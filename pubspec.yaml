@@ -1,0 +1,81 @@
+name: numer_app
+description: Study Group app with onboarding, courses, timer, and alarms
+publish_to: "none"
+
+version: 1.0.0+7
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+  # State & UI
+  provider: ^6.1.2
+  cupertino_icons: ^1.0.8
+
+  # Charts
+  fl_chart: ^1.1.1
+  table_calendar: ^3.1.2
+
+  # Storage / persistence
+  shared_preferences: ^2.3.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  image_picker: ^1.1.2
+
+  # Notifications
+  flutter_local_notifications: ^19.5.0
+  timezone: ^0.10.1
+  # (Optional cloud sync)
+  firebase_core: ^4.3.0
+  firebase_app_check: ^0.4.1+3
+  firebase_auth: ^6.1.3
+  cloud_firestore: ^6.1.1
+  animations: ^2.0.11
+  connectivity_plus: ^7.0.0
+  vector_math: ^2.1.4
+  cloud_functions: ^6.0.5
+  path_provider: ^2.1.5
+  firebase_messaging: ^16.1.0
+  # characters and material_color_utilities are provided by the Flutter SDK
+  # and are often SDK-pinned. Remove explicit pins to avoid conflicts.
+
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  # If you use Hive TypeAdapters, also add:
+  # hive_generator: ^2.0.1
+  # build_runner: ^2.4.9
+  # matcher and test_api are provided by the Flutter SDK via flutter_test
+  # and are SDK-pinned; do not override them here. Remove explicit pins
+  # to avoid version solving failures. If you need newer versions, upgrade
+  # the Flutter SDK instead.
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  
+  # Android adaptive icon configuration
+  # Adaptive icons work on Android 8.0+ and support various shapes
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#1a1a2e"  # Dark background color
+  
+  # Ensure important content stays within the safe zone (center 66%)
+  # The outer 33% may be cropped by different launcher shapes
+  min_sdk_android: 21

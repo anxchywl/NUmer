@@ -1,0 +1,923 @@
+import 'dart:math';
+import 'dart:typed_data';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../data/local/entities.dart';
+import '../data/local/local_database.dart';
+import '../models.dart';
+
+class Storage {
+  Storage._();
+
+  static final LocalDatabase _db = LocalDatabase.instance;
+
+  static const _metaDailyState = 'daily_state_v1';
+  static const _metaCourseMinutes = 'course_minutes_v1';
+  static const _metaActiveSession = 'active_session_v1';
+  static const _metaTimerState = 'timer_state_v1';
+  static const _metaLegacyDailyMigrated = 'legacy_daily_state_migrated_v1';
+  static const _metaAlarms = 'alarms_v1';
+  static const _metaProfileComplete = 'profile_complete_v1';
+  static const _metaProfilePromptShown = 'profile_prompt_shown_v1';
+  static const _metaLocale = 'locale_v1';
+
+  static Future<void> configureForUser(String uid) async {
+    await _db.openForUser(uid);
+  }
+
+  static Future<void> closeForSignOut() async {
+    await _db.close();
+  }
+
+  static Future<void> eraseUser(String uid) async {
+    await _db.deleteBoxesForUser(uid);
+  }
+
+  static Future<void> clearAll() async {
+    await _db.clearAll();
+  }
+
+  static void _ensureUser() {
+    if (_db.currentUid == null) {
+      throw StateError('Storage accessed without configuring user');
+    }
+  }
+
+  static int _now() => DateTime.now().toUtc().millisecondsSinceEpoch;
+
+  static LocalUserDoc _userDoc() {
+    _ensureUser();
+    return _db.ensureUserDoc();
+  }
+
+  static Future<void> _saveUser(LocalUserDoc doc, {bool dirty = true}) async {
+    if (dirty) {
+      doc.dirty = true;
+      doc.updatedAtMs = _now();
+    }
+    await _db.putUser(doc);
+  }
+
+  
+  
+  
+
+  static Future<String?> getMajor() async => _userDoc().major;
+
+  static Future<void> setMajor(String? major) async {
+    final doc = _userDoc();
+    doc.major = (major == null || major.trim().isEmpty) ? null : major.trim();
+    await _saveUser(doc);
+  }
+
+  static Future<String?> getProfileName() async => _userDoc().profileName;
+
+  static Future<void> setProfileName(String? name) async {
+    final doc = _userDoc();
+    doc.profileName =
+        (name == null || name.trim().isEmpty) ? null : name.trim();
+    await _saveUser(doc);
+    if (name != null && name.trim().isNotEmpty) {
+      await _db.putMeta(_metaProfileComplete, true);
+    }
+  }
+
+  static Future<bool> hasCompletedProfileSetup() async {
+    _ensureUser();
+    return _db.getMeta(_metaProfileComplete) == true;
+  }
+
+  static Future<String?> getProfileGoal() async => _userDoc().profileGoal;
+
+  static Future<void> setProfileGoal(String? goal) async {
+    final doc = _userDoc();
+    doc.profileGoal =
+        (goal == null || goal.trim().isEmpty) ? null : goal.trim();
+    await _saveUser(doc);
+  }
+
+  static Future<String?> getProfileContact() async => _userDoc().profileContact;
+
+  static Future<void> setProfileContact(String? contact) async {
+    final doc = _userDoc();
+    doc.profileContact =
+        (contact == null || contact.trim().isEmpty) ? null : contact.trim();
+    await _saveUser(doc);
+  }
+
+  static Future<int?> getProfileAvatarIndex() async =>
+      _userDoc().avatarIndex;
+
+  static Future<void> setProfileAvatarIndex(int? index) async {
+    final doc = _userDoc();
+    doc.avatarIndex = index != null && index >= 0 ? index : null;
+    await _saveUser(doc);
+  }
+
+  static Future<Uint8List?> getProfileAvatarImageBytes() async =>
+      _userDoc().avatarImage;
+
+  static Future<void> setProfileAvatarImageBytes(Uint8List? bytes) async {
+    final doc = _userDoc();
+    doc.avatarImage =
+        (bytes == null || bytes.isEmpty) ? null : Uint8List.fromList(bytes);
+    await _saveUser(doc);
+  }
+  
+  static Future<int?> getProfileAvatarColor() async =>
+      _userDoc().avatarColorValue;
+
+  static Future<void> setProfileAvatarColor(int? value) async {
+    final doc = LocalDatabase.instance.ensureUserDoc();
+    doc.avatarColorValue = value;
+    doc.dirty = true;
+    await doc.save();
+  }
+
+  static bool getProfileComplete() {
+    return LocalDatabase.instance.userDocOrNull?.profileComplete ?? false;
+  }
+
+  static Future<void> setProfileComplete(bool value) async {
+    final doc = LocalDatabase.instance.ensureUserDoc();
+    doc.profileComplete = value;
+    doc.dirty = true;
+    await doc.save();
+  }
+
+  static Future<String?> getThemeMode() async {
+    if (_db.currentUid == null) return null;
+    return _userDoc().themeMode;
+  }
+
+  static Future<void> setThemeMode(String? mode) async {
+    if (_db.currentUid == null) return;
+    final doc = _userDoc();
+    if (mode == null || mode.trim().isEmpty) {
+      doc.themeMode = null;
+    } else {
+      doc.themeMode = mode.trim();
+    }
+    await _saveUser(doc);
+  }
+
+  static Future<bool> getProfilePromptShown() async {
+    _ensureUser();
+    return _db.getMeta(_metaProfilePromptShown) == true;
+  }
+
+  static Future<void> setProfilePromptShown(bool value) async {
+    _ensureUser();
+    await _db.putMeta(_metaProfilePromptShown, value);
+  }
+
+  static Future<bool> getPendingCoursePrompt() async =>
+      _userDoc().pendingCoursePrompt;
+
+  static Future<void> setPendingCoursePrompt(bool value) async {
+    final doc = _userDoc();
+    doc.pendingCoursePrompt = value;
+    await _saveUser(doc, dirty: value);
+  }
+
+  static Future<String> getWeekStart() async => _userDoc().weekStart;
+
+  static Future<void> setWeekStart(String value) async {
+    final doc = _userDoc();
+    doc.weekStart = (value == 'sunday') ? 'sunday' : 'monday';
+    await _saveUser(doc);
+  }
+
+  static Future<String> getHomeSummaryRange() async =>
+      _userDoc().homeSummaryRange;
+
+  static Future<void> setHomeSummaryRange(String value) async {
+    final doc = _userDoc();
+    doc.homeSummaryRange = value;
+    await _saveUser(doc);
+  }
+
+  static Future<String> getProgressView() async => _userDoc().progressView;
+
+  static Future<void> setProgressView(String value) async {
+    final doc = _userDoc();
+    doc.progressView = value;
+    await _saveUser(doc);
+  }
+
+  static Future<bool> getQuickNotesEnabled() async => _userDoc().quickNotesEnabled;
+
+  static Future<void> setQuickNotesEnabled(bool value) async {
+    final doc = _userDoc();
+    doc.quickNotesEnabled = value;
+    await _saveUser(doc);
+  }
+
+  static Future<bool> getAllowNudges() async => _userDoc().allowNudges;
+
+  static Future<void> setAllowNudges(bool value) async {
+    final doc = _userDoc();
+    doc.allowNudges = value;
+    await _saveUser(doc);
+  }
+
+  static Future<String?> getLocale() async {
+    _ensureUser();
+    return _db.getMeta(_metaLocale) as String?;
+  }
+
+  static Future<void> setLocale(String? localeName) async {
+    _ensureUser();
+    await _db.putMeta(_metaLocale, localeName);
+  }
+
+  
+  
+  
+
+  static List<Course> _mapCourses(Iterable<LocalCourse> source) {
+    return source
+        .where((c) => !c.deleted)
+        .map(
+          (c) => Course(
+            id: c.id,
+            name: c.name,
+            day: c.day,
+            start: c.start,
+            end: c.end,
+            colorValue: c.colorValue,
+            credits: c.credits,
+            expLevel: c.expLevel,
+            sortOrder: c.sortOrder,
+          ),
+        )
+        .toList();
+  }
+
+  static Future<List<Course>> getCourses() async {
+    _ensureUser();
+    final items = _db.courses().toList();
+    await _ensureCourseOrder(items);
+    final courses = _mapCourses(items);
+    courses.sort(_compareCourseOrder);
+    return courses;
+  }
+
+  static Future<void> saveCourses(List<Course> courses) async {
+    _ensureUser();
+    final box = _db.coursesBox;
+    final uid = _db.currentUid!;
+    final now = _now();
+    final incomingIds = {for (final c in courses) c.id};
+
+    
+    for (final entry in box.values) {
+      if (!incomingIds.contains(entry.id) && !entry.deleted) {
+        entry.deleted = true;
+        entry.dirty = true;
+        entry.updatedAtMs = now;
+        await entry.save();
+      }
+    }
+
+    
+    for (final course in courses) {
+      final existing = box.get(course.id);
+      if (existing == null) {
+        final created = LocalCourse(
+          id: course.id,
+          uid: uid,
+          updatedAtMs: now,
+          name: course.name,
+          day: course.day,
+          start: course.start,
+          end: course.end,
+          colorValue: course.colorValue,
+          credits: course.credits,
+          expLevel: course.expLevel,
+          goalHours: _db.getGoalById(course.id)?.hours,
+          totalMinutes: 0,
+          pomodoroLongBreakMinutes: null,
+          sortOrder: course.sortOrder,
+          dirty: true,
+          deleted: false,
+        );
+        await box.put(created.id, created);
+        continue;
+      }
+
+      bool changed = false;
+      void update<T>(T current, T value, void Function(T) assign) {
+        if (current != value) {
+          assign(value);
+          changed = true;
+        }
+      }
+
+      update(existing.name, course.name, (v) => existing.name = v);
+      update(existing.day, course.day, (v) => existing.day = v);
+      update(existing.start, course.start, (v) => existing.start = v);
+      update(existing.end, course.end, (v) => existing.end = v);
+      update(existing.colorValue, course.colorValue,
+          (v) => existing.colorValue = v);
+      update(existing.credits, course.credits, (v) => existing.credits = v);
+      update(existing.expLevel, course.expLevel, (v) => existing.expLevel = v);
+      if (course.sortOrder != null) {
+        update(existing.sortOrder, course.sortOrder,
+            (v) => existing.sortOrder = v);
+      }
+      if (existing.deleted) {
+        existing.deleted = false;
+        changed = true;
+      }
+      if (changed) {
+        existing.updatedAtMs = now;
+        existing.dirty = true;
+        await existing.save();
+      }
+    }
+  }
+
+  static int _compareCourseOrder(Course a, Course b) {
+    final ao = a.sortOrder;
+    final bo = b.sortOrder;
+    if (ao == null && bo == null) return 0;
+    if (ao == null) return 1;
+    if (bo == null) return -1;
+    return ao.compareTo(bo);
+  }
+
+  static Future<void> _ensureCourseOrder(List<LocalCourse> items) async {
+    if (items.isEmpty) return;
+    final hasAnyOrder = items.any((c) => c.sortOrder != null);
+    var nextOrder = 0;
+    if (hasAnyOrder) {
+      final maxExisting = items
+          .where((c) => c.sortOrder != null)
+          .map((c) => c.sortOrder!)
+          .fold<int>(0, (prev, v) => v > prev ? v : prev);
+      nextOrder = maxExisting + 1;
+    }
+    final now = _now();
+    for (final course in items) {
+      if (course.sortOrder != null) continue;
+      course.sortOrder = nextOrder++;
+      course.updatedAtMs = now;
+      course.dirty = true;
+      await course.save();
+    }
+  }
+
+  static Future<List<AlarmItem>> getAlarms() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAlarms);
+    if (raw is List) {
+      return raw
+          .whereType<Map>()
+          .map((dynamic m) => AlarmItem.fromJson(
+                Map<String, dynamic>.from(m as Map),
+              ))
+          .toList();
+    }
+    return const [];
+  }
+
+  static Future<void> saveAlarms(List<AlarmItem> alarms) async {
+    _ensureUser();
+    final serialized = alarms.map((a) => a.toJson()).toList(growable: false);
+    await _db.putMeta(_metaAlarms, serialized);
+  }
+
+  static Future<Map<String, int>> getCourseMinutes() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaCourseMinutes);
+    if (raw is Map) {
+      return raw.map<String, int>((key, value) =>
+          MapEntry(key.toString(), (value as num).toInt()));
+    }
+    final map = <String, int>{};
+    for (final c in _db.courses()) {
+      map[c.id] = c.totalMinutes;
+    }
+    return map;
+  }
+
+  static Future<void> saveCourseMinutes(Map<String, int> map) async {
+    _ensureUser();
+    await _db.putMeta(_metaCourseMinutes, map);
+    final now = _now();
+    for (final entry in map.entries) {
+      final course = _db.getCourseById(entry.key);
+      if (course == null) continue;
+      if (course.totalMinutes == entry.value) continue;
+      course.totalMinutes = entry.value;
+      course.dirty = true;
+      course.updatedAtMs = now;
+      await course.save();
+    }
+  }
+
+  
+  
+  
+
+  static Future<Map<String, double>> getCourseGoalHours() async {
+    _ensureUser();
+    final out = <String, double>{};
+    for (final goal in _db.goals()) {
+      if (!goal.deleted && goal.hours != null) {
+        out[goal.id] = goal.hours!;
+      }
+    }
+    return out;
+  }
+
+  static Future<void> setCourseGoalHours(String courseId, double? hours) async {
+    _ensureUser();
+    final now = _now();
+    final existing = _db.getGoalById(courseId);
+    if (hours == null || hours <= 0) {
+      if (existing != null && !existing.deleted) {
+        existing.deleted = true;
+        existing.dirty = true;
+        existing.updatedAtMs = now;
+        await existing.save();
+      }
+      final course = _db.getCourseById(courseId);
+      if (course != null) {
+        course.goalHours = null;
+        await course.save();
+      }
+      return;
+    }
+
+    if (existing == null) {
+      final goal = LocalGoal(
+        id: courseId,
+        uid: _db.currentUid!,
+        hours: hours,
+        updatedAtMs: now,
+        dirty: true,
+        deleted: false,
+      );
+      await _db.putGoal(goal);
+    } else {
+      existing.hours = hours;
+      existing.deleted = false;
+      existing.updatedAtMs = now;
+      existing.dirty = true;
+      await existing.save();
+    }
+
+    final course = _db.getCourseById(courseId);
+    if (course != null) {
+      course.goalHours = hours;
+      await course.save();
+    }
+  }
+
+  
+  
+  
+
+  static Future<Map<String, int>> getPomodoroLongBreakMinutes() async {
+    _ensureUser();
+    final out = <String, int>{};
+    for (final c in _db.courses()) {
+      if (c.pomodoroLongBreakMinutes != null) {
+        out[c.id] = c.pomodoroLongBreakMinutes!;
+      }
+    }
+    return out;
+  }
+
+  static Future<void> setPomodoroLongBreakMinutes(
+      String courseId, int minutes) async {
+    _ensureUser();
+    final course = _db.getCourseById(courseId);
+    if (course == null) return;
+    course.pomodoroLongBreakMinutes = minutes;
+    await course.save();
+  }
+
+  static Future<void> removePomodoroLongBreakMinutes(String courseId) async {
+    _ensureUser();
+    final course = _db.getCourseById(courseId);
+    if (course == null) return;
+    course.pomodoroLongBreakMinutes = null;
+    await course.save();
+  }
+
+  
+  
+  
+
+  static Future<Map<String, Object?>?> getDailyState() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaDailyState);
+    if (raw is Map) {
+      final dateKey = raw['dateKey']?.toString();
+      final inner = raw['map'];
+      if (dateKey == null || inner is! Map) return null;
+      final parsed = inner.map<String, int>(
+        (key, value) =>
+            MapEntry(key.toString(), (value as num?)?.toInt() ?? 0),
+      );
+      return {'dateKey': dateKey, 'map': parsed};
+    }
+    return null;
+  }
+
+  static Future<void> saveDailyState(
+      String dateKey, Map<String, int> map) async {
+    _ensureUser();
+    await _db.putMeta(_metaDailyState, {
+      'dateKey': dateKey,
+      'map': map,
+    });
+  }
+
+  static Future<Map<String, dynamic>?> getActiveSession() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaActiveSession);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
+  static Future<void> saveActiveSession(Map<String, dynamic> data) async {
+    _ensureUser();
+    await _db.putMeta(_metaActiveSession, data);
+  }
+
+  static Future<void> clearActiveSession() async {
+    _ensureUser();
+    await _db.clearMetaKey(_metaActiveSession);
+  }
+
+  static Future<Map<String, dynamic>?> getTimerState() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaTimerState);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
+  static Future<void> saveTimerState(Map<String, dynamic> data) async {
+    _ensureUser();
+    await _db.putMeta(_metaTimerState, data);
+  }
+
+  static Future<void> clearTimerState() async {
+    _ensureUser();
+    await _db.clearMetaKey(_metaTimerState);
+    final doc = _userDoc();
+    doc.profileName = null;
+    doc.profileGoal = null;
+    doc.avatarIndex = null;
+    doc.avatarImage = null;
+    await _saveUser(doc);
+  }
+
+  
+  
+  
+
+  static Map<String, dynamic> _sessionToJson(LocalSession session) {
+    final startUtc =
+        DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
+    final endUtc =
+        DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+    return {
+      'id': session.id,
+      'courseId': session.courseId,
+      'startUtc': startUtc,
+      'endUtc': endUtc,
+      'seconds': session.seconds,
+      'kind': session.kind,
+      'notes': session.notes,
+    };
+  }
+
+  static Future<String?> addSession({
+    required String courseId,
+    required DateTime startLocal,
+    required DateTime endLocal,
+    String? kind,
+  }) async {
+    _ensureUser();
+    if (!endLocal.isAfter(startLocal)) return null;
+    final startUtc = startLocal.toUtc();
+    final endUtc = endLocal.toUtc();
+    final seconds =
+        endUtc.difference(startUtc).inSeconds.clamp(0, 1 << 31).toInt();
+    if (seconds <= 0) return null;
+
+    final id = '${startUtc.microsecondsSinceEpoch}_$courseId';
+    final now = _now();
+    final session = LocalSession(
+      id: id,
+      uid: _db.currentUid!,
+      courseId: courseId,
+      startUtcMs: startUtc.millisecondsSinceEpoch,
+      endUtcMs: endUtc.millisecondsSinceEpoch,
+      seconds: seconds,
+      kind: kind,
+      createdAtMs: now,
+      updatedAtMs: now,
+      dirty: true,
+      deleted: false,
+    );
+    await _db.putSession(session);
+    return id;
+  }
+
+  static Future<List<Map<String, dynamic>>> getSessions() async {
+    _ensureUser();
+    final sessions = _db.sessions();
+    return sessions.map(_sessionToJson).toList();
+  }
+
+  static Future<bool> hasSessionOverlap(
+      DateTime startLocal, DateTime endLocal) async {
+    if (!endLocal.isAfter(startLocal)) return true;
+    _ensureUser();
+    final startUtc = startLocal.toUtc();
+    final endUtc = endLocal.toUtc();
+    for (final session in _db.sessions()) {
+      final sStart =
+          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
+      final sEnd =
+          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      if (sEnd.isAfter(startUtc) && sStart.isBefore(endUtc)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static Future<void> clearSessions() async {
+    _ensureUser();
+    for (final session in _db.sessions(includeDeleted: true)) {
+      session.deleted = true;
+      session.dirty = true;
+      session.updatedAtMs = _now();
+      await session.save();
+    }
+  }
+
+  static Future<Map<String, int>> secondsByCourseBetween(
+      DateTime startLocal, DateTime endLocal) async {
+    if (!endLocal.isAfter(startLocal)) return {};
+    _ensureUser();
+    final startUtc = startLocal.toUtc();
+    final endUtc = endLocal.toUtc();
+    final result = <String, int>{};
+    for (final session in _db.sessions()) {
+      final sStart =
+          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
+      final sEnd =
+          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      if (!sEnd.isAfter(startUtc) || !sStart.isBefore(endUtc)) continue;
+      final from = sStart.isBefore(startUtc) ? startUtc : sStart;
+      final to = sEnd.isAfter(endUtc) ? endUtc : sEnd;
+      final secs = max(0, to.difference(from).inSeconds);
+      if (secs <= 0) continue;
+      result.update(session.courseId, (value) => value + secs,
+          ifAbsent: () => secs);
+    }
+    return result;
+  }
+
+  static Future<List<Map<String, int>>> dailySeries(
+      DateTime startLocal, int days) async {
+    if (days <= 0) return const [];
+    _ensureUser();
+    final startUtc =
+        DateTime.utc(startLocal.year, startLocal.month, startLocal.day);
+    final endUtc = startUtc.add(Duration(days: days));
+    final buckets = List.generate(days, (_) => <String, int>{});
+
+    for (final session in _db.sessions()) {
+      var cursor =
+          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
+      final stop =
+          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      if (!stop.isAfter(startUtc) || !cursor.isBefore(endUtc)) continue;
+
+      if (cursor.isBefore(startUtc)) cursor = startUtc;
+      final end = stop.isAfter(endUtc) ? endUtc : stop;
+
+      while (cursor.isBefore(end)) {
+        final bucketStart = DateTime.utc(cursor.year, cursor.month, cursor.day);
+        final bucketEnd = bucketStart.add(const Duration(days: 1));
+        final segmentEnd = end.isBefore(bucketEnd) ? end : bucketEnd;
+        final secs = segmentEnd.difference(cursor).inSeconds;
+        if (secs > 0) {
+          final index = bucketStart.difference(startUtc).inDays;
+          if (index >= 0 && index < buckets.length) {
+            buckets[index].update(session.courseId, (value) => value + secs,
+                ifAbsent: () => secs);
+          }
+        }
+        cursor = bucketEnd;
+      }
+    }
+    return buckets;
+  }
+
+  static Future<void> migrateDailyStateToSessionsIfNeeded() async {
+    _ensureUser();
+    final migratedFlag = _db.getMeta(_metaLegacyDailyMigrated);
+    if (migratedFlag == true) return;
+
+    final snapshot = await getDailyState();
+    if (snapshot == null) {
+      await _db.putMeta(_metaLegacyDailyMigrated, true);
+      return;
+    }
+
+    final dateKey = snapshot['dateKey'] as String?;
+    final map = snapshot['map'] as Map<String, int>?;
+    if (dateKey == null || map == null) return;
+
+    final parts = dateKey.split('-');
+    if (parts.length != 3) return;
+    final year = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final day = int.tryParse(parts[2]);
+    if (year == null || month == null || day == null) return;
+
+    final dayStart = DateTime(year, month, day);
+    final hasSessions =
+        (await secondsByCourseBetween(dayStart, dayStart.add(const Duration(days: 1))))
+            .isNotEmpty;
+    if (hasSessions) {
+      await _db.putMeta(_metaLegacyDailyMigrated, true);
+      return;
+    }
+
+    final anchor = DateTime(year, month, day, 12);
+    for (final entry in map.entries) {
+      final seconds = entry.value * 60;
+      if (seconds <= 0) continue;
+      await addSession(
+        courseId: entry.key,
+        startLocal: anchor,
+        endLocal: anchor.add(Duration(seconds: seconds)),
+        kind: 'legacy-migrated',
+      );
+    }
+    await _db.putMeta(_metaLegacyDailyMigrated, true);
+  }
+
+  static Future<void> deleteSessionsForCourse(String courseId) async {
+    _ensureUser();
+    for (final session in _db.sessions(includeDeleted: true)) {
+      if (session.courseId == courseId) {
+        session.deleted = true;
+        session.dirty = true;
+        session.updatedAtMs = _now();
+        await session.save();
+      }
+    }
+  }
+
+  static Future<void> removeCourseFromDailyState(String courseId) async {
+    _ensureUser();
+    final snapshot = await getDailyState();
+    if (snapshot == null) return;
+    final map = Map<String, int>.from(
+        snapshot['map'] as Map<String, int>? ?? const {});
+    map.remove(courseId);
+    await saveDailyState(snapshot['dateKey'] as String? ?? '', map);
+  }
+
+  static Future<void> removeCourseFromActiveSession(String courseId) async {
+    _ensureUser();
+    final current = await getActiveSession();
+    if (current == null) return;
+    for (final key in ['timers', 'stopwatches', 'pomodoros']) {
+      final map = current[key];
+      if (map is Map) {
+        map.remove(courseId);
+      }
+    }
+    await saveActiveSession(current);
+  }
+
+  static Future<void> removeCourseFromCourseMinutes(String courseId) async {
+    final map = await getCourseMinutes();
+    if (map.remove(courseId) != null) {
+      await saveCourseMinutes(map);
+    }
+  }
+
+  static Future<void> deleteSession(
+    String id, {
+    String? courseId,
+    DateTime? startUtc,
+    DateTime? endUtc,
+  }) async {
+    _ensureUser();
+    
+    final session = _db.getSessionById(id);
+    if (session != null) {
+      session.deleted = true;
+      session.dirty = true;
+      session.updatedAtMs = _now();
+      await session.save();
+      return;
+    }
+
+    
+    if (courseId == null || startUtc == null || endUtc == null) return;
+    for (final item in _db.sessions(includeDeleted: true)) {
+      final sStart =
+          DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true);
+      final sEnd =
+          DateTime.fromMillisecondsSinceEpoch(item.endUtcMs, isUtc: true);
+      if (item.courseId == courseId &&
+          sStart.microsecondsSinceEpoch ==
+              startUtc.toUtc().microsecondsSinceEpoch &&
+          sEnd.microsecondsSinceEpoch ==
+              endUtc.toUtc().microsecondsSinceEpoch) {
+        item.deleted = true;
+        item.dirty = true;
+        item.updatedAtMs = _now();
+        await item.save();
+      }
+    }
+
+    
+    final firestore = FirebaseFirestore.instance;
+    final auth = FirebaseAuth.instance;
+    final userId = auth.currentUser?.uid;
+    if (userId != null) {
+      
+      final querySnapshot = await firestore
+          .collection('users')
+          .doc(userId)
+          .collection('sessions')
+          .where('courseId', isEqualTo: courseId)
+          .where('startUtc', isEqualTo: Timestamp.fromDate(startUtc))
+          .where('endUtc', isEqualTo: Timestamp.fromDate(endUtc))
+          .get();
+
+      
+      final batch = firestore.batch();
+      for (final doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      
+      final sessionDoc = firestore
+          .collection('users')
+          .doc(userId)
+          .collection('sessions')
+          .doc(id);
+      
+      final sessionSnapshot = await sessionDoc.get();
+      if (sessionSnapshot.exists) {
+        batch.delete(sessionDoc);
+      }
+
+      await batch.commit();
+    }
+  }
+
+  static Future<void> setSessionNotes(String id, String? notes) async {
+    _ensureUser();
+    final session = _db.getSessionById(id);
+    if (session == null) return;
+    final normalized = notes?.trim();
+    session.notes = (normalized == null || normalized.isEmpty) ? null : normalized;
+    session.dirty = true;
+    session.updatedAtMs = _now();
+    await session.save();
+  }
+
+  static Future<List<Map<String, dynamic>>> listSessions(
+      {bool newestFirst = true}) async {
+    final sessions = await getSessions();
+    final converted = sessions.map((s) {
+      final startUtc = s['startUtc'] as DateTime;
+      final endUtc = s['endUtc'] as DateTime;
+      return {
+        ...s,
+        'startLocal': startUtc.toLocal(),
+        'endLocal': endUtc.toLocal(),
+      };
+    }).toList();
+
+    converted.sort((a, b) {
+      final da = a['startUtc'] as DateTime;
+      final db = b['startUtc'] as DateTime;
+      return newestFirst ? db.compareTo(da) : da.compareTo(db);
+    });
+    return converted;
+  }
+}

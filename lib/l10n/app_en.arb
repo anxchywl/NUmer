@@ -1,0 +1,609 @@
+{
+  "settingsTitle": "Account & Settings",
+  "account": "Account",
+  "profile": "Profile",
+  "appearance": "Appearance",
+  "system": "System",
+  "light": "Light",
+  "dark": "Dark",
+  "language": "Language",
+  "english": "English",
+  "russian": "Russian",
+  "kazakh": "Kazakh",
+  "weekStartsOn": "Week starts on",
+  "displayTotalStudyTime": "Display total study time per course over",
+  "displayProgressBar": "Display progress bar of",
+  "quickNotes": "Quick notes",
+  "wantToReceiveNudges": "Want to receive nudges?",
+  "yes": "Yes",
+  "no": "No",
+  "data": "Data",
+  "exportToCalendar": "Export to calendar",
+  "exportToCalendarSubtitle": "Save your sessions as calendar events",
+  "allCourses": "All courses",
+  "courseFallback": "Course",
+  "export": "Export",
+  "exporting": "Exporting...",
+  "exportFailedMessage": "Export failed: {error}",
+  "@exportFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedSuccessfully": "File saved successfully",
+  "fileSavedAt": "The file is saved at:",
+  "unknownPath": "Unknown path",
+  "nextSteps": "Next steps:",
+  "exportCalendarNextStepsBody": "• Open this file and import it into your calendar app,\n• OR open your calendar app settings and import the file manually.",
+  "deleteAccount": "Delete Account",
+  "deleteAccountSubtitle": "Permanently delete your account and all data",
+  "deleteAccountHoldConfirmDetail": "After holding the button for 5 seconds the account will be deleted forever",
+  "deletingAccount": "Deleting account...",
+  "accountDeleted": "Account deleted",
+  "pleaseSignInToViewAccount": "Please sign in to view your account.",
+  "signOut": "Sign out",
+  "syncNow": "Sync now",
+  "home": "Home",
+  "statistics": "Statistics",
+  "groups": "Groups",
+
+  "addCourse": "Add Course",
+  "addTime": "Add Time",
+  "courseName": "Course name",
+  "courseNameHint": "",
+  "required": "Required",
+  "color": "Color",
+  "creditsOptional": "Credits (optional)",
+  "creditsHint": "6 or 7 for example",
+  "creditsHelper": "Add credits to enable self-study goals",
+  "experienceLevel": "Experience level",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "deleteCourseTitle": "Delete Course",
+  "deleteCourseMessage": "Are you sure? All data for this course will be deleted.",
+  "timeSavedMessage": "Time for \"{courseName}\" saved",
+  "@timeSavedMessage": {
+    "placeholders": {
+      "courseName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "courseAnalysis": "Course Analysis",
+  "noCoursesAvailable": "No courses available.",
+  "selectCourse": "Select Course",
+  "timePeriod": "Time Period",
+  "oneMonth": "1 Month",
+  "threeMonths": "3 Months",
+  "sixMonths": "6 Months",
+  "generateInsight": "Generate Insight",
+  "analyzing": "Analyzing...",
+  "analysisPlaceholder": "Select a course and time period, then get AI-powered feedback of your studies.",
+  "dayStatsTipLine1": "• The calendar highlights your study activity. The greener the day, the more you studied.",
+  "dayStatsTipLine2": "• You can edit session time and notes in the History screen.",
+  "dayStatsTipLine3": "• You can tap on any course, and the history screen will show only the sessions for that course.",
+  "overview": "Overview",
+  "scrollUpHint": "Scroll up",
+  "topTopics": "Top Topics",
+  "insights": "Insights",
+  "recommendations": "Recommendations",
+
+  "syncOffline": "Offline",
+  "syncSyncing": "Syncing…",
+  "syncUpToDate": "Up to date",
+
+  "setGoals": "Set Goals",
+  "daily": "Daily",
+  "weekly": "Weekly",
+
+  "studyTimer": "Study Timer",
+  "noCoursesYet": "No courses yet. Add a course from Home.",
+  "chooseACourse": "Choose a course",
+  "start": "Start",
+  "stop": "Stop",
+  "reset": "Reset",
+  "ok": "OK",
+  "timerStoppedAndSaved": "Timer stopped and saved.",
+  "nothingToReset": "Nothing to reset.",
+  "anotherSessionRunning": "Another {sessionType} is already running.",
+  "@anotherSessionRunning": {
+    "placeholders": {
+      "sessionType": {
+        "type": "String"
+      }
+    }
+  },
+  "anotherSessionRunningOn": "Another {sessionType} is already running on \"{courseName}\".",
+  "@anotherSessionRunningOn": {
+    "placeholders": {
+      "sessionType": {
+        "type": "String"
+      },
+      "courseName": {
+        "type": "String"
+      }
+    }
+  },
+  "anotherSessionRunningSilly": "Another {sessionType} is already running, silly.",
+  "@anotherSessionRunningSilly": {
+    "placeholders": {
+      "sessionType": { "type": "String" }
+    }
+  },
+  "alreadyStudiedThisPeriod": "You already studied during this time period.",
+  "friendJoinPrompt": "Your friend can join by typing your group’s name into the search bar.",
+  "enterTimeFirst": "Enter time first",
+  "nothingToSave": "Nothing to save",
+  "maxTimeCapped": "Max is 3:00:00 — capped",
+  "studiedLabel": "Studied",
+  "goalsUpdated": "Goals updated",
+
+  "studiedToday": "Studied today",
+  "studiedThisWeek": "Studied this week",
+  "studiedThisMonth": "Studied this month",
+  "studiedThisYear": "Studied this year",
+  "studiedOverall": "Studied overall",
+
+  "timer": "timer",
+  "stopwatch": "stopwatch",
+  "pomodoro": "pomodoro",
+  "session": "session",
+
+  "editCourse": "Edit Course",
+  "courseName": "Course Name",
+  "today": "Today",
+  "edit": "Edit",
+  "timerTab": "Timer",
+  "stopwatchTab": "Stopwatch",
+  "pomodoroTab": "Pomodoro",
+  "typeTimeToStudy": "Here type the time you need to study for",
+  "maxTime": "Max: 3:00:00",
+  "elapsed": "elapsed",
+  "completedPomodoros": "Completed pomodoros: {completed} / 4",
+  "@completedPomodoros": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "longBreakLength": "Long break length ({minutes} min)",
+  "@longBreakLength": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "work": "Work",
+  "shortBreak": "Short break",
+  "longBreak": "Long break",
+  "paused": "paused",
+  "resume": "Resume",
+  "pause": "Pause",
+  "skipBreak": "Skip break",
+  "pomodoroExitWarning": "A pomodoro session is running. Exit anyway?",
+  "exitAnyway": "Exit anyway",
+
+  "expLevel1": "Complete noob",
+  "expLevel2": "Know some basics",
+  "expLevel3": "Comfortable with the subject",
+  "expLevel4": "Advanced level of knowledge",
+  "expLevel5": "Broad experience",
+  "expLevelDefault": "Comfortable",
+
+  "statistics": "Statistics",
+  "dayStatistics": "Day Statistics",
+  "periodStatistics": "Period Statistics",
+  "tip": "Tip",
+  "chartTip": "• Hold your finger on the chart and slide left or right to move between days or months.",
+  "courseStatistics": "Course Statistics",
+  
+  
+  "previousDay": "Previous day",
+  "nextDay": "Next day",
+  "history": "History",
+  "week": "Week",
+  "month": "Month",
+  "year": "Year",
+  "previousWeek": "previous week",
+  "previousMonth": "previous month",
+  "previousYear": "previous year",
+  "nextWeek": "next week",
+  "nextMonth": "next month",
+  "nextYear": "next year",
+  "noData": "No data",
+  "hours": "Hours",
+  "minutes": "Minutes",
+  "totalThisPeriod": "Total this {period}",
+  "@totalThisPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "avgPerDay": "Average per day",
+  "mostStudied": "Most studied",
+  "leastStudied": "Least studied",
+
+  "adjustWeeklyGoal": "Adjust Weekly Goal",
+  "targetPerWeek": "Target per week",
+  "targetPerDay": "Target per day",
+  "semester": "Semester (~{weeks} wks)",
+  "@semester": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "hPerWeek": "{hours} h/week",
+  "@hPerWeek": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groups": "Groups",
+  "createGroup": "Create Group",
+  "joinGroup": "Join Group",
+  "groupName": "Group Name",
+  "description": "Description",
+  "privacy": "Privacy",
+  "public": "Public",
+  "private": "Private",
+  "accessCode": "Access Code",
+  "members": "Members",
+  "leaveGroup": "Leave Group",
+  "deleteGroup": "Delete Group",
+  "groupSettings": "Group Settings",
+  "noGroupsYet": "You're not in any groups yet",
+  "createOrJoinPrompt": "Create a new group or join an existing one to collaborate with others",
+  "signInPrompt": "Sign in to explore groups.",
+  "errorLoadingMemberships": "Error loading memberships: {error}",
+  "@errorLoadingMemberships": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "findPublicGroupHint": "Find a group...",
+  "searchResults": "Search Results",
+  "errorLoadingGroups": "Error loading groups: {error}",
+  "@errorLoadingGroups": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "joinedSuccessfully": "Joined group successfully",
+  "joinedPrivateSuccessfully": "Joined private group successfully",
+  "joinGroupDialogTitle": "Join {groupName}",
+  "@joinGroupDialogTitle": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "joinGroupDialogMessage": "Enter the join code to access this private group.",
+  "joinCodeHint": "e.g. ABC123",
+  "publicGroups": "Public Groups",
+  "joinError": "Could not join group: {error}",
+  "@joinError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "noDescription": "No description provided.",
+  "membersCount": "{count} members",
+  "@membersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "yourGroup": "Your group",
+  "findStudyGroup": "Find your Study Group",
+  "joinCommunityPrompt": "Join a community to track progress, compete on leaderboards, and stay motivated together.",
+  "administrator": "Admin",
+  "memberLabel": "Member",
+  "unableToLoadGroup": "Unable to load group data",
+  "checkConnection": "Please check your internet connection",
+  "retry": "Retry",
+  "groupNotFound": "Group not found or was deleted.",
+  "signInToManage": "You need to be signed in to manage this group.",
+  "noLongerMember": "You are no longer a member of this group.",
+  "groupNameHint": "Enter a name for your group",
+  "visibility": "Visibility",
+  "descriptionHint": "Describe your group in a few words",
+  "codeRequired": "Code is required",
+  "codeJoinPrompt": "This code is required for new members to join.",
+  "onlyAdminVisibility": "Only administrators can change settings.",
+  "saving": "Saving...",
+  "saveChanges": "Save changes",
+  "membersTitle": "Members",
+  "unableToLoadMembers": "Unable to load member list",
+  "checkConnectionTryAgain": "Please check your connection and try again",
+  "noMembersYetLabel": "No members yet.",
+  "youAdmin": "You (Admin)",
+  "youMember": "You",
+  "youOwner": "You (Owner)",
+  "removeMemberTitle": "Remove member?",
+  "removeMemberMessage": "Remove this member from the group? They will lose access immediately.",
+  "memberRemoved": "Member removed",
+  "groupUpdated": "Group updated",
+  "failedToUpdateGroup": "Failed to update group: {error}",
+  "@failedToUpdateGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToDeleteGroup": "Failed to delete group: {error}",
+  "@failedToDeleteGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToLeaveGroup": "Failed to leave group: {error}",
+  "@failedToLeaveGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToRemoveMember": "Failed to remove member: {error}",
+  "@failedToRemoveMember": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "groupCodeLabel": "Group Code",
+  "dailyGoal": "Daily",
+  "weeklyGoal": "Weekly",
+  "hUnit": "h",
+  "mUnit": "m",
+  "sUnit": "s",
+  "errorLoadingLeaderboard": "Error loading leaderboard: {error}",
+  "@errorLoadingLeaderboard": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "noDataAvailable": "No data available for this period",
+  "groupLeaderboard": "Group Leaderboard",
+  "rankLabel": "#{rank}",
+  "@rankLabel": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "failedToLoadUserData": "Failed to load user data: {error}",
+  "@failedToLoadUserData": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "sun": "Sun",
+  "mon": "Mon",
+  "tue": "Tue",
+  "wed": "Wed",
+  "thu": "Thu",
+  "fri": "Fri",
+  "sat": "Sat",
+  "sunday": "Sunday",
+  "monday": "Monday",
+  "tuesday": "Tuesday",
+  "wednesday": "Wednesday",
+  "thursday": "Thursday",
+  "friday": "Friday",
+  "saturday": "Saturday",
+
+  "january": "January",
+  "february": "February",
+  "march": "March",
+  "april": "April",
+  "may": "May",
+  "june": "June",
+  "july": "July",
+  "august": "August",
+  "september": "September",
+  "october": "October",
+  "november": "November",
+  "december": "December",
+
+  "total": "Total",
+
+  "groupSummary": "Group Summary",
+  "average": "Average",
+  "leader": "Leader",
+  "lowest": "Lowest",
+  "vsAverage": "vs. Average",
+  "studyTimeComparison": "Study Time Comparison",
+  "performanceVsGroup": "Performance vs. Group",
+  "ofAverage": "of average",
+  "studyTimeByDay": "Study Time by Day",
+  "bestDay": "Best Day",
+  "avgDay": "Average/Day",
+  "member": "Member",
+  "todayDataTable": "Today",
+  "monthDataTable": "Month",
+  "overThisWeek": "over this week",
+  "overThisMonth": "over this month",
+  "overThisYear": "over this year",
+  "hour": "hour",
+  "hours_plural": "hours",
+  "minute": "minute",
+  "minutes_plural": "minutes",
+  "second": "second",
+  "seconds_plural": "seconds",
+
+  "jan": "Jan",
+  "feb": "Feb",
+  "mar": "Mar",
+  "apr": "Apr",
+  "mayShort": "May",
+  "jun": "Jun",
+  "jul": "Jul",
+  "aug": "Aug",
+  "sep": "Sep",
+  "oct": "Oct",
+  "nov": "Nov",
+  "dec": "Dec",
+
+  "viaTimer": "via Timer",
+  "viaStopwatch": "via Stopwatch",
+  "viaPomodoro": "via Pomodoro",
+  "startTime": "Start",
+  "endTime": "End",
+  "duration": "Duration",
+  "reflection": "Reflection",
+
+  "overThis": "over this",
+  "credits": "Credit",
+  "credits_plural": "Credits",
+  "save": "Save",
+  "deleteSession": "Delete session?",
+  "deleteSessionMessage": "This will remove the session from your history and statistics.",
+  "sessionDeleted": "Session deleted",
+  "deleteCourseTitle": "Delete Course",
+  "deleteCourseMessage": "Are you sure? All data for this course will be deleted.",
+  "leaveGroupTitle": "Leave Group?",
+  "leaveGroupMessage": "Are you sure you want to leave this group?",
+  "leave": "Leave",
+  "deleteGroupTitle": "Delete Group?",
+  "deleteGroupMessage": "This will permanently delete the group for all members.",
+  "manageGroup": "Manage Group",
+  "admin": "Admin",
+  "removeMember": "Remove member",
+  "makeAdmin": "Make admin",
+  "removeAdmin": "Remove admin",
+  "owner": "Owner",
+  "memberPromoted": "Member promoted to Admin",
+  "adminDemoted": "Admin demoted to Member",
+  "failedToPromote": "Failed to promote member",
+  "failedToDemote": "Failed to demote member",
+  "demoteTooltip": "Demote to member",
+  "makeAdminTooltip": "Make admin",
+  "cannotEnterFutureTime": "You cannot enter future time.",
+  "startTimeLaterThanEndTime": "Start time can’t be later than end time.",
+  "timeAddedToCourse": "Time added to {courseName}",
+  "@timeAddedToCourse": {
+    "placeholders": {
+      "courseName": { "type": "String" }
+    }
+  },
+  "currentDay": "current day",
+  "thisWeekShort": "this week",
+  "thisMonthShort": "this month",
+  "thisYearShort": "this year",
+  "overall": "overall",
+  "dayGoalLabel": "day goal",
+  "weekGoalLabel": "week goal",
+  "on": "on",
+  "off": "off",
+  "justSwipeIt": "Just swipe it",
+  "customPhotosUnavailable": "Custom photos are temporarily unavailable.",
+  "unableToPickImage": "Unable to pick that image.",
+  "couldNotSaveProfile": "Could not save profile. Please try again.",
+  "yourName": "Your Name",
+  "addPersonalGoal": "Add a personal goal",
+  "nameLabel": "Name",
+  "nameRequired": "Name is required",
+  "majorLabel": "Major",
+  "majorRequired": "Major is required",
+  "contactLabel": "How to contact you",
+  "contactHint": "Phone number or tg username idk",
+  "personalGoalLabel": "Personal goal",
+  "personalGoalHint": "Become better",
+  "chooseAvatar": "Choose an avatar",
+  "photoLibraryUnavailable": "Photo library unavailable",
+  "iconColor": "Icon color",
+  "saved": "Saved",
+  "done": "Done",
+  "stay": "Stay",
+  "resetAndLeave": "Reset & Leave",
+  "leavePomodoroTitle": "Leave Pomodoro?",
+  "leavePomodoroMessage": "A Pomodoro cycle is running. Reset it before leaving this tab?",
+  "timeFormatHint": "HH:MM:SS",
+  "addCourseFirst": "Add a course first",
+  "invalidTimeFormat": "Enter times as {format}",
+  "@invalidTimeFormat": {
+    "placeholders": {
+      "format": { "type": "String" }
+    }
+  },
+  "signIn": "Sign in",
+  "register": "Register",
+  "loginSubtitle": "We missed you pal",
+  "registerSubtitle": "<3",
+  "emailAddress": "Email address",
+  "password": "Password",
+  "displayName": "Display name",
+  "createAccount": "Create account",
+  "afterCreatingAccount": "After creating an account, you'll need to verify your email to start using the app.",
+  "verificationEmailSent": "Verification email sent!",
+  "signedInSuccessfully": "Signed in successfully",
+  "resendEmail": "Resend Email",
+  "enterEmail": "Please enter your email address.",
+  "invalidEmail": "Please enter a valid email address.",
+  "enterPassword": "Enter your password.",
+  "displayNameLength": "Display name must be at least 2 characters.",
+  "passwordLength": "Password must be at least 8 characters.",
+  "min8Chars": "Minimum 8 characters.",
+  "loadingProfile": "Loading your profile...",
+  "sessionNotes": "Session notes",
+  "sessionNotesHint": "Add notes for this session",
+  "sendNotes": "Send notes",
+  "updateNotes": "Update notes",
+  "notesSaved": "Notes saved",
+  "failedToPrepareData": "Failed to prepare offline data.",
+  "sessionFinished": "Session finished: {duration}",
+  "@sessionFinished": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "whatDidYouWorkOn": "What did you work on?",
+  "failedToSaveReflection": "Failed to save reflection: {error}",
+  "@failedToSaveReflection": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "skip": "Skip",
+  "streakDays": "{count, plural, one{{count} day streak} other{{count} days streak}}",
+  "noStreakYet": "No streak yet",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nudgeWaitMinutes": "Please wait {minutes} {minutes, plural, one{minute} other{minutes}} before nudging again.",
+  "@nudgeWaitMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "nudgeWaitSeconds": "Please wait {seconds} {seconds, plural, one{second} other{seconds}} before nudging again.",
+  "@nudgeWaitSeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "memberCannotReceiveNudges": "This member cannot receive nudges yet.",
+  "nudgeSent": "Nudge sent.",
+  "failedToSendNudge": "Failed to send nudge: {error}",
+  "@failedToSendNudge": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "cannotNudgeSelf": "You cannot nudge yourself.",
+  "userProhibitedNudge": "This user has disabled nudges.",
+  "leaderboardHintMessage": "• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him."
+}

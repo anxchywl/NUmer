@@ -1,0 +1,740 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
+
+import '../data/local/entities.dart';
+import '../data/local/local_database.dart';
+
+enum SyncStatus { offline, syncing, upToDate }
+
+class SyncService extends ChangeNotifier {
+  SyncService({
+    FirebaseFirestore? firestore,
+    Connectivity? connectivity,
+    LocalDatabase? database,
+    Duration periodicInterval = const Duration(seconds: 45),
+    Duration heartbeatInterval = const Duration(seconds: 60),
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _connectivity = connectivity ?? Connectivity(),
+        _db = database ?? LocalDatabase.instance,
+        _periodicInterval = periodicInterval,
+        _heartbeatInterval = heartbeatInterval;
+
+  final FirebaseFirestore _firestore;
+  final Connectivity _connectivity;
+  final LocalDatabase _db;
+  final Duration _periodicInterval;
+  final Duration _heartbeatInterval;
+
+  SyncStatus _status = SyncStatus.offline;
+  SyncStatus get status => _status;
+
+  String? _uid;
+  String? _deviceId;
+  bool _online = false;
+  bool _isRunning = false;
+  bool _isSyncing = false;
+
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+      _activeSessionSub;
+  Timer? _periodicTimer;
+  Timer? _heartbeatTimer;
+  Future<void> Function()? _onForcedLogout;
+  Future<void> Function()? onBeforeStop;
+  final List<Future<void> Function()> _afterPullListeners = [];
+
+  DateTime? lastPush;
+  DateTime? lastPull;
+  String? lastError;
+
+  static const _userStateKey = 'user';
+  static const _coursesStateKey = 'courses';
+  static const _sessionsStateKey = 'sessions';
+  static const _goalsStateKey = 'goals';
+
+  Future<void> start({
+    required String uid,
+    required String deviceId,
+    Future<void> Function()? onForcedLogout,
+    bool bootstrap = false,
+  }) async {
+    if (_isRunning && _uid == uid && _deviceId == deviceId) {
+      _onForcedLogout = onForcedLogout;
+      return;
+    }
+
+    await stop();
+
+    _uid = uid;
+    _deviceId = deviceId;
+    _onForcedLogout = onForcedLogout;
+
+    await _db.openForUser(uid);
+
+    _isRunning = true;
+
+    await _checkConnectivity();
+
+    _connectivitySub =
+        _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
+      _online = _computeOnlineStatus(results);
+      if (_online) {
+        unawaited(syncNow());
+      } else {
+        _setStatus(SyncStatus.offline);
+      }
+    });
+
+    _periodicTimer =
+        Timer.periodic(_periodicInterval, (_) => _online ? syncNow() : null);
+    _heartbeatTimer = Timer.periodic(
+        _heartbeatInterval, (_) => _online ? _sendHeartbeat() : null);
+
+    if (_online) {
+      await _claimSession();
+    }
+    _listenActiveSession();
+
+    if (_online) {
+      await syncNow(full: bootstrap);
+    } else {
+      _setStatus(SyncStatus.offline);
+    }
+  }
+
+  Future<void> stop() async {
+    if (onBeforeStop != null) {
+      await onBeforeStop!();
+    }
+    _status = SyncStatus.offline;
+    _isRunning = false;
+    _isSyncing = false;
+    await _connectivitySub?.cancel();
+    await _activeSessionSub?.cancel();
+    _connectivitySub = null;
+    _activeSessionSub = null;
+    _periodicTimer?.cancel();
+    _heartbeatTimer?.cancel();
+    _periodicTimer = null;
+    _heartbeatTimer = null;
+    _uid = null;
+    _deviceId = null;
+    lastPull = null;
+    lastPush = null;
+    lastError = null;
+    notifyListeners();
+  }
+
+  Future<void> syncNow({bool full = false}) async {
+    if (!_isRunning || _isSyncing || !_online || _uid == null) {
+      return;
+    }
+    _isSyncing = true;
+    _setStatus(SyncStatus.syncing);
+    lastError = null;
+    try {
+      await pushDirty();
+      await pullSince(full: full);
+      _setStatus(SyncStatus.upToDate);
+    } catch (err, stack) {
+      if (kDebugMode) {
+        
+        print('Sync failed: $err\n$stack');
+      }
+      lastError = err.toString();
+      _setStatus(SyncStatus.offline);
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  Future<void> pushDirty() async {
+    if (_uid == null) return;
+    const maxOperations = 450; 
+    final userDoc = _db.userDocOrNull;
+    if (userDoc != null && userDoc.dirty) {
+      await _pushUser(userDoc);
+    }
+
+    Future<void> pushChunk<T extends HiveObject>(
+      List<T> items,
+      Future<void> Function(
+        WriteBatch batch,
+        T item,
+      )
+          writer,
+    ) async {
+      if (items.isEmpty) return;
+      var offset = 0;
+      while (offset < items.length) {
+        final slice = items.sublist(
+          offset,
+          min(offset + maxOperations, items.length),
+        );
+        final batch = _firestore.batch();
+        for (final item in slice) {
+          await writer(batch, item);
+        }
+        await batch.commit();
+        offset += slice.length;
+      }
+    }
+
+    final dirtyCourses = _db.dirtyCourses();
+    await pushChunk<LocalCourse>(dirtyCourses, (batch, course) async {
+      final ref = _firestore
+          .collection('users')
+          .doc(_uid)
+          .collection('courses')
+          .doc(course.id);
+      if (course.deleted) {
+        batch.delete(ref);
+      } else {
+        batch.set(ref, _courseToRemote(course), SetOptions(merge: true));
+      }
+      course.dirty = false;
+      course.updatedAtMs = _now();
+    });
+
+    final dirtySessions = _db.dirtySessions();
+    await pushChunk<LocalSession>(dirtySessions, (batch, session) async {
+      final ref = _firestore
+          .collection('users')
+          .doc(_uid)
+          .collection('sessions')
+          .doc(session.id);
+      if (session.deleted) {
+        batch.delete(ref);
+      } else {
+        batch.set(ref, _sessionToRemote(session), SetOptions(merge: true));
+      }
+      session.dirty = false;
+      session.updatedAtMs = _now();
+    });
+
+    final dirtyGoals = _db.dirtyGoals();
+    await pushChunk<LocalGoal>(dirtyGoals, (batch, goal) async {
+      final ref = _firestore
+          .collection('users')
+          .doc(_uid)
+          .collection('goals')
+          .doc(goal.id);
+      if (goal.deleted) {
+        batch.delete(ref);
+      } else {
+        batch.set(ref, _goalToRemote(goal), SetOptions(merge: true));
+      }
+      goal.dirty = false;
+      goal.updatedAtMs = _now();
+    });
+
+    await Future.wait([
+      for (final c in dirtyCourses) c.save(),
+      for (final s in dirtySessions)
+        s.deleted ? s.delete() : s.save(),
+      for (final g in dirtyGoals) g.save(),
+      if (userDoc != null && userDoc.dirty == false) userDoc.save(),
+    ]);
+
+    final state = _db.syncStateForKey(_coursesStateKey);
+    state.lastPushMs = _now();
+    await _db.putSyncState(state);
+    lastPush = DateTime.now();
+  }
+
+  Future<void> pullSince({bool full = false}) async {
+    if (_uid == null) return;
+    await _pullUser(full: full);
+    await _pullCollection(
+      collection: 'courses',
+      stateKey: _coursesStateKey,
+      mapper: _applyRemoteCourse,
+      full: full,
+      limit: 250,
+    );
+    await _pullCollection(
+      collection: 'sessions',
+      stateKey: _sessionsStateKey,
+      mapper: _applyRemoteSession,
+      full: full,
+      limit: 200,
+    );
+    await _pullCollection(
+      collection: 'goals',
+      stateKey: _goalsStateKey,
+      mapper: _applyRemoteGoal,
+      full: full,
+      limit: 200,
+    );
+    lastPull = DateTime.now();
+    await _notifyAfterPullListeners();
+  }
+
+  
+  
+  
+
+  Future<void> _checkConnectivity() async {
+    final value = await _connectivity.checkConnectivity();
+    _online = _computeOnlineStatus(value);
+  }
+
+  void _setStatus(SyncStatus status) {
+    if (_status == status) return;
+    _status = status;
+    notifyListeners();
+  }
+
+  Future<void> _sendHeartbeat() async {
+    if (_uid == null || _deviceId == null) return;
+    final docRef = _firestore.collection('users').doc(_uid);
+    await docRef.set({
+      'activeSession': {
+        'deviceId': _deviceId,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> _claimSession() async {
+    if (_uid == null || _deviceId == null) return;
+    await _sendHeartbeat();
+  }
+
+  void _listenActiveSession() {
+    if (_uid == null || _deviceId == null) return;
+    _activeSessionSub = _firestore
+        .collection('users')
+        .doc(_uid)
+        .snapshots()
+        .listen((snapshot) async {
+      final data = snapshot.data();
+      if (data == null) return;
+      final active = data['activeSession'];
+      if (active is Map && active['deviceId'] is String) {
+        final currentDevice = active['deviceId'] as String;
+        if (currentDevice.isNotEmpty && currentDevice != _deviceId) {
+          if (_onForcedLogout != null) {
+            await _onForcedLogout!.call();
+          }
+        }
+      }
+    });
+  }
+
+  Future<void> _pushUser(LocalUserDoc doc) async {
+    if (_uid == null) return;
+    final ref = _firestore.collection('users').doc(_uid);
+    await ref.set(_userToRemote(doc), SetOptions(merge: true));
+    doc.dirty = false;
+    doc.updatedAtMs = _now();
+    await doc.save();
+    final state = _db.syncStateForKey(_userStateKey);
+    state.lastPushMs = doc.updatedAtMs;
+    await _db.putSyncState(state);
+  }
+
+  Future<void> _pullUser({bool full = false}) async {
+    if (_uid == null) return;
+    final ref = _firestore.collection('users').doc(_uid);
+    final snapshot = await ref.get(GetOptions(source: Source.server));
+    final data = snapshot.data();
+    if (data == null) return;
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    final local = _db.ensureUserDoc();
+    final state = _db.syncStateForKey(_userStateKey);
+    if (!full && updatedAt <= local.updatedAtMs && !local.dirty) {
+      state.lastPullMs = max(state.lastPullMs, updatedAt);
+      await _db.putSyncState(state);
+      return;
+    }
+    if (local.dirty && updatedAt <= local.updatedAtMs) {
+      
+      return;
+    }
+    if (local.dirty && updatedAt > local.updatedAtMs) {
+      await _db.logConflict(
+        collection: 'users',
+        entityId: local.id,
+        localUpdatedAtMs: local.updatedAtMs,
+        remoteUpdatedAtMs: updatedAt,
+        resolvedWithRemote: true,
+      );
+    }
+    final remoteAvatarIndex =
+        (data['avatarIndex'] as num?)?.toInt() ??
+            (data['profileAvatarIndex'] as num?)?.toInt();
+    final remoteAvatarBase64 = data['avatarImageBase64'] as String? ??
+        data['profileAvatarImageBase64'] as String?;
+    local
+      ..profileName = data['profileName'] as String?
+      ..profileGoal = data['profileGoal'] as String?
+      ..major = data['major'] as String?
+      ..profileContact = data['profileContact'] as String?
+      ..avatarIndex = remoteAvatarIndex
+      ..avatarImage = _decodeAvatar(remoteAvatarBase64)
+      ..themeMode = data['themeMode'] as String?
+      ..weekStart = (data['weekStart'] as String?) ?? local.weekStart
+      ..progressView = (data['progressView'] as String?) ?? local.progressView
+      ..homeSummaryRange =
+          (data['homeSummaryRange'] as String?) ?? local.homeSummaryRange
+      ..pendingCoursePrompt =
+          (data['pendingCoursePrompt'] as bool?) ?? local.pendingCoursePrompt
+      ..avatarColorValue = (data['avatarColorValue'] as num?)?.toInt() ?? (data['profileAvatarColorValue'] as num?)?.toInt()
+      ..profileComplete = (data['profileComplete'] as bool?) ?? local.profileComplete
+      ..dirty = false
+      ..updatedAtMs = updatedAt;
+    await local.save();
+    state.lastPullMs = max(state.lastPullMs, updatedAt);
+    await _db.putSyncState(state);
+  }
+
+  Future<void> _pullCollection({
+    required String collection,
+    required String stateKey,
+    required Future<void> Function(
+      QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+    )
+        mapper,
+    required bool full,
+    int limit = 200,
+  }) async {
+    if (_uid == null) return;
+    final state = _db.syncStateForKey(stateKey);
+    var cursor = full ? 0 : state.lastPullMs;
+
+    Query<Map<String, dynamic>> baseQuery = _firestore
+        .collection('users')
+        .doc(_uid)
+        .collection(collection);
+
+    if (cursor > 0) {
+      baseQuery = baseQuery.where(
+        'updatedAt',
+        isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(cursor),
+      );
+    }
+    baseQuery = baseQuery.orderBy('updatedAt');
+
+    Query<Map<String, dynamic>> pageQuery = baseQuery;
+    var maxSeen = cursor;
+
+    while (true) {
+      final snapshot = await pageQuery
+          .limit(limit)
+          .get(GetOptions(source: Source.server));
+      if (snapshot.docs.isEmpty) {
+        break;
+      }
+      for (final doc in snapshot.docs) {
+        await mapper(doc);
+        maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
+      }
+      if (snapshot.docs.length < limit) {
+        break;
+      }
+      final lastDoc = snapshot.docs.last;
+      pageQuery = baseQuery.startAfterDocument(lastDoc);
+    }
+
+    state.lastPullMs = max(state.lastPullMs, maxSeen);
+    await _db.putSyncState(state);
+  }
+
+  Future<void> _applyRemoteCourse(
+      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    final data = snapshot.data();
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    var course = _db.getCourseById(snapshot.id);
+    if (course == null) {
+      course = LocalCourse(
+        id: snapshot.id,
+        uid: _uid!,
+        name: data['name'] as String? ?? '',
+        day: data['day'] as String? ?? '',
+        start: data['start'] as String? ?? '',
+        end: data['end'] as String? ?? '',
+        colorValue: (data['colorValue'] as num?)?.toInt() ?? 0,
+        credits: (data['credits'] as num?)?.toDouble(),
+        expLevel: (data['expLevel'] as num?)?.toInt(),
+        goalHours: (data['goalHours'] as num?)?.toDouble(),
+        totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
+        pomodoroLongBreakMinutes:
+            (data['pomodoroLongBreakMinutes'] as num?)?.toInt(),
+        sortOrder: (data['sortOrder'] as num?)?.toInt(),
+        updatedAtMs: updatedAt,
+        dirty: false,
+        deleted: data['deleted'] == true,
+      );
+      await _db.putCourse(course);
+      return;
+    }
+
+    if (course.dirty && updatedAt <= course.updatedAtMs) {
+      return; 
+    }
+
+    if (course.dirty && updatedAt > course.updatedAtMs) {
+      await _db.logConflict(
+        collection: 'courses',
+        entityId: course.id,
+        localUpdatedAtMs: course.updatedAtMs,
+        remoteUpdatedAtMs: updatedAt,
+        resolvedWithRemote: true,
+      );
+    }
+
+    course
+      ..name = data['name'] as String? ?? course.name
+      ..day = data['day'] as String? ?? course.day
+      ..start = data['start'] as String? ?? course.start
+      ..end = data['end'] as String? ?? course.end
+      ..colorValue = (data['colorValue'] as num?)?.toInt() ?? course.colorValue
+      ..credits = (data['credits'] as num?)?.toDouble()
+      ..expLevel = (data['expLevel'] as num?)?.toInt()
+      ..goalHours = (data['goalHours'] as num?)?.toDouble()
+      ..sortOrder = (data['sortOrder'] as num?)?.toInt() ?? course.sortOrder
+      ..deleted = data['deleted'] == true
+      ..updatedAtMs = updatedAt
+      ..dirty = false;
+    await course.save();
+  }
+
+  Future<void> _applyRemoteSession(
+      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    final data = snapshot.data();
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    var session = _db.getSessionById(snapshot.id);
+    
+    
+    if (!snapshot.exists) {
+      if (session != null && !session.deleted) {
+        session.deleted = true;
+        session.dirty = false;
+        session.updatedAtMs = updatedAt;
+        await session.save();
+      }
+      return;
+    }
+
+    final startUtc = _timestampToMs(data['startUtc']);
+    final endUtc = _timestampToMs(data['endUtc']);
+    if (session == null) {
+      session = LocalSession(
+        id: snapshot.id,
+        uid: _uid!,
+        courseId: data['courseId'] as String? ?? '',
+        startUtcMs: startUtc,
+        endUtcMs: endUtc,
+        seconds: (data['seconds'] as num?)?.toInt() ?? 0,
+        kind: data['kind'] as String?,
+        notes: data['notes'] as String?,
+        createdAtMs: _timestampToMs(data['createdAt']),
+        updatedAtMs: updatedAt,
+        dirty: false,
+        deleted: false,
+      );
+      await _db.putSession(session);
+      return;
+    }
+
+    if (session.dirty && updatedAt <= session.updatedAtMs) {
+      return;
+    }
+
+    if (session.dirty && updatedAt > session.updatedAtMs) {
+      await _db.logConflict(
+        collection: 'sessions',
+        entityId: session.id,
+        localUpdatedAtMs: session.updatedAtMs,
+        remoteUpdatedAtMs: updatedAt,
+        resolvedWithRemote: true,
+      );
+    }
+
+    session
+      ..courseId = data['courseId'] as String? ?? session.courseId
+      ..startUtcMs = startUtc
+      ..endUtcMs = endUtc
+      ..seconds = (data['seconds'] as num?)?.toInt() ?? session.seconds
+      ..kind = data['kind'] as String?
+      ..notes = data['notes'] as String?
+      ..deleted = data['deleted'] == true
+      ..updatedAtMs = updatedAt
+      ..dirty = false;
+    await session.save();
+  }
+
+  Future<void> _applyRemoteGoal(
+      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    final data = snapshot.data();
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    var goal = _db.getGoalById(snapshot.id);
+    if (goal == null) {
+      goal = LocalGoal(
+        id: snapshot.id,
+        uid: _uid!,
+        hours: (data['hours'] as num?)?.toDouble(),
+        updatedAtMs: updatedAt,
+        dirty: false,
+        deleted: data['deleted'] == true,
+      );
+      await _db.putGoal(goal);
+    } else {
+      if (goal.dirty && updatedAt <= goal.updatedAtMs) {
+        return;
+      }
+      if (goal.dirty && updatedAt > goal.updatedAtMs) {
+        await _db.logConflict(
+          collection: 'goals',
+          entityId: goal.id,
+          localUpdatedAtMs: goal.updatedAtMs,
+          remoteUpdatedAtMs: updatedAt,
+          resolvedWithRemote: true,
+        );
+      }
+      goal
+        ..hours = (data['hours'] as num?)?.toDouble()
+        ..deleted = data['deleted'] == true
+        ..updatedAtMs = updatedAt
+        ..dirty = false;
+      await goal.save();
+    }
+
+    final course = _db.getCourseById(snapshot.id);
+    if (course != null) {
+      course.goalHours = goal.hours;
+      await course.save();
+    }
+  }
+
+  Map<String, dynamic> _userToRemote(LocalUserDoc doc) {
+    final avatarBase64 = (doc.avatarImage != null && doc.avatarImage!.isNotEmpty)
+        ? base64Encode(doc.avatarImage!)
+        : null;
+    final hasCustomAvatar = avatarBase64 != null;
+    final avatarIndex = hasCustomAvatar ? null : doc.avatarIndex;
+    return {
+      'uid': doc.uid,
+      'displayName': doc.profileName,
+      'profileName': doc.profileName,
+      'profileGoal': doc.profileGoal,
+      'major': doc.major,
+      'profileContact': doc.profileContact,
+      'avatarIndex': avatarIndex,
+      'profileAvatarIndex': avatarIndex,
+      'avatarImageBase64': hasCustomAvatar ? avatarBase64 : null,
+      'profileAvatarImageBase64': hasCustomAvatar ? avatarBase64 : null,
+      'themeMode': doc.themeMode,
+      'weekStart': doc.weekStart,
+      'progressView': doc.progressView,
+      'homeSummaryRange': doc.homeSummaryRange,
+      'pendingCoursePrompt': doc.pendingCoursePrompt,
+      'avatarColorValue': doc.avatarColorValue,
+      'profileAvatarColorValue': doc.avatarColorValue,
+      'profileComplete': doc.profileComplete,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> _courseToRemote(LocalCourse course) {
+    return {
+      'uid': course.uid,
+      'name': course.name,
+      'day': course.day,
+      'start': course.start,
+      'end': course.end,
+      'colorValue': course.colorValue,
+      'credits': course.credits,
+      'expLevel': course.expLevel,
+      'goalHours': course.goalHours,
+      'totalMinutes': course.totalMinutes,
+      'pomodoroLongBreakMinutes': course.pomodoroLongBreakMinutes,
+      'sortOrder': course.sortOrder,
+      'deleted': course.deleted,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> _sessionToRemote(LocalSession session) {
+    return {
+      'uid': session.uid,
+      'courseId': session.courseId,
+      'startUtc': Timestamp.fromMillisecondsSinceEpoch(session.startUtcMs),
+      'endUtc': Timestamp.fromMillisecondsSinceEpoch(session.endUtcMs),
+      'seconds': session.seconds,
+      'kind': session.kind,
+      'notes': session.notes,
+      'createdAt': Timestamp.fromMillisecondsSinceEpoch(session.createdAtMs),
+      'deleted': session.deleted,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic> _goalToRemote(LocalGoal goal) {
+    return {
+      'uid': goal.uid,
+      'hours': goal.hours,
+      'deleted': goal.deleted,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  int _timestampToMs(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate().toUtc().millisecondsSinceEpoch;
+    }
+    if (value is DateTime) {
+      return value.toUtc().millisecondsSinceEpoch;
+    }
+    if (value is int) {
+      return value;
+    }
+    return 0;
+  }
+
+  Uint8List? _decodeAvatar(String? base64Str) {
+    if (base64Str == null || base64Str.isEmpty) return null;
+    try {
+      return Uint8List.fromList(base64Decode(base64Str));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int _now() => DateTime.now().toUtc().millisecondsSinceEpoch;
+
+  bool _computeOnlineStatus(dynamic payload) {
+    if (payload is ConnectivityResult) {
+      return payload != ConnectivityResult.none;
+    }
+    if (payload is List<ConnectivityResult>) {
+      return payload.any((result) => result != ConnectivityResult.none);
+    }
+    return false;
+  }
+
+  void addAfterPullListener(Future<void> Function() listener) {
+    _afterPullListeners.add(listener);
+  }
+
+  void removeAfterPullListener(Future<void> Function() listener) {
+    _afterPullListeners.remove(listener);
+  }
+
+  Future<void> _notifyAfterPullListeners() async {
+    for (final listener in List<Future<void> Function()>.from(_afterPullListeners)) {
+      try {
+        await listener();
+      } catch (_) {
+        
+      }
+    }
+  }
+}

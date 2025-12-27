@@ -1,0 +1,608 @@
+{
+  "settingsTitle": "Есептік жазба және баптаулар",
+  "account": "Есептік жазба",
+  "profile": "Профиль",
+  "appearance": "Сыртқы түрі",
+  "system": "Жүйелік",
+  "light": "Ашық",
+  "dark": "Түн",
+  "language": "Тіл",
+  "english": "Ағылшын",
+  "russian": "Орыс",
+  "kazakh": "Қазақ",
+  "weekStartsOn": "Апта басталуы",
+  "displayTotalStudyTime": "Курс бойынша жалпы оқу уақытын көрсету",
+  "displayProgressBar": "Прогресс жолағын көрсету",
+  "quickNotes": "Жылдам жазбалар",
+  "wantToReceiveNudges": "Ньюдж ескертулерін алғыңыз келе ме?",
+  "yes": "Иә",
+  "no": "Жоқ",
+  "data": "Деректер",
+  "exportToCalendar": "Күнтізбеге экспорттау",
+  "exportToCalendarSubtitle": "Сеанстарыңызды күнтізбе оқиғалары ретінде сақтаңыз",
+  "allCourses": "Барлық курстар",
+  "courseFallback": "Курс",
+  "export": "Экспорттау",
+  "exporting": "Экспортталуда...",
+  "exportFailedMessage": "Экспорттау сәтсіз аяқталды: {error}",
+  "@exportFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fileSavedSuccessfully": "Файл сәтті сақталды",
+  "fileSavedAt": "Файл келесі жерде сақталды:",
+  "unknownPath": "Белгісіз жол",
+  "nextSteps": "Келесі қадамдар:",
+  "exportCalendarNextStepsBody": "• Осы файлды ашып, оны күнтізбе қолданбаңызға импорттаңыз,\n• НЕМЕСЕ күнтізбе қолданбасының баптауларын ашып, файлды қолмен импорттаңыз.",
+  "deleteAccount": "Есептік жазбаны жою",
+  "deleteAccountSubtitle": "Есептік жазбаны және барлық деректерді біржола жою",
+  "deleteAccountHoldConfirmDetail": "Түймені 5 секунд басып тұрсаңыз, есептік жазба мәңгіге жойылады",
+  "deletingAccount": "Есептік жазба жойылуда...",
+  "accountDeleted": "Есептік жазба жойылды",
+  "pleaseSignInToViewAccount": "Есептік жазбаңызды көру үшін кіріңіз.",
+  "signOut": "Шығу",
+  "syncNow": "Қазір синхрондау",
+  "home": "Басты бет",
+  "statistics": "Статистика",
+  "groups": "Топтар",
+
+  "addCourse": "Курсты қосу",
+  "addTime": "Уақыт қосу",
+  "courseName": "Курс атауы",
+  "courseNameHint": "",
+  "required": "Міндетті",
+  "color": "Түс",
+  "creditsOptional": "Кредиттер (міндетті емес)",
+  "creditsHint": "мысалы, 6 немесе 7",
+  "creditsHelper": "Өзіндік оқу мақсаттарын қосу үшін кредиттерді енгізіңіз",
+  "experienceLevel": "Тәжірибе деңгейі",
+  "save": "Сақтау",
+  "cancel": "Бас тарту",
+  "delete": "Жою",
+  "deleteCourseTitle": "Курсты жою",
+  "deleteCourseMessage": "Сенімдісіз бе? Бұл курстың барлық деректері жойылады.",
+  "timeSavedMessage": "\"{courseName}\" үшін уақыт сақталды",
+  "@timeSavedMessage": {
+    "placeholders": {
+      "courseName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "courseAnalysis": "Курс талдауы",
+  "noCoursesAvailable": "Курстар жоқ.",
+  "selectCourse": "Курсты таңдаңыз",
+  "timePeriod": "Уақыт кезеңі",
+  "oneMonth": "1 ай",
+  "threeMonths": "3 ай",
+  "sixMonths": "6 ай",
+  "generateInsight": "Инсайт алу",
+  "analyzing": "Талданып жатыр...",
+  "analysisPlaceholder": "Курс пен уақыт кезеңін таңдап, оқуңыз бойынша AI-талдау алыңыз.",
+  "dayStatsTipLine1": "• Күнтізбе оқу белсенділігін көрсетеді. Күн неғұрлым жасыл болса, соғұрлым көп оқыдыңыз.",
+  "dayStatsTipLine2": "• Сессия уақытын және жазбаларды Тарих бөлімінде өңдей аласыз.",
+  "dayStatsTipLine3": "• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.",
+  "overview": "Шолу",
+  "scrollUpHint": "Жоғары жылжыңыз",
+  "topTopics": "Үздік тақырыптар",
+  "insights": "Инсайттар",
+  "recommendations": "Ұсыныстар",
+
+  "syncOffline": "Офлайн",
+  "syncSyncing": "Синхрондалып жатыр…",
+  "syncUpToDate": "Жаңартылған",
+
+  "setGoals": "Мақсат қою",
+  "daily": "Күндік",
+  "weekly": "Апталық",
+
+  "studyTimer": "Оқу таймері",
+  "noCoursesYet": "Әлі курс жоқ. Басты беттен курс қосыңыз.",
+  "chooseACourse": "Курсты таңдаңыз",
+  "start": "Бастау",
+  "stop": "Тоқтату",
+  "reset": "Қалпына келтіру",
+  "ok": "ОК",
+  "timerStoppedAndSaved": "Таймер тоқтатылып, сақталды.",
+  "nothingToReset": "Қалпына келтіретін ештеңе жоқ.",
+  "anotherSessionRunning": "Басқа {sessionType} қазірдің өзінде жұмыс істеп тұр. Алдымен оны тоқтатыңыз.",
+  "@anotherSessionRunning": {
+    "placeholders": {
+      "sessionType": {
+        "type": "String"
+      }
+    }
+  },
+  "anotherSessionRunningOn": "Басқа {sessionType} \"{courseName}\" бойынша жұмыс істеп тұр. Алдымен оны тоқтатыңыз.",
+  "alreadyStudiedThisPeriod": "Сіз бұл уақыт аралығында бұрыннан оқығансыз.",
+  "anotherSessionRunningSilly": "Тағы бір {sessionType} қазір жұмыс істеп тұр, silly.",
+  "@anotherSessionRunningSilly": {
+    "placeholders": {
+      "sessionType": { "type": "String" }
+    }
+  },
+  "friendJoinPrompt": "Досыңыз іздеу жолағына тобыңыздың атын теру арқылы қосыла алады.",
+  "@anotherSessionRunningOn": {
+    "placeholders": {
+      "sessionType": {
+        "type": "String"
+      },
+      "courseName": {
+        "type": "String"
+      }
+    }
+  },
+  "goalsUpdated": "Мақсаттар жаңартылды",
+  "enterTimeFirst": "Алдымен уақытты енгізіңіз",
+  "nothingToSave": "Сақтайтын ештеңе жоқ",
+  "maxTimeCapped": "Максимум 3:00:00 — шектелген",
+  "studiedLabel": "Оқылды",
+
+  "studiedToday": "Бүгін оқылды",
+  "studiedThisWeek": "Осы аптада оқылды",
+  "studiedThisMonth": "Осы айда оқылды",
+  "studiedThisYear": "Осы жылы оқылды",
+  "studiedOverall": "Жалпы оқылды",
+
+  "timer": "таймер",
+  "stopwatch": "секундомер",
+  "pomodoro": "помодоро",
+  "session": "сеанс",
+
+  "editCourse": "Курсты өңдеу",
+  "courseName": "Курс атауы",
+  "today": "Бүгін",
+  "edit": "Өңдеу",
+  "timerTab": "Таймер",
+  "stopwatchTab": "Секундомер",
+  "pomodoroTab": "Помодоро",
+  "typeTimeToStudy": "Оқу үшін қажет уақытты осында енгізіңіз",
+  "maxTime": "Макс: 3:00:00",
+  "elapsed": "өткен",
+  "completedPomodoros": "Аяқталған помодоро: {completed} / 4",
+  "@completedPomodoros": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "longBreakLength": "Ұзын үзіліс ұзақтығы ({minutes} мин)",
+  "@longBreakLength": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "work": "Жұмыс",
+  "shortBreak": "Қысқа үзіліс",
+  "longBreak": "Ұзын үзіліс",
+  "paused": "кідіртілді",
+  "resume": "Жалғастыру",
+  "pause": "Кідірту",
+  "skipBreak": "Үзілісті өткізіп жіберу",
+  "pomodoroExitWarning": "Помодоро сеансы жүріп жатыр. Шығасыз ба?",
+  "exitAnyway": "Қалай болғанда да шығу",
+
+  "expLevel1": "Мүлде бастаушы",
+  "expLevel2": "Негіздерін білемін",
+  "expLevel3": "Пәнді сенімді білемін",
+  "expLevel4": "Жоғары деңгейдегі білім",
+  "expLevel5": "Кең тәжірибе",
+  "expLevelDefault": "Сенімді",
+
+  "statistics": "Статистика",
+  "dayStatistics": "Күндік статистика",
+  "periodStatistics": "Кезең статистикасы",
+  "tip": "Кеңес",
+  "chartTip": "• Графикте саусағыңызды ұстап тұрып, күндер немесе айлар арасында ауысу үшін солға немесе оңға сырғытыңыз.",
+  "courseStatistics": "Курс статистикасы",
+  
+  "previousDay": "Алдыңғы күн",
+  "nextDay": "Келесі күн",
+  "history": "Тарих",
+  "week": "Апта",
+  "month": "Ай",
+  "year": "Жыл",
+  "previousWeek": "алдыңғы апта",
+  "previousMonth": "алдыңғы ай",
+  "previousYear": "алдыңғы жыл",
+  "nextWeek": "келесі апта",
+  "nextMonth": "келесі ай",
+  "nextYear": "келесі жыл",
+  "noData": "Дерек жоқ",
+  "hours": "Сағат",
+  "minutes": "Минут",
+  "totalThisPeriod": "Осы {period} ішінде барлығы",
+  "@totalThisPeriod": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "avgPerDay": "Күніне орташа",
+  "mostStudied": "Ең көп",
+  "leastStudied": "Ең аз",
+
+  "adjustWeeklyGoal": "Апталық мақсатты түзету",
+  "targetPerWeek": "Апталық мақсат",
+  "targetPerDay": "Күндік мақсат",
+  "semester": "Семестр (~{weeks} апта)",
+  "@semester": {
+    "placeholders": {
+      "weeks": {
+        "type": "int"
+      }
+    }
+  },
+  "hPerWeek": "{hours} сағ/апта",
+  "@hPerWeek": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+
+  "groups": "Топтар",
+  "createGroup": "Топ құру",
+  "joinGroup": "Топқа қосылу",
+  "groupName": "Топ атауы",
+  "description": "Сипаттама",
+  "privacy": "Құпиялылық",
+  "public": "Ашық",
+  "private": "Жабық",
+  "accessCode": "Қолжеткізу коды",
+  "members": "Қатысушылар",
+  "leaveGroup": "Топтан шығу",
+  "deleteGroup": "Топты жою",
+  "groupSettings": "Топ баптаулары",
+  "noGroupsYet": "Сіз әлі бірде-бір топқа кірмедіңіз",
+  "createOrJoinPrompt": "Жаңа топ құрыңыз немесе бар топқа қосылып, басқалармен бірлесе жұмыс істеңіз",
+  "signInPrompt": "Топтарды көру үшін кіріңіз.",
+  "errorLoadingMemberships": "Мүшелік жүктелмеді: {error}",
+  "@errorLoadingMemberships": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "findPublicGroupHint": "Топты табу...",
+  "searchResults": "Іздеу нәтижелері",
+  "errorLoadingGroups": "Топтарды жүктеу қатесі: {error}",
+  "@errorLoadingGroups": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "joinedSuccessfully": "Топқа сәтті қосылдыңыз",
+  "joinedPrivateSuccessfully": "Жабық топқа сәтті қосылдыңыз",
+  "joinGroupDialogTitle": "{groupName} тобына қосылу",
+  "@joinGroupDialogTitle": {
+    "placeholders": {
+      "groupName": { "type": "String" }
+    }
+  },
+  "joinGroupDialogMessage": "Осы жабық топқа кіру үшін қосылу кодын енгізіңіз.",
+  "joinCodeHint": "мысалы, ABC123",
+  "publicGroups": "Ашық топтар",
+  "joinError": "Топқа қосылу мүмкін болмады: {error}",
+  "@joinError": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "noDescription": "Сипаттама жоқ.",
+  "membersCount": "{count} қатысушы",
+  "@membersCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "yourGroup": "Сіздің тобыңыз",
+  "findStudyGroup": "Оқу тобыңызды табыңыз",
+  "joinCommunityPrompt": "Қауымдастыққа қосылып, прогресті бақылап, көшбасшылар тақтасында жарысып, мотивацияны бірге сақтаңыз.",
+  "administrator": "Админ",
+  "memberLabel": "Қатысушы",
+  "unableToLoadGroup": "Топ деректерін жүктеу мүмкін болмады",
+  "checkConnection": "Интернет байланысын тексеріңіз",
+  "retry": "Қайталау",
+  "groupNotFound": "Топ табылмады немесе жойылды.",
+  "signInToManage": "Бұл топты басқару үшін жүйеге кіру керек.",
+  "noLongerMember": "Сіз бұл топтың мүшесі емессіз.",
+  "groupNameHint": "Топқа атау енгізіңіз",
+  "visibility": "Көрінуі",
+  "descriptionHint": "Тобыңызды бірнеше сөзбен сипаттаңыз",
+  "codeRequired": "Код міндетті",
+  "codeJoinPrompt": "Бұл код жаңа мүшелердің қосылуы үшін қажет.",
+  "onlyAdminVisibility": "Тек әкімшілер параметрлерін өзгерте алады.",
+  "saving": "Сақталуда...",
+  "saveChanges": "Өзгерістерді сақтау",
+  "membersTitle": "Қатысушылар",
+  "unableToLoadMembers": "Қатысушылар тізімін жүктеу мүмкін болмады",
+  "checkConnectionTryAgain": "Байланысты тексеріп, қайта көріңіз",
+  "noMembersYetLabel": "Әлі қатысушы жоқ.",
+  "youAdmin": "Сіз (Админ)",
+  "youMember": "Сіз",
+  "youOwner": "Сіз (Иесі)",
+  "removeMemberTitle": "Қатысушыны жою керек пе?",
+  "removeMemberMessage": "Осы қатысушыны топтан жою керек пе? Ол бірден қолжетімділіктен айырылады.",
+  "memberRemoved": "Қатысушы жойылды",
+  "groupUpdated": "Топ жаңартылды",
+  "failedToUpdateGroup": "Топты жаңарту мүмкін болмады: {error}",
+  "@failedToUpdateGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToDeleteGroup": "Топты жою мүмкін болмады: {error}",
+  "@failedToDeleteGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToLeaveGroup": "Топтан шығу мүмкін болмады: {error}",
+  "@failedToLeaveGroup": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "failedToRemoveMember": "Қатысушыны жою мүмкін болмады: {error}",
+  "@failedToRemoveMember": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "groupCodeLabel": "Топ коды",
+  "dailyGoal": "Күндік",
+  "weeklyGoal": "Апталық",
+  "hUnit": "сағ",
+  "mUnit": "мин",
+  "sUnit": "с",
+  "errorLoadingLeaderboard": "Көшбасшылар тақтасын жүктеу қатесі: {error}",
+  "@errorLoadingLeaderboard": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "noDataAvailable": "Бұл кезеңге дерек жоқ",
+  "groupLeaderboard": "Көшбасшылар тақтасы",
+  "rankLabel": "#{rank}",
+  "@rankLabel": {
+    "placeholders": {
+      "rank": { "type": "int" }
+    }
+  },
+  "failedToLoadUserData": "Пайдаланушы деректерін жүктеу қатесі: {error}",
+  "@failedToLoadUserData": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+
+  "sun": "Жс",
+  "mon": "Дс",
+  "tue": "Сс",
+  "wed": "Ср",
+  "thu": "Бс",
+  "fri": "Жм",
+  "sat": "Сн",
+  "sunday": "Жексенбі",
+  "monday": "Дүйсенбі",
+  "tuesday": "Сейсенбі",
+  "wednesday": "Сәрсенбі",
+  "thursday": "Бейсенбі",
+  "friday": "Жұма",
+  "saturday": "Сенбі",
+
+  "january": "Қаңтар",
+  "february": "Ақпан",
+  "march": "Наурыз",
+  "april": "Сәуір",
+  "may": "Мамыр",
+  "june": "Маусым",
+  "july": "Шілде",
+  "august": "Тамыз",
+  "september": "Қыркүйек",
+  "october": "Қазан",
+  "november": "Қараша",
+  "december": "Желтоқсан",
+
+  "total": "Барлығы",
+
+  "groupSummary": "Топ қорытындысы",
+  "average": "Орташа",
+  "leader": "Көшбасшы",
+  "lowest": "Ең төмен",
+  "vsAverage": "орташамен салыстырғанда",
+  "studyTimeComparison": "Оқу уақытының салыстыруы",
+  "performanceVsGroup": "Топқа қатысты көрсеткіш",
+  "ofAverage": "орташаның",
+  "studyTimeByDay": "Күндер бойынша оқу уақыты",
+  "bestDay": "Ең жақсы күн",
+  "avgDay": "Күніне орташа",
+  "member": "Қатысушы",
+  "todayDataTable": "Бүгін",
+  "monthDataTable": "Ай",
+  "overThisWeek": "осы аптада",
+  "overThisMonth": "осы айда",
+  "overThisYear": "осы жылы",
+  "hour": "сағат",
+  "hours_plural": "сағат",
+  "minute": "минут",
+  "minutes_plural": "минут",
+  "second": "секунд",
+  "seconds_plural": "секунд",
+
+  "jan": "Қаң",
+  "feb": "Ақп",
+  "mar": "Нау",
+  "apr": "Сәу",
+  "mayShort": "Мам",
+  "jun": "Мау",
+  "jul": "Шіл",
+  "aug": "Там",
+  "sep": "Қыр",
+  "oct": "Қаз",
+  "nov": "Қар",
+  "dec": "Жел",
+
+  "viaTimer": "Таймер арқылы",
+  "viaStopwatch": "Секундомер арқылы",
+  "viaPomodoro": "Помодоро арқылы",
+  "startTime": "Бастау",
+  "endTime": "Аяқтау",
+  "duration": "Ұзақтығы",
+  "reflection": "Ескертпе",
+
+  "overThis": "осы",
+  "credits": "Кредит",
+  "credits_plural": "Кредиттер",
+  "save": "Сақтау",
+  "deleteSession": "Сеансты жою керек пе?",
+  "deleteSessionMessage": "Бұл сеансты тарих пен статистикадан алып тастайды.",
+  "sessionDeleted": "Сеанс жойылды",
+  "deleteCourseTitle": "Курсты жою",
+  "deleteCourseMessage": "Сенімдісіз бе? Бұл курстың барлық деректері жойылады.",
+  "leaveGroupTitle": "Топтан шығасыз ба?",
+  "leaveGroupMessage": "Бұл топтан шығуды қалайсыз ба?",
+  "leave": "Шығу",
+  "deleteGroupTitle": "Топты жою керек пе?",
+  "deleteGroupMessage": "Бұл топты барлық мүшелер үшін біржола жояды.",
+  "manageGroup": "Топты басқару",
+  "admin": "Админ",
+  "removeMember": "Қатысушыны жою",
+  "makeAdmin": "Әкімші ету",
+  "removeAdmin": "Әкімшіден алу",
+  "owner": "Иесі",
+  "memberPromoted": "Қатысушы әкімші болып тағайындалды",
+  "adminDemoted": "Әкімші қатысушы деңгейіне түсірілді",
+  "failedToPromote": "Әкімші етіп тағайындау мүмкін болмады",
+  "failedToDemote": "Әкімші деңгейін түсіру мүмкін болмады",
+  "demoteTooltip": "Қатысушы деңгейіне түсіру",
+  "makeAdminTooltip": "Әкімші ету",
+  "cannotEnterFutureTime": "Болашақ уақытты енгізе алмайсыз.",
+  "startTimeLaterThanEndTime": "Басталу уақыты аяқталу уақытынан кеш болмауы керек.",
+  "timeAddedToCourse": "Уақыт {courseName} курсына қосылды",
+  "@timeAddedToCourse": {
+    "placeholders": {
+      "courseName": { "type": "String" }
+    }
+  },
+  "currentDay": "ағымдағы күн",
+  "thisWeekShort": "осы апта",
+  "thisMonthShort": "осы ай",
+  "thisYearShort": "осы жыл",
+  "overall": "жалпы",
+  "dayGoalLabel": "күндік мақсат",
+  "weekGoalLabel": "апталық мақсат",
+  "on": "қосулы",
+  "off": "сөндірулі",
+  "justSwipeIt": "Жай ғана сырғытыңыз",
+  "customPhotosUnavailable": "Пайдаланушы фотолары уақытша қолжетімсіз.",
+  "unableToPickImage": "Сол суретті таңдау мүмкін болмады.",
+  "couldNotSaveProfile": "Профильді сақтау мүмкін болмады. Қайталап көріңіз.",
+  "yourName": "Атыңыз",
+  "addPersonalGoal": "Жеке мақсат қосу",
+  "nameLabel": "Аты",
+  "nameRequired": "Аты міндетті",
+  "majorLabel": "Мамандығы",
+  "majorRequired": "Мамандық міндетті",
+  "contactLabel": "Қалай байланысуға болады",
+  "contactHint": "мысалы, телефон не tg никі",
+  "personalGoalLabel": "Жеке мақсат",
+  "personalGoalHint": "мысалы, Жақсырақ болу",
+  "chooseAvatar": "Аватарды таңдаңыз",
+  "photoLibraryUnavailable": "Фотокітапхана қолжетімсіз",
+  "iconColor": "Белгіше түсі",
+  "saved": "Сақталды",
+  "done": "Дайын",
+  "stay": "Қалу",
+  "resetAndLeave": "Қалпына келтіру және шығу",
+  "leavePomodoroTitle": "Помодородан шығу керек пе?",
+  "leavePomodoroMessage": "Помодоро циклі жүріп жатыр. Осы қойындыдан шығар алдында оны қалпына келтіресіз бе?",
+  "timeFormatHint": "HH:MM:SS",
+  "addCourseFirst": "Алдымен курс қосыңыз",
+  "invalidTimeFormat": "Уақытты {format} түрінде енгізіңіз",
+  "@invalidTimeFormat": {
+    "placeholders": {
+      "format": { "type": "String" }
+    }
+  },
+  "signIn": "Кіру",
+  "register": "Тіркелу",
+  "loginSubtitle": "Сізді сағындық",
+  "registerSubtitle": "<3",
+  "emailAddress": "Эл. пошта",
+  "password": "Құпиясөз",
+  "displayName": "Көрсетілетін ат",
+  "createAccount": "Есептік жазба жасау",
+  "afterCreatingAccount": "Есептік жазба жасағаннан кейін қолданбаны пайдалану үшін эл. поштаны растау қажет болады.",
+  "verificationEmailSent": "Растау хаты жіберілді!",
+  "signedInSuccessfully": "Сәтті кірдіңіз",
+  "resendEmail": "Қайта жіберу",
+  "enterEmail": "Эл. поштаңызды енгізіңіз.",
+  "invalidEmail": "Дұрыс эл. пошта мекенжайын енгізіңіз.",
+  "enterPassword": "Құпиясөзді енгізіңіз.",
+  "displayNameLength": "Көрсетілетін ат кемінде 2 таңба болуы керек.",
+  "passwordLength": "Құпиясөз кемінде 8 таңба болуы керек.",
+  "min8Chars": "Кемінде 8 таңба.",
+  "loadingProfile": "Профиль жүктелуде...",
+  "sessionNotes": "Сессия жазбалары",
+  "sessionNotesHint": "Осы сессияға жазба қосыңыз",
+  "sendNotes": "Жазбаларды жіберу",
+  "updateNotes": "Жазбаларды жаңарту",
+  "notesSaved": "Жазбалар сақталды",
+  "failedToPrepareData": "Деректерді дайындау мүмкін болмады.",
+  "sessionFinished": "Сабақ аяқталды: {duration}",
+  "@sessionFinished": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "whatDidYouWorkOn": "Сіз немен айналыстыңыз?",
+  "failedToSaveReflection": "Жазбаны сақтау мүмкін болмады: {error}",
+  "@failedToSaveReflection": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "skip": "Өткізіп жіберу",
+  "streakDays": "{count} күндік серия",
+  "noStreakYet": "Серия жоқ",
+  "@streakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nudgeWaitMinutes": "Қайта түртпес бұрын {minutes} минут күте тұрыңыз.",
+  "@nudgeWaitMinutes": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "nudgeWaitSeconds": "Қайта түртпес бұрын {seconds} секунд күте тұрыңыз.",
+  "@nudgeWaitSeconds": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+  "memberCannotReceiveNudges": "Бұл мүше әлі түртпелерді ала алмайды.",
+  "nudgeSent": "Түртпе жіберілді.",
+  "failedToSendNudge": "Түртпе жіберу сәтсіз аяқталды: {error}",
+  "@failedToSendNudge": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "cannotNudgeSelf": "Өзіңізді түртпелей алмайсыз.",
+  "userProhibitedNudge": "Бұл пайдаланушы түртпелерді өшіріп тастаған.",
+  "leaderboardHintMessage": "• Оқу уақытын көру үшін көшбасшылар тақтасындағы кез келген пайдаланушыны басуға болады.\n• Мүшені түрту үшін оның аватарының жанындағы қол белгішесін басыңыз."
+}

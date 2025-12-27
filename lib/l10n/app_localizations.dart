@@ -1,0 +1,2579 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_kk.dart';
+import 'app_localizations_ru.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('kk'),
+    Locale('ru')
+  ];
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Account & Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @appearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get appearance;
+
+  /// No description provided for @system.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get system;
+
+  /// No description provided for @light.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get light;
+
+  /// No description provided for @dark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get dark;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @russian.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get russian;
+
+  /// No description provided for @kazakh.
+  ///
+  /// In en, this message translates to:
+  /// **'Kazakh'**
+  String get kazakh;
+
+  /// No description provided for @weekStartsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Week starts on'**
+  String get weekStartsOn;
+
+  /// No description provided for @displayTotalStudyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Display total study time per course over'**
+  String get displayTotalStudyTime;
+
+  /// No description provided for @displayProgressBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Display progress bar of'**
+  String get displayProgressBar;
+
+  /// No description provided for @quickNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick notes'**
+  String get quickNotes;
+
+  /// No description provided for @wantToReceiveNudges.
+  ///
+  /// In en, this message translates to:
+  /// **'Want to receive nudges?'**
+  String get wantToReceiveNudges;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// No description provided for @data.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get data;
+
+  /// No description provided for @exportToCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to calendar'**
+  String get exportToCalendar;
+
+  /// No description provided for @exportToCalendarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your sessions as calendar events'**
+  String get exportToCalendarSubtitle;
+
+  /// No description provided for @allCourses.
+  ///
+  /// In en, this message translates to:
+  /// **'All courses'**
+  String get allCourses;
+
+  /// No description provided for @courseFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Course'**
+  String get courseFallback;
+
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
+  /// No description provided for @exporting.
+  ///
+  /// In en, this message translates to:
+  /// **'Exporting...'**
+  String get exporting;
+
+  /// No description provided for @exportFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String exportFailedMessage(String error);
+
+  /// No description provided for @fileSavedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'File saved successfully'**
+  String get fileSavedSuccessfully;
+
+  /// No description provided for @fileSavedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'The file is saved at:'**
+  String get fileSavedAt;
+
+  /// No description provided for @unknownPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown path'**
+  String get unknownPath;
+
+  /// No description provided for @nextSteps.
+  ///
+  /// In en, this message translates to:
+  /// **'Next steps:'**
+  String get nextSteps;
+
+  /// No description provided for @exportCalendarNextStepsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'• Open this file and import it into your calendar app,\n• OR open your calendar app settings and import the file manually.'**
+  String get exportCalendarNextStepsBody;
+
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your account and all data'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountHoldConfirmDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'After holding the button for 5 seconds the account will be deleted forever'**
+  String get deleteAccountHoldConfirmDetail;
+
+  /// No description provided for @deletingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting account...'**
+  String get deletingAccount;
+
+  /// No description provided for @accountDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted'**
+  String get accountDeleted;
+
+  /// No description provided for @pleaseSignInToViewAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to view your account.'**
+  String get pleaseSignInToViewAccount;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// No description provided for @syncNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get syncNow;
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @statistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Statistics'**
+  String get statistics;
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @addCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Course'**
+  String get addCourse;
+
+  /// No description provided for @addTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Time'**
+  String get addTime;
+
+  /// No description provided for @courseName.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Name'**
+  String get courseName;
+
+  /// No description provided for @courseNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get courseNameHint;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @color.
+  ///
+  /// In en, this message translates to:
+  /// **'Color'**
+  String get color;
+
+  /// No description provided for @creditsOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits (optional)'**
+  String get creditsOptional;
+
+  /// No description provided for @creditsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'6 or 7 for example'**
+  String get creditsHint;
+
+  /// No description provided for @creditsHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Add credits to enable self-study goals'**
+  String get creditsHelper;
+
+  /// No description provided for @experienceLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience level'**
+  String get experienceLevel;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteCourseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Course'**
+  String get deleteCourseTitle;
+
+  /// No description provided for @deleteCourseMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure? All data for this course will be deleted.'**
+  String get deleteCourseMessage;
+
+  /// No description provided for @timeSavedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Time for \"{courseName}\" saved'**
+  String timeSavedMessage(String courseName);
+
+  /// No description provided for @courseAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Analysis'**
+  String get courseAnalysis;
+
+  /// No description provided for @noCoursesAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No courses available.'**
+  String get noCoursesAvailable;
+
+  /// No description provided for @selectCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Course'**
+  String get selectCourse;
+
+  /// No description provided for @timePeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Period'**
+  String get timePeriod;
+
+  /// No description provided for @oneMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'1 Month'**
+  String get oneMonth;
+
+  /// No description provided for @threeMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'3 Months'**
+  String get threeMonths;
+
+  /// No description provided for @sixMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'6 Months'**
+  String get sixMonths;
+
+  /// No description provided for @generateInsight.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Insight'**
+  String get generateInsight;
+
+  /// No description provided for @analyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing...'**
+  String get analyzing;
+
+  /// No description provided for @analysisPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a course and time period, then get AI-powered feedback of your studies.'**
+  String get analysisPlaceholder;
+
+  /// No description provided for @dayStatsTipLine1.
+  ///
+  /// In en, this message translates to:
+  /// **'• The calendar highlights your study activity. The greener the day, the more you studied.'**
+  String get dayStatsTipLine1;
+
+  /// No description provided for @dayStatsTipLine2.
+  ///
+  /// In en, this message translates to:
+  /// **'• You can edit session time and notes in the History screen.'**
+  String get dayStatsTipLine2;
+
+  /// No description provided for @dayStatsTipLine3.
+  ///
+  /// In en, this message translates to:
+  /// **'• You can tap on any course, and the history screen will show only the sessions for that course.'**
+  String get dayStatsTipLine3;
+
+  /// No description provided for @overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get overview;
+
+  /// No description provided for @scrollUpHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll up'**
+  String get scrollUpHint;
+
+  /// No description provided for @topTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Top Topics'**
+  String get topTopics;
+
+  /// No description provided for @insights.
+  ///
+  /// In en, this message translates to:
+  /// **'Insights'**
+  String get insights;
+
+  /// No description provided for @recommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendations'**
+  String get recommendations;
+
+  /// No description provided for @syncOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncOffline;
+
+  /// No description provided for @syncSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing…'**
+  String get syncSyncing;
+
+  /// No description provided for @syncUpToDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to date'**
+  String get syncUpToDate;
+
+  /// No description provided for @setGoals.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Goals'**
+  String get setGoals;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @studyTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Timer'**
+  String get studyTimer;
+
+  /// No description provided for @noCoursesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No courses yet. Add a course from Home.'**
+  String get noCoursesYet;
+
+  /// No description provided for @chooseACourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a course'**
+  String get chooseACourse;
+
+  /// No description provided for @start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get start;
+
+  /// No description provided for @stop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get stop;
+
+  /// No description provided for @reset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get reset;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @timerStoppedAndSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer stopped and saved.'**
+  String get timerStoppedAndSaved;
+
+  /// No description provided for @nothingToReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to reset.'**
+  String get nothingToReset;
+
+  /// No description provided for @anotherSessionRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Another {sessionType} is already running.'**
+  String anotherSessionRunning(String sessionType);
+
+  /// No description provided for @anotherSessionRunningOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Another {sessionType} is already running on \"{courseName}\".'**
+  String anotherSessionRunningOn(String sessionType, String courseName);
+
+  /// No description provided for @anotherSessionRunningSilly.
+  ///
+  /// In en, this message translates to:
+  /// **'Another {sessionType} is already running, silly.'**
+  String anotherSessionRunningSilly(String sessionType);
+
+  /// No description provided for @alreadyStudiedThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'You already studied during this time period.'**
+  String get alreadyStudiedThisPeriod;
+
+  /// No description provided for @friendJoinPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Your friend can join by typing your group’s name into the search bar.'**
+  String get friendJoinPrompt;
+
+  /// No description provided for @enterTimeFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter time first'**
+  String get enterTimeFirst;
+
+  /// No description provided for @nothingToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to save'**
+  String get nothingToSave;
+
+  /// No description provided for @maxTimeCapped.
+  ///
+  /// In en, this message translates to:
+  /// **'Max is 3:00:00 — capped'**
+  String get maxTimeCapped;
+
+  /// No description provided for @studiedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied'**
+  String get studiedLabel;
+
+  /// No description provided for @goalsUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Goals updated'**
+  String get goalsUpdated;
+
+  /// No description provided for @studiedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied today'**
+  String get studiedToday;
+
+  /// No description provided for @studiedThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied this week'**
+  String get studiedThisWeek;
+
+  /// No description provided for @studiedThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied this month'**
+  String get studiedThisMonth;
+
+  /// No description provided for @studiedThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied this year'**
+  String get studiedThisYear;
+
+  /// No description provided for @studiedOverall.
+  ///
+  /// In en, this message translates to:
+  /// **'Studied overall'**
+  String get studiedOverall;
+
+  /// No description provided for @timer.
+  ///
+  /// In en, this message translates to:
+  /// **'timer'**
+  String get timer;
+
+  /// No description provided for @stopwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'stopwatch'**
+  String get stopwatch;
+
+  /// No description provided for @pomodoro.
+  ///
+  /// In en, this message translates to:
+  /// **'pomodoro'**
+  String get pomodoro;
+
+  /// No description provided for @session.
+  ///
+  /// In en, this message translates to:
+  /// **'session'**
+  String get session;
+
+  /// No description provided for @editCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Course'**
+  String get editCourse;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @timerTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Timer'**
+  String get timerTab;
+
+  /// No description provided for @stopwatchTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopwatch'**
+  String get stopwatchTab;
+
+  /// No description provided for @pomodoroTab.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro'**
+  String get pomodoroTab;
+
+  /// No description provided for @typeTimeToStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Here type the time you need to study for'**
+  String get typeTimeToStudy;
+
+  /// No description provided for @maxTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Max: 3:00:00'**
+  String get maxTime;
+
+  /// No description provided for @elapsed.
+  ///
+  /// In en, this message translates to:
+  /// **'elapsed'**
+  String get elapsed;
+
+  /// No description provided for @completedPomodoros.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed pomodoros: {completed} / 4'**
+  String completedPomodoros(int completed);
+
+  /// No description provided for @longBreakLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Long break length ({minutes} min)'**
+  String longBreakLength(int minutes);
+
+  /// No description provided for @work.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get work;
+
+  /// No description provided for @shortBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Short break'**
+  String get shortBreak;
+
+  /// No description provided for @longBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Long break'**
+  String get longBreak;
+
+  /// No description provided for @paused.
+  ///
+  /// In en, this message translates to:
+  /// **'paused'**
+  String get paused;
+
+  /// No description provided for @resume.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resume;
+
+  /// No description provided for @pause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pause;
+
+  /// No description provided for @skipBreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip break'**
+  String get skipBreak;
+
+  /// No description provided for @pomodoroExitWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'A pomodoro session is running. Exit anyway?'**
+  String get pomodoroExitWarning;
+
+  /// No description provided for @exitAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit anyway'**
+  String get exitAnyway;
+
+  /// No description provided for @expLevel1.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete noob'**
+  String get expLevel1;
+
+  /// No description provided for @expLevel2.
+  ///
+  /// In en, this message translates to:
+  /// **'Know some basics'**
+  String get expLevel2;
+
+  /// No description provided for @expLevel3.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable with the subject'**
+  String get expLevel3;
+
+  /// No description provided for @expLevel4.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced level of knowledge'**
+  String get expLevel4;
+
+  /// No description provided for @expLevel5.
+  ///
+  /// In en, this message translates to:
+  /// **'Broad experience'**
+  String get expLevel5;
+
+  /// No description provided for @expLevelDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Comfortable'**
+  String get expLevelDefault;
+
+  /// No description provided for @dayStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Statistics'**
+  String get dayStatistics;
+
+  /// No description provided for @periodStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Period Statistics'**
+  String get periodStatistics;
+
+  /// No description provided for @tip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip'**
+  String get tip;
+
+  /// No description provided for @chartTip.
+  ///
+  /// In en, this message translates to:
+  /// **'• Hold your finger on the chart and slide left or right to move between days or months.'**
+  String get chartTip;
+
+  /// No description provided for @courseStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Course Statistics'**
+  String get courseStatistics;
+
+  /// No description provided for @previousDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous day'**
+  String get previousDay;
+
+  /// No description provided for @nextDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next day'**
+  String get nextDay;
+
+  /// No description provided for @history.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get history;
+
+  /// No description provided for @week.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get week;
+
+  /// No description provided for @month.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get month;
+
+  /// No description provided for @year.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get year;
+
+  /// No description provided for @previousWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'previous week'**
+  String get previousWeek;
+
+  /// No description provided for @previousMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'previous month'**
+  String get previousMonth;
+
+  /// No description provided for @previousYear.
+  ///
+  /// In en, this message translates to:
+  /// **'previous year'**
+  String get previousYear;
+
+  /// No description provided for @nextWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'next week'**
+  String get nextWeek;
+
+  /// No description provided for @nextMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'next month'**
+  String get nextMonth;
+
+  /// No description provided for @nextYear.
+  ///
+  /// In en, this message translates to:
+  /// **'next year'**
+  String get nextYear;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get noData;
+
+  /// No description provided for @hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Hours'**
+  String get hours;
+
+  /// No description provided for @minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Minutes'**
+  String get minutes;
+
+  /// No description provided for @totalThisPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Total this {period}'**
+  String totalThisPeriod(String period);
+
+  /// No description provided for @avgPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Average per day'**
+  String get avgPerDay;
+
+  /// No description provided for @mostStudied.
+  ///
+  /// In en, this message translates to:
+  /// **'Most studied'**
+  String get mostStudied;
+
+  /// No description provided for @leastStudied.
+  ///
+  /// In en, this message translates to:
+  /// **'Least studied'**
+  String get leastStudied;
+
+  /// No description provided for @adjustWeeklyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust Weekly Goal'**
+  String get adjustWeeklyGoal;
+
+  /// No description provided for @targetPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Target per week'**
+  String get targetPerWeek;
+
+  /// No description provided for @targetPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Target per day'**
+  String get targetPerDay;
+
+  /// No description provided for @semester.
+  ///
+  /// In en, this message translates to:
+  /// **'Semester (~{weeks} wks)'**
+  String semester(int weeks);
+
+  /// No description provided for @hPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h/week'**
+  String hPerWeek(String hours);
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Group'**
+  String get createGroup;
+
+  /// No description provided for @joinGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Group'**
+  String get joinGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Name'**
+  String get groupName;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get privacy;
+
+  /// No description provided for @public.
+  ///
+  /// In en, this message translates to:
+  /// **'Public'**
+  String get public;
+
+  /// No description provided for @private.
+  ///
+  /// In en, this message translates to:
+  /// **'Private'**
+  String get private;
+
+  /// No description provided for @accessCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Access Code'**
+  String get accessCode;
+
+  /// No description provided for @members.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get members;
+
+  /// No description provided for @leaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Group'**
+  String get leaveGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Group'**
+  String get deleteGroup;
+
+  /// No description provided for @groupSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Settings'**
+  String get groupSettings;
+
+  /// No description provided for @noGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re not in any groups yet'**
+  String get noGroupsYet;
+
+  /// No description provided for @createOrJoinPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a new group or join an existing one to collaborate with others'**
+  String get createOrJoinPrompt;
+
+  /// No description provided for @signInPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to explore groups.'**
+  String get signInPrompt;
+
+  /// No description provided for @errorLoadingMemberships.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading memberships: {error}'**
+  String errorLoadingMemberships(String error);
+
+  /// No description provided for @findPublicGroupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a group...'**
+  String get findPublicGroupHint;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Results'**
+  String get searchResults;
+
+  /// No description provided for @errorLoadingGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading groups: {error}'**
+  String errorLoadingGroups(String error);
+
+  /// No description provided for @joinedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined group successfully'**
+  String get joinedSuccessfully;
+
+  /// No description provided for @joinedPrivateSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined private group successfully'**
+  String get joinedPrivateSuccessfully;
+
+  /// No description provided for @joinGroupDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join {groupName}'**
+  String joinGroupDialogTitle(String groupName);
+
+  /// No description provided for @joinGroupDialogMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the join code to access this private group.'**
+  String get joinGroupDialogMessage;
+
+  /// No description provided for @joinCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. ABC123'**
+  String get joinCodeHint;
+
+  /// No description provided for @publicGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Public Groups'**
+  String get publicGroups;
+
+  /// No description provided for @joinError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not join group: {error}'**
+  String joinError(String error);
+
+  /// No description provided for @noDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'No description provided.'**
+  String get noDescription;
+
+  /// No description provided for @membersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} members'**
+  String membersCount(int count);
+
+  /// No description provided for @yourGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Your group'**
+  String get yourGroup;
+
+  /// No description provided for @findStudyGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Find your Study Group'**
+  String get findStudyGroup;
+
+  /// No description provided for @joinCommunityPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Join a community to track progress, compete on leaderboards, and stay motivated together.'**
+  String get joinCommunityPrompt;
+
+  /// No description provided for @administrator.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get administrator;
+
+  /// No description provided for @memberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get memberLabel;
+
+  /// No description provided for @unableToLoadGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load group data'**
+  String get unableToLoadGroup;
+
+  /// No description provided for @checkConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your internet connection'**
+  String get checkConnection;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @groupNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Group not found or was deleted.'**
+  String get groupNotFound;
+
+  /// No description provided for @signInToManage.
+  ///
+  /// In en, this message translates to:
+  /// **'You need to be signed in to manage this group.'**
+  String get signInToManage;
+
+  /// No description provided for @noLongerMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You are no longer a member of this group.'**
+  String get noLongerMember;
+
+  /// No description provided for @groupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name for your group'**
+  String get groupNameHint;
+
+  /// No description provided for @visibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Visibility'**
+  String get visibility;
+
+  /// No description provided for @descriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe your group in a few words'**
+  String get descriptionHint;
+
+  /// No description provided for @codeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code is required'**
+  String get codeRequired;
+
+  /// No description provided for @codeJoinPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'This code is required for new members to join.'**
+  String get codeJoinPrompt;
+
+  /// No description provided for @onlyAdminVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Only administrators can change settings.'**
+  String get onlyAdminVisibility;
+
+  /// No description provided for @saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving...'**
+  String get saving;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
+  /// No description provided for @membersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Members'**
+  String get membersTitle;
+
+  /// No description provided for @unableToLoadMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load member list'**
+  String get unableToLoadMembers;
+
+  /// No description provided for @checkConnectionTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your connection and try again'**
+  String get checkConnectionTryAgain;
+
+  /// No description provided for @noMembersYetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'No members yet.'**
+  String get noMembersYetLabel;
+
+  /// No description provided for @youAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'You (Admin)'**
+  String get youAdmin;
+
+  /// No description provided for @youMember.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get youMember;
+
+  /// No description provided for @youOwner.
+  ///
+  /// In en, this message translates to:
+  /// **'You (Owner)'**
+  String get youOwner;
+
+  /// No description provided for @removeMemberTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove member?'**
+  String get removeMemberTitle;
+
+  /// No description provided for @removeMemberMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this member from the group? They will lose access immediately.'**
+  String get removeMemberMessage;
+
+  /// No description provided for @memberRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Member removed'**
+  String get memberRemoved;
+
+  /// No description provided for @groupUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Group updated'**
+  String get groupUpdated;
+
+  /// No description provided for @failedToUpdateGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update group: {error}'**
+  String failedToUpdateGroup(String error);
+
+  /// No description provided for @failedToDeleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to delete group: {error}'**
+  String failedToDeleteGroup(String error);
+
+  /// No description provided for @failedToLeaveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to leave group: {error}'**
+  String failedToLeaveGroup(String error);
+
+  /// No description provided for @failedToRemoveMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove member: {error}'**
+  String failedToRemoveMember(String error);
+
+  /// No description provided for @groupCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Code'**
+  String get groupCodeLabel;
+
+  /// No description provided for @dailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get dailyGoal;
+
+  /// No description provided for @weeklyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weeklyGoal;
+
+  /// No description provided for @hUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'h'**
+  String get hUnit;
+
+  /// No description provided for @mUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'m'**
+  String get mUnit;
+
+  /// No description provided for @sUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'s'**
+  String get sUnit;
+
+  /// No description provided for @errorLoadingLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading leaderboard: {error}'**
+  String errorLoadingLeaderboard(String error);
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available for this period'**
+  String get noDataAvailable;
+
+  /// No description provided for @groupLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Leaderboard'**
+  String get groupLeaderboard;
+
+  /// No description provided for @rankLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'#{rank}'**
+  String rankLabel(int rank);
+
+  /// No description provided for @failedToLoadUserData.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load user data: {error}'**
+  String failedToLoadUserData(String error);
+
+  /// No description provided for @sun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get sun;
+
+  /// No description provided for @mon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get mon;
+
+  /// No description provided for @tue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get tue;
+
+  /// No description provided for @wed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get wed;
+
+  /// No description provided for @thu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get thu;
+
+  /// No description provided for @fri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get fri;
+
+  /// No description provided for @sat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get sat;
+
+  /// No description provided for @sunday.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunday'**
+  String get sunday;
+
+  /// No description provided for @monday.
+  ///
+  /// In en, this message translates to:
+  /// **'Monday'**
+  String get monday;
+
+  /// No description provided for @tuesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Tuesday'**
+  String get tuesday;
+
+  /// No description provided for @wednesday.
+  ///
+  /// In en, this message translates to:
+  /// **'Wednesday'**
+  String get wednesday;
+
+  /// No description provided for @thursday.
+  ///
+  /// In en, this message translates to:
+  /// **'Thursday'**
+  String get thursday;
+
+  /// No description provided for @friday.
+  ///
+  /// In en, this message translates to:
+  /// **'Friday'**
+  String get friday;
+
+  /// No description provided for @saturday.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturday'**
+  String get saturday;
+
+  /// No description provided for @january.
+  ///
+  /// In en, this message translates to:
+  /// **'January'**
+  String get january;
+
+  /// No description provided for @february.
+  ///
+  /// In en, this message translates to:
+  /// **'February'**
+  String get february;
+
+  /// No description provided for @march.
+  ///
+  /// In en, this message translates to:
+  /// **'March'**
+  String get march;
+
+  /// No description provided for @april.
+  ///
+  /// In en, this message translates to:
+  /// **'April'**
+  String get april;
+
+  /// No description provided for @may.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get may;
+
+  /// No description provided for @june.
+  ///
+  /// In en, this message translates to:
+  /// **'June'**
+  String get june;
+
+  /// No description provided for @july.
+  ///
+  /// In en, this message translates to:
+  /// **'July'**
+  String get july;
+
+  /// No description provided for @august.
+  ///
+  /// In en, this message translates to:
+  /// **'August'**
+  String get august;
+
+  /// No description provided for @september.
+  ///
+  /// In en, this message translates to:
+  /// **'September'**
+  String get september;
+
+  /// No description provided for @october.
+  ///
+  /// In en, this message translates to:
+  /// **'October'**
+  String get october;
+
+  /// No description provided for @november.
+  ///
+  /// In en, this message translates to:
+  /// **'November'**
+  String get november;
+
+  /// No description provided for @december.
+  ///
+  /// In en, this message translates to:
+  /// **'December'**
+  String get december;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @groupSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Group Summary'**
+  String get groupSummary;
+
+  /// No description provided for @average.
+  ///
+  /// In en, this message translates to:
+  /// **'Average'**
+  String get average;
+
+  /// No description provided for @leader.
+  ///
+  /// In en, this message translates to:
+  /// **'Leader'**
+  String get leader;
+
+  /// No description provided for @lowest.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest'**
+  String get lowest;
+
+  /// No description provided for @vsAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'vs. Average'**
+  String get vsAverage;
+
+  /// No description provided for @studyTimeComparison.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Time Comparison'**
+  String get studyTimeComparison;
+
+  /// No description provided for @performanceVsGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance vs. Group'**
+  String get performanceVsGroup;
+
+  /// No description provided for @ofAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'of average'**
+  String get ofAverage;
+
+  /// No description provided for @studyTimeByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Time by Day'**
+  String get studyTimeByDay;
+
+  /// No description provided for @bestDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Day'**
+  String get bestDay;
+
+  /// No description provided for @avgDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Average/Day'**
+  String get avgDay;
+
+  /// No description provided for @member.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get member;
+
+  /// No description provided for @todayDataTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get todayDataTable;
+
+  /// No description provided for @monthDataTable.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get monthDataTable;
+
+  /// No description provided for @overThisWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'over this week'**
+  String get overThisWeek;
+
+  /// No description provided for @overThisMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'over this month'**
+  String get overThisMonth;
+
+  /// No description provided for @overThisYear.
+  ///
+  /// In en, this message translates to:
+  /// **'over this year'**
+  String get overThisYear;
+
+  /// No description provided for @hour.
+  ///
+  /// In en, this message translates to:
+  /// **'hour'**
+  String get hour;
+
+  /// No description provided for @hours_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'hours'**
+  String get hours_plural;
+
+  /// No description provided for @minute.
+  ///
+  /// In en, this message translates to:
+  /// **'minute'**
+  String get minute;
+
+  /// No description provided for @minutes_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'minutes'**
+  String get minutes_plural;
+
+  /// No description provided for @second.
+  ///
+  /// In en, this message translates to:
+  /// **'second'**
+  String get second;
+
+  /// No description provided for @seconds_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'seconds'**
+  String get seconds_plural;
+
+  /// No description provided for @jan.
+  ///
+  /// In en, this message translates to:
+  /// **'Jan'**
+  String get jan;
+
+  /// No description provided for @feb.
+  ///
+  /// In en, this message translates to:
+  /// **'Feb'**
+  String get feb;
+
+  /// No description provided for @mar.
+  ///
+  /// In en, this message translates to:
+  /// **'Mar'**
+  String get mar;
+
+  /// No description provided for @apr.
+  ///
+  /// In en, this message translates to:
+  /// **'Apr'**
+  String get apr;
+
+  /// No description provided for @mayShort.
+  ///
+  /// In en, this message translates to:
+  /// **'May'**
+  String get mayShort;
+
+  /// No description provided for @jun.
+  ///
+  /// In en, this message translates to:
+  /// **'Jun'**
+  String get jun;
+
+  /// No description provided for @jul.
+  ///
+  /// In en, this message translates to:
+  /// **'Jul'**
+  String get jul;
+
+  /// No description provided for @aug.
+  ///
+  /// In en, this message translates to:
+  /// **'Aug'**
+  String get aug;
+
+  /// No description provided for @sep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sep'**
+  String get sep;
+
+  /// No description provided for @oct.
+  ///
+  /// In en, this message translates to:
+  /// **'Oct'**
+  String get oct;
+
+  /// No description provided for @nov.
+  ///
+  /// In en, this message translates to:
+  /// **'Nov'**
+  String get nov;
+
+  /// No description provided for @dec.
+  ///
+  /// In en, this message translates to:
+  /// **'Dec'**
+  String get dec;
+
+  /// No description provided for @viaTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'via Timer'**
+  String get viaTimer;
+
+  /// No description provided for @viaStopwatch.
+  ///
+  /// In en, this message translates to:
+  /// **'via Stopwatch'**
+  String get viaStopwatch;
+
+  /// No description provided for @viaPomodoro.
+  ///
+  /// In en, this message translates to:
+  /// **'via Pomodoro'**
+  String get viaPomodoro;
+
+  /// No description provided for @startTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startTime;
+
+  /// No description provided for @endTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get endTime;
+
+  /// No description provided for @duration.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get duration;
+
+  /// No description provided for @reflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Reflection'**
+  String get reflection;
+
+  /// No description provided for @overThis.
+  ///
+  /// In en, this message translates to:
+  /// **'over this'**
+  String get overThis;
+
+  /// No description provided for @credits.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get credits;
+
+  /// No description provided for @credits_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'Credits'**
+  String get credits_plural;
+
+  /// No description provided for @deleteSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete session?'**
+  String get deleteSession;
+
+  /// No description provided for @deleteSessionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove the session from your history and statistics.'**
+  String get deleteSessionMessage;
+
+  /// No description provided for @sessionDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Session deleted'**
+  String get sessionDeleted;
+
+  /// No description provided for @leaveGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Group?'**
+  String get leaveGroupTitle;
+
+  /// No description provided for @leaveGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this group?'**
+  String get leaveGroupMessage;
+
+  /// No description provided for @leave.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get leave;
+
+  /// No description provided for @deleteGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Group?'**
+  String get deleteGroupTitle;
+
+  /// No description provided for @deleteGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete the group for all members.'**
+  String get deleteGroupMessage;
+
+  /// No description provided for @manageGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Group'**
+  String get manageGroup;
+
+  /// No description provided for @admin.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin'**
+  String get admin;
+
+  /// No description provided for @removeMember.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove member'**
+  String get removeMember;
+
+  /// No description provided for @makeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdmin;
+
+  /// No description provided for @removeAdmin.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove admin'**
+  String get removeAdmin;
+
+  /// No description provided for @owner.
+  ///
+  /// In en, this message translates to:
+  /// **'Owner'**
+  String get owner;
+
+  /// No description provided for @memberPromoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Member promoted to Admin'**
+  String get memberPromoted;
+
+  /// No description provided for @adminDemoted.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin demoted to Member'**
+  String get adminDemoted;
+
+  /// No description provided for @failedToPromote.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to promote member'**
+  String get failedToPromote;
+
+  /// No description provided for @failedToDemote.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to demote member'**
+  String get failedToDemote;
+
+  /// No description provided for @demoteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Demote to member'**
+  String get demoteTooltip;
+
+  /// No description provided for @makeAdminTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Make admin'**
+  String get makeAdminTooltip;
+
+  /// No description provided for @cannotEnterFutureTime.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot enter future time.'**
+  String get cannotEnterFutureTime;
+
+  /// No description provided for @startTimeLaterThanEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time can’t be later than end time.'**
+  String get startTimeLaterThanEndTime;
+
+  /// No description provided for @timeAddedToCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Time added to {courseName}'**
+  String timeAddedToCourse(String courseName);
+
+  /// No description provided for @currentDay.
+  ///
+  /// In en, this message translates to:
+  /// **'current day'**
+  String get currentDay;
+
+  /// No description provided for @thisWeekShort.
+  ///
+  /// In en, this message translates to:
+  /// **'this week'**
+  String get thisWeekShort;
+
+  /// No description provided for @thisMonthShort.
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get thisMonthShort;
+
+  /// No description provided for @thisYearShort.
+  ///
+  /// In en, this message translates to:
+  /// **'this year'**
+  String get thisYearShort;
+
+  /// No description provided for @overall.
+  ///
+  /// In en, this message translates to:
+  /// **'overall'**
+  String get overall;
+
+  /// No description provided for @dayGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'day goal'**
+  String get dayGoalLabel;
+
+  /// No description provided for @weekGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'week goal'**
+  String get weekGoalLabel;
+
+  /// No description provided for @on.
+  ///
+  /// In en, this message translates to:
+  /// **'on'**
+  String get on;
+
+  /// No description provided for @off.
+  ///
+  /// In en, this message translates to:
+  /// **'off'**
+  String get off;
+
+  /// No description provided for @justSwipeIt.
+  ///
+  /// In en, this message translates to:
+  /// **'Just swipe it'**
+  String get justSwipeIt;
+
+  /// No description provided for @customPhotosUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom photos are temporarily unavailable.'**
+  String get customPhotosUnavailable;
+
+  /// No description provided for @unableToPickImage.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to pick that image.'**
+  String get unableToPickImage;
+
+  /// No description provided for @couldNotSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save profile. Please try again.'**
+  String get couldNotSaveProfile;
+
+  /// No description provided for @yourName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Name'**
+  String get yourName;
+
+  /// No description provided for @addPersonalGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a personal goal'**
+  String get addPersonalGoal;
+
+  /// No description provided for @nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get nameLabel;
+
+  /// No description provided for @nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get nameRequired;
+
+  /// No description provided for @majorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Major'**
+  String get majorLabel;
+
+  /// No description provided for @majorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Major is required'**
+  String get majorRequired;
+
+  /// No description provided for @contactLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'How to contact you'**
+  String get contactLabel;
+
+  /// No description provided for @contactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number or tg username idk'**
+  String get contactHint;
+
+  /// No description provided for @personalGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal goal'**
+  String get personalGoalLabel;
+
+  /// No description provided for @personalGoalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Become better'**
+  String get personalGoalHint;
+
+  /// No description provided for @chooseAvatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an avatar'**
+  String get chooseAvatar;
+
+  /// No description provided for @photoLibraryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo library unavailable'**
+  String get photoLibraryUnavailable;
+
+  /// No description provided for @iconColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Icon color'**
+  String get iconColor;
+
+  /// No description provided for @saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get saved;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @stay.
+  ///
+  /// In en, this message translates to:
+  /// **'Stay'**
+  String get stay;
+
+  /// No description provided for @resetAndLeave.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset & Leave'**
+  String get resetAndLeave;
+
+  /// No description provided for @leavePomodoroTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Pomodoro?'**
+  String get leavePomodoroTitle;
+
+  /// No description provided for @leavePomodoroMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A Pomodoro cycle is running. Reset it before leaving this tab?'**
+  String get leavePomodoroMessage;
+
+  /// No description provided for @timeFormatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'HH:MM:SS'**
+  String get timeFormatHint;
+
+  /// No description provided for @addCourseFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a course first'**
+  String get addCourseFirst;
+
+  /// No description provided for @invalidTimeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter times as {format}'**
+  String invalidTimeFormat(String format);
+
+  /// No description provided for @signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get signIn;
+
+  /// No description provided for @register.
+  ///
+  /// In en, this message translates to:
+  /// **'Register'**
+  String get register;
+
+  /// No description provided for @loginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We missed you pal'**
+  String get loginSubtitle;
+
+  /// No description provided for @registerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'<3'**
+  String get registerSubtitle;
+
+  /// No description provided for @emailAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get emailAddress;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @displayName.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name'**
+  String get displayName;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get createAccount;
+
+  /// No description provided for @afterCreatingAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'After creating an account, you\'ll need to verify your email to start using the app.'**
+  String get afterCreatingAccount;
+
+  /// No description provided for @verificationEmailSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification email sent!'**
+  String get verificationEmailSent;
+
+  /// No description provided for @signedInSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in successfully'**
+  String get signedInSuccessfully;
+
+  /// No description provided for @resendEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend Email'**
+  String get resendEmail;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address.'**
+  String get enterEmail;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get invalidEmail;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password.'**
+  String get enterPassword;
+
+  /// No description provided for @displayNameLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name must be at least 2 characters.'**
+  String get displayNameLength;
+
+  /// No description provided for @passwordLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters.'**
+  String get passwordLength;
+
+  /// No description provided for @min8Chars.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum 8 characters.'**
+  String get min8Chars;
+
+  /// No description provided for @loadingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your profile...'**
+  String get loadingProfile;
+
+  /// No description provided for @sessionNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Session notes'**
+  String get sessionNotes;
+
+  /// No description provided for @sessionNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add notes for this session'**
+  String get sessionNotesHint;
+
+  /// No description provided for @sendNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Send notes'**
+  String get sendNotes;
+
+  /// No description provided for @updateNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Update notes'**
+  String get updateNotes;
+
+  /// No description provided for @notesSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes saved'**
+  String get notesSaved;
+
+  /// No description provided for @failedToPrepareData.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to prepare offline data.'**
+  String get failedToPrepareData;
+
+  /// No description provided for @sessionFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Session finished: {duration}'**
+  String sessionFinished(String duration);
+
+  /// No description provided for @whatDidYouWorkOn.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you work on?'**
+  String get whatDidYouWorkOn;
+
+  /// No description provided for @failedToSaveReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save reflection: {error}'**
+  String failedToSaveReflection(String error);
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @streakDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day streak} other{{count} days streak}}'**
+  String streakDays(int count);
+
+  /// No description provided for @noStreakYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No streak yet'**
+  String get noStreakYet;
+
+  /// No description provided for @nudgeWaitMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait {minutes} {minutes, plural, one{minute} other{minutes}} before nudging again.'**
+  String nudgeWaitMinutes(int minutes);
+
+  /// No description provided for @nudgeWaitSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait {seconds} {seconds, plural, one{second} other{seconds}} before nudging again.'**
+  String nudgeWaitSeconds(int seconds);
+
+  /// No description provided for @memberCannotReceiveNudges.
+  ///
+  /// In en, this message translates to:
+  /// **'This member cannot receive nudges yet.'**
+  String get memberCannotReceiveNudges;
+
+  /// No description provided for @nudgeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Nudge sent.'**
+  String get nudgeSent;
+
+  /// No description provided for @failedToSendNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send nudge: {error}'**
+  String failedToSendNudge(String error);
+
+  /// No description provided for @cannotNudgeSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot nudge yourself.'**
+  String get cannotNudgeSelf;
+
+  /// No description provided for @userProhibitedNudge.
+  ///
+  /// In en, this message translates to:
+  /// **'This user has disabled nudges.'**
+  String get userProhibitedNudge;
+
+  /// No description provided for @leaderboardHintMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him.'**
+  String get leaderboardHintMessage;
+}
+
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) =>
+      <String>['en', 'kk', 'ru'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'kk':
+      return AppLocalizationsKk();
+    case 'ru':
+      return AppLocalizationsRu();
+  }
+
+  throw FlutterError(
+      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+      'an issue with the localizations generation tool. Please file an issue '
+      'on GitHub with a reproducible sample app and the gen-l10n configuration '
+      'that was used.');
+}
