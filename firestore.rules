@@ -256,5 +256,15 @@ service cloud.firestore {
     match /users/{userId}/nudgeCooldowns/{cooldownId} {
       allow read, write: if isOwner(userId);
     }
+
+    // Habits feature
+    // Habits feature
+    match /users/{userId}/habits/{habitId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/habits/{habitId}/history/{entryId} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }

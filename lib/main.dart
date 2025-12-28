@@ -27,7 +27,9 @@ import 'screens/timer.dart';
 import 'screens/groups/groups_screen.dart';
 import 'services/auth_service.dart';
 import 'services/group_service.dart';
+import 'services/habit_service.dart';
 import 'services/sync_service.dart';
+import 'screens/habits/habits_screen.dart';
 import 'widgets/profile_form.dart';
 import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
@@ -92,6 +94,9 @@ Future<void> main() async {
         ),
         Provider<GroupService>(
           create: (_) => GroupService(),
+        ),
+        Provider<HabitService>(
+          create: (_) => HabitService(),
         ),
         ChangeNotifierProxyProvider<SyncService, AppState>(
           create: (_) => AppState(),
@@ -418,6 +423,7 @@ class _ShellState extends State<_Shell> {
   Widget build(BuildContext context) {
     final pages = [
       const HomeScreen(),
+      const HabitsScreen(),
       const StatsScreen(),
       const GroupsScreen(),
       AccountScreen(onThemeChange: widget.onThemeChange),
@@ -436,6 +442,11 @@ class _ShellState extends State<_Shell> {
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home),
             label: AppLocalizations.of(context)!.home,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.check_circle_outline),
+            selectedIcon: const Icon(Icons.check_circle),
+            label: "Habits", // TODO: Localize
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),
