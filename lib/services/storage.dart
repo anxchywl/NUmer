@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../data/local/entities.dart';
 import '../data/local/local_database.dart';
 import '../models.dart';
+import '../models/habit_category.dart';
 
 class Storage {
   Storage._();
@@ -21,6 +22,7 @@ class Storage {
   static const _metaProfileComplete = 'profile_complete_v1';
   static const _metaProfilePromptShown = 'profile_prompt_shown_v1';
   static const _metaLocale = 'locale_v1';
+  static const _metaHabitCategories = 'habit_categories_v1';
 
   static Future<void> configureForUser(String uid) async {
     await _db.openForUser(uid);
@@ -919,5 +921,20 @@ class Storage {
       return newestFirst ? db.compareTo(da) : da.compareTo(db);
     });
     return converted;
+  }
+
+  static Future<List<HabitCategory>> getHabitCategories() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaHabitCategories);
+    if (raw is List) {
+       return raw.map((item) => HabitCategory.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+    }
+    return [];
+  }
+
+  static Future<void> saveHabitCategories(List<HabitCategory> categories) async {
+    _ensureUser();
+    final raw = categories.map((c) => c.toJson()).toList();
+    await _db.putMeta(_metaHabitCategories, raw);
   }
 }

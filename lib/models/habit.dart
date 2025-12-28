@@ -7,10 +7,24 @@ enum HabitType {
   time, // At least X duration
 }
 
+enum HabitComparator {
+  atLeast,
+  lessThan,
+  exactly,
+  any,
+}
+
 enum HabitFrequencyType {
   daily,
   specificDays,
   interval, // Every N days
+  repeatsInPeriod, // X times per period
+}
+
+enum HabitPeriod {
+  week,
+  month,
+  year,
 }
 
 class Habit {
@@ -28,11 +42,14 @@ class Habit {
   final HabitType type;
   final double targetValue; // 1.0 for YesNo, N for numeric/time
   final String? unit; // "pages", "mins", etc.
+  final HabitComparator comparator; // New field
   
   // Frequency
   final HabitFrequencyType frequencyType;
   final Set<int> weekDays; // 1-7 for specificDays
   final int intervalDays; // for interval type
+  final HabitPeriod? frequencyPeriod; // for repeatsInPeriod
+  final int? frequencyGoal; // X times per period
   
   // Schedule
   final DateTime startDate;
@@ -58,9 +75,12 @@ class Habit {
     this.type = HabitType.yesNo,
     this.targetValue = 1.0,
     this.unit,
+    this.comparator = HabitComparator.atLeast,
     this.frequencyType = HabitFrequencyType.specificDays, // Default to specificDays (or daily implied empty)
     this.weekDays = const {},
     this.intervalDays = 1,
+    this.frequencyPeriod,
+    this.frequencyGoal,
     required this.startDate,
     this.endDate,
     this.totalCompletions = 0,
@@ -73,9 +93,6 @@ class Habit {
 
   bool get isDaily => frequencyType == HabitFrequencyType.daily;
   
-  // Helper to check if habit is active on a given date logic...
-  // (We'll implement actual scheduling logic in service/UI)
-
   factory Habit.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     
@@ -93,6 +110,16 @@ class Habit {
     if (data['type'] != null) {
       type = HabitType.values.firstWhere((e) => e.name == data['type'], orElse: () => HabitType.yesNo);
     }
+    
+    HabitComparator comparator = HabitComparator.atLeast;
+    if (data['comparator'] != null) {
+      comparator = HabitComparator.values.firstWhere((e) => e.name == data['comparator'], orElse: () => HabitComparator.atLeast);
+    }
+    
+    HabitPeriod? period;
+    if (data['frequencyPeriod'] != null) {
+      period = HabitPeriod.values.firstWhere((e) => e.name == data['frequencyPeriod'], orElse: () => HabitPeriod.week);
+    }
 
     return Habit(
       id: doc.id,
@@ -105,9 +132,12 @@ class Habit {
       type: type,
       targetValue: (data['targetValue'] as num?)?.toDouble() ?? 1.0,
       unit: data['unit'],
+      comparator: comparator,
       frequencyType: freq,
       weekDays: days,
       intervalDays: data['intervalDays'] ?? 1,
+      frequencyPeriod: period,
+      frequencyGoal: data['frequencyGoal'],
       startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Fallback to now for legacy
       endDate: (data['endDate'] as Timestamp?)?.toDate(),
       totalCompletions: data['stats']?['totalCompletions'] ?? 0,
@@ -130,7 +160,10 @@ class Habit {
       'type': type.name,
       'targetValue': targetValue,
       'unit': unit,
+      'comparator': comparator.name,
       'frequencyType': frequencyType.name,
+      'frequencyPeriod': frequencyPeriod?.name,
+      'frequencyGoal': frequencyGoal,
       'weekDays': weekDays.toList(),
       'intervalDays': intervalDays,
       'startDate': Timestamp.fromDate(startDate),

@@ -1,8 +1,42 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/habit.dart';
+import '../models/habit_category.dart';
+import 'storage.dart';
 
 class HabitService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // -- Categories (Local Only) --
+
+  final _categoryController = StreamController<List<HabitCategory>>.broadcast();
+
+  Stream<List<HabitCategory>> getCategories(String uid) {
+    _loadLocalCategories(); // Initial load
+    return _categoryController.stream;
+  }
+
+  Future<void> _loadLocalCategories() async {
+    final cats = await Storage.getHabitCategories();
+    _categoryController.add(cats);
+  }
+
+  Future<void> createCategory(String uid, HabitCategory category) async {
+    final current = await Storage.getHabitCategories();
+    final updated = [...current, category];
+    await Storage.saveHabitCategories(updated);
+    _categoryController.add(updated);
+  }
+
+  Future<void> deleteCategory(String uid, String categoryId) async {
+    final current = await Storage.getHabitCategories();
+    final updated = current.where((c) => c.id != categoryId).toList();
+    await Storage.saveHabitCategories(updated);
+    _categoryController.add(updated);
+  }
+
+  // -- Habits --
+
   // We might inject AuthService or pass uid directly. 
   // For simplicity, let's assume we get the UID from the UI or Auth provider.
   // But standard pattern in this app seems to be simple services.
@@ -13,7 +47,7 @@ class HabitService {
   // Let's use methods with userId to be safe and stateless if used as a singleton/provider.
 
   Stream<List<Habit>> habitsStream(String userId) {
-    return _firestore
+    return _db
         .collection('users')
         .doc(userId)
         .collection('habits')
@@ -29,9 +63,9 @@ class HabitService {
     // If habit.id is empty or temp, we might want a new doc ref.
     DocumentReference ref;
     if (habit.id.isEmpty || habit.id.contains('_temp')) {
-       ref = _firestore.collection('users').doc(userId).collection('habits').doc();
+       ref = _db.collection('users').doc(userId).collection('habits').doc();
     } else {
-       ref = _firestore.collection('users').doc(userId).collection('habits').doc(habit.id);
+       ref = _db.collection('users').doc(userId).collection('habits').doc(habit.id);
     }
     
     // Ensure we use the ref ID
@@ -48,14 +82,14 @@ class HabitService {
     required bool completed,
   }) async {
     final dateKey = _dateKey(date);
-    final habitRef = _firestore
+    final habitRef = _db
         .collection('users')
         .doc(userId)
         .collection('habits')
         .doc(habitId);
     final historyRef = habitRef.collection('history').doc(dateKey);
 
-    return _firestore.runTransaction((transaction) async {
+    return _db.runTransaction((transaction) async {
       final habitSnap = await transaction.get(habitRef);
       if (!habitSnap.exists) throw Exception("Habit not found");
 
@@ -78,7 +112,8 @@ class HabitService {
       // Streaks are complex to do in a single atomic increment without more data.
       // We will skip complex streak logic in transaction for MVP and just do totals + last7.
       
-      final currentStats = habitSnap.data()?['stats'] as Map<String, dynamic>? ?? {};
+      final data = habitSnap.data();
+      final currentStats = data?['stats'] as Map<String, dynamic>? ?? {};
       int total = currentStats['totalCompletions'] ?? 0;
       
       if (completed) {
@@ -110,7 +145,7 @@ class HabitService {
     final s = Timestamp.fromDate(start);
     final e = Timestamp.fromDate(end);
 
-    final snapshot = await _firestore
+    final snapshot = await _db
         .collection('users')
         .doc(userId)
         .collection('habits')

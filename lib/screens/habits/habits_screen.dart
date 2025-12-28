@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
-import 'wizard/create_habit_wizard.dart';
+import 'add_habit_sheet.dart';
 import 'habit_details_screen.dart';
 
 class HabitsScreen extends StatefulWidget {
@@ -101,9 +101,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
                         const SizedBox(height: 8),
                         FilledButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const CreateHabitWizard()),
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Theme.of(context).colorScheme.surface,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                              ),
+                              builder: (_) => const AddHabitSheet(),
                             );
                           },
                           child: const Text("Create your first habit"),
@@ -146,9 +151,14 @@ class _HabitsScreenState extends State<HabitsScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const CreateHabitWizard()),
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Theme.of(context).colorScheme.surface,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (_) => const AddHabitSheet(),
           );
         },
         child: const Icon(Icons.add),
