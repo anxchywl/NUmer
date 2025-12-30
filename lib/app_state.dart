@@ -7,6 +7,8 @@ import 'models.dart';
 import 'services/storage.dart';
 import 'services/notifications.dart';
 import 'services/sync_service.dart';
+import 'services/habit_service.dart';
+import 'services/habit_scheduler.dart';
 import 'data/local/local_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -34,6 +36,7 @@ class AppState extends ChangeNotifier {
   bool get isLoaded => _isLoaded;
   Future<void>? _loadFuture;
   SyncService? _syncService;
+  HabitService? _habitService; // Injected
   bool _hydrated = false;
   bool get isHydrated => _hydrated;
   bool _profilePromptCompleted = false;
@@ -249,6 +252,11 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void bindHabitService(HabitService service) {
+    if (_habitService == service) return;
+    _habitService = service;
+  }
+
   Future<void> _handleRemoteRefresh() async {
     try {
       await load(force: true);
@@ -415,6 +423,17 @@ class AppState extends ChangeNotifier {
     }
     _isLoaded = true;
     _updateStreak();
+    
+    // Reschedule Habit Reminders (pool next 7 occurrences)
+    if (_habitService != null) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
+        unawaited(_habitService!.getHabits(uid).then((habits) {
+          HabitScheduler.rescheduleAll(habits);
+        }));
+      }
+    }
+
     notifyListeners();
   }
 
@@ -606,7 +625,23 @@ class AppState extends ChangeNotifier {
     await _saveDailyState();
     _updateStreak();
     notifyListeners();
+    await _saveDailyState();
+    _updateStreak();
+    notifyListeners();
     unawaited(_maybeCelebrateProgress(courseId));
+
+    // Sync to Habits
+    if (_habitService != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        unawaited(_habitService!.updateHabitProgressFromCourse(
+          userId: user.uid, 
+          courseId: courseId, 
+          date: DateTime.now(),
+          deltaSeconds: seconds,
+        ));
+      }
+    }
   }
 
   
@@ -2177,6 +2212,20 @@ class AppState extends ChangeNotifier {
     _triggerSync();
     notifyListeners();
     unawaited(_maybeCelebrateProgress(courseId));
+
+    // Sync to Habits
+    if (_habitService != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Use start date for habit log
+        unawaited(_habitService!.updateHabitProgressFromCourse(
+          userId: user.uid, 
+          courseId: courseId, 
+          date: start,
+          deltaSeconds: totalSecs,
+        ));
+      }
+    }
   }
 
   Future<void> deleteSession({
@@ -2212,6 +2261,19 @@ class AppState extends ChangeNotifier {
     _updateStreak();
     _triggerSync();
     notifyListeners();
+
+    // Sync to Habits
+    if (_habitService != null) {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        unawaited(_habitService!.updateHabitProgressFromCourse(
+          userId: user.uid,
+          courseId: courseId,
+          date: startLocal,
+          deltaSeconds: -duration, // Negative delta
+        ));
+      }
+    }
   }
 
   Future<void> saveSessionNotes({

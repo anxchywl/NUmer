@@ -571,35 +571,48 @@ class _MembershipCard extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-        return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          child: ListTile(
-            leading: Icon(
-              group.isPublic ? Icons.groups_outlined : Icons.lock_outline,
-              color: Theme.of(context).colorScheme.primary,
+      final theme = Theme.of(context);
+      final isDark = theme.brightness == Brightness.dark;
+
+      return Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            title: Text(
-              group.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              group.createdBy == currentUserId 
-                ? AppLocalizations.of(context)!.owner 
-                : (membership.isAdmin ? AppLocalizations.of(context)!.administrator : AppLocalizations.of(context)!.memberLabel),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              tooltip: AppLocalizations.of(context)!.groupSettings,
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ManageGroupScreen(groupId: group.id),
-                  ),
-                );
-              },
-            ),
+          ],
+        ),
+        child: ListTile(
+          leading: Icon(
+            group.isPublic ? Icons.groups_outlined : Icons.lock_outline,
+            color: theme.colorScheme.primary,
           ),
-        );
+          title: Text(
+            group.name,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            group.createdBy == currentUserId 
+              ? AppLocalizations.of(context)!.owner 
+              : (membership.isAdmin ? AppLocalizations.of(context)!.administrator : AppLocalizations.of(context)!.memberLabel),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: AppLocalizations.of(context)!.groupSettings,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ManageGroupScreen(groupId: group.id),
+                ),
+              );
+            },
+          ),
+        ),
+      );
       },
     );
   }

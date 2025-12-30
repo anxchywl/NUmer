@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 import 'l10n/app_localizations.dart';
 
@@ -72,6 +74,9 @@ Future<void> main() async {
   const useEmulator =
       bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
   await Firebase.initializeApp();
+  if (Platform.isAndroid) {
+    await AndroidAlarmManager.initialize();
+  }
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
@@ -81,7 +86,7 @@ Future<void> main() async {
     FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   }
   await LocalDatabase.instance.initCore();
-  await Notifs.init();
+  await Notifs.requestPermissions(); // Requests permissions and inits for foreground
 
   
   
@@ -98,11 +103,12 @@ Future<void> main() async {
         Provider<HabitService>(
           create: (_) => HabitService(),
         ),
-        ChangeNotifierProxyProvider<SyncService, AppState>(
+        ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
           create: (_) => AppState(),
-          update: (_, syncService, appState) {
+          update: (_, syncService, habitService, appState) {
             final state = appState ?? AppState();
             state.bindSyncService(syncService);
+            state.bindHabitService(habitService);
             return state;
           },
         ),

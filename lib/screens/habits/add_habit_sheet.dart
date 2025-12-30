@@ -125,10 +125,10 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
     // Initialize numeric controllers. If editing an existing habit, show values,
     // otherwise keep inputs empty as requested.
     final isEditing = widget.habit != null;
-    _frequencyGoalCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "${_frequencyGoal}" : "");
-    _workDaysCtrl = TextEditingController(text: isEditing && _interval > 0 ? "${_interval}" : "");
-    _restDaysCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "${_frequencyGoal}" : "");
-    _targetCtrl = TextEditingController(text: isEditing && _target > 0 ? "${_target}" : "");
+    _frequencyGoalCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
+    _workDaysCtrl = TextEditingController(text: isEditing && _interval > 0 ? "$_interval" : "");
+    _restDaysCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
+    _targetCtrl = TextEditingController(text: isEditing && _target > 0 ? "$_target" : "");
     _unitCtrl = TextEditingController(text: _unit);
 
   // Focus Listeners
@@ -294,10 +294,12 @@ final FocusNode _timeFocus = FocusNode();
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     
-    return WillPopScope(
-      onWillPop: () async {
-        _exitFocusMode();
-        return true;
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          _exitFocusMode();
+        }
       },
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -1180,7 +1182,11 @@ final FocusNode _timeFocus = FocusNode();
            rowDays.add(
              GestureDetector(
                onTap: () => setState(() {
-                  if (selected) _weekDays.remove(day); else _weekDays.add(day);
+                  if (selected) {
+                    _weekDays.remove(day);
+                  } else {
+                    _weekDays.add(day);
+                  }
                }),
                child: Container(
                  width: 40, height: 40,
@@ -1269,50 +1275,6 @@ final FocusNode _timeFocus = FocusNode();
       );
   }
 
-  Widget _buildTypeOption(ThemeData theme, {required HabitType type, required String title, required String subtitle}) {
-     final selected = _type == type;
-     return GestureDetector(
-       onTap: () => setState(() => _type = type),
-       child: AnimatedContainer(
-         duration: const Duration(milliseconds: 200),
-         padding: const EdgeInsets.all(12),
-         decoration: BoxDecoration(
-           color: selected ? theme.colorScheme.secondaryContainer : theme.colorScheme.surfaceContainerHighest.withAlpha(50),
-           borderRadius: BorderRadius.circular(12),
-           border: Border.all(
-              color: selected ? theme.colorScheme.primary : Colors.transparent,
-              width: 2,
-           ),
-         ),
-         child: Row(
-           children: [
-             Radio<HabitType>(
-               value: type, 
-               groupValue: _type, 
-               onChanged: (v) => setState(() => _type = v!),
-               activeColor: theme.colorScheme.primary,
-             ),
-             const SizedBox(width: 8),
-             Expanded(
-               child: Column(
-                 crossAxisAlignment: CrossAxisAlignment.start,
-                 children: [
-                    Text(title, style: theme.textTheme.titleMedium?.copyWith(
-                       fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                       color: selected ? theme.colorScheme.onSecondaryContainer : theme.colorScheme.onSurface,
-                    )),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: theme.textTheme.bodySmall?.copyWith(
-                       color: selected ? theme.colorScheme.onSecondaryContainer.withAlpha(200) : theme.colorScheme.onSurfaceVariant,
-                    )),
-                 ],
-               ),
-             ),
-           ],
-         ),
-       ),
-     );
-  }
 
   Widget _buildHeader(ThemeData theme) {
     return Row(
@@ -1378,6 +1340,9 @@ final FocusNode _timeFocus = FocusNode();
          id: '',
          name: name,
          color: color,
+         iconCodePoint: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).codePoint : 0xe156,
+         iconFamily: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontFamily : null,
+         iconPackage: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontPackage : null,
          category: category,
          type: _type,
          targetValue: _target,
@@ -1458,27 +1423,5 @@ final FocusNode _timeFocus = FocusNode();
           }
        }
     }
-  }
-}
-
-class _HmsAutoColonFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
-    const max = 6; 
-    final take = digits.length > max ? digits.substring(0, max) : digits;
-    final buf = StringBuffer();
-    for (int i = 0; i < take.length; i++) {
-      if (i == 2 || i == 4) buf.write(':'); 
-      buf.write(take[i]);
-    }
-    final formatted = buf.toString();
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
   }
 }

@@ -588,6 +588,9 @@ class _StatsScreenState extends State<StatsScreen> {
     bool useCard = true,
     Widget? trailingHeader,
   }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -598,7 +601,7 @@ class _StatsScreenState extends State<StatsScreen> {
             children: [
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
               ),
@@ -609,9 +612,19 @@ class _StatsScreenState extends State<StatsScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: useCard
-              ? Card(
+              ? Container(
                   clipBehavior: Clip.none,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                   child: child,
                 )
               : child,

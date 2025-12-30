@@ -5,8 +5,11 @@ import 'package:intl/intl.dart';
 import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
-import 'add_habit_sheet.dart';
+import 'habits_calendar_screen.dart';
+import 'archived_habits_screen.dart';
+import 'widgets/habit_logging_sheet.dart';
 import 'habit_details_screen.dart';
+import 'add_habit_sheet.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -15,39 +18,63 @@ class HabitsScreen extends StatefulWidget {
   State<HabitsScreen> createState() => _HabitsScreenState();
 }
 
-class _HabitsScreenState extends State<HabitsScreen> {
+class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderStateMixin {
   // We'll calculate the last 7 days (today + past 6 days) to show circles
   late List<DateTime> _weekDates;
+  
+  int _selectedTabIndex = 0; // 0 for Today, 1 for Habits
+  late DateTime _selectedDate;
+  late ScrollController _dateScrollController;
 
   @override
   void initState() {
     super.initState();
     _updateWeekDates();
+    _selectedDate = DateTime.now();
+    _selectedDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    _dateScrollController = ScrollController();
+    
+    // Scroll to today (middle of the list)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToToday(animate: false);
+    });
+  }
+
+  void _scrollToToday({bool animate = false}) {
+    if (_dateScrollController.hasClients) {
+      final screenWidth = MediaQuery.of(context).size.width;
+      final itemWidth = (screenWidth - 24) / 7;
+      final offset = 12 + 30 * itemWidth + itemWidth / 2 - screenWidth / 2;
+      if (animate) {
+        _dateScrollController.animateTo(
+          offset,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _dateScrollController.jumpTo(offset);
+      }
+    }
   }
 
   void _updateWeekDates() {
     final now = DateTime.now();
-    // Generate [Today-6, ..., Today]
-    // Or strictly Monday-Sunday? The requirement says "7-day Mon-Sun indicators".
-    // That usually means a static week row? Or a rolling window?
-    // "last 7 days" vs "this week".
-    // Let's implement "Last 7 days" ending today for the rolling window effect,
-    // OR "Current Calendar Week".
-    // "7-day Mon-Sun indicators" suggests Mon-Sun fixed.
-    // Let's do Mon-Sun of current week.
-    
     final today = DateTime(now.year, now.month, now.day);
-    // Find Monday
     final monday = today.subtract(Duration(days: today.weekday - 1));
-    
     _weekDates = List.generate(7, (i) => monday.add(Duration(days: i)));
   }
 
   @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Re-verify auth
     final auth = context.watch<AuthController>();
     final uid = auth.currentUser?.uid;
+    final theme = Theme.of(context);
 
     if (uid == null) {
       return const Center(child: Text("Please sign in"));
@@ -56,99 +83,157 @@ class _HabitsScreenState extends State<HabitsScreen> {
     final habitService = context.watch<HabitService>();
 
     return Scaffold(
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            title: const Text("Habits"),
-            floating: true,
-            pinned: true,
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.calendar_month),
-                onPressed: () {
-                  // TODO: Go to full calendar view or history
-                },
-              )
-            ],
-          ),
-          
-          // Stream Builder for Habits
-          StreamBuilder<List<Habit>>(
-            stream: habitService.habitsStream(uid),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return SliverFillRemaining(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
-                );
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final habits = snapshot.data ?? [];
-
-              if (habits.isEmpty) {
-                return SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.check_circle_outline, size: 64, color: Colors.grey),
-                        const SizedBox(height: 16),
-                        const Text("No habits yet", style: TextStyle(fontSize: 18, color: Colors.grey)),
-                        const SizedBox(height: 8),
-                        FilledButton(
-                          onPressed: () {
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Theme.of(context).colorScheme.surface,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                              ),
-                              builder: (_) => const AddHabitSheet(),
-                            );
-                          },
-                          child: const Text("Create your first habit"),
+          slivers: [
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              title: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    _buildTabItem(0, "Progress"),
+                    _buildTabItem(1, "My habits"),
+                  ],
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.archive_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ArchivedHabitsScreen(),
+                      ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_month),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HabitsCalendarScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            
+            if (_selectedTabIndex == 0) ...[
+              // Today View: Date Picker
+              SliverToBoxAdapter(
+                child: _buildHorizontalDatePicker(theme),
+              ),
+              // Today View: Habit List
+              StreamBuilder<List<Habit>>(
+                stream: habitService.habitsStream(uid),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SliverToBoxAdapter(child: SizedBox());
+                  final habits = snapshot.data!.where((h) => h.isScheduledFor(_selectedDate)).toList();
+                  
+                  if (habits.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.done_all, size: 48, color: theme.colorScheme.outline),
+                            const SizedBox(height: 16),
+                            Text("All done for today!", style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }
+                      ),
+                    );
+                  }
 
-              return SliverPadding(
-                padding: const EdgeInsets.only(bottom: 80),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final habit = habits[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => HabitDetailsScreen(habit: habit),
-                            ),
-                          );
-                        },
-                        child: _HabitItem(
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildTodayHabitItem(habits[index], theme),
+                      childCount: habits.length,
+                    ),
+                  );
+                },
+              ),
+            ] else 
+            // Stream Builder for Habits (Overiew)
+            StreamBuilder<List<Habit>>(
+              stream: habitService.habitsStream(uid),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverFillRemaining(
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  );
+                }
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final habits = snapshot.data ?? [];
+
+                if (habits.isEmpty) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("No habit yet", style: TextStyle(fontSize: 18, color: Colors.grey)),
+                          const SizedBox(height: 8),
+                          FilledButton(
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Theme.of(context).colorScheme.surface,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                ),
+                                builder: (_) => const AddHabitSheet(),
+                              );
+                            },
+                            child: const Text("Create your first"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final habit = habits[index];
+                        return _HabitItem(
                           habit: habit,
                           weekDates: _weekDates,
                           onToggle: (date) => _toggleHabit(habit, date),
-                        ),
-                      );
-                    },
-                    childCount: habits.length,
+                        );
+                      },
+                      childCount: habits.length,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+                );
+              },
+            ),
+          ],
+        ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           showModalBottomSheet(
@@ -166,23 +251,245 @@ class _HabitsScreenState extends State<HabitsScreen> {
     );
   }
 
-
-
   void _toggleHabit(Habit habit, DateTime date) {
-    // Calculate new status
-    final dateKey = _dateKey(date);
-    final isCompleted = habit.last7[dateKey] == 1;
-    final uid = context.read<AuthController>().currentUser!.uid;
-    
-    // Haptic feedback
-    if (!isCompleted) HapticFeedback.mediumImpact();
+    HapticFeedback.lightImpact();
+    final auth = context.read<AuthController>();
+    final uid = auth.currentUser?.uid;
+    if (uid == null) return;
 
-    // Call service
-    context.read<HabitService>().toggleCompletion(
-      userId: uid,
-      habitId: habit.id,
-      date: date,
-      completed: !isCompleted,
+    if (habit.type == HabitType.yesNo) {
+      final dateKey = _dateKey(date);
+      final isCompleted = habit.last7[dateKey] != null;
+      context.read<HabitService>().toggleCompletion(
+            userId: uid,
+            habit: habit,
+            date: date,
+            completed: !isCompleted,
+          );
+    } else {
+      // Show numeric/time input bottom sheet
+      final dateKey = _dateKey(date);
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => HabitLoggingSheet(
+          habit: habit,
+          date: date,
+          userId: uid,
+          initialValue: habit.last7[dateKey],
+        ),
+      );
+    }
+  }
+
+  Widget _buildTabItem(int index, String label) {
+    final theme = Theme.of(context);
+    final isSelected = _selectedTabIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (_selectedTabIndex != index) {
+            setState(() => _selectedTabIndex = index);
+            if (index == 0) {
+              Future.delayed(const Duration(milliseconds: 50), () => _scrollToToday(animate: true));
+            }
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          alignment: Alignment.center,
+          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+          decoration: BoxDecoration(
+            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected ? [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              )
+            ] : null,
+          ),
+          child: Text(
+            label,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHorizontalDatePicker(ThemeData theme) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final itemWidth = (screenWidth - 24) / 7; // 24 is the combined horizontal padding (12 * 2)
+
+    return Container(
+      height: 90,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: ListView.builder(
+        controller: _dateScrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: 61, // 30 days back + today + 30 days forward
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        itemBuilder: (context, index) {
+          final date = today.add(Duration(days: index - 30));
+          final isSelected = date.year == _selectedDate.year &&
+              date.month == _selectedDate.month &&
+              date.day == _selectedDate.day;
+          final isToday = date.year == today.year &&
+              date.month == today.month &&
+              date.day == today.day;
+
+          return GestureDetector(
+            onTap: () => setState(() => _selectedDate = date),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: itemWidth - 8, // Subtract margin
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              decoration: BoxDecoration(
+                color: isSelected ? theme.colorScheme.primary : (isToday ? theme.colorScheme.primary.withValues(alpha: 0.1) : Colors.transparent),
+                borderRadius: BorderRadius.circular(16),
+                border: isToday && !isSelected ? Border.all(color: theme.colorScheme.primary, width: 1) : null,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    DateFormat.E().format(date),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    date.day.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildTodayHabitItem(Habit habit, ThemeData theme) {
+    final dateKey = _dateKey(_selectedDate);
+    final currentValue = habit.last7[dateKey] ?? 0.0;
+    final isCompleted = currentValue >= habit.targetValue;
+
+    String requirementText = "Mark as done";
+    if (habit.type == HabitType.numeric) {
+      requirementText = "${currentValue.toInt()} / ${habit.targetValue.toInt()} ${habit.unit ?? ""} today";
+    } else if (habit.type == HabitType.time) {
+      final curH = currentValue ~/ 3600;
+      final curM = (currentValue % 3600) ~/ 60;
+      final tarH = habit.targetValue ~/ 3600;
+      final tarM = (habit.targetValue % 3600) ~/ 60;
+      
+      String curStr = curH > 0 ? "${curH}h ${curM}m" : "${curM}m";
+      String tarStr = tarH > 0 ? "${tarH}h ${tarM}m" : "${tarM}m";
+      requirementText = "$curStr / $tarStr today";
+    }
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: habit.color.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
+              color: habit.color,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(habit.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 2),
+                Text(
+                  requirementText,
+                  style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: () => _toggleHabit(habit, _selectedDate),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                if (habit.type != HabitType.yesNo && !isCompleted)
+                  SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: CircularProgressIndicator(
+                      value: (currentValue / habit.targetValue).clamp(0.0, 1.0),
+                      strokeWidth: 3,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(habit.color.withValues(alpha: 0.6)),
+                    ),
+                  ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isCompleted ? habit.color : Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isCompleted ? habit.color : theme.colorScheme.outline.withValues(alpha: 0.3),
+                      width: 2,
+                    ),
+                  ),
+                  child: isCompleted ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -202,98 +509,186 @@ class _HabitItem extends StatelessWidget {
     required this.onToggle,
   });
 
+  String _getFrequencyText() {
+    switch (habit.frequencyType) {
+      case HabitFrequencyType.daily:
+        return "Every day";
+      case HabitFrequencyType.specificDays:
+        if (habit.weekDays.length == 7 || habit.weekDays.isEmpty) {
+          return "Every day";
+        }
+        final days = habit.weekDays.toList()..sort();
+        final weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        return days.map((d) => weekdays[d - 1]).join(", ");
+      case HabitFrequencyType.interval:
+        return "Every ${habit.intervalDays} days";
+      case HabitFrequencyType.repeatsInPeriod:
+        final period = habit.frequencyPeriod?.name ?? "period";
+        return "${habit.frequencyGoal ?? 1} times per $period";
+    }
+  }
+
+
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainer,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: null,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: habit.color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
-                    color: habit.color,
-                    size: 20,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: habit.color.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
+                        color: habit.color,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  habit.name,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (habit.currentStreak > 0) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "${habit.currentStreak}",
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _getFrequencyText(),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.more_vert, size: 20, color: theme.colorScheme.onSurfaceVariant),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => HabitDetailsScreen(habit: habit)),
+                        );
+                      },
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                     crossAxisAlignment: CrossAxisAlignment.start,
-                     children: [
-                        Text(habit.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                        Text(
-                          "${habit.totalCompletions} completions • ${habit.currentStreak} streak",
-                          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: weekDates.map((date) {
+                      final dateKey =
+                          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                      final isCompleted = habit.last7[dateKey] == 1 || (habit.last7[dateKey] ?? 0) >= habit.targetValue;
+                      final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
+
+                      final isScheduled = habit.isScheduledFor(date);
+
+                      return GestureDetector(
+                        onTap: isScheduled ? () => onToggle(date) : null,
+                        child: Column(
+                          children: [
+                            Text(
+                              DateFormat.E().format(date)[0],
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: isCompleted ? habit.color : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent),
+                                shape: BoxShape.circle,
+                                border: isToday && !isCompleted ? Border.all(color: habit.color, width: 2) : null,
+                              ),
+                              child: isCompleted ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                            ),
+                          ],
                         ),
-                     ],
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            // Week Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: weekDates.map((date) {
-                final dateKey = "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-                final isCompleted = habit.last7[dateKey] == 1;
-                final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
-                
-                // Is this day active for this habit?
-                // If weekDays is empty, every day is active.
-                // If not empty, check if weekday (1-7) is in set.
-                final isScheduled = habit.weekDays.isEmpty || habit.weekDays.contains(date.weekday);
-
-                return GestureDetector(
-                  onTap: isScheduled ? () => onToggle(date) : null,
-                  child: Column(
-                    children: [
-                      Text(
-                        DateFormat.E().format(date)[0], 
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                          fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: isCompleted 
-                             ? habit.color 
-                             : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent),
-                          shape: BoxShape.circle,
-                          border: isToday && !isCompleted 
-                             ? Border.all(color: habit.color, width: 2)
-                             : null,
-                        ),
-                        child: isCompleted 
-                           ? const Icon(Icons.check, size: 18, color: Colors.white)
-                           : null,
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+          ),
         ),
       ),
     );

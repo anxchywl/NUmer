@@ -60,9 +60,17 @@ class Habit {
   final int currentStreak;
   final int longestStreak;
   
-  final Map<String, int> last7;
+  final Map<String, double> last7;
   final bool archived;
   final DateTime createdAt;
+
+  // Course Integration
+  final List<String> connectedCourseIds;
+
+  // Reminder Settings
+  final bool hasReminder;
+  final int? reminderHour;   // 0-23
+  final int? reminderMinute; // 0-59
 
   Habit({
     required this.id,
@@ -89,13 +97,20 @@ class Habit {
     this.last7 = const {},
     this.archived = false,
     required this.createdAt,
+    this.connectedCourseIds = const [],
+    this.hasReminder = false,
+    this.reminderHour,
+    this.reminderMinute,
   });
 
   bool get isDaily => frequencyType == HabitFrequencyType.daily;
   
   factory Habit.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
-    
+    return Habit.fromMap(doc.id, data);
+  }
+
+  factory Habit.fromMap(String id, Map<String, dynamic> data) {
     // Migration helpers
     HabitFrequencyType freq = HabitFrequencyType.specificDays;
     Set<int> days = (data['weekDays'] as List<dynamic>?)?.map((e) => e as int).toSet() ?? {};
@@ -121,8 +136,15 @@ class Habit {
       period = HabitPeriod.values.firstWhere((e) => e.name == data['frequencyPeriod'], orElse: () => HabitPeriod.week);
     }
 
+    DateTime? parseDate(dynamic d) {
+      if (d == null) return null;
+      if (d is Timestamp) return d.toDate();
+      if (d is String) return DateTime.tryParse(d);
+      return null;
+    }
+
     return Habit(
-      id: doc.id,
+      id: id,
       name: data['name'] ?? 'Unnamed Habit',
       color: Color(data['color'] ?? 0xFF000000),
       iconCodePoint: data['iconCodePoint'] ?? 0xe156,
@@ -138,14 +160,18 @@ class Habit {
       intervalDays: data['intervalDays'] ?? 1,
       frequencyPeriod: period,
       frequencyGoal: data['frequencyGoal'],
-      startDate: (data['startDate'] as Timestamp?)?.toDate() ?? DateTime.now(), // Fallback to now for legacy
-      endDate: (data['endDate'] as Timestamp?)?.toDate(),
+      startDate: parseDate(data['startDate']) ?? DateTime.now(),
+      endDate: parseDate(data['endDate']),
       totalCompletions: data['stats']?['totalCompletions'] ?? 0,
       currentStreak: data['stats']?['currentStreak'] ?? 0,
       longestStreak: data['stats']?['longestStreak'] ?? 0,
-      last7: Map<String, int>.from(data['last7'] ?? {}),
+      last7: (data['last7'] as Map<String, dynamic>? ?? {}).map((k, v) => MapEntry(k, (v as num).toDouble())),
       archived: data['archived'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      createdAt: parseDate(data['createdAt']) ?? DateTime.now(),
+      connectedCourseIds: (data['connectedCourseIds'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      hasReminder: data['hasReminder'] ?? false,
+      reminderHour: data['reminderHour'],
+      reminderMinute: data['reminderMinute'],
     );
   }
 
@@ -176,7 +202,47 @@ class Habit {
       'last7': last7,
       'archived': archived,
       'createdAt': Timestamp.fromDate(createdAt),
+      'connectedCourseIds': connectedCourseIds,
+      'hasReminder': hasReminder,
+      'reminderHour': reminderHour,
+      'reminderMinute': reminderMinute,
     };
+  }
+
+  bool isScheduledFor(DateTime date) {
+    // 1. Check if before start date or after end date
+    final d = DateTime(date.year, date.month, date.day);
+    final s = DateTime(startDate.year, startDate.month, startDate.day);
+    if (d.isBefore(s)) return false;
+    if (endDate != null) {
+      final e = DateTime(endDate!.year, endDate!.month, endDate!.day);
+      if (d.isAfter(e)) return false;
+    }
+
+    // 2. Frequency Rules
+    switch (frequencyType) {
+      case HabitFrequencyType.daily:
+        return true;
+      case HabitFrequencyType.specificDays:
+        if (frequencyPeriod == HabitPeriod.month) {
+          return weekDays.contains(d.day);
+        } else if (frequencyPeriod == HabitPeriod.year) {
+          final encoded = d.month * 100 + d.day;
+          return weekDays.contains(encoded);
+        }
+        return weekDays.contains(d.weekday);
+      case HabitFrequencyType.interval:
+        final diff = d.difference(s).inDays;
+        final totalCycle = intervalDays + (frequencyGoal ?? 0);
+        if (totalCycle == 0) return true;
+        final position = diff % totalCycle;
+        return position < intervalDays; // "Work" days are first in cycle
+      case HabitFrequencyType.repeatsInPeriod:
+        // For "repeats in period", it's technically scheduled EVERY day 
+        // until the goal is met? Or just show it every day and let user decide.
+        // Usually, these are shown every day of the period.
+        return true;
+    }
   }
 }
 

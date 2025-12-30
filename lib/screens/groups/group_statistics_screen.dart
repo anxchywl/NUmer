@@ -538,19 +538,28 @@ class _RankListTile extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
         color: isCurrentUser
-            ? colorScheme.primaryContainer.withAlpha(50)
-            : colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isCurrentUser
-              ? colorScheme.primary.withAlpha(100)
-              : colorScheme.outlineVariant.withAlpha(80),
-          width: 1,
-        ),
+            ? colorScheme.primaryContainer.withValues(alpha: isDark ? 0.3 : 0.1)
+            : theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: isCurrentUser
+            ? Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.3),
+                width: 1,
+              )
+            : null,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
