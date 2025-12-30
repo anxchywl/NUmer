@@ -8,7 +8,6 @@ import 'services/storage.dart';
 import 'services/notifications.dart';
 import 'services/sync_service.dart';
 import 'services/habit_service.dart';
-import 'services/habit_scheduler.dart';
 import 'data/local/local_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -425,16 +424,6 @@ class AppState extends ChangeNotifier {
     _isLoaded = true;
     _updateStreak();
     
-    // Reschedule Habit Reminders (pool next 7 occurrences)
-    if (_habitService != null) {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) {
-        unawaited(_habitService!.getHabits(uid).then((habits) {
-          HabitScheduler.rescheduleAll(habits);
-        }));
-      }
-    }
-
     notifyListeners();
   }
 

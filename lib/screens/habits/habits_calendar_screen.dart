@@ -165,6 +165,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   Widget _buildCalendarGrid(BuildContext context) {
     final firstDay = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
     final firstWeekday = firstDay.weekday; 
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     
     final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
     final weekdayLabels = [...narrowWeekdays.skip(1), narrowWeekdays.first];
@@ -195,7 +197,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                 final isCurrentMonth = date.month == _focusedMonth.month;
                 if (!isCurrentMonth) return const SizedBox.shrink(); 
                 
-                final isToday = date.year == DateTime.now().year && date.month == DateTime.now().month && date.day == DateTime.now().day;
+                final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
+                final isFuture = date.isAfter(today);
                 
                 final dateKey = _dateKey(date);
                 final progressMap = _progressByDate[dateKey] ?? {};
@@ -204,13 +207,17 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                 final completedHabits = _allHabits.where((h) => progressMap.containsKey(h.id) && progressMap[h.id]! > 0).toList();
 
                 return InkWell(
-                  onTap: () => _showDaySheet(date),
+                  onTap: isFuture ? null : () => _showDaySheet(date),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isToday ? Theme.of(context).colorScheme.primaryContainer.withAlpha(100) : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50),
+                      color: isFuture
+                          ? Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(30)
+                          : (isToday
+                              ? Theme.of(context).colorScheme.primaryContainer.withAlpha(100)
+                              : Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(50)),
                       borderRadius: BorderRadius.circular(8),
-                      border: isToday ? Border.all(color: Theme.of(context).colorScheme.primary) : null,
+                      border: isToday && !isFuture ? Border.all(color: Theme.of(context).colorScheme.primary) : null,
                     ),
                     padding: const EdgeInsets.all(4),
                     child: Column(
@@ -219,7 +226,9 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                          Text("${date.day}", style: TextStyle(
                             fontSize: 12, 
                             fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                            color: isToday ? Theme.of(context).colorScheme.primary : null,
+                            color: isFuture
+                                ? Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(120)
+                                : (isToday ? Theme.of(context).colorScheme.primary : null),
                          )),
                          const SizedBox(height: 2),
                          Expanded(
@@ -230,12 +239,12 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                                   margin: const EdgeInsets.only(bottom: 2),
                                   padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
                                   decoration: BoxDecoration(
-                                    color: h.color.withAlpha(50),
+                                    color: isFuture ? h.color.withAlpha(20) : h.color.withAlpha(50),
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                   child: Text(
                                     h.name,
-                                    style: TextStyle(fontSize: 8, color: h.color, fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontSize: 8, color: isFuture ? h.color.withAlpha(120) : h.color, fontWeight: FontWeight.bold),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 1,
                                   ),

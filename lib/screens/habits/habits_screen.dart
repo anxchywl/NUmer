@@ -80,6 +80,13 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     _weekDates = List.generate(7, (i) => start.add(Duration(days: i)));
   }
 
+  bool _isFutureDate(DateTime date) {
+    final today = DateTime.now();
+    final todayMidnight = DateTime(today.year, today.month, today.day);
+    final dateMidnight = DateTime(date.year, date.month, date.day);
+    return dateMidnight.isAfter(todayMidnight);
+  }
+
   int _weekStartOffset(DateTime date, WeekStart weekStart) {
     if (weekStart == WeekStart.monday) {
       return (date.weekday - DateTime.monday).clamp(0, 6);
@@ -322,6 +329,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   }
 
   Future<void> _toggleHabit(Habit habit, DateTime date) async {
+    if (_isFutureDate(date)) return;
     HapticFeedback.lightImpact();
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
@@ -468,6 +476,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     final dateKey = _dateKey(_selectedDate);
     final currentValue = habit.last7[dateKey] ?? 0.0;
     final isCompleted = currentValue >= habit.targetValue;
+    final isFuture = _isFutureDate(_selectedDate);
+    final isDark = theme.brightness == Brightness.dark;
     final localeName = l10n.localeName;
     final numberFormat = NumberFormat.decimalPattern(localeName);
 
@@ -487,15 +497,16 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       requirementText = l10n.habitRequirementMarkDone;
     }
 
-    return Container(
+    final row = Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
+        border: isDark ? Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -532,7 +543,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           ),
           const SizedBox(width: 12),
           GestureDetector(
-            onTap: () => _toggleHabit(habit, _selectedDate),
+            onTap: isFuture ? null : () => _toggleHabit(habit, _selectedDate),
             child: habit.type == HabitType.yesNo
                 ? AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
@@ -575,6 +586,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
         ],
       ),
     );
+    if (!isFuture) return row;
+    return Opacity(opacity: 0.5, child: row);
   }
 
   String _formatDurationHms(double seconds) {
@@ -653,6 +666,46 @@ class _HabitItem extends StatelessWidget {
     return DateFormat.E(localeName).format(date);
   }
 
+  bool _isFutureDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateMidnight = DateTime(date.year, date.month, date.day);
+    return dateMidnight.isAfter(today);
+  }
+
+  bool _isSamePeriod(DateTime a, DateTime b, HabitPeriod period) {
+    DateTime startOfPeriod(DateTime d) {
+      switch (period) {
+        case HabitPeriod.week:
+          return DateTime(d.year, d.month, d.day - (d.weekday - 1));
+        case HabitPeriod.month:
+          return DateTime(d.year, d.month, 1);
+        case HabitPeriod.year:
+          return DateTime(d.year, 1, 1);
+      }
+    }
+
+    final aStart = startOfPeriod(a);
+    final bStart = startOfPeriod(b);
+    return aStart.year == bStart.year &&
+        aStart.month == bStart.month &&
+        aStart.day == bStart.day;
+  }
+
+  bool _shouldDisableFutureScheduled(DateTime date) {
+    if (!_isFutureDate(date)) return false;
+    final isScheduled = habit.isScheduledFor(date);
+    if (!isScheduled) return false;
+
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+      final period = habit.frequencyPeriod ?? HabitPeriod.week;
+      if (!_isSamePeriod(DateTime.now(), date, period)) return false;
+      return habit.isGoalMetForPeriod(habit.last7, DateTime.now());
+    }
+
+    return true;
+  }
+
 
 
   @override
@@ -668,6 +721,7 @@ class _HabitItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
+        border: isDark ? Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4)) : null,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
@@ -782,18 +836,21 @@ class _HabitItem extends StatelessWidget {
                           "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
                       final isCompleted = habit.last7[dateKey] == 1 || (habit.last7[dateKey] ?? 0) >= habit.targetValue;
                       final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
+                      final isDisabledFuture = _shouldDisableFutureScheduled(date);
 
                       final isScheduled = habit.isScheduledFor(date);
 
-                      return GestureDetector(
-                        onTap: isScheduled ? () => onToggle(date) : null,
+                      final dateItem = GestureDetector(
+                        onTap: (!isDisabledFuture && isScheduled) ? () => onToggle(date) : null,
                         child: Column(
                           children: [
                             Text(
                               DateFormat.E(localeName).format(date),
                               style: TextStyle(
                                 fontSize: 10,
-                                color: isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                color: isDisabledFuture
+                                    ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                                    : (isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
                                 fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                               ),
                             ),
@@ -802,15 +859,21 @@ class _HabitItem extends StatelessWidget {
                               width: 32,
                               height: 32,
                               decoration: BoxDecoration(
-                                color: isCompleted ? habit.color : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent),
+                                color: isDisabledFuture
+                                    ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                                    : (isCompleted
+                                        ? habit.color
+                                        : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent)),
                                 shape: BoxShape.circle,
-                                border: isToday && !isCompleted ? Border.all(color: habit.color, width: 2) : null,
+                                border: isToday && !isCompleted && !isDisabledFuture ? Border.all(color: habit.color, width: 2) : null,
                               ),
-                              child: isCompleted ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                              child: isCompleted && !isDisabledFuture ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
                             ),
                           ],
                         ),
                       );
+
+                      return isDisabledFuture ? Opacity(opacity: 0.5, child: dateItem) : dateItem;
                     }).toList(),
                   ),
                 ),

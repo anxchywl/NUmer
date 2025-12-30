@@ -1673,7 +1673,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitReminderDisabledTitle => 'Напоминания';
 
   @override
-  String get habitReminderDisabledSubtitle => 'Эта функция сейчас недоступна';
+  String get habitReminderDisabledSubtitle => 'Скоро';
 
   @override
   String get habitArchiveTitle => 'Архивировать привычку';

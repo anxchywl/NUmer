@@ -11,6 +11,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Habit icons are dynamic; disable icon tree shaking for release builds.
+project.extensions.extraProperties["tree-shake-icons"] = "false"
+
 android {
     namespace = "app.anx.numer"
     compileSdk = flutter.compileSdkVersion

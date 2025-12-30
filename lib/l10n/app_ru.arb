@@ -678,7 +678,7 @@
   "habitCourseSyncHint": "Прогресс синхронизируется, когда вы занимаетесь по этим курсам.",
   "habitCourseNumericWarning": "Переключитесь на Да/Нет или Время, чтобы подключить курсы.",
   "habitReminderDisabledTitle": "Напоминания",
-  "habitReminderDisabledSubtitle": "Эта функция сейчас недоступна",
+  "habitReminderDisabledSubtitle": "Скоро",
   "habitArchiveTitle": "Архивировать привычку",
   "habitArchivedLabel": "В архиве",
   "habitResetProgressTitle": "Сбросить прогресс привычки",

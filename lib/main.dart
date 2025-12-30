@@ -34,8 +34,6 @@ import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
 import 'services/notifications.dart';
 
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-
 Future<void> _activateAppCheck({required bool useEmulator}) async {
   if (useEmulator) return; 
   if (kIsWeb) {
@@ -75,10 +73,6 @@ Future<void> main() async {
       bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
   await Firebase.initializeApp();
   
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    await AndroidAlarmManager.initialize();
-  }
-  
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
@@ -88,7 +82,7 @@ Future<void> main() async {
     FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   }
   await LocalDatabase.instance.initCore();
-  await Notifs.requestPermissions(); // Requests permissions and inits for foreground
+  await Notifs.init();
 
   
   

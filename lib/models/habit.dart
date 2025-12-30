@@ -69,11 +69,6 @@ class Habit {
   // Course Integration
   final List<String> connectedCourseIds;
 
-  // Reminder Settings
-  final bool hasReminder;
-  final int? reminderHour;   // 0-23
-  final int? reminderMinute; // 0-59
-
   Habit({
     required this.id,
     required this.name,
@@ -101,9 +96,6 @@ class Habit {
     this.archived = false,
     required this.createdAt,
     this.connectedCourseIds = const [],
-    this.hasReminder = false,
-    this.reminderHour,
-    this.reminderMinute,
   });
 
   bool get isDaily => frequencyType == HabitFrequencyType.daily;
@@ -209,24 +201,6 @@ class Habit {
     int curS = stats['cs'] ?? stats['currentStreak'] ?? 0;
     int longS = stats['ls'] ?? stats['longestStreak'] ?? 0;
 
-    // -- Reminder --
-    // Compact: 'rm' (int minutes from midnight)
-    // Legacy: 'reminderHour', 'reminderMinute'
-    bool hasRem = false; 
-    int? rHour;
-    int? rMin;
-    
-    if (data.containsKey('rm') && data['rm'] != null) {
-      int minutes = data['rm'] as int;
-      rHour = minutes ~/ 60;
-      rMin = minutes % 60;
-      hasRem = true;
-    } else {
-      hasRem = data['hasReminder'] ?? false;
-      rHour = data['reminderHour'];
-      rMin = data['reminderMinute'];
-    }
-
     return Habit(
       id: id,
       name: get('n', 'name') ?? 'Unnamed Habit',
@@ -261,10 +235,6 @@ class Habit {
       archived: get('ar', 'archived') ?? false,
       createdAt: parseDate(get('cr', 'createdAt')) ?? DateTime.now(),
       connectedCourseIds: (get('cc', 'connectedCourseIds') as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
-      
-      hasReminder: hasRem,
-      reminderHour: rHour,
-      reminderMinute: rMin,
     );
   }
 
@@ -302,10 +272,6 @@ class Habit {
     if (endDate != null) map['ed'] = Timestamp.fromDate(endDate!);
     if (archived) map['ar'] = true;
     if (connectedCourseIds.isNotEmpty) map['cc'] = connectedCourseIds;
-    
-    if (hasReminder && reminderHour != null && reminderMinute != null) {
-      map['rm'] = reminderHour! * 60 + reminderMinute!;
-    }
     
     return map;
   }
@@ -419,9 +385,6 @@ class Habit {
     bool? archived,
     DateTime? createdAt,
     List<String>? connectedCourseIds,
-    bool? hasReminder,
-    int? reminderHour,
-    int? reminderMinute,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -450,9 +413,6 @@ class Habit {
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
       connectedCourseIds: connectedCourseIds ?? this.connectedCourseIds,
-      hasReminder: hasReminder ?? this.hasReminder,
-      reminderHour: reminderHour ?? this.reminderHour,
-      reminderMinute: reminderMinute ?? this.reminderMinute,
     );
   }
 }

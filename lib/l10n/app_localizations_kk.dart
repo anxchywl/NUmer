@@ -1649,7 +1649,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitReminderDisabledTitle => 'Еске салу';
 
   @override
-  String get habitReminderDisabledSubtitle => 'Бұл мүмкіндік қазір қолжетімсіз';
+  String get habitReminderDisabledSubtitle => 'Жақында';
 
   @override
   String get habitArchiveTitle => 'Әдетті архивтеу';

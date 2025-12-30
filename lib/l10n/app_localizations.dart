@@ -3115,7 +3115,7 @@ abstract class AppLocalizations {
   /// No description provided for @habitReminderDisabledSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'This feature is currently disabled'**
+  /// **'Coming soon'**
   String get habitReminderDisabledSubtitle;
 
   /// No description provided for @habitArchiveTitle.

@@ -65,11 +65,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   late DateTime? _endDate;
   late bool _archived;
 
-  // Reminder Settings
-  bool _hasReminder = false;
-  int? _reminderHour;
-  int? _reminderMinute;
-
   // Time Helpers
   final _timeCtrl = TextEditingController(text: "00:00:00");
   late TextEditingController _targetCtrl;
@@ -99,11 +94,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     _endDate = h.endDate;
     _archived = h.archived;
     _connectedCourseIds = List.from(h.connectedCourseIds);
-
-    // Reminder Settings
-    _hasReminder = h.hasReminder;
-    _reminderHour = h.reminderHour;
-    _reminderMinute = h.reminderMinute;
 
     // Time Control Init
     if (_type == HabitType.time) {
@@ -260,9 +250,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
       archived: _archived,
       createdAt: widget.habit.createdAt,
       connectedCourseIds: _connectedCourseIds,
-      hasReminder: _hasReminder,
-      reminderHour: _reminderHour,
-      reminderMinute: _reminderMinute,
     );
 
     await context.read<HabitService>().createHabit(uid, updatedHabit);
@@ -758,8 +745,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
          ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(
-              _hasReminder ? Icons.notifications_active : Icons.notifications_active_outlined,
-              color: _hasReminder ? theme.colorScheme.primary : null,
+              Icons.notifications_off_outlined,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
             title: Text(AppLocalizations.of(context)!.habitReminderDisabledTitle),
             subtitle: Text(AppLocalizations.of(context)!.habitReminderDisabledSubtitle),

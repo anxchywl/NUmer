@@ -3,8 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/habit.dart';
 import '../models/habit_category.dart';
 import 'storage.dart';
-import 'habit_scheduler.dart';
-import 'notifications.dart';
 
 class HabitService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -115,8 +113,6 @@ class HabitService {
     
     await ref.set(data);
     
-    final savedHabit = Habit.fromMap(ref.id, data);
-    await HabitScheduler.cancel(savedHabit); 
   }
 
   Future<void> toggleCompletion({
@@ -224,7 +220,6 @@ class HabitService {
   }
 
   Future<void> deleteHabit(String userId, String habitId) async {
-    await Notifs.cancel(habitId.hashCode.abs());
     await Storage.removeHabitFromOrder(habitId);
 
     final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habitId);

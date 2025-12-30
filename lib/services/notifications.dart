@@ -8,6 +8,9 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 class Notifs {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _inited = false;
+  static const _channelId = 'reminders_channel';
+  static const _channelName = 'Notifications';
+  static const _channelDescription = 'Timers, alarms, and nudges.';
 
   /// Initializes the notification plugin.
   /// [isBackground] should be true if called from a background isolate.
@@ -76,9 +79,9 @@ class Notifs {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
       await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
-        'reminders_channel',
-        'Reminders',
-        description: 'Habit reminders',
+        _channelId,
+        _channelName,
+        description: _channelDescription,
         importance: Importance.max,
         playSound: true,
         enableVibration: true,
@@ -86,28 +89,6 @@ class Notifs {
     }
 
     _inited = true;
-  }
-
-  static Future<void> requestPermissions() async {
-    await init();
-    if (Platform.isAndroid) {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      final granted = await androidPlugin?.requestNotificationsPermission();
-      debugPrint("Notifs: Android notification permission granted: $granted");
-      
-      final exact = await androidPlugin?.requestExactAlarmsPermission();
-      debugPrint("Notifs: Android exact alarm permission granted: $exact");
-    } else if (Platform.isIOS) {
-       final iosPlugin = _plugin.resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>();
-       final granted = await iosPlugin?.requestPermissions(
-         alert: true,
-         badge: true,
-         sound: true,
-       );
-       debugPrint("Notifs: iOS permissions granted: $granted");
-    }
   }
 
   static Future<void> scheduleOnce({
@@ -127,9 +108,9 @@ class Notifs {
         // Common details
         const details = NotificationDetails(
           android: AndroidNotificationDetails(
-            'reminders_channel',
-            'Reminders',
-            channelDescription: 'Habit reminders',
+            _channelId,
+            _channelName,
+            channelDescription: _channelDescription,
             importance: Importance.max,
             priority: Priority.max,
             showWhen: true,
@@ -146,31 +127,16 @@ class Notifs {
           ),
         );
         
-        // Try strict exact scheduling first
-        try {
-          await _plugin.zonedSchedule(
-            id,
-            title,
-            body,
-            tzTime,
-            details,
-            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-            matchDateTimeComponents: null,
-          );
-          debugPrint("Notifs: Scheduled exact for $id");
-        } catch (e) {
-          debugPrint("Notifs: Exact scheduling failed ($e), trying inexact");
-          await _plugin.zonedSchedule(
-            id,
-            title,
-            body,
-            tzTime,
-            details,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            matchDateTimeComponents: null,
-          );
-          debugPrint("Notifs: Scheduled inexact for $id");
-        }
+        await _plugin.zonedSchedule(
+          id,
+          title,
+          body,
+          tzTime,
+          details,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          matchDateTimeComponents: null,
+        );
+        debugPrint("Notifs: Scheduled inexact for $id");
     } catch (e, stack) {
         debugPrint("Notifs: Fatal error scheduling $id: $e\n$stack");
     }
@@ -191,8 +157,8 @@ class Notifs {
       body,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'reminders_channel',
-          'Reminders',
+          _channelId,
+          _channelName,
           importance: Importance.max,
           priority: Priority.max,
           showWhen: true,
@@ -238,8 +204,8 @@ class Notifs {
       tzTime,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'reminders_channel',
-          'Reminders',
+          _channelId,
+          _channelName,
           importance: Importance.max,
           priority: Priority.max,
           showWhen: true,
@@ -254,7 +220,7 @@ class Notifs {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, 
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle, 
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }

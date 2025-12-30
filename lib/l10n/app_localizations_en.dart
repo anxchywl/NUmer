@@ -1665,8 +1665,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get habitReminderDisabledTitle => 'Remind me';
 
   @override
-  String get habitReminderDisabledSubtitle =>
-      'This feature is currently disabled';
+  String get habitReminderDisabledSubtitle => 'Coming soon';
 
   @override
   String get habitArchiveTitle => 'Archive habit';

@@ -793,7 +793,7 @@
   "habitCourseSyncHint": "Syncs progress when you study for these courses.",
   "habitCourseNumericWarning": "Switch to Yes/No or Time to connect courses.",
   "habitReminderDisabledTitle": "Remind me",
-  "habitReminderDisabledSubtitle": "This feature is currently disabled",
+  "habitReminderDisabledSubtitle": "Coming soon",
   "habitArchiveTitle": "Archive habit",
   "habitArchivedLabel": "Archived",
   "habitResetProgressTitle": "Reset habit progress",
