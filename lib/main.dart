@@ -432,7 +432,7 @@ class _ShellState extends State<_Shell> {
           NavigationDestination(
             icon: const Icon(Icons.check_circle_outline),
             selectedIcon: const Icon(Icons.check_circle),
-            label: "Habits", // TODO: Localize
+            label: AppLocalizations.of(context)!.habitsNavLabel,
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),

@@ -604,5 +604,212 @@
   },
   "cannotNudgeSelf": "Өзіңізді түртпелей алмайсыз.",
   "userProhibitedNudge": "Бұл пайдаланушы түртпелерді өшіріп тастаған.",
-  "leaderboardHintMessage": "• Оқу уақытын көру үшін көшбасшылар тақтасындағы кез келген пайдаланушыны басуға болады.\n• Мүшені түрту үшін оның аватарының жанындағы қол белгішесін басыңыз."
+  "leaderboardHintMessage": "• Оқу уақытын көру үшін көшбасшылар тақтасындағы кез келген пайдаланушыны басуға болады.\n• Мүшені түрту үшін оның аватарының жанындағы қол белгішесін басыңыз.",
+  "habitsNavLabel": "Әдеттер",
+  "habitsTabProgress": "Прогресс",
+  "habitsTabList": "Менің әдеттерім",
+  "habitsPleaseSignIn": "Кіру қажет",
+  "habitsEmptyToday": "Бүгін жоспар жоқ. Керемет!",
+  "habitsListError": "Қате: {error}",
+  "@habitsListError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsEmptyListTitle": "Әзірге әдеттер жоқ",
+  "habitsEmptyListCta": "Алғашқысын құру",
+  "habitRequirementMarkDone": "Орындалды деп белгілеу",
+  "habitRequirementToday": "{current} / {target} {unit} бүгін",
+  "@habitRequirementToday": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "habitRequirementTodayNoUnit": "{current} / {target} бүгін",
+  "@habitRequirementTodayNoUnit": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyEveryDay": "Күн сайын",
+  "habitFrequencySpecificMonth": "Айдың нақты күндері",
+  "habitFrequencySpecificDates": "Белгілі күндер",
+  "habitFrequencyDaysLabel": "Күндер: {days}",
+  "@habitFrequencyDaysLabel": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyInterval": "Әр {days} {days, plural, one{күн} other{күн}}",
+  "@habitFrequencyInterval": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitFrequencyTimesPerPeriod": "{count, plural, one{{count} рет {period} ішінде} other{{count} рет {period} ішінде}}",
+  "@habitFrequencyTimesPerPeriod": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "habitPeriodWeek": "Апта",
+  "habitPeriodMonth": "Ай",
+  "habitPeriodYear": "Жыл",
+  "habitDailyOverview": "Күндік шолу",
+  "habitNoHabitsThisDay": "Бұл күні әдеттер орындалмады.",
+  "habitMinutesShort": "мин",
+  "habitLogSetTotal": "Барлығын орнату",
+  "habitLogAddMore": "Қосу",
+  "habitUpdateProgress": "Прогресті жаңарту",
+  "habitLogSetValueTitle": "Мәнін орнату",
+  "habitClearTime": "Уақытты тазарту",
+  "habitProgressLabel": "Прогресс, {date}",
+  "@habitProgressLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogSettingTotal": "{total} ретінде орнату",
+  "@habitLogSettingTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogAdding": "{value} мәнін {existing} үстіне қосу",
+  "@habitLogAdding": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "existing": {
+        "type": "String"
+      }
+    }
+  },
+  "habitGoalLabel": "Мақсат: {goal}",
+  "@habitGoalLabel": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCreateTitle": "Жаңа әдет құру",
+  "habitTrackingTitle": "Бақылау түрі",
+  "habitExplainHabit": "Әдетті сипаттаңыз",
+  "habitNameLabel": "Әдет атауы",
+  "habitNameHint": "мысалы, таңғы жүгіру",
+  "habitCategoryLabel": "Санат",
+  "habitCategoryNew": "Жаңа санат",
+  "habitCategoryNameLabel": "Санат атауы",
+  "habitCategoryNameHint": "мысалы, оқу",
+  "habitCategoryDeleteTitle": "Санатты жою",
+  "habitCategoryDeleteMessage": "\"{name}\" жойылсын ба? Бұны қайтару мүмкін емес.",
+  "@habitCategoryDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCategoryCreateAction": "Өзгеше жасау",
+  "habitBack": "Артқа",
+  "habitNext": "Әрі қарай",
+  "habitYesNo": "Иә / Жоқ",
+  "habitNumeric": "Сандық",
+  "habitTime": "Уақыт",
+  "habitTrackingYesNoDescription": "Әдеттің орындалғанын белгілеңіз.",
+  "habitTrackingNumericDescription": "Күн сайынғы нақты санды қойыңыз.",
+  "habitTrackingTimeDescription": "Күндік мақсат ретінде уақыт мөлшерін қойыңыз.",
+  "habitComparatorAtLeast": "Кемінде",
+  "habitComparatorLessThan": "Аз",
+  "habitComparatorExactly": "Дәл",
+  "habitComparatorAny": "Кез келген мән",
+  "habitValueLabel": "Мән",
+  "habitUnitLabel": "Бірлік",
+  "habitUnitHint": "мысалы, бет",
+  "habitPerDay": "күніне",
+  "habitTimeLabel": "сағат : минут : секунд",
+  "habitTimePlaceholder": "00:00:00",
+  "habitFrequencyPrompt": "Әдет қаншалықты жиі қайталанатынын таңдаңыз",
+  "habitFrequencySpecificTitle": "Нақты күндер",
+  "habitFrequencyDailyDescription": "Әдетті күн сайын үзіліссіз орындаңыз.",
+  "habitFrequencySpecificDescription": "Апта күндерін немесе нақты күндерді таңдаңыз.",
+  "habitFrequencyPeriodWeekLabel": "Апта",
+  "habitFrequencyPeriodMonthLabel": "Ай",
+  "habitFrequencyPeriodYearLabel": "Жыл",
+  "habitFrequencyTimesPerPeriodTitle": "Периодтағы күндер",
+  "habitFrequencyTimesPerPeriodDescription": "Апта, ай немесе жыл ішінде қанша күн орындау керегін қойыңыз.",
+  "habitTimesPerLabel": "рет",
+  "habitFrequencyWorkRestTitle": "Жұмыс / Демалыс",
+  "habitFrequencyWorkRestDescription": "Әдет циклі: Жұмыс — орындау күндері, Демалыс — үзілістер.",
+  "habitWorkLabel": "Жұмыс",
+  "habitRestLabel": "Демалыс",
+  "habitChooseTimeRangeTitle": "Бастау мерзімін таңдаңыз",
+  "habitStartDateLabel": "Басталу күні",
+  "habitEndDateLabel": "Аяқталу күні (қалауыңызша)",
+  "habitNoEndDate": "Аяқтау күні жоқ",
+  "habitCreateAction": "Әдетті құру",
+  "habitForever": "Шектеусіз",
+  "habitAddDateAction": "Күн қосу",
+  "habitScheduleTitle": "Кесте",
+  "habitFrequencySectionTitle": "Жиілік",
+  "habitSelectDatePlaceholder": "Таңдау",
+  "habitDeleteTitle": "Әдетті жою керек пе?",
+  "habitDeleteMessage": "Бұл әрекетті қайтару мүмкін емес.",
+  "habitEditTitle": "Әдетті өңдеу",
+  "habitGeneralSection": "Негізгі",
+  "habitAdvancedSection": "Қосымша",
+  "habitConnectCourse": "Курсты байланыстыру",
+  "habitCourseSyncHint": "Осы курстарға оқығанда прогресс синхрондалады.",
+  "habitCourseNumericWarning": "Курстарды қосу үшін Иә/Жоқ немесе Уақыт түрін таңдаңыз.",
+  "habitReminderDisabledTitle": "Еске салу",
+  "habitReminderDisabledSubtitle": "Бұл мүмкіндік қазір қолжетімсіз",
+  "habitArchiveTitle": "Әдетті архивтеу",
+  "habitArchivedLabel": "Архивте",
+  "habitResetProgressTitle": "Әдет прогресін тазарту",
+  "habitResetProgressSubtitle": "Барлық тарих өшіріледі",
+  "habitResetProgressConfirmTitle": "Әдет прогресін өшіру керек пе?",
+  "habitResetProgressConfirmMessage": "Бұл әдеттің бүкіл тарихын жояды. Қайтаруға болмайды.",
+  "habitUnarchiveAction": "Архивтен шығару",
+  "archivedHabitsTitle": "Архивтегі әдеттер",
+  "archivedHabitsEmpty": "Архивте әдет жоқ",
+  "habitsCalendarTitle": "Календарь",
+  "habitTimeHourShort": "Сағ",
+  "habitTimeMinuteShort": "Мин",
+  "habitTimeSecondShort": "Сек",
+  "habitCategoryStudy": "Оқу",
+  "habitCategorySports": "Спорт",
+  "habitCategoryQuitBadHabit": "Жаман әдеттен бас тарту",
+  "habitCategoryHome": "Үй",
+  "habitCategoryHealth": "Денсаулық",
+  "habitCategoryWork": "Жұмыс"
 }

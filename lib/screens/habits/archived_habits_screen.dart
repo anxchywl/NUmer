@@ -4,6 +4,7 @@ import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
 import 'habit_details_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class ArchivedHabitsScreen extends StatelessWidget {
   const ArchivedHabitsScreen({super.key});
@@ -14,20 +15,21 @@ class ArchivedHabitsScreen extends StatelessWidget {
     final uid = auth.currentUser?.uid;
     final habitService = context.watch<HabitService>();
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (uid == null) {
-      return const Scaffold(body: Center(child: Text("Please sign in")));
+      return Scaffold(body: Center(child: Text(l10n.habitsPleaseSignIn)));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Archived habits"),
+        title: Text(l10n.archivedHabitsTitle),
       ),
       body: StreamBuilder<List<Habit>>(
         stream: habitService.archivedHabitsStream(uid),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text(l10n.habitsListError(snapshot.error.toString())));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -39,13 +41,13 @@ class ArchivedHabitsScreen extends StatelessWidget {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.archive_outlined, size: 64, color: theme.colorScheme.outline),
-                  const SizedBox(height: 16),
-                  Text("No archived habits", style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
-                ],
-              ),
-            );
+              children: [
+                Icon(Icons.archive_outlined, size: 64, color: theme.colorScheme.outline),
+                const SizedBox(height: 16),
+                Text(l10n.archivedHabitsEmpty, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
+              ],
+            ),
+          );
           }
 
           return ListView.builder(
@@ -73,10 +75,10 @@ class ArchivedHabitsScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(habit.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text("Archived", style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
+                  subtitle: Text(l10n.habitArchivedLabel, style: TextStyle(color: theme.colorScheme.outline, fontSize: 12)),
                   trailing: TextButton(
                     onPressed: () => _unarchive(context, uid, habit.id),
-                    child: const Text("Unarchive"),
+                    child: Text(l10n.habitUnarchiveAction),
                   ),
                   onTap: () {
                     Navigator.push(

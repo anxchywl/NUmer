@@ -1318,4 +1318,394 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get leaderboardHintMessage =>
       '• Оқу уақытын көру үшін көшбасшылар тақтасындағы кез келген пайдаланушыны басуға болады.\n• Мүшені түрту үшін оның аватарының жанындағы қол белгішесін басыңыз.';
+
+  @override
+  String get habitsNavLabel => 'Әдеттер';
+
+  @override
+  String get habitsTabProgress => 'Прогресс';
+
+  @override
+  String get habitsTabList => 'Менің әдеттерім';
+
+  @override
+  String get habitsPleaseSignIn => 'Кіру қажет';
+
+  @override
+  String get habitsEmptyToday => 'Бүгін жоспар жоқ. Керемет!';
+
+  @override
+  String habitsListError(String error) {
+    return 'Қате: $error';
+  }
+
+  @override
+  String get habitsEmptyListTitle => 'Әзірге әдеттер жоқ';
+
+  @override
+  String get habitsEmptyListCta => 'Алғашқысын құру';
+
+  @override
+  String get habitRequirementMarkDone => 'Орындалды деп белгілеу';
+
+  @override
+  String habitRequirementToday(String current, String target, String unit) {
+    return '$current / $target $unit бүгін';
+  }
+
+  @override
+  String habitRequirementTodayNoUnit(String current, String target) {
+    return '$current / $target бүгін';
+  }
+
+  @override
+  String get habitFrequencyEveryDay => 'Күн сайын';
+
+  @override
+  String get habitFrequencySpecificMonth => 'Айдың нақты күндері';
+
+  @override
+  String get habitFrequencySpecificDates => 'Белгілі күндер';
+
+  @override
+  String habitFrequencyDaysLabel(String days) {
+    return 'Күндер: $days';
+  }
+
+  @override
+  String habitFrequencyInterval(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'күн',
+      one: 'күн',
+    );
+    return 'Әр $days $_temp0';
+  }
+
+  @override
+  String habitFrequencyTimesPerPeriod(int count, String period) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count рет $period ішінде',
+      one: '$count рет $period ішінде',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get habitPeriodWeek => 'Апта';
+
+  @override
+  String get habitPeriodMonth => 'Ай';
+
+  @override
+  String get habitPeriodYear => 'Жыл';
+
+  @override
+  String get habitDailyOverview => 'Күндік шолу';
+
+  @override
+  String get habitNoHabitsThisDay => 'Бұл күні әдеттер орындалмады.';
+
+  @override
+  String get habitMinutesShort => 'мин';
+
+  @override
+  String get habitLogSetTotal => 'Барлығын орнату';
+
+  @override
+  String get habitLogAddMore => 'Қосу';
+
+  @override
+  String get habitUpdateProgress => 'Прогресті жаңарту';
+
+  @override
+  String get habitLogSetValueTitle => 'Мәнін орнату';
+
+  @override
+  String get habitClearTime => 'Уақытты тазарту';
+
+  @override
+  String habitProgressLabel(String date) {
+    return 'Прогресс, $date';
+  }
+
+  @override
+  String habitLogSettingTotal(String total) {
+    return '$total ретінде орнату';
+  }
+
+  @override
+  String habitLogAdding(String value, String existing) {
+    return '$value мәнін $existing үстіне қосу';
+  }
+
+  @override
+  String habitGoalLabel(String goal) {
+    return 'Мақсат: $goal';
+  }
+
+  @override
+  String get habitCreateTitle => 'Жаңа әдет құру';
+
+  @override
+  String get habitTrackingTitle => 'Бақылау түрі';
+
+  @override
+  String get habitExplainHabit => 'Әдетті сипаттаңыз';
+
+  @override
+  String get habitNameLabel => 'Әдет атауы';
+
+  @override
+  String get habitNameHint => 'мысалы, таңғы жүгіру';
+
+  @override
+  String get habitCategoryLabel => 'Санат';
+
+  @override
+  String get habitCategoryNew => 'Жаңа санат';
+
+  @override
+  String get habitCategoryNameLabel => 'Санат атауы';
+
+  @override
+  String get habitCategoryNameHint => 'мысалы, оқу';
+
+  @override
+  String get habitCategoryDeleteTitle => 'Санатты жою';
+
+  @override
+  String habitCategoryDeleteMessage(String name) {
+    return '\"$name\" жойылсын ба? Бұны қайтару мүмкін емес.';
+  }
+
+  @override
+  String get habitCategoryCreateAction => 'Өзгеше жасау';
+
+  @override
+  String get habitBack => 'Артқа';
+
+  @override
+  String get habitNext => 'Әрі қарай';
+
+  @override
+  String get habitYesNo => 'Иә / Жоқ';
+
+  @override
+  String get habitNumeric => 'Сандық';
+
+  @override
+  String get habitTime => 'Уақыт';
+
+  @override
+  String get habitTrackingYesNoDescription =>
+      'Әдеттің орындалғанын белгілеңіз.';
+
+  @override
+  String get habitTrackingNumericDescription =>
+      'Күн сайынғы нақты санды қойыңыз.';
+
+  @override
+  String get habitTrackingTimeDescription =>
+      'Күндік мақсат ретінде уақыт мөлшерін қойыңыз.';
+
+  @override
+  String get habitComparatorAtLeast => 'Кемінде';
+
+  @override
+  String get habitComparatorLessThan => 'Аз';
+
+  @override
+  String get habitComparatorExactly => 'Дәл';
+
+  @override
+  String get habitComparatorAny => 'Кез келген мән';
+
+  @override
+  String get habitValueLabel => 'Мән';
+
+  @override
+  String get habitUnitLabel => 'Бірлік';
+
+  @override
+  String get habitUnitHint => 'мысалы, бет';
+
+  @override
+  String get habitPerDay => 'күніне';
+
+  @override
+  String get habitTimeLabel => 'сағат : минут : секунд';
+
+  @override
+  String get habitTimePlaceholder => '00:00:00';
+
+  @override
+  String get habitFrequencyPrompt =>
+      'Әдет қаншалықты жиі қайталанатынын таңдаңыз';
+
+  @override
+  String get habitFrequencySpecificTitle => 'Нақты күндер';
+
+  @override
+  String get habitFrequencyDailyDescription =>
+      'Әдетті күн сайын үзіліссіз орындаңыз.';
+
+  @override
+  String get habitFrequencySpecificDescription =>
+      'Апта күндерін немесе нақты күндерді таңдаңыз.';
+
+  @override
+  String get habitFrequencyPeriodWeekLabel => 'Апта';
+
+  @override
+  String get habitFrequencyPeriodMonthLabel => 'Ай';
+
+  @override
+  String get habitFrequencyPeriodYearLabel => 'Жыл';
+
+  @override
+  String get habitFrequencyTimesPerPeriodTitle => 'Периодтағы күндер';
+
+  @override
+  String get habitFrequencyTimesPerPeriodDescription =>
+      'Апта, ай немесе жыл ішінде қанша күн орындау керегін қойыңыз.';
+
+  @override
+  String get habitTimesPerLabel => 'рет';
+
+  @override
+  String get habitFrequencyWorkRestTitle => 'Жұмыс / Демалыс';
+
+  @override
+  String get habitFrequencyWorkRestDescription =>
+      'Әдет циклі: Жұмыс — орындау күндері, Демалыс — үзілістер.';
+
+  @override
+  String get habitWorkLabel => 'Жұмыс';
+
+  @override
+  String get habitRestLabel => 'Демалыс';
+
+  @override
+  String get habitChooseTimeRangeTitle => 'Бастау мерзімін таңдаңыз';
+
+  @override
+  String get habitStartDateLabel => 'Басталу күні';
+
+  @override
+  String get habitEndDateLabel => 'Аяқталу күні (қалауыңызша)';
+
+  @override
+  String get habitNoEndDate => 'Аяқтау күні жоқ';
+
+  @override
+  String get habitCreateAction => 'Әдетті құру';
+
+  @override
+  String get habitForever => 'Шектеусіз';
+
+  @override
+  String get habitAddDateAction => 'Күн қосу';
+
+  @override
+  String get habitScheduleTitle => 'Кесте';
+
+  @override
+  String get habitFrequencySectionTitle => 'Жиілік';
+
+  @override
+  String get habitSelectDatePlaceholder => 'Таңдау';
+
+  @override
+  String get habitDeleteTitle => 'Әдетті жою керек пе?';
+
+  @override
+  String get habitDeleteMessage => 'Бұл әрекетті қайтару мүмкін емес.';
+
+  @override
+  String get habitEditTitle => 'Әдетті өңдеу';
+
+  @override
+  String get habitGeneralSection => 'Негізгі';
+
+  @override
+  String get habitAdvancedSection => 'Қосымша';
+
+  @override
+  String get habitConnectCourse => 'Курсты байланыстыру';
+
+  @override
+  String get habitCourseSyncHint =>
+      'Осы курстарға оқығанда прогресс синхрондалады.';
+
+  @override
+  String get habitCourseNumericWarning =>
+      'Курстарды қосу үшін Иә/Жоқ немесе Уақыт түрін таңдаңыз.';
+
+  @override
+  String get habitReminderDisabledTitle => 'Еске салу';
+
+  @override
+  String get habitReminderDisabledSubtitle => 'Бұл мүмкіндік қазір қолжетімсіз';
+
+  @override
+  String get habitArchiveTitle => 'Әдетті архивтеу';
+
+  @override
+  String get habitArchivedLabel => 'Архивте';
+
+  @override
+  String get habitResetProgressTitle => 'Әдет прогресін тазарту';
+
+  @override
+  String get habitResetProgressSubtitle => 'Барлық тарих өшіріледі';
+
+  @override
+  String get habitResetProgressConfirmTitle => 'Әдет прогресін өшіру керек пе?';
+
+  @override
+  String get habitResetProgressConfirmMessage =>
+      'Бұл әдеттің бүкіл тарихын жояды. Қайтаруға болмайды.';
+
+  @override
+  String get habitUnarchiveAction => 'Архивтен шығару';
+
+  @override
+  String get archivedHabitsTitle => 'Архивтегі әдеттер';
+
+  @override
+  String get archivedHabitsEmpty => 'Архивте әдет жоқ';
+
+  @override
+  String get habitsCalendarTitle => 'Календарь';
+
+  @override
+  String get habitTimeHourShort => 'Сағ';
+
+  @override
+  String get habitTimeMinuteShort => 'Мин';
+
+  @override
+  String get habitTimeSecondShort => 'Сек';
+
+  @override
+  String get habitCategoryStudy => 'Оқу';
+
+  @override
+  String get habitCategorySports => 'Спорт';
+
+  @override
+  String get habitCategoryQuitBadHabit => 'Жаман әдеттен бас тарту';
+
+  @override
+  String get habitCategoryHome => 'Үй';
+
+  @override
+  String get habitCategoryHealth => 'Денсаулық';
+
+  @override
+  String get habitCategoryWork => 'Жұмыс';
 }

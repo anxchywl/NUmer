@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
 import '../../../models/habit_category.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/habit_service.dart';
 import 'swipe_selector.dart';
 import '../../../app_state.dart';
+import '../../../l10n/app_localizations.dart';
 
 class AddHabitSheet extends StatefulWidget {
   final HabitCategory? initialCategory;
@@ -291,9 +293,41 @@ final FocusNode _timeFocus = FocusNode();
     return _defaultCategories.firstWhere((c) => c['name'] == _categoryName, orElse: () => _defaultCategories.last);
   }
 
+  String _localizedCategoryName(String name, AppLocalizations l10n) {
+    switch (name) {
+      case 'Study':
+        return l10n.habitCategoryStudy;
+      case 'Sports':
+        return l10n.habitCategorySports;
+      case 'Quit a bad habit':
+        return l10n.habitCategoryQuitBadHabit;
+      case 'Home':
+        return l10n.habitCategoryHome;
+      case 'Health':
+        return l10n.habitCategoryHealth;
+      case 'Work':
+        return l10n.habitCategoryWork;
+      default:
+        return name;
+    }
+  }
+
+  String _periodLabel(HabitPeriod period, AppLocalizations l10n) {
+    switch (period) {
+      case HabitPeriod.week:
+        return l10n.habitPeriodWeek;
+      case HabitPeriod.month:
+        return l10n.habitPeriodMonth;
+      case HabitPeriod.year:
+        return l10n.habitPeriodYear;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final localeName = l10n.localeName;
     
     return PopScope(
       canPop: true,
@@ -313,19 +347,19 @@ final FocusNode _timeFocus = FocusNode();
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(theme),
+                _buildHeader(theme, l10n),
                 const SizedBox(height: 24),
                
                  if (_screen == 0) ...[
                     // -- Step 1: Details --
-                    Text("Explain your habit", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(l10n.habitExplainHabit, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     TextFormField(
                       focusNode: _habitNameFocus,
                       initialValue: _habitName.isNotEmpty ? _habitName : null, 
                       decoration: InputDecoration(
-                        labelText: "Habit name",
-                        hintText: "e.g. morning jog",
+                        labelText: l10n.habitNameLabel,
+                        hintText: l10n.habitNameHint,
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                         border: OutlineInputBorder(
@@ -345,7 +379,7 @@ final FocusNode _timeFocus = FocusNode();
                       onChanged: (v) => _habitName = v,
                       inputFormatters: [
                         LengthLimitingTextInputFormatter(32),
-                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                        FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -358,7 +392,7 @@ final FocusNode _timeFocus = FocusNode();
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(_isCreatingCategory ? "New category" : "Category", style: theme.textTheme.labelLarge),
+                              Text(_isCreatingCategory ? l10n.habitCategoryNew : l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
                               const SizedBox(height: 12),
                               AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 400),
@@ -388,12 +422,12 @@ final FocusNode _timeFocus = FocusNode();
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
                                       TextField(
-                                        decoration: const InputDecoration(labelText: "Category Name", hintText: "e.g. Reading"),
+                                        decoration: InputDecoration(labelText: l10n.habitCategoryNameLabel, hintText: l10n.habitCategoryNameHint),
                                         onChanged: (v) => _newCatName = v,
                                         autofocus: true,
                                         inputFormatters: [
                                           LengthLimitingTextInputFormatter(32),
-                                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                          FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
                                         ],
                                       ),
                                       const SizedBox(height: 12),
@@ -464,12 +498,12 @@ final FocusNode _timeFocus = FocusNode();
                                          children: [
                                            TextButton(
                                               onPressed: () => setState(() => _isCreatingCategory = false), 
-                                              child: const Text("Back")
+                                              child: Text(l10n.habitBack)
                                            ),
                                            const Spacer(),
                                            FilledButton(
                                               onPressed: _saveNewCategory, 
-                                              child: const Text("Save Category")
+                                              child: Text(l10n.save)
                                            ),
                                          ],
                                       )
@@ -504,7 +538,7 @@ final FocusNode _timeFocus = FocusNode();
                                               Row(
                                                 mainAxisAlignment: MainAxisAlignment.center,
                                                 children: [
-                                                  Text(item, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                                                  Text(_localizedCategoryName(item, l10n), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                                                   const SizedBox(width: 8),
                                                   Icon(icon, color: color, size: 20),
                                                 ],
@@ -515,7 +549,7 @@ final FocusNode _timeFocus = FocusNode();
                                                   child: IconButton(
                                                     icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
                                                     onPressed: () => _confirmDeleteCategory(cat),
-                                                    tooltip: "Delete Category",
+                                                    tooltip: l10n.habitCategoryDeleteTitle,
                                                   ),
                                                 ),
                                             ],
@@ -529,7 +563,7 @@ final FocusNode _timeFocus = FocusNode();
                                              setState(() => _isCreatingCategory = true);
                                           },
                                           icon: const Icon(Icons.add, size: 16),
-                                          label: const Text("Create custom"),
+                                          label: Text(l10n.habitCategoryCreateAction),
                                           style: TextButton.styleFrom(
                                             visualDensity: VisualDensity.compact,
                                             foregroundColor: theme.colorScheme.primary,
@@ -547,7 +581,7 @@ final FocusNode _timeFocus = FocusNode();
                     FilledButton(
                       style: _nextButtonStyle(theme),
                       onPressed: _habitName.trim().isEmpty ? null : () => _navigateToStep(1),
-                      child: const Text("Next"),
+                      child: Text(l10n.habitNext),
                     ),
                   ] else if (_screen == 1) ...[
                   // -- Step 2: Tracking Type --
@@ -585,22 +619,22 @@ final FocusNode _timeFocus = FocusNode();
                               children: [
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                  child: Wrap(
+                                      child: Wrap(
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
                                       ChoiceChip(
-                                        label: const Text("Yes / No"),
+                                        label: Text(l10n.habitYesNo),
                                         selected: _type == HabitType.yesNo,
                                         onSelected: (b) => setState(() => _type = HabitType.yesNo),
                                       ),
                                       ChoiceChip(
-                                        label: const Text("Numeric"),
+                                        label: Text(l10n.habitNumeric),
                                         selected: _type == HabitType.numeric,
                                         onSelected: (b) => setState(() => _type = HabitType.numeric),
                                       ),
                                       ChoiceChip(
-                                        label: const Text("Time"),
+                                        label: Text(l10n.habitTime),
                                         selected: _type == HabitType.time,
                                         onSelected: (b) => setState(() => _type = HabitType.time),
                                       ),
@@ -610,9 +644,9 @@ final FocusNode _timeFocus = FocusNode();
                                 const SizedBox(height: 16),
                                 Text(
                                   switch(_type) {
-                                    HabitType.yesNo => "Mark whether you completed the habit or not.",
-                                    HabitType.numeric => "Set a specific number to reach each day.",
-                                    HabitType.time => "Set a time duration as your daily goal.",
+                                    HabitType.yesNo => l10n.habitTrackingYesNoDescription,
+                                    HabitType.numeric => l10n.habitTrackingNumericDescription,
+                                    HabitType.time => l10n.habitTrackingTimeDescription,
                                   },
                                   style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                 ),
@@ -632,10 +666,10 @@ final FocusNode _timeFocus = FocusNode();
                           onChanged: (v) => setState(() => _comparator = v),
                           builder: (context, item) {
                              String label = switch(item) {
-                                HabitComparator.atLeast => "At least",
-                                HabitComparator.lessThan => "Less than",
-                                HabitComparator.exactly => "Exactly",
-                                HabitComparator.any => "Any value", // Should not happen with filter
+                                HabitComparator.atLeast => l10n.habitComparatorAtLeast,
+                                HabitComparator.lessThan => l10n.habitComparatorLessThan,
+                                HabitComparator.exactly => l10n.habitComparatorExactly,
+                                HabitComparator.any => l10n.habitComparatorAny, // Should not happen with filter
                              };
                               return Center(
                                 child: Text(
@@ -657,7 +691,7 @@ final FocusNode _timeFocus = FocusNode();
                                 controller: _targetCtrl,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
-                                  labelText: "Value",
+                                  labelText: l10n.habitValueLabel,
                                   filled: true,
                                   fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -693,8 +727,8 @@ final FocusNode _timeFocus = FocusNode();
                                 focusNode: _unitFocus,
                                 controller: _unitCtrl,
                                 decoration: InputDecoration(
-                                  labelText: "Unit",
-                                   hintText: "e.g. pages",                                  filled: true,
+                                  labelText: l10n.habitUnitLabel,
+                                   hintText: l10n.habitUnitHint,                                  filled: true,
                                   fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -703,17 +737,17 @@ final FocusNode _timeFocus = FocusNode();
                                 onChanged: (v) => setState(() => _unit = v),
                                 inputFormatters: [
                                   LengthLimitingTextInputFormatter(16),
-                                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                  FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
                                 ],
                               ),
                            ),
                         ]),
                         const SizedBox(height: 8),
-                        Center(child: Text("per day", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
+                        Center(child: Text(l10n.habitPerDay, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
                         
                      ] else if (_type == HabitType.time) ...[
                         // Label ABOVE
-                        Center(child: Text("hours : minutes : seconds", style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline))),
+                        Center(child: Text(l10n.habitTimeLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline))),
                         const SizedBox(height: 8),
                         
                         Center(
@@ -726,7 +760,7 @@ final FocusNode _timeFocus = FocusNode();
                               textAlign: TextAlign.center,
                               style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
                               decoration: InputDecoration(
-                                hintText: "00:00:00",
+                                hintText: l10n.habitTimePlaceholder,
                                 filled: true,
                                 fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -739,7 +773,7 @@ final FocusNode _timeFocus = FocusNode();
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Center(child: Text("per day", style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
+                        Center(child: Text(l10n.habitPerDay, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
                      ],
                   ],
 
@@ -748,19 +782,19 @@ final FocusNode _timeFocus = FocusNode();
                   // Navigation
                   Row(
                     children: [
-                      TextButton(onPressed: () => _navigateToStep(0), child: const Text("Back")),
+                      TextButton(onPressed: () => _navigateToStep(0), child: Text(l10n.habitBack)),
                       const Spacer(),
                       FilledButton(
                         style: _nextButtonStyle(theme),
                         onPressed: _isTrackingNextEnabled ? () => _navigateToStep(2) : null,
-                        child: const Text("Next"),
+                        child: Text(l10n.habitNext),
                       ),
                     ],
                   ),
                 ] else if (_screen == 2) ...[
                   // -- Step 3: Frequency --
                   // -- Step 3: Frequency --
-                  Text("Choose how often the habit should repeat", style: theme.textTheme.labelLarge),
+                  Text(l10n.habitFrequencyPrompt, style: theme.textTheme.labelLarge),
                   const SizedBox(height: 12),
                   
                   Column(
@@ -775,19 +809,19 @@ final FocusNode _timeFocus = FocusNode();
                                  _buildFreqOption(
                                     theme,
                                     type: HabitFrequencyType.daily,
-                                    title: "Every day",
-                                    child: Text("Do the habit daily without skipping.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                                    title: l10n.habitFrequencyEveryDay,
+                                    child: Text(l10n.habitFrequencyDailyDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                  ),
                                  const SizedBox(height: 12),
                                  
                                  _buildFreqOption(
                                     theme,
                                     type: HabitFrequencyType.specificDays,
-                                    title: "Specific days",
+                                    title: l10n.habitFrequencySpecificTitle,
                                     child: Column(
                                        crossAxisAlignment: CrossAxisAlignment.start,
                                        children: [
-                                          Text("Choose exact weekdays or dates.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                                          Text(l10n.habitFrequencySpecificDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                           const SizedBox(height: 12),
                                           // Sub-selector
                                           Container(
@@ -799,9 +833,9 @@ final FocusNode _timeFocus = FocusNode();
                                             padding: const EdgeInsets.all(4),
                                             child: Row(
                                               children: [
-                                                 _buildPeriodTab(theme, "Week", HabitPeriod.week),
-                                                 _buildPeriodTab(theme, "Month", HabitPeriod.month),
-                                                 _buildPeriodTab(theme, "Year", HabitPeriod.year),
+                                                 _buildPeriodTab(theme, l10n.habitFrequencyPeriodWeekLabel, HabitPeriod.week),
+                                                 _buildPeriodTab(theme, l10n.habitFrequencyPeriodMonthLabel, HabitPeriod.month),
+                                                 _buildPeriodTab(theme, l10n.habitFrequencyPeriodYearLabel, HabitPeriod.year),
                                               ],
                                             ),
                                           ),
@@ -830,11 +864,11 @@ final FocusNode _timeFocus = FocusNode();
                                _buildFreqOption(
                                   theme,
                                   type: HabitFrequencyType.repeatsInPeriod,
-                                  title: "Days per period",
+                                  title: l10n.habitFrequencyTimesPerPeriodTitle,
                                   child: Column(
                                      crossAxisAlignment: CrossAxisAlignment.start,
                                      children: [
-                                        Text("Set how many days within a week, month, or year.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                                        Text(l10n.habitFrequencyTimesPerPeriodDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                         const SizedBox(height: 12),
                                         Row(
                                            mainAxisAlignment: MainAxisAlignment.start,
@@ -888,7 +922,7 @@ final FocusNode _timeFocus = FocusNode();
                                           }
                                        )),
                                               const SizedBox(width: 12),
-                                              const Text("times per"),
+                                              Text(l10n.habitTimesPerLabel),
                                               const SizedBox(width: 12),
                                               
                                               // Tap to toggle period
@@ -923,19 +957,19 @@ final FocusNode _timeFocus = FocusNode();
                          curve: Curves.easeOutCubic,
                           child: _isFreqGoalFocused 
                            ? const SizedBox.shrink()
-                           : _buildFreqOption(
-                             theme,
-                             type: HabitFrequencyType.interval,
-                             title: "Work / Rest",
-                             child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                   Text("Set a repeating cycle for the habit. Work — days when you do the habit. Rest — days off.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                          : _buildFreqOption(
+                            theme,
+                            type: HabitFrequencyType.interval,
+                            title: l10n.habitFrequencyWorkRestTitle,
+                            child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                   Text(l10n.habitFrequencyWorkRestDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                    const SizedBox(height: 12),
                                    Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                         const Text("Work "),
+                                         Text("${l10n.habitWorkLabel} "),
                                         SizedBox(width: 60, child: Builder(
                                           builder: (context) {
                                             return TextFormField(
@@ -949,15 +983,15 @@ final FocusNode _timeFocus = FocusNode();
                                                      FilteringTextInputFormatter.deny(RegExp(r'^0')),
                                                      LengthLimitingTextInputFormatter(3),
                                                   ],
-                                                  decoration: InputDecoration(
-                                                    isDense: true, 
-                                                    filled: true,
-                                                    fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-                                                    hintText: "0",
-                                                  ),
+                                                   decoration: InputDecoration(
+                                                     isDense: true, 
+                                                     filled: true,
+                                                     fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
+                                                     hintText: "0",
+                                                   ),
                                                 onChanged: (v) {
                                                   final trimmed = v.trim();
                                                   if (trimmed.isEmpty) {
@@ -981,7 +1015,7 @@ final FocusNode _timeFocus = FocusNode();
                                           }
                                        )),
                                          const SizedBox(width: 12),
-                                         const Text("X"),
+                                         const Text("×"),
                                          const SizedBox(width: 12),
                                         SizedBox(width: 60, child: Builder(
                                           builder: (context) {
@@ -996,15 +1030,15 @@ final FocusNode _timeFocus = FocusNode();
                                                      FilteringTextInputFormatter.deny(RegExp(r'^0')),
                                                      LengthLimitingTextInputFormatter(3),
                                                   ],
-                                                  decoration: InputDecoration(
-                                                    isDense: true, 
-                                                    filled: true,
-                                                    fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                                    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                                                    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-                                                    hintText: "0",
-                                                  ),
+                                                   decoration: InputDecoration(
+                                                     isDense: true, 
+                                                     filled: true,
+                                                     fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                                                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                                     enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                                                     focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
+                                                     hintText: "0",
+                                                   ),
                                                 onChanged: (v) {
                                                   final trimmed = v.trim();
                                                   if (trimmed.isEmpty) {
@@ -1022,12 +1056,12 @@ final FocusNode _timeFocus = FocusNode();
                                                     _restDaysCtrl.text = "$val";
                                                     _restDaysCtrl.selection = TextSelection.fromPosition(TextPosition(offset: _restDaysCtrl.text.length));
                                                   }
-                                                  setState(() => _frequencyGoal = val);
-                                                },
-                                             );
+                                                   setState(() => _frequencyGoal = val);
+                                                 },
+                                              );
                                           }
                                        )),
-                                         const Text(" Rest"),
+                                         Text(" ${l10n.habitRestLabel}"),
                                       ],
                                    ),
                                 ],
@@ -1042,23 +1076,23 @@ final FocusNode _timeFocus = FocusNode();
                   // Navigation
                   Row(
                     children: [
-                      TextButton(onPressed: () => _navigateToStep(1), child: const Text("Back")),
+                      TextButton(onPressed: () => _navigateToStep(1), child: Text(l10n.habitBack)),
                       const Spacer(),
                       FilledButton(
                         style: _nextButtonStyle(theme),
                         onPressed: _isFrequencyNextEnabled ? () => _navigateToStep(3) : null,
-                        child: const Text("Next"),
+                        child: Text(l10n.habitNext),
                       ),
                     ],
                   ),
                 ] else if (_screen == 3) ...[
                   // -- Step 4: When? --
-                  Text("Choose the time range when you want to start", style: theme.textTheme.labelLarge),
+                  Text(l10n.habitChooseTimeRangeTitle, style: theme.textTheme.labelLarge),
                   const SizedBox(height: 16),
                   
                   ListTile(
-                    title: const Text("Start date"),
-                    subtitle: Text("${_startDate.day}/${_startDate.month}/${_startDate.year}"),
+                    title: Text(l10n.habitStartDateLabel),
+                    subtitle: Text(DateFormat.yMMMd(localeName).format(_startDate)),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
                       final picked = await showDatePicker(
@@ -1072,8 +1106,8 @@ final FocusNode _timeFocus = FocusNode();
                   ),
                   const Divider(),
                   ListTile(
-                    title: const Text("End date (optional)"),
-                    subtitle: Text(_endDate == null ? "No end date" : "${_endDate!.day}/${_endDate!.month}/${_endDate!.year}"),
+                    title: Text(l10n.habitEndDateLabel),
+                    subtitle: Text(_endDate == null ? l10n.habitNoEndDate : DateFormat.yMMMd(localeName).format(_endDate!)),
                     trailing: _endDate == null ? const Icon(Icons.add) : const Icon(Icons.close),
                     onTap: () async {
                       if (_endDate != null) {
@@ -1095,11 +1129,11 @@ final FocusNode _timeFocus = FocusNode();
                   // Navigation & Create
                   Row(
                     children: [
-                      TextButton(onPressed: () => _navigateToStep(2), child: const Text("Back")),
+                      TextButton(onPressed: () => _navigateToStep(2), child: Text(l10n.habitBack)),
                       const SizedBox(width: 12),
                       Expanded(child: FilledButton(
                         onPressed: _isSaving ? null : _submit,
-                        child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text("Create Habit"),
+                        child: _isSaving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(l10n.habitCreateAction),
                       )),
                     ],
                   ),
@@ -1195,6 +1229,8 @@ final FocusNode _timeFocus = FocusNode();
   }
 
   Widget _buildPeriodToggle(ThemeData theme, HabitPeriod p) {
+       final l10n = AppLocalizations.of(context)!;
+       final label = _periodLabel(p, l10n);
        return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1206,7 +1242,7 @@ final FocusNode _timeFocus = FocusNode();
             duration: const Duration(milliseconds: 200),
             transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: ScaleTransition(scale: anim, child: child)),
             child: Text(
-               p.name.toUpperCase(),
+               label.toUpperCase(),
                key: ValueKey(p),
                style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
             ),
@@ -1262,19 +1298,8 @@ final FocusNode _timeFocus = FocusNode();
   }
 
   Widget _buildYearSelector(ThemeData theme) {
-      // "First select month, then select day. Allow selecting multiple dates"
-      // This is complex. We need a list of selected dates (Day + Month).
-      // `weekDays` (Set<int>) cannot store Month+Day easily unless we encode it (e.g. MMDD).
-      // Or we change the model. I cannot change the model easily without migration.
-      // Let's check `Habit` model again.
-      // It has `weekDays`.
-      // If I use MMDD (e.g. 101 for Jan 1st, 1231 for Dec 31st), max is 1231. 
-      // This fits in `int`.
-      // Let's use that encoding for Year mode.
-      
-      // UI: Simple Month Picker, then Day Grid?
-      // Or simply a button "Add Date" that opens a picker.
-      final months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      final localeName = AppLocalizations.of(context)!.localeName;
+      final months = List.generate(12, (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)));
       
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1308,29 +1333,29 @@ final FocusNode _timeFocus = FocusNode();
                  );
                  if (picked != null) {
                     final encoded = picked.month * 100 + picked.day;
-                    setState(() => _weekDays.add(encoded));
-                 }
+                 setState(() => _weekDays.add(encoded));
+               }
              }, 
              icon: const Icon(Icons.add), 
-             label: const Text("Add Date"),
+             label: Text(AppLocalizations.of(context)!.habitAddDateAction),
            ),
         ],
       );
   }
 
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(ThemeData theme, AppLocalizations l10n) {
     return Row(
       children: [
         const SizedBox(width: 48),
         Expanded(
             child: Text(
             switch(_screen) {
-              0 => "Create new habit",
-              1 => "Tracking type",
-              2 => "Frequency",
-              3 => "When should this habit take place?",
-              _ => "Create new habit",
+              0 => l10n.habitCreateTitle,
+              1 => l10n.habitTrackingTitle,
+              2 => l10n.habitFrequencySectionTitle,
+              3 => l10n.habitChooseTimeRangeTitle,
+              _ => l10n.habitCreateTitle,
             },
             style: theme.textTheme.titleLarge,
             textAlign: TextAlign.center,
@@ -1342,7 +1367,8 @@ final FocusNode _timeFocus = FocusNode();
   }
 
   Widget _buildDaySelector(ThemeData theme) {
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
+    final days = [...narrowWeekdays.skip(1), narrowWeekdays.first];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (index) {
@@ -1409,7 +1435,10 @@ final FocusNode _timeFocus = FocusNode();
       }
       
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+      if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.habitsListError(e.toString()))));
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -1442,17 +1471,18 @@ final FocusNode _timeFocus = FocusNode();
   }
 
   Future<void> _confirmDeleteCategory(HabitCategory cat) async {
+    final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
        context: context,
        builder: (ctx) => AlertDialog(
-          title: const Text("Delete Category"),
-          content: Text("Delete '${cat.name}'? This cannot be undone."),
+          title: Text(l10n.habitCategoryDeleteTitle),
+          content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
           actions: [
-             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Cancel")),
+             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
              FilledButton(
                onPressed: () => Navigator.pop(ctx, true), 
                style: FilledButton.styleFrom(backgroundColor: Colors.red),
-               child: const Text("Delete")
+               child: Text(l10n.delete)
              ),
           ],
        )

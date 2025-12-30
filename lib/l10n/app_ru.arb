@@ -490,5 +490,212 @@
   },
   "cannotNudgeSelf": "Вы не можете подтолкнуть самого себя.",
   "userProhibitedNudge": "Этот пользователь отключил уведомления.",
-  "leaderboardHintMessage": "• Вы можете нажать на любого пользователя в таблице лидеров, чтобы просмотреть его время обучения.\n• Нажмите на иконку руки рядом с аватаркой участника, чтобы подтолкнуть его."
+  "leaderboardHintMessage": "• Вы можете нажать на любого пользователя в таблице лидеров, чтобы просмотреть его время обучения.\n• Нажмите на иконку руки рядом с аватаркой участника, чтобы подтолкнуть его.",
+  "habitsNavLabel": "Привычки",
+  "habitsTabProgress": "Прогресс",
+  "habitsTabList": "Мои привычки",
+  "habitsPleaseSignIn": "Пожалуйста, войдите",
+  "habitsEmptyToday": "На сегодня ничего нет. Ура!",
+  "habitsListError": "Ошибка: {error}",
+  "@habitsListError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsEmptyListTitle": "Пока нет привычек",
+  "habitsEmptyListCta": "Создать первую",
+  "habitRequirementMarkDone": "Отметить выполненным",
+  "habitRequirementToday": "{current} / {target} {unit} сегодня",
+  "@habitRequirementToday": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "habitRequirementTodayNoUnit": "{current} / {target} сегодня",
+  "@habitRequirementTodayNoUnit": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyEveryDay": "Каждый день",
+  "habitFrequencySpecificMonth": "Определенные дни месяца",
+  "habitFrequencySpecificDates": "Конкретные даты",
+  "habitFrequencyDaysLabel": "Дни: {days}",
+  "@habitFrequencyDaysLabel": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyInterval": "Каждые {days} {days, plural, one{день} few{дня} many{дней} other{дней}}",
+  "@habitFrequencyInterval": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitFrequencyTimesPerPeriod": "{count, plural, one{{count} раз в {period}} few{{count} раза в {period}} many{{count} раз в {period}} other{{count} раз в {period}}}",
+  "@habitFrequencyTimesPerPeriod": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "habitPeriodWeek": "Неделя",
+  "habitPeriodMonth": "Месяц",
+  "habitPeriodYear": "Год",
+  "habitDailyOverview": "Ежедневный обзор",
+  "habitNoHabitsThisDay": "В этот день привычек не выполнено.",
+  "habitMinutesShort": "мин",
+  "habitLogSetTotal": "Задать итог",
+  "habitLogAddMore": "Добавить",
+  "habitUpdateProgress": "Обновить прогресс",
+  "habitLogSetValueTitle": "Установить значение",
+  "habitClearTime": "Сбросить время",
+  "habitProgressLabel": "Прогресс, {date}",
+  "@habitProgressLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogSettingTotal": "Устанавливаем итог {total}",
+  "@habitLogSettingTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogAdding": "Добавляем {value} к {existing}",
+  "@habitLogAdding": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "existing": {
+        "type": "String"
+      }
+    }
+  },
+  "habitGoalLabel": "Цель: {goal}",
+  "@habitGoalLabel": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCreateTitle": "Создать новую привычку",
+  "habitTrackingTitle": "Тип отслеживания",
+  "habitExplainHabit": "Опишите привычку",
+  "habitNameLabel": "Название привычки",
+  "habitNameHint": "например, утренняя пробежка",
+  "habitCategoryLabel": "Категория",
+  "habitCategoryNew": "Новая категория",
+  "habitCategoryNameLabel": "Название категории",
+  "habitCategoryNameHint": "например, чтение",
+  "habitCategoryDeleteTitle": "Удалить категорию",
+  "habitCategoryDeleteMessage": "Удалить «{name}»? Это действие нельзя отменить.",
+  "@habitCategoryDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCategoryCreateAction": "Создать свою",
+  "habitBack": "Назад",
+  "habitNext": "Далее",
+  "habitYesNo": "Да / Нет",
+  "habitNumeric": "Числовая",
+  "habitTime": "Время",
+  "habitTrackingYesNoDescription": "Отмечайте, выполнена привычка или нет.",
+  "habitTrackingNumericDescription": "Задайте конкретное число на каждый день.",
+  "habitTrackingTimeDescription": "Задайте длительность как ежедневную цель.",
+  "habitComparatorAtLeast": "Не менее",
+  "habitComparatorLessThan": "Меньше чем",
+  "habitComparatorExactly": "Ровно",
+  "habitComparatorAny": "Любое значение",
+  "habitValueLabel": "Значение",
+  "habitUnitLabel": "Единица",
+  "habitUnitHint": "например, страницы",
+  "habitPerDay": "в день",
+  "habitTimeLabel": "часы : минуты : секунды",
+  "habitTimePlaceholder": "00:00:00",
+  "habitFrequencyPrompt": "Выберите, как часто повторять привычку",
+  "habitFrequencySpecificTitle": "Определенные дни",
+  "habitFrequencyDailyDescription": "Выполняйте привычку каждый день без пропусков.",
+  "habitFrequencySpecificDescription": "Выберите конкретные дни недели или даты.",
+  "habitFrequencyPeriodWeekLabel": "Неделя",
+  "habitFrequencyPeriodMonthLabel": "Месяц",
+  "habitFrequencyPeriodYearLabel": "Год",
+  "habitFrequencyTimesPerPeriodTitle": "Дней за период",
+  "habitFrequencyTimesPerPeriodDescription": "Укажите, сколько дней в неделю, месяц или год.",
+  "habitTimesPerLabel": "раз(а) в",
+  "habitFrequencyWorkRestTitle": "Работа / Отдых",
+  "habitFrequencyWorkRestDescription": "Задайте циклы привычки. Work — дни выполнения, Rest — выходные.",
+  "habitWorkLabel": "Работа",
+  "habitRestLabel": "Отдых",
+  "habitChooseTimeRangeTitle": "Выберите период начала",
+  "habitStartDateLabel": "Дата начала",
+  "habitEndDateLabel": "Дата окончания",
+  "habitNoEndDate": "Без даты окончания",
+  "habitCreateAction": "Создать привычку",
+  "habitForever": "Бессрочно",
+  "habitAddDateAction": "Добавить дату",
+  "habitScheduleTitle": "Расписание",
+  "habitFrequencySectionTitle": "Частота",
+  "habitSelectDatePlaceholder": "Выбрать",
+  "habitDeleteTitle": "Удалить привычку?",
+  "habitDeleteMessage": "Это действие нельзя отменить.",
+  "habitEditTitle": "Изменить",
+  "habitGeneralSection": "Основное",
+  "habitAdvancedSection": "Дополнительно",
+  "habitConnectCourse": "Связать курс",
+  "habitCourseSyncHint": "Прогресс синхронизируется, когда вы занимаетесь по этим курсам.",
+  "habitCourseNumericWarning": "Переключитесь на Да/Нет или Время, чтобы подключить курсы.",
+  "habitReminderDisabledTitle": "Напоминания",
+  "habitReminderDisabledSubtitle": "Эта функция сейчас недоступна",
+  "habitArchiveTitle": "Архивировать привычку",
+  "habitArchivedLabel": "В архиве",
+  "habitResetProgressTitle": "Сбросить прогресс привычки",
+  "habitResetProgressSubtitle": "Удаляет всю историю",
+  "habitResetProgressConfirmTitle": "Сбросить прогресс привычки?",
+  "habitResetProgressConfirmMessage": "Это удалит всю историю выполнения этой привычки. Действие необратимо.",
+  "habitUnarchiveAction": "Разархивировать",
+  "archivedHabitsTitle": "Архивированные",
+  "archivedHabitsEmpty": "Нет архивированных привычек",
+  "habitsCalendarTitle": "Календарь",
+  "habitTimeHourShort": "Ч",
+  "habitTimeMinuteShort": "М",
+  "habitTimeSecondShort": "С",
+  "habitCategoryStudy": "Учёба",
+  "habitCategorySports": "Спорт",
+  "habitCategoryQuitBadHabit": "Бросить плохую привычку",
+  "habitCategoryHome": "Дом",
+  "habitCategoryHealth": "Здоровье",
+  "habitCategoryWork": "Работа"
 }

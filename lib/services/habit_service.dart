@@ -448,6 +448,13 @@ class HabitService {
       final targetDate = DateTime(date.year, date.month, date.day);
       final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
       if (targetDate.isBefore(start)) continue; 
+      if (habit.endDate != null) {
+        final end = DateTime(habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
+        if (targetDate.isAfter(end)) continue;
+      }
+
+      // Respect the schedule to avoid logging on rest days
+      if (!habit.isScheduledFor(targetDate)) continue;
 
       // 2. Check type logic
       if (habit.type != HabitType.time) continue; 
@@ -467,6 +474,7 @@ class HabitService {
         
         double newVal = currentVal + deltaSeconds;
         if (newVal < 0) newVal = 0; 
+        if (newVal > 86399) newVal = 86399;
 
         if (newVal > 0) {
           transaction.set(historyRef, {

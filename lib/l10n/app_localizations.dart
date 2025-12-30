@@ -2541,6 +2541,696 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him.'**
   String get leaderboardHintMessage;
+
+  /// No description provided for @habitsNavLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Habits'**
+  String get habitsNavLabel;
+
+  /// No description provided for @habitsTabProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get habitsTabProgress;
+
+  /// No description provided for @habitsTabList.
+  ///
+  /// In en, this message translates to:
+  /// **'My habits'**
+  String get habitsTabList;
+
+  /// No description provided for @habitsPleaseSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in'**
+  String get habitsPleaseSignIn;
+
+  /// No description provided for @habitsEmptyToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to do today. Cheers!'**
+  String get habitsEmptyToday;
+
+  /// No description provided for @habitsListError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: {error}'**
+  String habitsListError(String error);
+
+  /// No description provided for @habitsEmptyListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits yet'**
+  String get habitsEmptyListTitle;
+
+  /// No description provided for @habitsEmptyListCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your first'**
+  String get habitsEmptyListCta;
+
+  /// No description provided for @habitRequirementMarkDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as done'**
+  String get habitRequirementMarkDone;
+
+  /// No description provided for @habitRequirementToday.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {target} {unit} today'**
+  String habitRequirementToday(String current, String target, String unit);
+
+  /// No description provided for @habitRequirementTodayNoUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {target} today'**
+  String habitRequirementTodayNoUnit(String current, String target);
+
+  /// No description provided for @habitFrequencyEveryDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Every day'**
+  String get habitFrequencyEveryDay;
+
+  /// No description provided for @habitFrequencySpecificMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific days of month'**
+  String get habitFrequencySpecificMonth;
+
+  /// No description provided for @habitFrequencySpecificDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific dates'**
+  String get habitFrequencySpecificDates;
+
+  /// No description provided for @habitFrequencyDaysLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Days: {days}'**
+  String habitFrequencyDaysLabel(String days);
+
+  /// No description provided for @habitFrequencyInterval.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {days} {days, plural, one{day} other{days}}'**
+  String habitFrequencyInterval(int days);
+
+  /// No description provided for @habitFrequencyTimesPerPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} time per {period}} other{{count} times per {period}}}'**
+  String habitFrequencyTimesPerPeriod(int count, String period);
+
+  /// No description provided for @habitPeriodWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get habitPeriodWeek;
+
+  /// No description provided for @habitPeriodMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get habitPeriodMonth;
+
+  /// No description provided for @habitPeriodYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get habitPeriodYear;
+
+  /// No description provided for @habitDailyOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily overview'**
+  String get habitDailyOverview;
+
+  /// No description provided for @habitNoHabitsThisDay.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits completed on this day.'**
+  String get habitNoHabitsThisDay;
+
+  /// No description provided for @habitMinutesShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get habitMinutesShort;
+
+  /// No description provided for @habitLogSetTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Set total'**
+  String get habitLogSetTotal;
+
+  /// No description provided for @habitLogAddMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more'**
+  String get habitLogAddMore;
+
+  /// No description provided for @habitUpdateProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Update progress'**
+  String get habitUpdateProgress;
+
+  /// No description provided for @habitLogSetValueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set value'**
+  String get habitLogSetValueTitle;
+
+  /// No description provided for @habitClearTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear time'**
+  String get habitClearTime;
+
+  /// No description provided for @habitProgressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress, {date}'**
+  String habitProgressLabel(String date);
+
+  /// No description provided for @habitLogSettingTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Setting total to {total}'**
+  String habitLogSettingTotal(String total);
+
+  /// No description provided for @habitLogAdding.
+  ///
+  /// In en, this message translates to:
+  /// **'Adding {value} to {existing}'**
+  String habitLogAdding(String value, String existing);
+
+  /// No description provided for @habitGoalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal}'**
+  String habitGoalLabel(String goal);
+
+  /// No description provided for @habitCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create new habit'**
+  String get habitCreateTitle;
+
+  /// No description provided for @habitTrackingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking type'**
+  String get habitTrackingTitle;
+
+  /// No description provided for @habitExplainHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Explain your habit'**
+  String get habitExplainHabit;
+
+  /// No description provided for @habitNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit name'**
+  String get habitNameLabel;
+
+  /// No description provided for @habitNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. morning jog'**
+  String get habitNameHint;
+
+  /// No description provided for @habitCategoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get habitCategoryLabel;
+
+  /// No description provided for @habitCategoryNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New category'**
+  String get habitCategoryNew;
+
+  /// No description provided for @habitCategoryNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Category name'**
+  String get habitCategoryNameLabel;
+
+  /// No description provided for @habitCategoryNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. reading'**
+  String get habitCategoryNameHint;
+
+  /// No description provided for @habitCategoryDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete category'**
+  String get habitCategoryDeleteTitle;
+
+  /// No description provided for @habitCategoryDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"? This cannot be undone.'**
+  String habitCategoryDeleteMessage(String name);
+
+  /// No description provided for @habitCategoryCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create custom'**
+  String get habitCategoryCreateAction;
+
+  /// No description provided for @habitBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get habitBack;
+
+  /// No description provided for @habitNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get habitNext;
+
+  /// No description provided for @habitYesNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes / No'**
+  String get habitYesNo;
+
+  /// No description provided for @habitNumeric.
+  ///
+  /// In en, this message translates to:
+  /// **'Numeric'**
+  String get habitNumeric;
+
+  /// No description provided for @habitTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get habitTime;
+
+  /// No description provided for @habitTrackingYesNoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark whether you completed the habit or not.'**
+  String get habitTrackingYesNoDescription;
+
+  /// No description provided for @habitTrackingNumericDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a specific number to reach each day.'**
+  String get habitTrackingNumericDescription;
+
+  /// No description provided for @habitTrackingTimeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a time duration as your daily goal.'**
+  String get habitTrackingTimeDescription;
+
+  /// No description provided for @habitComparatorAtLeast.
+  ///
+  /// In en, this message translates to:
+  /// **'At least'**
+  String get habitComparatorAtLeast;
+
+  /// No description provided for @habitComparatorLessThan.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than'**
+  String get habitComparatorLessThan;
+
+  /// No description provided for @habitComparatorExactly.
+  ///
+  /// In en, this message translates to:
+  /// **'Exactly'**
+  String get habitComparatorExactly;
+
+  /// No description provided for @habitComparatorAny.
+  ///
+  /// In en, this message translates to:
+  /// **'Any value'**
+  String get habitComparatorAny;
+
+  /// No description provided for @habitValueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get habitValueLabel;
+
+  /// No description provided for @habitUnitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get habitUnitLabel;
+
+  /// No description provided for @habitUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. pages'**
+  String get habitUnitHint;
+
+  /// No description provided for @habitPerDay.
+  ///
+  /// In en, this message translates to:
+  /// **'per day'**
+  String get habitPerDay;
+
+  /// No description provided for @habitTimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'hours : minutes : seconds'**
+  String get habitTimeLabel;
+
+  /// No description provided for @habitTimePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'00:00:00'**
+  String get habitTimePlaceholder;
+
+  /// No description provided for @habitFrequencyPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how often the habit should repeat'**
+  String get habitFrequencyPrompt;
+
+  /// No description provided for @habitFrequencySpecificTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Specific days'**
+  String get habitFrequencySpecificTitle;
+
+  /// No description provided for @habitFrequencyDailyDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Do the habit daily without skipping.'**
+  String get habitFrequencyDailyDescription;
+
+  /// No description provided for @habitFrequencySpecificDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose exact weekdays or dates.'**
+  String get habitFrequencySpecificDescription;
+
+  /// No description provided for @habitFrequencyPeriodWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Week'**
+  String get habitFrequencyPeriodWeekLabel;
+
+  /// No description provided for @habitFrequencyPeriodMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Month'**
+  String get habitFrequencyPeriodMonthLabel;
+
+  /// No description provided for @habitFrequencyPeriodYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get habitFrequencyPeriodYearLabel;
+
+  /// No description provided for @habitFrequencyTimesPerPeriodTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Days per period'**
+  String get habitFrequencyTimesPerPeriodTitle;
+
+  /// No description provided for @habitFrequencyTimesPerPeriodDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how many days within a week, month, or year.'**
+  String get habitFrequencyTimesPerPeriodDescription;
+
+  /// No description provided for @habitTimesPerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'times per'**
+  String get habitTimesPerLabel;
+
+  /// No description provided for @habitFrequencyWorkRestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Work / Rest'**
+  String get habitFrequencyWorkRestTitle;
+
+  /// No description provided for @habitFrequencyWorkRestDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a repeating cycle for the habit. Work — days when you do the habit. Rest — days off.'**
+  String get habitFrequencyWorkRestDescription;
+
+  /// No description provided for @habitWorkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get habitWorkLabel;
+
+  /// No description provided for @habitRestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get habitRestLabel;
+
+  /// No description provided for @habitChooseTimeRangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the time range when you want to start'**
+  String get habitChooseTimeRangeTitle;
+
+  /// No description provided for @habitStartDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Start date'**
+  String get habitStartDateLabel;
+
+  /// No description provided for @habitEndDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End date (optional)'**
+  String get habitEndDateLabel;
+
+  /// No description provided for @habitNoEndDate.
+  ///
+  /// In en, this message translates to:
+  /// **'No end date'**
+  String get habitNoEndDate;
+
+  /// No description provided for @habitCreateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Create habit'**
+  String get habitCreateAction;
+
+  /// No description provided for @habitForever.
+  ///
+  /// In en, this message translates to:
+  /// **'Forever'**
+  String get habitForever;
+
+  /// No description provided for @habitAddDateAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add date'**
+  String get habitAddDateAction;
+
+  /// No description provided for @habitScheduleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Schedule'**
+  String get habitScheduleTitle;
+
+  /// No description provided for @habitFrequencySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency'**
+  String get habitFrequencySectionTitle;
+
+  /// No description provided for @habitSelectDatePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select'**
+  String get habitSelectDatePlaceholder;
+
+  /// No description provided for @habitDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete habit?'**
+  String get habitDeleteTitle;
+
+  /// No description provided for @habitDeleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This action cannot be undone.'**
+  String get habitDeleteMessage;
+
+  /// No description provided for @habitEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit habit'**
+  String get habitEditTitle;
+
+  /// No description provided for @habitGeneralSection.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get habitGeneralSection;
+
+  /// No description provided for @habitAdvancedSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get habitAdvancedSection;
+
+  /// No description provided for @habitConnectCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect course'**
+  String get habitConnectCourse;
+
+  /// No description provided for @habitCourseSyncHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncs progress when you study for these courses.'**
+  String get habitCourseSyncHint;
+
+  /// No description provided for @habitCourseNumericWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch to Yes/No or Time to connect courses.'**
+  String get habitCourseNumericWarning;
+
+  /// No description provided for @habitReminderDisabledTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me'**
+  String get habitReminderDisabledTitle;
+
+  /// No description provided for @habitReminderDisabledSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This feature is currently disabled'**
+  String get habitReminderDisabledSubtitle;
+
+  /// No description provided for @habitArchiveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive habit'**
+  String get habitArchiveTitle;
+
+  /// No description provided for @habitArchivedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived'**
+  String get habitArchivedLabel;
+
+  /// No description provided for @habitResetProgressTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset habit progress'**
+  String get habitResetProgressTitle;
+
+  /// No description provided for @habitResetProgressSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Clears all history'**
+  String get habitResetProgressSubtitle;
+
+  /// No description provided for @habitResetProgressConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset habit progress?'**
+  String get habitResetProgressConfirmTitle;
+
+  /// No description provided for @habitResetProgressConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all completion history for this habit. It cannot be undone.'**
+  String get habitResetProgressConfirmMessage;
+
+  /// No description provided for @habitUnarchiveAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Unarchive'**
+  String get habitUnarchiveAction;
+
+  /// No description provided for @archivedHabitsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archived habits'**
+  String get archivedHabitsTitle;
+
+  /// No description provided for @archivedHabitsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No archived habits'**
+  String get archivedHabitsEmpty;
+
+  /// No description provided for @habitsCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get habitsCalendarTitle;
+
+  /// No description provided for @habitTimeHourShort.
+  ///
+  /// In en, this message translates to:
+  /// **'H'**
+  String get habitTimeHourShort;
+
+  /// No description provided for @habitTimeMinuteShort.
+  ///
+  /// In en, this message translates to:
+  /// **'M'**
+  String get habitTimeMinuteShort;
+
+  /// No description provided for @habitTimeSecondShort.
+  ///
+  /// In en, this message translates to:
+  /// **'S'**
+  String get habitTimeSecondShort;
+
+  /// No description provided for @habitCategoryStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get habitCategoryStudy;
+
+  /// No description provided for @habitCategorySports.
+  ///
+  /// In en, this message translates to:
+  /// **'Sports'**
+  String get habitCategorySports;
+
+  /// No description provided for @habitCategoryQuitBadHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit a bad habit'**
+  String get habitCategoryQuitBadHabit;
+
+  /// No description provided for @habitCategoryHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get habitCategoryHome;
+
+  /// No description provided for @habitCategoryHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get habitCategoryHealth;
+
+  /// No description provided for @habitCategoryWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get habitCategoryWork;
 }
 
 class _AppLocalizationsDelegate

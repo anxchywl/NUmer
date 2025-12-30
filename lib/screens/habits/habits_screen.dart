@@ -13,6 +13,7 @@ import 'habit_details_screen.dart';
 import 'add_habit_sheet.dart';
 import '../../widgets/progress_circle.dart';
 import '../../services/storage.dart';
+import '../../l10n/app_localizations.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});
@@ -24,6 +25,7 @@ class HabitsScreen extends StatefulWidget {
 class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderStateMixin {
   // We'll calculate the last 7 days (today + past 6 days) to show circles
   late List<DateTime> _weekDates;
+  WeekStart? _lastWeekStart;
   
   int _selectedTabIndex = 0; // 0 for Today, 1 for Habits
   late DateTime _selectedDate;
@@ -32,7 +34,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _updateWeekDates();
+    _updateWeekDates(WeekStart.monday);
     _selectedDate = DateTime.now();
     _selectedDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
     _dateScrollController = ScrollController();
@@ -41,6 +43,15 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scrollToToday(animate: false);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final weekStart = context.read<AppState>().weekStart;
+    if (_lastWeekStart != weekStart) {
+      setState(() => _updateWeekDates(weekStart));
+    }
   }
 
   void _scrollToToday({bool animate = false}) {
@@ -60,11 +71,20 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     }
   }
 
-  void _updateWeekDates() {
+  void _updateWeekDates(WeekStart weekStart) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final monday = today.subtract(Duration(days: today.weekday - 1));
-    _weekDates = List.generate(7, (i) => monday.add(Duration(days: i)));
+    _lastWeekStart = weekStart;
+    final offset = _weekStartOffset(today, weekStart);
+    final start = today.subtract(Duration(days: offset));
+    _weekDates = List.generate(7, (i) => start.add(Duration(days: i)));
+  }
+
+  int _weekStartOffset(DateTime date, WeekStart weekStart) {
+    if (weekStart == WeekStart.monday) {
+      return (date.weekday - DateTime.monday).clamp(0, 6);
+    }
+    return date.weekday % 7;
   }
 
   @override
@@ -78,9 +98,10 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     final auth = context.watch<AuthController>();
     final uid = auth.currentUser?.uid;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     if (uid == null) {
-      return const Center(child: Text("Please sign in"));
+      return Center(child: Text(l10n.habitsPleaseSignIn));
     }
 
     final habitService = context.watch<HabitService>();
@@ -104,8 +125,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                 ),
                 child: Row(
                   children: [
-                    _buildTabItem(0, "Progress"),
-                    _buildTabItem(1, "My habits"),
+                    _buildTabItem(0, l10n.habitsTabProgress),
+                    _buildTabItem(1, l10n.habitsTabList),
                   ],
                 ),
               ),
@@ -182,7 +203,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                           children: [
                             Icon(Icons.done_all, size: 48, color: theme.colorScheme.outline),
                             const SizedBox(height: 16),
-                            Text("Nothing to do today. Cheers!", style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
+                            Text(l10n.habitsEmptyToday, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
                           ],
                         ),
                       ),
@@ -204,7 +225,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                       return ReorderableDelayedDragStartListener(
                         key: ValueKey(habit.id),
                         index: index,
-                        child: _buildTodayHabitItem(habit, theme),
+                        child: _buildTodayHabitItem(habit, theme, l10n),
                       );
                     },
                   );
@@ -217,7 +238,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
                   return SliverFillRemaining(
-                    child: Center(child: Text('Error: ${snapshot.error}')),
+                    child: Center(child: Text(l10n.habitsListError(snapshot.error.toString()))),
                   );
                 }
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -234,7 +255,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text("No habit yet", style: TextStyle(fontSize: 18, color: Colors.grey)),
+                          Text(l10n.habitsEmptyListTitle, style: const TextStyle(fontSize: 18, color: Colors.grey)),
                           const SizedBox(height: 8),
                           FilledButton(
                             onPressed: () {
@@ -248,7 +269,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                                 builder: (_) => const AddHabitSheet(),
                               );
                             },
-                            child: const Text("Create your first"),
+                            child: Text(l10n.habitsEmptyListCta),
                           ),
                         ],
                       ),
@@ -379,6 +400,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   }
 
   Widget _buildHorizontalDatePicker(ThemeData theme) {
+    final localeName = AppLocalizations.of(context)!.localeName;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     
@@ -417,7 +439,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    DateFormat.E().format(date),
+                    DateFormat.E(localeName).format(date),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -442,23 +464,27 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     );
   }
 
-  Widget _buildTodayHabitItem(Habit habit, ThemeData theme) {
+  Widget _buildTodayHabitItem(Habit habit, ThemeData theme, AppLocalizations l10n) {
     final dateKey = _dateKey(_selectedDate);
     final currentValue = habit.last7[dateKey] ?? 0.0;
     final isCompleted = currentValue >= habit.targetValue;
+    final localeName = l10n.localeName;
+    final numberFormat = NumberFormat.decimalPattern(localeName);
 
-    String requirementText = "Mark as done";
+    String requirementText;
     if (habit.type == HabitType.numeric) {
-      requirementText = "${currentValue.toInt()} / ${habit.targetValue.toInt()} ${habit.unit ?? ""} today";
+      final unit = (habit.unit ?? "").trim();
+      final currentStr = numberFormat.format(currentValue.toInt());
+      final targetStr = numberFormat.format(habit.targetValue.toInt());
+      requirementText = unit.isNotEmpty
+          ? l10n.habitRequirementToday(currentStr, targetStr, unit)
+          : l10n.habitRequirementTodayNoUnit(currentStr, targetStr);
     } else if (habit.type == HabitType.time) {
-      final curH = currentValue ~/ 3600;
-      final curM = (currentValue % 3600) ~/ 60;
-      final tarH = habit.targetValue ~/ 3600;
-      final tarM = (habit.targetValue % 3600) ~/ 60;
-      
-      String curStr = curH > 0 ? "${curH}h ${curM}m" : "${curM}m";
-      String tarStr = tarH > 0 ? "${tarH}h ${tarM}m" : "${tarM}m";
-      requirementText = "$curStr / $tarStr today";
+      final curStr = _formatDurationHms(currentValue);
+      final tarStr = _formatDurationHms(habit.targetValue);
+      requirementText = l10n.habitRequirementTodayNoUnit(curStr, tarStr);
+    } else {
+      requirementText = l10n.habitRequirementMarkDone;
     }
 
     return Container(
@@ -551,6 +577,17 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     );
   }
 
+  String _formatDurationHms(double seconds) {
+    final totalSeconds = seconds.round().clamp(0, 359999).toInt();
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final secs = totalSeconds % 60;
+    final hStr = hours.toString().padLeft(2, '0');
+    final mStr = minutes.toString().padLeft(2, '0');
+    final sStr = secs.toString().padLeft(2, '0');
+    return "$hStr:$mStr:$sStr";
+  }
+
   String _dateKey(DateTime d) {
     return "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
   }
@@ -567,33 +604,53 @@ class _HabitItem extends StatelessWidget {
     required this.onToggle,
   });
 
-  String _getFrequencyText() {
+  String _getFrequencyText(AppLocalizations l10n, String localeName) {
+    final numberFormat = NumberFormat.decimalPattern(localeName);
     switch (habit.frequencyType) {
       case HabitFrequencyType.daily:
-        return "Every day";
+        return l10n.habitFrequencyEveryDay;
       case HabitFrequencyType.specificDays:
         if (habit.frequencyPeriod == HabitPeriod.month) {
-          if (habit.weekDays.isEmpty) return "Specific days of month";
+          if (habit.weekDays.isEmpty) return l10n.habitFrequencySpecificMonth;
           final days = habit.weekDays.toList()..sort();
-          return "Days: ${days.join(", ")}";
+          final dayLabels = days.map((d) => numberFormat.format(d)).join(", ");
+          return l10n.habitFrequencyDaysLabel(dayLabels);
         } else if (habit.frequencyPeriod == HabitPeriod.year) {
-          return "Specific dates";
+          return l10n.habitFrequencySpecificDates;
         }
         if (habit.weekDays.length == 7 || habit.weekDays.isEmpty) {
-          return "Every day";
+          return l10n.habitFrequencyEveryDay;
         }
         final days = habit.weekDays.toList()..sort();
-        final weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-        return days
+        final labels = days
             .where((d) => d >= 1 && d <= 7)
-            .map((d) => weekdays[d - 1])
+            .map((d) => _weekdayLabel(d, localeName))
             .join(", ");
+        return l10n.habitFrequencyDaysLabel(labels);
       case HabitFrequencyType.interval:
-        return "Every ${habit.intervalDays} days";
+        return l10n.habitFrequencyInterval(habit.intervalDays);
       case HabitFrequencyType.repeatsInPeriod:
-        final period = habit.frequencyPeriod?.name ?? "period";
-        return "${habit.frequencyGoal ?? 1} times per $period";
+        final period = _periodLabel(habit.frequencyPeriod ?? HabitPeriod.week, l10n).toLowerCase();
+        final count = habit.frequencyGoal ?? 1;
+        return l10n.habitFrequencyTimesPerPeriod(count, period);
     }
+  }
+
+  String _periodLabel(HabitPeriod period, AppLocalizations l10n) {
+    switch (period) {
+      case HabitPeriod.week:
+        return l10n.habitPeriodWeek;
+      case HabitPeriod.month:
+        return l10n.habitPeriodMonth;
+      case HabitPeriod.year:
+        return l10n.habitPeriodYear;
+    }
+  }
+
+  String _weekdayLabel(int weekday, String localeName) {
+    final baseMonday = DateTime(2024, 1, 1);
+    final date = baseMonday.add(Duration(days: weekday - 1));
+    return DateFormat.E(localeName).format(date);
   }
 
 
@@ -602,6 +659,9 @@ class _HabitItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final localeName = l10n.localeName;
+    final frequencyText = _getFrequencyText(l10n, localeName);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -690,7 +750,7 @@ class _HabitItem extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _getFrequencyText(),
+                            frequencyText,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                               fontSize: 12,
@@ -730,7 +790,7 @@ class _HabitItem extends StatelessWidget {
                         child: Column(
                           children: [
                             Text(
-                              DateFormat.E().format(date)[0],
+                              DateFormat.E(localeName).format(date),
                               style: TextStyle(
                                 fontSize: 10,
                                 color: isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),

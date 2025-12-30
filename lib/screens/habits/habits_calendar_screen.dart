@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -5,6 +6,7 @@ import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
 import 'widgets/habit_day_sheet.dart';
+import '../../l10n/app_localizations.dart';
 
 class HabitsCalendarScreen extends StatefulWidget {
   const HabitsCalendarScreen({super.key});
@@ -18,6 +20,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   Map<String, Map<String, double>> _progressByDate = {}; // dateKey -> {habitId -> value}
   List<Habit> _allHabits = [];
   bool _isLoading = true;
+  StreamSubscription<List<Habit>>? _habitsSub;
+  String? _activeLoadKey;
 
   @override
   void initState() {
@@ -28,35 +32,49 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   void _loadMonthData() {
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
-    if (uid == null) return;
+    if (uid == null) {
+      _habitsSub?.cancel();
+      _activeLoadKey = null;
+      setState(() {
+        _isLoading = false;
+        _progressByDate = {};
+        _allHabits = [];
+      });
+      return;
+    }
 
+    final habitService = context.read<HabitService>();
+
+    _habitsSub?.cancel();
+    final loadKey = "${_focusedMonth.year}-${_focusedMonth.month}";
+    _activeLoadKey = loadKey;
     setState(() => _isLoading = true);
 
     final start = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
     final nextMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1, 1);
     final end = nextMonth.subtract(const Duration(days: 1));
 
-    context.read<HabitService>().habitsStream(uid).listen((habits) async {
-       if (!mounted) return;
-       
-       final Map<String, Map<String, double>> newProgress = {};
-       
-       for (final habit in habits) {
-          final history = await context.read<HabitService>().getHistory(uid, habit.id, start, end);
-          for (final entry in history) {
-             final dateKey = _dateKey(entry.date);
-             if (newProgress[dateKey] == null) newProgress[dateKey] = {};
-             newProgress[dateKey]![habit.id] = entry.value ?? 1.0;
-          }
-       }
-       
-       if (mounted) {
-         setState(() {
-            _allHabits = habits;
-            _progressByDate = newProgress;
-            _isLoading = false;
-         });
-       }
+    _habitsSub = habitService.habitsStream(uid).listen((habits) async {
+      if (auth.currentUser?.uid != uid) return;
+      final Map<String, Map<String, double>> newProgress = {};
+
+      for (final habit in habits) {
+        final history = await habitService.getHistory(uid, habit.id, start, end);
+        for (final entry in history) {
+          final dateKey = _dateKey(entry.date);
+          newProgress.putIfAbsent(dateKey, () => {})[habit.id] = entry.value ?? 1.0;
+        }
+      }
+
+      if (!mounted || _activeLoadKey != loadKey) return;
+      setState(() {
+        _allHabits = habits;
+        _progressByDate = newProgress;
+        _isLoading = false;
+      });
+    }, onError: (_) {
+      if (!mounted || _activeLoadKey != loadKey) return;
+      setState(() => _isLoading = false);
     });
   }
 
@@ -65,6 +83,12 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
       _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
       _loadMonthData();
     });
+  }
+
+  @override
+  void dispose() {
+    _habitsSub?.cancel();
+    super.dispose();
   }
 
   void _nextMonth() {
@@ -94,9 +118,10 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Calendar"),
+        title: Text(l10n.habitsCalendarTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.today),
@@ -119,7 +144,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               children: [
                 IconButton(onPressed: _prevMonth, icon: const Icon(Icons.chevron_left)),
                 Text(
-                  DateFormat.yMMMM().format(_focusedMonth),
+                  DateFormat.yMMMM(l10n.localeName).format(_focusedMonth),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 IconButton(onPressed: _nextMonth, icon: const Icon(Icons.chevron_right)),
@@ -141,11 +166,14 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     final firstDay = DateTime(_focusedMonth.year, _focusedMonth.month, 1);
     final firstWeekday = firstDay.weekday; 
     
+    final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
+    final weekdayLabels = [...narrowWeekdays.skip(1), narrowWeekdays.first];
+
     return Column(
       children: [
          // Weekday headers
          Row(
-           children: ["M", "T", "W", "T", "F", "S", "S"].map((d) => 
+           children: weekdayLabels.map((d) => 
              Expanded(child: Center(child: Text(d, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey))))
            ).toList(),
          ),

@@ -10,6 +10,7 @@ import '../../services/habit_service.dart';
 import 'widgets/habit_schedule_editor.dart';
 import '../../app_state.dart';
 import 'swipe_selector.dart';
+import '../../l10n/app_localizations.dart';
 
 class HabitDetailsScreen extends StatefulWidget {
   final Habit habit;
@@ -195,6 +196,25 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     return _defaultCategories.firstWhere((c) => c['name'] == _categoryName, orElse: () => _defaultCategories.last);
   }
 
+  String _localizedCategoryName(String name, AppLocalizations l10n) {
+    switch (name) {
+      case 'Study':
+        return l10n.habitCategoryStudy;
+      case 'Sports':
+        return l10n.habitCategorySports;
+      case 'Quit a bad habit':
+        return l10n.habitCategoryQuitBadHabit;
+      case 'Home':
+        return l10n.habitCategoryHome;
+      case 'Health':
+        return l10n.habitCategoryHealth;
+      case 'Work':
+        return l10n.habitCategoryWork;
+      default:
+        return name;
+    }
+  }
+
   @override
   void dispose() {
     _timeCtrl.dispose();
@@ -279,14 +299,15 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   }
 
   Future<void> _deleteHabit() async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete habit?"),
-        content: const Text("This action cannot be undone."),
+        title: Text(l10n.habitDeleteTitle),
+        content: Text(l10n.habitDeleteMessage),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Cancel")),
-          TextButton(onPressed: () => Navigator.pop(context, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text("Delete")),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l10n.cancel)),
+          TextButton(onPressed: () => Navigator.pop(context, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: Text(l10n.delete)),
         ],
       ),
     );
@@ -306,18 +327,19 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
           SliverAppBar(
-            title: const Text("Edit habit"),
+            title: Text(l10n.habitEditTitle),
             actions: [
                if (_isDirty)
                 TextButton(
                   onPressed: _save,
-                  child: const Text("Save", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(l10n.save, style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
                IconButton(
                  icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -330,11 +352,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // -- GENERAL SECTION --
-                _sectionHeader("General"),
+                _sectionHeader(l10n.habitGeneralSection),
                 TextFormField(
                   initialValue: _habitName,
               decoration: InputDecoration(
-                labelText: "Habit name",
+                labelText: l10n.habitNameLabel,
                 filled: true,
                 fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
@@ -342,20 +364,20 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
               onChanged: (v) { _habitName = v; _markDirty(); },
               inputFormatters: [
                 LengthLimitingTextInputFormatter(32),
-                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
               ],
             ),
             const SizedBox(height: 24),
             
             // Category Selector
-            Text("Category", style: theme.textTheme.labelLarge),
+            Text(l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
             const SizedBox(height: 12),
             _buildCategorySelector(theme),
             
             const SizedBox(height: 32),
 
              // -- TRACKING SECTION --
-            _sectionHeader("Tracking"),
+            _sectionHeader(l10n.habitTrackingTitle),
             _buildTrackingSection(theme),
             const SizedBox(height: 32),
 
@@ -382,11 +404,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                   });
                },
             ),
-
+ 
             const SizedBox(height: 32),
             
             // -- ADVANCED --
-            _sectionHeader("Advanced"),
+            _sectionHeader(l10n.habitAdvancedSection),
             _buildAdvancedSection(theme),
                 const SizedBox(height: 48),
               ]),
@@ -405,6 +427,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   }
 
   Widget _buildCategorySelector(ThemeData theme) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         SwipeSelector<String>(
@@ -430,7 +453,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(item, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                Text(_localizedCategoryName(item, l10n), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(width: 8),
                 Icon(icon, color: color, size: 20),
               ],
@@ -449,7 +472,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
               children: [
                  Icon(_isCreatingCategory ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right, color: theme.colorScheme.primary),
                  const SizedBox(width: 8),
-                 Text("Create custom", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                 Text(l10n.habitCategoryCreateAction, style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
               ],
            ),
         ),
@@ -471,12 +494,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-          decoration: const InputDecoration(labelText: "Category name", hintText: "e.g. reading"),
+          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.habitCategoryNameLabel, hintText: AppLocalizations.of(context)!.habitCategoryNameHint),
           onChanged: (v) => _newCatName = v,
           autofocus: true,
           inputFormatters: [
             LengthLimitingTextInputFormatter(32),
-            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+            FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
           ],
         ),
         const SizedBox(height: 12),
@@ -531,9 +554,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
         const SizedBox(height: 24),
         Row(
            children: [
-             TextButton(onPressed: () => setState(() => _isCreatingCategory = false), child: const Text("Cancel")),
+             TextButton(onPressed: () => setState(() => _isCreatingCategory = false), child: Text(AppLocalizations.of(context)!.cancel)),
              const Spacer(),
-             FilledButton(onPressed: _saveNewCategory, child: const Text("Save category")),
+             FilledButton(onPressed: _saveNewCategory, child: Text(AppLocalizations.of(context)!.save)),
            ],
         )
       ],
@@ -547,9 +570,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
            Wrap(
              spacing: 8, runSpacing: 8,
              children: [
-                 _buildTypeChip("Yes / No", HabitType.yesNo),
-                _buildTypeChip("Numeric", HabitType.numeric),
-                _buildTypeChip("Time", HabitType.time),
+                 _buildTypeChip(AppLocalizations.of(context)!.habitYesNo, HabitType.yesNo),
+                _buildTypeChip(AppLocalizations.of(context)!.habitNumeric, HabitType.numeric),
+                _buildTypeChip(AppLocalizations.of(context)!.habitTime, HabitType.time),
              ],
            ),
            const SizedBox(height: 16),
@@ -561,10 +584,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                 onChanged: (v) => setState(() { _comparator = v; _markDirty(); }),
                 builder: (context, item) {
                    String label = switch(item) {
-                      HabitComparator.atLeast => "At least",
-                      HabitComparator.lessThan => "Less than",
-                      HabitComparator.exactly => "Exactly",
-                      HabitComparator.any => "Any value",
+                      HabitComparator.atLeast => AppLocalizations.of(context)!.habitComparatorAtLeast,
+                      HabitComparator.lessThan => AppLocalizations.of(context)!.habitComparatorLessThan,
+                      HabitComparator.exactly => AppLocalizations.of(context)!.habitComparatorExactly,
+                      HabitComparator.any => AppLocalizations.of(context)!.habitComparatorAny,
                    };
                     return Container(alignment: Alignment.center, child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)));
                 },
@@ -578,7 +601,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                   child: TextFormField(
                     controller: _targetCtrl,
                     keyboardType: TextInputType.number,
-                    decoration: InputDecoration(labelText: "Value", filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.habitValueLabel, filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
                     onChanged: (v) {
                       final trimmed = v.trim();
                       if (trimmed.isEmpty) {
@@ -607,11 +630,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                Expanded(
                   child: TextFormField(
                     controller: _unitCtrl,
-                    decoration: InputDecoration(labelText: "Unit", hintText: "e.g. pages", filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.habitUnitLabel, hintText: AppLocalizations.of(context)!.habitUnitHint, filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
                     onChanged: (v) { _unit = v; _markDirty(); },
                     inputFormatters: [
                       LengthLimitingTextInputFormatter(16),
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                      FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
                     ],
                   ),
                ),
@@ -626,7 +649,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                    textAlign: TextAlign.center,
                    style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
                    decoration: InputDecoration(
-                     hintText: "00:00:00", filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                     hintText: AppLocalizations.of(context)!.habitTimePlaceholder, filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                    ),
                    onChanged: (v) => _markDirty(),
@@ -666,12 +689,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
              children: [
                Icon(Icons.link, size: 20, color: theme.colorScheme.primary),
                const SizedBox(width: 8),
-               Text("Connect course", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+               Text(AppLocalizations.of(context)!.habitConnectCourse, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
              ],
            ),
            const SizedBox(height: 8),
            Text(
-             "Syncs progress when you study for these courses.",
+             AppLocalizations.of(context)!.habitCourseSyncHint,
              style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
            ),
            const SizedBox(height: 12),
@@ -719,7 +742,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
            if (_type == HabitType.numeric && courses.isNotEmpty)
              Padding(
                padding: const EdgeInsets.only(top: 8),
-               child: Text("Switch to Yes/No or Time to connect courses.", style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
+               child: Text(AppLocalizations.of(context)!.habitCourseNumericWarning, style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
              ),
         ],
      );
@@ -731,46 +754,46 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   Widget _buildAdvancedSection(ThemeData theme) {
      return Column(
        children: [
-          // Remind Me Button
+         // Remind Me Button
+         ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              _hasReminder ? Icons.notifications_active : Icons.notifications_active_outlined,
+              color: _hasReminder ? theme.colorScheme.primary : null,
+            ),
+            title: Text(AppLocalizations.of(context)!.habitReminderDisabledTitle),
+            subtitle: Text(AppLocalizations.of(context)!.habitReminderDisabledSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            enabled: false,
+            onTap: null, // _showRemindMeModal,
+         ),
+         
           ListTile(
-             contentPadding: EdgeInsets.zero,
-             leading: Icon(
-               _hasReminder ? Icons.notifications_active : Icons.notifications_active_outlined,
-               color: _hasReminder ? theme.colorScheme.primary : null,
-             ),
-             title: const Text("Remind me (disabled)"),
-             subtitle: const Text("This feature is currently disabled"),
-             trailing: const Icon(Icons.chevron_right),
-             enabled: false,
-             onTap: null, // _showRemindMeModal,
-          ),
-          
-           ListTile(
-             contentPadding: EdgeInsets.zero,
-             leading: const Icon(Icons.archive),
-             title: const Text("Archive habit"),
-             trailing: Switch(value: _archived, onChanged: (v) { setState(() { _archived = v; _markDirty(); }); }),
-          ),
-          
-           ListTile(
-             contentPadding: EdgeInsets.zero,
-             leading: const Icon(Icons.restart_alt, color: Colors.red),
-             title: const Text("Reset habit progress", style: TextStyle(color: Colors.red)), 
-             subtitle: const Text("Clears all history"),
-             trailing: OutlinedButton(
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                onPressed: () async {
-                    final habitService = context.read<HabitService>();
-                    final uid = context.read<AuthController>().currentUser?.uid;
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.archive),
+            title: Text(AppLocalizations.of(context)!.habitArchiveTitle),
+            trailing: Switch(value: _archived, onChanged: (v) { setState(() { _archived = v; _markDirty(); }); }),
+         ),
+         
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.restart_alt, color: Colors.red),
+            title: Text(AppLocalizations.of(context)!.habitResetProgressTitle, style: const TextStyle(color: Colors.red)), 
+            subtitle: Text(AppLocalizations.of(context)!.habitResetProgressSubtitle),
+            trailing: OutlinedButton(
+               style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+               onPressed: () async {
+                   final habitService = context.read<HabitService>();
+                   final uid = context.read<AuthController>().currentUser?.uid;
 
-                    final ok = await showDialog<bool>(
-                       context: context, 
-                       builder: (c) => AlertDialog(
-                         title: const Text("Reset habit progress?"), 
-                         content: const Text("This will delete all completion history for this habit. It cannot be undone."),
-                         actions: [
-                           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text("Cancel")), 
-                           TextButton(onPressed: () => Navigator.pop(c, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: const Text("Reset"))
+                   final ok = await showDialog<bool>(
+                      context: context, 
+                      builder: (c) => AlertDialog(
+                        title: Text(AppLocalizations.of(context)!.habitResetProgressConfirmTitle), 
+                        content: Text(AppLocalizations.of(context)!.habitResetProgressConfirmMessage),
+                        actions: [
+                           TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppLocalizations.of(context)!.cancel)), 
+                           TextButton(onPressed: () => Navigator.pop(c, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: Text(AppLocalizations.of(context)!.reset))
                          ]
                       )
                     );
@@ -782,14 +805,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                        if (mounted) {
                          context.read<AppState>().triggerSync();
                          // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Habit progress reset"))); // Removed per request
-                         setState(() {});
+                        setState(() {});
                        }
-                    }
-                },
-                child: const Text("Reset"),
-             ),
-          ),
-       ],
+                   }
+               },
+               child: Text(AppLocalizations.of(context)!.reset),
+            ),
+         ),
+      ],
      );
   }
 
@@ -800,4 +823,3 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
 extension StringCamelCase on String {
   String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
-

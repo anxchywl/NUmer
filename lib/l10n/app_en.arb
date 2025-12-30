@@ -605,5 +605,212 @@
   },
   "cannotNudgeSelf": "You cannot nudge yourself.",
   "userProhibitedNudge": "This user has disabled nudges.",
-  "leaderboardHintMessage": "• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him."
+  "leaderboardHintMessage": "• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him.",
+  "habitsNavLabel": "Habits",
+  "habitsTabProgress": "Progress",
+  "habitsTabList": "My habits",
+  "habitsPleaseSignIn": "Please sign in",
+  "habitsEmptyToday": "Nothing to do today. Cheers!",
+  "habitsListError": "Error: {error}",
+  "@habitsListError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsEmptyListTitle": "No habits yet",
+  "habitsEmptyListCta": "Create your first",
+  "habitRequirementMarkDone": "Mark as done",
+  "habitRequirementToday": "{current} / {target} {unit} today",
+  "@habitRequirementToday": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "habitRequirementTodayNoUnit": "{current} / {target} today",
+  "@habitRequirementTodayNoUnit": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyEveryDay": "Every day",
+  "habitFrequencySpecificMonth": "Specific days of month",
+  "habitFrequencySpecificDates": "Specific dates",
+  "habitFrequencyDaysLabel": "Days: {days}",
+  "@habitFrequencyDaysLabel": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "habitFrequencyInterval": "Every {days} {days, plural, one{day} other{days}}",
+  "@habitFrequencyInterval": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitFrequencyTimesPerPeriod": "{count, plural, one{{count} time per {period}} other{{count} times per {period}}}",
+  "@habitFrequencyTimesPerPeriod": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "habitPeriodWeek": "Week",
+  "habitPeriodMonth": "Month",
+  "habitPeriodYear": "Year",
+  "habitDailyOverview": "Daily overview",
+  "habitNoHabitsThisDay": "No habits completed on this day.",
+  "habitMinutesShort": "min",
+  "habitLogSetTotal": "Set total",
+  "habitLogAddMore": "Add more",
+  "habitUpdateProgress": "Update progress",
+  "habitLogSetValueTitle": "Set value",
+  "habitClearTime": "Clear time",
+  "habitProgressLabel": "Progress, {date}",
+  "@habitProgressLabel": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogSettingTotal": "Setting total to {total}",
+  "@habitLogSettingTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "habitLogAdding": "Adding {value} to {existing}",
+  "@habitLogAdding": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "existing": {
+        "type": "String"
+      }
+    }
+  },
+  "habitGoalLabel": "Goal: {goal}",
+  "@habitGoalLabel": {
+    "placeholders": {
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCreateTitle": "Create new habit",
+  "habitTrackingTitle": "Tracking type",
+  "habitExplainHabit": "Explain your habit",
+  "habitNameLabel": "Habit name",
+  "habitNameHint": "e.g. morning jog",
+  "habitCategoryLabel": "Category",
+  "habitCategoryNew": "New category",
+  "habitCategoryNameLabel": "Category name",
+  "habitCategoryNameHint": "e.g. reading",
+  "habitCategoryDeleteTitle": "Delete category",
+  "habitCategoryDeleteMessage": "Delete \"{name}\"? This cannot be undone.",
+  "@habitCategoryDeleteMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "habitCategoryCreateAction": "Create custom",
+  "habitBack": "Back",
+  "habitNext": "Next",
+  "habitYesNo": "Yes / No",
+  "habitNumeric": "Numeric",
+  "habitTime": "Time",
+  "habitTrackingYesNoDescription": "Mark whether you completed the habit or not.",
+  "habitTrackingNumericDescription": "Set a specific number to reach each day.",
+  "habitTrackingTimeDescription": "Set a time duration as your daily goal.",
+  "habitComparatorAtLeast": "At least",
+  "habitComparatorLessThan": "Less than",
+  "habitComparatorExactly": "Exactly",
+  "habitComparatorAny": "Any value",
+  "habitValueLabel": "Value",
+  "habitUnitLabel": "Unit",
+  "habitUnitHint": "e.g. pages",
+  "habitPerDay": "per day",
+  "habitTimeLabel": "hours : minutes : seconds",
+  "habitTimePlaceholder": "00:00:00",
+  "habitFrequencyPrompt": "Choose how often the habit should repeat",
+  "habitFrequencySpecificTitle": "Specific days",
+  "habitFrequencyDailyDescription": "Do the habit daily without skipping.",
+  "habitFrequencySpecificDescription": "Choose exact weekdays or dates.",
+  "habitFrequencyPeriodWeekLabel": "Week",
+  "habitFrequencyPeriodMonthLabel": "Month",
+  "habitFrequencyPeriodYearLabel": "Year",
+  "habitFrequencyTimesPerPeriodTitle": "Days per period",
+  "habitFrequencyTimesPerPeriodDescription": "Set how many days within a week, month, or year.",
+  "habitTimesPerLabel": "times per",
+  "habitFrequencyWorkRestTitle": "Work / Rest",
+  "habitFrequencyWorkRestDescription": "Set a repeating cycle for the habit. Work — days when you do the habit. Rest — days off.",
+  "habitWorkLabel": "Work",
+  "habitRestLabel": "Rest",
+  "habitChooseTimeRangeTitle": "Choose the time range when you want to start",
+  "habitStartDateLabel": "Start date",
+  "habitEndDateLabel": "End date (optional)",
+  "habitNoEndDate": "No end date",
+  "habitCreateAction": "Create habit",
+  "habitForever": "Forever",
+  "habitAddDateAction": "Add date",
+  "habitScheduleTitle": "Schedule",
+  "habitFrequencySectionTitle": "Frequency",
+  "habitSelectDatePlaceholder": "Select",
+  "habitDeleteTitle": "Delete habit?",
+  "habitDeleteMessage": "This action cannot be undone.",
+  "habitEditTitle": "Edit habit",
+  "habitGeneralSection": "General",
+  "habitAdvancedSection": "Advanced",
+  "habitConnectCourse": "Connect course",
+  "habitCourseSyncHint": "Syncs progress when you study for these courses.",
+  "habitCourseNumericWarning": "Switch to Yes/No or Time to connect courses.",
+  "habitReminderDisabledTitle": "Remind me",
+  "habitReminderDisabledSubtitle": "This feature is currently disabled",
+  "habitArchiveTitle": "Archive habit",
+  "habitArchivedLabel": "Archived",
+  "habitResetProgressTitle": "Reset habit progress",
+  "habitResetProgressSubtitle": "Clears all history",
+  "habitResetProgressConfirmTitle": "Reset habit progress?",
+  "habitResetProgressConfirmMessage": "This will delete all completion history for this habit. It cannot be undone.",
+  "habitUnarchiveAction": "Unarchive",
+  "archivedHabitsTitle": "Archived habits",
+  "archivedHabitsEmpty": "No archived habits",
+  "habitsCalendarTitle": "Calendar",
+  "habitTimeHourShort": "H",
+  "habitTimeMinuteShort": "M",
+  "habitTimeSecondShort": "S",
+  "habitCategoryStudy": "Study",
+  "habitCategorySports": "Sports",
+  "habitCategoryQuitBadHabit": "Quit a bad habit",
+  "habitCategoryHome": "Home",
+  "habitCategoryHealth": "Health",
+  "habitCategoryWork": "Work"
 }

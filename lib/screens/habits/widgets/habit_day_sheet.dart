@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
+import '../../../l10n/app_localizations.dart';
 
 class HabitDaySheet extends StatelessWidget {
   final DateTime date;
@@ -17,6 +18,7 @@ class HabitDaySheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     final sortedHabits = _getDailyHabits();
 
     return Container(
@@ -42,14 +44,14 @@ class HabitDaySheet extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                DateFormat.yMMMMEEEEd().format(date),
+                DateFormat.yMMMMEEEEd(l10n.localeName).format(date),
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                "Daily overview",
+                l10n.habitDailyOverview,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -63,7 +65,7 @@ class HabitDaySheet extends StatelessWidget {
                     children: [
                       Icon(Icons.event_busy, size: 48, color: theme.colorScheme.outline),
                       const SizedBox(height: 12),
-                      Text("No habits completed on this day.", style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline)),
+                      Text(l10n.habitNoHabitsThisDay, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline)),
                     ],
                   ),
                 )
@@ -109,6 +111,7 @@ class _HabitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     
     // Determine status
     bool isCompleted = false;
@@ -175,7 +178,7 @@ class _HabitRow extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
                       child: Text(
-                        _formatProgress(),
+                        _formatProgress(l10n),
                         style: theme.textTheme.bodySmall?.copyWith(
                            color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -198,12 +201,16 @@ class _HabitRow extends StatelessWidget {
     );
   }
 
-  String _formatProgress() {
+  String _formatProgress(AppLocalizations l10n) {
+    final numberFormat = NumberFormat.decimalPattern(l10n.localeName);
     if (habit.type == HabitType.time) {
       final currentMins = (progress / 60).round();
       final targetMins = (habit.targetValue / 60).round();
-      return "$currentMins / $targetMins min";
+      return "${numberFormat.format(currentMins)} / ${numberFormat.format(targetMins)} ${l10n.habitMinutesShort}";
     }
-    return "${progress.toInt()} / ${habit.targetValue.toInt()} ${habit.unit ?? ''}";
+    final current = numberFormat.format(progress.toInt());
+    final target = numberFormat.format(habit.targetValue.toInt());
+    final unit = habit.unit ?? '';
+    return "$current / $target ${unit.isNotEmpty ? unit : ''}".trim();
   }
 }

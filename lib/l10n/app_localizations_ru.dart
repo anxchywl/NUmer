@@ -1339,4 +1339,397 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get leaderboardHintMessage =>
       '• Вы можете нажать на любого пользователя в таблице лидеров, чтобы просмотреть его время обучения.\n• Нажмите на иконку руки рядом с аватаркой участника, чтобы подтолкнуть его.';
+
+  @override
+  String get habitsNavLabel => 'Привычки';
+
+  @override
+  String get habitsTabProgress => 'Прогресс';
+
+  @override
+  String get habitsTabList => 'Мои привычки';
+
+  @override
+  String get habitsPleaseSignIn => 'Пожалуйста, войдите';
+
+  @override
+  String get habitsEmptyToday => 'На сегодня ничего нет. Ура!';
+
+  @override
+  String habitsListError(String error) {
+    return 'Ошибка: $error';
+  }
+
+  @override
+  String get habitsEmptyListTitle => 'Пока нет привычек';
+
+  @override
+  String get habitsEmptyListCta => 'Создать первую';
+
+  @override
+  String get habitRequirementMarkDone => 'Отметить выполненным';
+
+  @override
+  String habitRequirementToday(String current, String target, String unit) {
+    return '$current / $target $unit сегодня';
+  }
+
+  @override
+  String habitRequirementTodayNoUnit(String current, String target) {
+    return '$current / $target сегодня';
+  }
+
+  @override
+  String get habitFrequencyEveryDay => 'Каждый день';
+
+  @override
+  String get habitFrequencySpecificMonth => 'Определенные дни месяца';
+
+  @override
+  String get habitFrequencySpecificDates => 'Конкретные даты';
+
+  @override
+  String habitFrequencyDaysLabel(String days) {
+    return 'Дни: $days';
+  }
+
+  @override
+  String habitFrequencyInterval(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'дней',
+      many: 'дней',
+      few: 'дня',
+      one: 'день',
+    );
+    return 'Каждые $days $_temp0';
+  }
+
+  @override
+  String habitFrequencyTimesPerPeriod(int count, String period) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count раз в $period',
+      many: '$count раз в $period',
+      few: '$count раза в $period',
+      one: '$count раз в $period',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get habitPeriodWeek => 'Неделя';
+
+  @override
+  String get habitPeriodMonth => 'Месяц';
+
+  @override
+  String get habitPeriodYear => 'Год';
+
+  @override
+  String get habitDailyOverview => 'Ежедневный обзор';
+
+  @override
+  String get habitNoHabitsThisDay => 'В этот день привычек не выполнено.';
+
+  @override
+  String get habitMinutesShort => 'мин';
+
+  @override
+  String get habitLogSetTotal => 'Задать итог';
+
+  @override
+  String get habitLogAddMore => 'Добавить';
+
+  @override
+  String get habitUpdateProgress => 'Обновить прогресс';
+
+  @override
+  String get habitLogSetValueTitle => 'Установить значение';
+
+  @override
+  String get habitClearTime => 'Сбросить время';
+
+  @override
+  String habitProgressLabel(String date) {
+    return 'Прогресс, $date';
+  }
+
+  @override
+  String habitLogSettingTotal(String total) {
+    return 'Устанавливаем итог $total';
+  }
+
+  @override
+  String habitLogAdding(String value, String existing) {
+    return 'Добавляем $value к $existing';
+  }
+
+  @override
+  String habitGoalLabel(String goal) {
+    return 'Цель: $goal';
+  }
+
+  @override
+  String get habitCreateTitle => 'Создать новую привычку';
+
+  @override
+  String get habitTrackingTitle => 'Тип отслеживания';
+
+  @override
+  String get habitExplainHabit => 'Опишите привычку';
+
+  @override
+  String get habitNameLabel => 'Название привычки';
+
+  @override
+  String get habitNameHint => 'например, утренняя пробежка';
+
+  @override
+  String get habitCategoryLabel => 'Категория';
+
+  @override
+  String get habitCategoryNew => 'Новая категория';
+
+  @override
+  String get habitCategoryNameLabel => 'Название категории';
+
+  @override
+  String get habitCategoryNameHint => 'например, чтение';
+
+  @override
+  String get habitCategoryDeleteTitle => 'Удалить категорию';
+
+  @override
+  String habitCategoryDeleteMessage(String name) {
+    return 'Удалить «$name»? Это действие нельзя отменить.';
+  }
+
+  @override
+  String get habitCategoryCreateAction => 'Создать свою';
+
+  @override
+  String get habitBack => 'Назад';
+
+  @override
+  String get habitNext => 'Далее';
+
+  @override
+  String get habitYesNo => 'Да / Нет';
+
+  @override
+  String get habitNumeric => 'Числовая';
+
+  @override
+  String get habitTime => 'Время';
+
+  @override
+  String get habitTrackingYesNoDescription =>
+      'Отмечайте, выполнена привычка или нет.';
+
+  @override
+  String get habitTrackingNumericDescription =>
+      'Задайте конкретное число на каждый день.';
+
+  @override
+  String get habitTrackingTimeDescription =>
+      'Задайте длительность как ежедневную цель.';
+
+  @override
+  String get habitComparatorAtLeast => 'Не менее';
+
+  @override
+  String get habitComparatorLessThan => 'Меньше чем';
+
+  @override
+  String get habitComparatorExactly => 'Ровно';
+
+  @override
+  String get habitComparatorAny => 'Любое значение';
+
+  @override
+  String get habitValueLabel => 'Значение';
+
+  @override
+  String get habitUnitLabel => 'Единица';
+
+  @override
+  String get habitUnitHint => 'например, страницы';
+
+  @override
+  String get habitPerDay => 'в день';
+
+  @override
+  String get habitTimeLabel => 'часы : минуты : секунды';
+
+  @override
+  String get habitTimePlaceholder => '00:00:00';
+
+  @override
+  String get habitFrequencyPrompt => 'Выберите, как часто повторять привычку';
+
+  @override
+  String get habitFrequencySpecificTitle => 'Определенные дни';
+
+  @override
+  String get habitFrequencyDailyDescription =>
+      'Выполняйте привычку каждый день без пропусков.';
+
+  @override
+  String get habitFrequencySpecificDescription =>
+      'Выберите конкретные дни недели или даты.';
+
+  @override
+  String get habitFrequencyPeriodWeekLabel => 'Неделя';
+
+  @override
+  String get habitFrequencyPeriodMonthLabel => 'Месяц';
+
+  @override
+  String get habitFrequencyPeriodYearLabel => 'Год';
+
+  @override
+  String get habitFrequencyTimesPerPeriodTitle => 'Дней за период';
+
+  @override
+  String get habitFrequencyTimesPerPeriodDescription =>
+      'Укажите, сколько дней в неделю, месяц или год.';
+
+  @override
+  String get habitTimesPerLabel => 'раз(а) в';
+
+  @override
+  String get habitFrequencyWorkRestTitle => 'Работа / Отдых';
+
+  @override
+  String get habitFrequencyWorkRestDescription =>
+      'Задайте циклы привычки. Work — дни выполнения, Rest — выходные.';
+
+  @override
+  String get habitWorkLabel => 'Работа';
+
+  @override
+  String get habitRestLabel => 'Отдых';
+
+  @override
+  String get habitChooseTimeRangeTitle => 'Выберите период начала';
+
+  @override
+  String get habitStartDateLabel => 'Дата начала';
+
+  @override
+  String get habitEndDateLabel => 'Дата окончания';
+
+  @override
+  String get habitNoEndDate => 'Без даты окончания';
+
+  @override
+  String get habitCreateAction => 'Создать привычку';
+
+  @override
+  String get habitForever => 'Бессрочно';
+
+  @override
+  String get habitAddDateAction => 'Добавить дату';
+
+  @override
+  String get habitScheduleTitle => 'Расписание';
+
+  @override
+  String get habitFrequencySectionTitle => 'Частота';
+
+  @override
+  String get habitSelectDatePlaceholder => 'Выбрать';
+
+  @override
+  String get habitDeleteTitle => 'Удалить привычку?';
+
+  @override
+  String get habitDeleteMessage => 'Это действие нельзя отменить.';
+
+  @override
+  String get habitEditTitle => 'Изменить';
+
+  @override
+  String get habitGeneralSection => 'Основное';
+
+  @override
+  String get habitAdvancedSection => 'Дополнительно';
+
+  @override
+  String get habitConnectCourse => 'Связать курс';
+
+  @override
+  String get habitCourseSyncHint =>
+      'Прогресс синхронизируется, когда вы занимаетесь по этим курсам.';
+
+  @override
+  String get habitCourseNumericWarning =>
+      'Переключитесь на Да/Нет или Время, чтобы подключить курсы.';
+
+  @override
+  String get habitReminderDisabledTitle => 'Напоминания';
+
+  @override
+  String get habitReminderDisabledSubtitle => 'Эта функция сейчас недоступна';
+
+  @override
+  String get habitArchiveTitle => 'Архивировать привычку';
+
+  @override
+  String get habitArchivedLabel => 'В архиве';
+
+  @override
+  String get habitResetProgressTitle => 'Сбросить прогресс привычки';
+
+  @override
+  String get habitResetProgressSubtitle => 'Удаляет всю историю';
+
+  @override
+  String get habitResetProgressConfirmTitle => 'Сбросить прогресс привычки?';
+
+  @override
+  String get habitResetProgressConfirmMessage =>
+      'Это удалит всю историю выполнения этой привычки. Действие необратимо.';
+
+  @override
+  String get habitUnarchiveAction => 'Разархивировать';
+
+  @override
+  String get archivedHabitsTitle => 'Архивированные';
+
+  @override
+  String get archivedHabitsEmpty => 'Нет архивированных привычек';
+
+  @override
+  String get habitsCalendarTitle => 'Календарь';
+
+  @override
+  String get habitTimeHourShort => 'Ч';
+
+  @override
+  String get habitTimeMinuteShort => 'М';
+
+  @override
+  String get habitTimeSecondShort => 'С';
+
+  @override
+  String get habitCategoryStudy => 'Учёба';
+
+  @override
+  String get habitCategorySports => 'Спорт';
+
+  @override
+  String get habitCategoryQuitBadHabit => 'Бросить плохую привычку';
+
+  @override
+  String get habitCategoryHome => 'Дом';
+
+  @override
+  String get habitCategoryHealth => 'Здоровье';
+
+  @override
+  String get habitCategoryWork => 'Работа';
 }

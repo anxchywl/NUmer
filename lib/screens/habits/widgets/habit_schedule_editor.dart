@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
+import '../../../l10n/app_localizations.dart';
 
 class HabitScheduleEditor extends StatefulWidget {
   final HabitFrequencyType frequencyType;
@@ -102,11 +103,12 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // TITLE
-        Text("Schedule", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(l10n.habitScheduleTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
         const SizedBox(height: 16),
         
         // DATES
@@ -115,7 +117,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
              Expanded(
                child: _buildDatePicker(
                  context, 
-                     label: "Start date", 
+                     label: l10n.habitStartDateLabel, 
                  date: _startDate, 
                  onPick: (d) {
                     setState(() { _startDate = d; _notify(); });
@@ -126,7 +128,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
              Expanded(
                child: _buildDatePicker(
                  context, 
-                     label: "End date (optional)", 
+                     label: l10n.habitEndDateLabel, 
                  date: _endDate, 
                  onPick: (d) {
                     setState(() { _endDate = d; _notify(); });
@@ -134,7 +136,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                  onClear: _endDate != null ? () {
                     setState(() { _endDate = null; _notify(); });
                  } : null,
-                 placeholder: "Forever",
+                 placeholder: l10n.habitForever,
                ),
              ),
            ],
@@ -143,14 +145,14 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         
         const SizedBox(height: 24),
         
-        Text("Frequency", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(l10n.habitFrequencySectionTitle, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
         const SizedBox(height: 12),
 
         _buildFreqOption(
            theme,
            type: HabitFrequencyType.daily,
-           title: "Every day",
-           child: Text("Do the habit daily without skipping.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+           title: l10n.habitFrequencyEveryDay,
+           child: Text(l10n.habitFrequencyDailyDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         ),
         const SizedBox(height: 12),
 
@@ -159,11 +161,11 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         _buildFreqOption(
            theme,
            type: HabitFrequencyType.specificDays,
-           title: "Specific days",
+           title: l10n.habitFrequencySpecificTitle,
            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Text("Choose exact weekdays or dates.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                 Text(l10n.habitFrequencySpecificDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                  const SizedBox(height: 12),
                  Container(
                    width: double.infinity,
@@ -174,9 +176,9 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                    padding: const EdgeInsets.all(4),
                    child: Row(
                      children: [
-                        _buildPeriodTab(theme, "Week", HabitPeriod.week),
-                        _buildPeriodTab(theme, "Month", HabitPeriod.month),
-                        _buildPeriodTab(theme, "Year", HabitPeriod.year),
+                        _buildPeriodTab(theme, l10n.habitFrequencyPeriodWeekLabel, HabitPeriod.week),
+                        _buildPeriodTab(theme, l10n.habitFrequencyPeriodMonthLabel, HabitPeriod.month),
+                        _buildPeriodTab(theme, l10n.habitFrequencyPeriodYearLabel, HabitPeriod.year),
                      ],
                    ),
                  ),
@@ -195,11 +197,11 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         _buildFreqOption(
            theme,
            type: HabitFrequencyType.repeatsInPeriod,
-           title: "Days per period",
+           title: l10n.habitFrequencyTimesPerPeriodTitle,
            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                 Text("Set how many days within a week, month, or year.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                 Text(l10n.habitFrequencyTimesPerPeriodDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                  const SizedBox(height: 12),
                  Row(
                     children: [
@@ -235,7 +237,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                         },
                       )),
                        const SizedBox(width: 12),
-                       const Text("times per"),
+                       Text(l10n.habitTimesPerLabel),
                        const SizedBox(width: 12),
                        GestureDetector(
                           onTap: () {
@@ -266,15 +268,15 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         _buildFreqOption(
           theme,
           type: HabitFrequencyType.interval,
-          title: "Work / Rest",
+          title: l10n.habitFrequencyWorkRestTitle,
           child: Column(
              crossAxisAlignment: CrossAxisAlignment.start,
              children: [
-                Text("Set a repeating cycle for the habit.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                Text(l10n.habitFrequencyWorkRestDescription, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 12),
                 Row(
                    children: [
-                      const Text("Work "),
+                      Text("${l10n.habitWorkLabel} "),
                      SizedBox(width: 60, child: TextFormField(
                        controller: _workDaysCtrl,
                        keyboardType: TextInputType.number,
@@ -287,7 +289,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                        },
                      )),
                       const SizedBox(width: 12),
-                      const Text("X"),
+                      const Text("×"),
                       const SizedBox(width: 12),
                      SizedBox(width: 60, child: TextFormField(
                        controller: _restDaysCtrl,
@@ -300,7 +302,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                          setState(() { _frequencyGoal = val; _notify(); }); // Storing rest days in frequencyGoal
                        },
                      )),
-                      const Text(" Rest"),
+                      Text(" ${l10n.habitRestLabel}"),
                    ],
                 ),
              ],
@@ -323,6 +325,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
 
   Widget _buildDatePicker(BuildContext context, {required String label, required DateTime? date, required Function(DateTime) onPick, VoidCallback? onClear, String? placeholder}) {
     final theme = Theme.of(context);
+    final localeName = AppLocalizations.of(context)!.localeName;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -349,7 +352,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  date != null ? DateFormat.yMMMd().format(date) : (placeholder ?? "Select"),
+                  date != null ? DateFormat.yMMMd(localeName).format(date) : (placeholder ?? AppLocalizations.of(context)!.habitSelectDatePlaceholder),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: date != null ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                     fontWeight: date != null ? FontWeight.w500 : FontWeight.normal,
@@ -449,7 +452,8 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
   }
 
   Widget _buildWeekDaySelector(ThemeData theme) {
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
+    final days = [...narrowWeekdays.skip(1), narrowWeekdays.first];
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (index) {
@@ -523,7 +527,8 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
   }
   
   Widget _buildYearSelector(ThemeData theme) {
-      final months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      final localeName = AppLocalizations.of(context)!.localeName;
+      final months = List.generate(12, (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)));
       
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -565,13 +570,26 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                  }
              }, 
              icon: const Icon(Icons.add), 
-             label: const Text("Add date"),
+             label: Text(AppLocalizations.of(context)!.habitAddDateAction),
            ),
         ],
       );
   }
 
+  String _periodLabel(HabitPeriod p, AppLocalizations l10n) {
+     switch (p) {
+       case HabitPeriod.week:
+         return l10n.habitPeriodWeek;
+       case HabitPeriod.month:
+         return l10n.habitPeriodMonth;
+       case HabitPeriod.year:
+         return l10n.habitPeriodYear;
+     }
+  }
+
   Widget _buildPeriodToggle(ThemeData theme, HabitPeriod p) {
+       final l10n = AppLocalizations.of(context)!;
+       final label = _periodLabel(p, l10n);
        return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -583,7 +601,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
             duration: const Duration(milliseconds: 200),
             transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: ScaleTransition(scale: anim, child: child)),
             child: Text(
-               p.name.toUpperCase(),
+               label.toUpperCase(),
                key: ValueKey(p),
                style: TextStyle(color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.bold),
             ),

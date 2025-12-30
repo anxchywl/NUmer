@@ -1334,4 +1334,395 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get leaderboardHintMessage =>
       '• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him.';
+
+  @override
+  String get habitsNavLabel => 'Habits';
+
+  @override
+  String get habitsTabProgress => 'Progress';
+
+  @override
+  String get habitsTabList => 'My habits';
+
+  @override
+  String get habitsPleaseSignIn => 'Please sign in';
+
+  @override
+  String get habitsEmptyToday => 'Nothing to do today. Cheers!';
+
+  @override
+  String habitsListError(String error) {
+    return 'Error: $error';
+  }
+
+  @override
+  String get habitsEmptyListTitle => 'No habits yet';
+
+  @override
+  String get habitsEmptyListCta => 'Create your first';
+
+  @override
+  String get habitRequirementMarkDone => 'Mark as done';
+
+  @override
+  String habitRequirementToday(String current, String target, String unit) {
+    return '$current / $target $unit today';
+  }
+
+  @override
+  String habitRequirementTodayNoUnit(String current, String target) {
+    return '$current / $target today';
+  }
+
+  @override
+  String get habitFrequencyEveryDay => 'Every day';
+
+  @override
+  String get habitFrequencySpecificMonth => 'Specific days of month';
+
+  @override
+  String get habitFrequencySpecificDates => 'Specific dates';
+
+  @override
+  String habitFrequencyDaysLabel(String days) {
+    return 'Days: $days';
+  }
+
+  @override
+  String habitFrequencyInterval(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'days',
+      one: 'day',
+    );
+    return 'Every $days $_temp0';
+  }
+
+  @override
+  String habitFrequencyTimesPerPeriod(int count, String period) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count times per $period',
+      one: '$count time per $period',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get habitPeriodWeek => 'Week';
+
+  @override
+  String get habitPeriodMonth => 'Month';
+
+  @override
+  String get habitPeriodYear => 'Year';
+
+  @override
+  String get habitDailyOverview => 'Daily overview';
+
+  @override
+  String get habitNoHabitsThisDay => 'No habits completed on this day.';
+
+  @override
+  String get habitMinutesShort => 'min';
+
+  @override
+  String get habitLogSetTotal => 'Set total';
+
+  @override
+  String get habitLogAddMore => 'Add more';
+
+  @override
+  String get habitUpdateProgress => 'Update progress';
+
+  @override
+  String get habitLogSetValueTitle => 'Set value';
+
+  @override
+  String get habitClearTime => 'Clear time';
+
+  @override
+  String habitProgressLabel(String date) {
+    return 'Progress, $date';
+  }
+
+  @override
+  String habitLogSettingTotal(String total) {
+    return 'Setting total to $total';
+  }
+
+  @override
+  String habitLogAdding(String value, String existing) {
+    return 'Adding $value to $existing';
+  }
+
+  @override
+  String habitGoalLabel(String goal) {
+    return 'Goal: $goal';
+  }
+
+  @override
+  String get habitCreateTitle => 'Create new habit';
+
+  @override
+  String get habitTrackingTitle => 'Tracking type';
+
+  @override
+  String get habitExplainHabit => 'Explain your habit';
+
+  @override
+  String get habitNameLabel => 'Habit name';
+
+  @override
+  String get habitNameHint => 'e.g. morning jog';
+
+  @override
+  String get habitCategoryLabel => 'Category';
+
+  @override
+  String get habitCategoryNew => 'New category';
+
+  @override
+  String get habitCategoryNameLabel => 'Category name';
+
+  @override
+  String get habitCategoryNameHint => 'e.g. reading';
+
+  @override
+  String get habitCategoryDeleteTitle => 'Delete category';
+
+  @override
+  String habitCategoryDeleteMessage(String name) {
+    return 'Delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get habitCategoryCreateAction => 'Create custom';
+
+  @override
+  String get habitBack => 'Back';
+
+  @override
+  String get habitNext => 'Next';
+
+  @override
+  String get habitYesNo => 'Yes / No';
+
+  @override
+  String get habitNumeric => 'Numeric';
+
+  @override
+  String get habitTime => 'Time';
+
+  @override
+  String get habitTrackingYesNoDescription =>
+      'Mark whether you completed the habit or not.';
+
+  @override
+  String get habitTrackingNumericDescription =>
+      'Set a specific number to reach each day.';
+
+  @override
+  String get habitTrackingTimeDescription =>
+      'Set a time duration as your daily goal.';
+
+  @override
+  String get habitComparatorAtLeast => 'At least';
+
+  @override
+  String get habitComparatorLessThan => 'Less than';
+
+  @override
+  String get habitComparatorExactly => 'Exactly';
+
+  @override
+  String get habitComparatorAny => 'Any value';
+
+  @override
+  String get habitValueLabel => 'Value';
+
+  @override
+  String get habitUnitLabel => 'Unit';
+
+  @override
+  String get habitUnitHint => 'e.g. pages';
+
+  @override
+  String get habitPerDay => 'per day';
+
+  @override
+  String get habitTimeLabel => 'hours : minutes : seconds';
+
+  @override
+  String get habitTimePlaceholder => '00:00:00';
+
+  @override
+  String get habitFrequencyPrompt => 'Choose how often the habit should repeat';
+
+  @override
+  String get habitFrequencySpecificTitle => 'Specific days';
+
+  @override
+  String get habitFrequencyDailyDescription =>
+      'Do the habit daily without skipping.';
+
+  @override
+  String get habitFrequencySpecificDescription =>
+      'Choose exact weekdays or dates.';
+
+  @override
+  String get habitFrequencyPeriodWeekLabel => 'Week';
+
+  @override
+  String get habitFrequencyPeriodMonthLabel => 'Month';
+
+  @override
+  String get habitFrequencyPeriodYearLabel => 'Year';
+
+  @override
+  String get habitFrequencyTimesPerPeriodTitle => 'Days per period';
+
+  @override
+  String get habitFrequencyTimesPerPeriodDescription =>
+      'Set how many days within a week, month, or year.';
+
+  @override
+  String get habitTimesPerLabel => 'times per';
+
+  @override
+  String get habitFrequencyWorkRestTitle => 'Work / Rest';
+
+  @override
+  String get habitFrequencyWorkRestDescription =>
+      'Set a repeating cycle for the habit. Work — days when you do the habit. Rest — days off.';
+
+  @override
+  String get habitWorkLabel => 'Work';
+
+  @override
+  String get habitRestLabel => 'Rest';
+
+  @override
+  String get habitChooseTimeRangeTitle =>
+      'Choose the time range when you want to start';
+
+  @override
+  String get habitStartDateLabel => 'Start date';
+
+  @override
+  String get habitEndDateLabel => 'End date (optional)';
+
+  @override
+  String get habitNoEndDate => 'No end date';
+
+  @override
+  String get habitCreateAction => 'Create habit';
+
+  @override
+  String get habitForever => 'Forever';
+
+  @override
+  String get habitAddDateAction => 'Add date';
+
+  @override
+  String get habitScheduleTitle => 'Schedule';
+
+  @override
+  String get habitFrequencySectionTitle => 'Frequency';
+
+  @override
+  String get habitSelectDatePlaceholder => 'Select';
+
+  @override
+  String get habitDeleteTitle => 'Delete habit?';
+
+  @override
+  String get habitDeleteMessage => 'This action cannot be undone.';
+
+  @override
+  String get habitEditTitle => 'Edit habit';
+
+  @override
+  String get habitGeneralSection => 'General';
+
+  @override
+  String get habitAdvancedSection => 'Advanced';
+
+  @override
+  String get habitConnectCourse => 'Connect course';
+
+  @override
+  String get habitCourseSyncHint =>
+      'Syncs progress when you study for these courses.';
+
+  @override
+  String get habitCourseNumericWarning =>
+      'Switch to Yes/No or Time to connect courses.';
+
+  @override
+  String get habitReminderDisabledTitle => 'Remind me';
+
+  @override
+  String get habitReminderDisabledSubtitle =>
+      'This feature is currently disabled';
+
+  @override
+  String get habitArchiveTitle => 'Archive habit';
+
+  @override
+  String get habitArchivedLabel => 'Archived';
+
+  @override
+  String get habitResetProgressTitle => 'Reset habit progress';
+
+  @override
+  String get habitResetProgressSubtitle => 'Clears all history';
+
+  @override
+  String get habitResetProgressConfirmTitle => 'Reset habit progress?';
+
+  @override
+  String get habitResetProgressConfirmMessage =>
+      'This will delete all completion history for this habit. It cannot be undone.';
+
+  @override
+  String get habitUnarchiveAction => 'Unarchive';
+
+  @override
+  String get archivedHabitsTitle => 'Archived habits';
+
+  @override
+  String get archivedHabitsEmpty => 'No archived habits';
+
+  @override
+  String get habitsCalendarTitle => 'Calendar';
+
+  @override
+  String get habitTimeHourShort => 'H';
+
+  @override
+  String get habitTimeMinuteShort => 'M';
+
+  @override
+  String get habitTimeSecondShort => 'S';
+
+  @override
+  String get habitCategoryStudy => 'Study';
+
+  @override
+  String get habitCategorySports => 'Sports';
+
+  @override
+  String get habitCategoryQuitBadHabit => 'Quit a bad habit';
+
+  @override
+  String get habitCategoryHome => 'Home';
+
+  @override
+  String get habitCategoryHealth => 'Health';
+
+  @override
+  String get habitCategoryWork => 'Work';
 }
