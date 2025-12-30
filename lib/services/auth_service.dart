@@ -209,7 +209,7 @@ class AuthController extends ChangeNotifier {
         final body = notification?.body ?? '';
         if (body.isEmpty) return;
         final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
-        await Notifs.showNow(id: id, title: title, body: body);
+        await Notifs.showImmediate(id: id, title: title, body: body);
       });
     } catch (e) {
       if (kDebugMode) {

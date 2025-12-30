@@ -1,6 +1,4 @@
-
 import 'dart:async';
-import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -10,7 +8,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 import 'l10n/app_localizations.dart';
 
@@ -36,6 +33,8 @@ import 'widgets/profile_form.dart';
 import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
 import 'services/notifications.dart';
+
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 Future<void> _activateAppCheck({required bool useEmulator}) async {
   if (useEmulator) return; 
@@ -68,15 +67,18 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
     );
 }
 
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   const useEmulator =
       bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
   await Firebase.initializeApp();
-  if (Platform.isAndroid) {
+  
+  if (defaultTargetPlatform == TargetPlatform.android) {
     await AndroidAlarmManager.initialize();
   }
+  
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
@@ -171,45 +173,44 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final appState = context.watch<AppState>();
+    return Selector<AppState, (ThemeMode, Locale?)>(
+      selector: (_, state) => (state.themeMode, state.locale),
+      builder: (context, data, _) {
+        final themeMode = data.$1;
+        final locale = data.$2;
 
-    return MaterialApp(
-      title: 'Numer',
-      debugShowCheckedModeBanner: false,
-      builder: (context, child) {
-        return Material(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          child: child,
+        return MaterialApp(
+          title: 'Numer',
+          debugShowCheckedModeBanner: false,
+          themeAnimationDuration: const Duration(milliseconds: 300),
+          themeAnimationCurve: Curves.easeInOut,
+          theme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          ),
+          darkTheme: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.indigo,
+              brightness: Brightness.dark,
+            ),
+          ),
+          themeMode: themeMode,
+          locale: locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AuthGate(onThemeChange: setTheme),
+          routes: {
+            '/shell': (_) => _Shell(onThemeChange: setTheme),
+            '/timer': (_) => const TimerScreen(),
+            '/alarms': (_) => const AlarmsScreen(),
+          },
         );
-      },
-      themeAnimationDuration: const Duration(milliseconds: 300),
-      themeAnimationCurve: Curves.easeInOut,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-      ),
-      darkTheme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.dark,
-        ),
-      ),
-      themeMode: appState.themeMode,
-      locale: appState.locale,
-      localizationsDelegates: const [
-        AppLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: AuthGate(onThemeChange: setTheme),
-
-      routes: {
-        '/shell': (_) => _Shell(onThemeChange: setTheme),
-        '/timer': (_) => const TimerScreen(),
-        '/alarms': (_) => const AlarmsScreen(),
       },
     );
   }
@@ -327,39 +328,18 @@ class _AuthGateState extends State<AuthGate> {
         
         return Consumer<AppState>(
           builder: (context, state, _) {
-            if (!state.isLoaded) {
-              return FutureBuilder(
-                future: state.load(force: true),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return Scaffold(
-                      body: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text('Failed to load data'),
-                            ElevatedButton(
-                              onPressed: () {
-                                state.load(force: true); 
-                              },
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  return const Scaffold(
-                    body: Center(child: CircularProgressIndicator()),
-                  );
-                },
-              );
+            if (auth.currentUser != null && !state.isLoaded) {
+              unawaited(state.load());
             }
-            if (!state.isHydrated) {
+
+            // Only show loader if we haven't loaded anything yet.
+            // If we are already loaded, we stay in the shell even during background refreshes/reloads.
+            if (!state.isLoaded || !state.isHydrated) {
               return const Scaffold(
                 body: Center(child: CircularProgressIndicator()),
               );
             }
+
             final profile = auth.profile;
             if (profile != null) {
               unawaited(state.applyRemoteProfile(profile));

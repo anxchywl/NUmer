@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
@@ -31,6 +33,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   late double _currentValue;
   LoggingMode _mode = LoggingMode.set;
   Map<String, int> _courseContributions = {}; // courseId -> seconds
+  Timer? _incrementTimer;
 
   @override
   void initState() {
@@ -89,7 +92,16 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       completed: finalValue > 0,
       value: finalValue,
     );
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+       context.read<AppState>().triggerSync();
+       Navigator.pop(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    _incrementTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -142,8 +154,8 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
             width: double.infinity,
             child: SegmentedButton<LoggingMode>(
               segments: const [
-                ButtonSegment(value: LoggingMode.set, label: Text("Set Total"), icon: Icon(Icons.edit)),
-                ButtonSegment(value: LoggingMode.add, label: Text("Add More"), icon: Icon(Icons.add)),
+                ButtonSegment(value: LoggingMode.set, label: Text("Set total"), icon: Icon(Icons.edit)),
+                ButtonSegment(value: LoggingMode.add, label: Text("Add more"), icon: Icon(Icons.add)),
               ],
               selected: {_mode},
               onSelectionChanged: (val) {
@@ -180,7 +192,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                 backgroundColor: widget.habit.color,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: const Text("Update Progress", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: const Text("Update progress", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 16),
@@ -193,9 +205,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildStepButton(Icons.remove, () {
-          setState(() => _currentValue = (_currentValue - 1).clamp(0, 999999));
-        }),
+        _buildStepButton(Icons.remove, -1.0, theme),
         const SizedBox(width: 24),
         GestureDetector(
           onTap: _showManualValueDialog,
@@ -214,9 +224,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
           ),
         ),
         const SizedBox(width: 24),
-        _buildStepButton(Icons.add, () {
-          setState(() => _currentValue = (_currentValue + 1).clamp(0, 999999));
-        }),
+        _buildStepButton(Icons.add, 1.0, theme),
       ],
     );
   }
@@ -226,7 +234,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Set Value"),
+        title: const Text("Set value"),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
@@ -260,11 +268,11 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildTimeUnit(h.toInt().toString().padLeft(2, '0'), "H", theme),
+        _buildTimeUnit(h.toInt().toString().padLeft(2, '0'), "H", 3600, theme),
         _buildTimeSeparator(theme),
-        _buildTimeUnit(m.toInt().toString().padLeft(2, '0'), "M", theme),
+        _buildTimeUnit(m.toInt().toString().padLeft(2, '0'), "M", 60, theme),
         _buildTimeSeparator(theme),
-        _buildTimeUnit(s.toInt().toString().padLeft(2, '0'), "S", theme),
+        _buildTimeUnit(s.toInt().toString().padLeft(2, '0'), "S", 1, theme),
         const SizedBox(width: 8),
         Padding(
           padding: const EdgeInsets.only(bottom: 20),
@@ -280,23 +288,40 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     );
   }
 
-  void _incrementTimeUnit(String unit) {
-    setState(() {
-      if (unit == "H") {
-        _currentValue = (_currentValue + 3600).clamp(0, 86399);
-      } else if (unit == "M") {
-        _currentValue = (_currentValue + 60).clamp(0, 86399);
-      } else {
-        _currentValue = (_currentValue + 5).clamp(0, 86399);
-      }
+  void _startAdjusting(double step) {
+    _stopAdjusting();
+    _adjustValue(step); // First one is immediate
+
+    _incrementTimer = Timer(const Duration(milliseconds: 500), () {
+      _incrementTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        _adjustValue(step);
+        HapticFeedback.selectionClick();
+      });
     });
   }
 
-  Widget _buildTimeUnit(String val, String unit, ThemeData theme) {
+  void _stopAdjusting() {
+    _incrementTimer?.cancel();
+    _incrementTimer = null;
+  }
+
+  void _adjustValue(double step) {
+    setState(() {
+      final maxVal = widget.habit.type == HabitType.time ? 86399.0 : 999999.0;
+      _currentValue = (_currentValue + step).clamp(0.0, maxVal);
+    });
+  }
+
+  Widget _buildTimeUnit(String val, String label, double step, ThemeData theme) {
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _incrementTimeUnit(unit),
+          onTapDown: (_) {
+            _startAdjusting(step);
+            HapticFeedback.lightImpact();
+          },
+          onTapUp: (_) => _stopAdjusting(),
+          onTapCancel: () => _stopAdjusting(),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -310,7 +335,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
           ),
         ),
         const SizedBox(height: 4),
-        Text(unit, style: theme.textTheme.labelSmall?.copyWith(
+        Text(label, style: theme.textTheme.labelSmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
           fontWeight: FontWeight.bold,
         )),
@@ -325,11 +350,22 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     );
   }
 
-  Widget _buildStepButton(IconData icon, VoidCallback onPressed) {
-    return IconButton.filledTonal(
-      onPressed: onPressed,
-      icon: Icon(icon),
-      padding: const EdgeInsets.all(12),
+  Widget _buildStepButton(IconData icon, double step, ThemeData theme) {
+    return GestureDetector(
+      onTapDown: (_) {
+        _startAdjusting(step);
+        HapticFeedback.lightImpact();
+      },
+      onTapUp: (_) => _stopAdjusting(),
+      onTapCancel: () => _stopAdjusting(),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: theme.colorScheme.onSecondaryContainer),
+      ),
     );
   }
 

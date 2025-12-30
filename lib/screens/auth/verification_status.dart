@@ -59,9 +59,6 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email verified! Loading your account...')),
         );
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop(true);
-        }
         return;
       }
 

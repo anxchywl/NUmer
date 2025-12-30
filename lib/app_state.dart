@@ -271,9 +271,6 @@ class AppState extends ChangeNotifier {
 
   Future<void> load({bool force = false}) {
     if (_loadFuture != null) {
-      if (force) {
-        return _loadFuture!.whenComplete(() => load(force: true));
-      }
       return _loadFuture!;
     }
     if (_isLoaded && !force) {
@@ -283,10 +280,14 @@ class AppState extends ChangeNotifier {
     return _loadFuture!.whenComplete(() => _loadFuture = null);
   }
 
-  void _triggerSync() {
+  Future<void> triggerSync() async {
     final sync = _syncService;
     if (sync == null) return;
-    unawaited(sync.syncNow());
+    await sync.syncNow();
+  }
+
+  void _triggerSync() {
+    unawaited(triggerSync());
   }
 
   Future<void> _performLoad({required bool force}) async {
@@ -1673,7 +1674,7 @@ class AppState extends ChangeNotifier {
       if (elapsed < dailyGoal) return;
       final token = _dateKey(DateTime.now());
       if (!await _markProgressCelebrated('day', courseId, token)) return;
-      await Notifs.showNow(
+      await Notifs.showImmediate(
         id: _notificationId('progress_day', courseId),
         title: 'Daily goal crushed!',
         body: '"${course.name}" reached today\'s target. Nice work!',
@@ -1685,7 +1686,7 @@ class AppState extends ChangeNotifier {
       if (elapsed < weeklyGoalSecs) return;
       final token = _weekKey(start);
       if (!await _markProgressCelebrated('week', courseId, token)) return;
-      await Notifs.showNow(
+      await Notifs.showImmediate(
         id: _notificationId('progress_week', courseId),
         title: 'Weekly goal complete!',
         body: '"${course.name}" met this week\'s target. Keep it up!',

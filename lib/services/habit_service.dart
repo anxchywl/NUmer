@@ -39,25 +39,24 @@ class HabitService {
 
   // -- Habits --
 
-  // We might inject AuthService or pass uid directly. 
-  // For simplicity, let's assume we get the UID from the UI or Auth provider.
-  // But standard pattern in this app seems to be simple services.
-  // Let's rely on the caller to provide UID or current user.
-  
-  // Actually, looking at main.dart, it seems we use Providers.
-  // We can facilitate it by accepting a uid in methods or constructor if scoped.
-  // Let's use methods with userId to be safe and stateless if used as a singleton/provider.
-
   Stream<List<Habit>> habitsStream(String userId) {
     return _db
         .collection('users')
         .doc(userId)
         .collection('habits')
-        .where('archived', isEqualTo: false)
-        .orderBy('createdAt', descending: false)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+          // Filter archived client-side to handle both simplified 'ar' field and legacy 'archived'
+          final active = habits.where((h) => !h.archived).toList();
+          
+          active.sort((a, b) {
+            int cmp = a.sortOrder.compareTo(b.sortOrder);
+            if (cmp != 0) return cmp;
+            return a.createdAt.compareTo(b.createdAt);
+          });
+          return active;
+        });
   }
 
   Future<List<Habit>> getHabits(String userId) async {
@@ -65,9 +64,17 @@ class HabitService {
         .collection('users')
         .doc(userId)
         .collection('habits')
-        .where('archived', isEqualTo: false)
         .get();
-    return snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+        
+    final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+    final active = habits.where((h) => !h.archived).toList();
+    
+    active.sort((a, b) {
+      int cmp = a.sortOrder.compareTo(b.sortOrder);
+      if (cmp != 0) return cmp;
+      return a.createdAt.compareTo(b.createdAt);
+    });
+    return active;
   }
 
   Stream<List<Habit>> archivedHabitsStream(String userId) {
@@ -75,11 +82,13 @@ class HabitService {
         .collection('users')
         .doc(userId)
         .collection('habits')
-        .where('archived', isEqualTo: true)
-        .orderBy('createdAt', descending: false)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList());
+        .map((snapshot) {
+          final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+          final archived = habits.where((h) => h.archived).toList();
+          archived.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return archived;
+        });
   }
 
   Future<void> unarchiveHabit(String userId, String habitId) async {
@@ -88,12 +97,13 @@ class HabitService {
         .doc(userId)
         .collection('habits')
         .doc(habitId)
-        .update({'archived': false});
+        .update({
+          'archived': FieldValue.delete(), // Remove legacy
+          'ar': FieldValue.delete(),       // Remove new (omitted = false)
+        });
   }
 
   Future<void> createHabit(String userId, Habit habit) async {
-    // We let Firestore generate ID or use the one in model if we generated it client-side.
-    // If habit.id is empty or temp, we might want a new doc ref.
     DocumentReference ref;
     if (habit.id.isEmpty || habit.id.contains('_temp')) {
        ref = _db.collection('users').doc(userId).collection('habits').doc();
@@ -101,16 +111,12 @@ class HabitService {
        ref = _db.collection('users').doc(userId).collection('habits').doc(habit.id);
     }
     
-    // Ensure we use the ref ID
     final data = habit.toFirestore();
-    // timestamp updates?
     
     await ref.set(data);
     
-    // Always call schedule. The scheduler handles both scheduling 
-    // new alarms and cancelling existing ones if hasReminder is false.
     final savedHabit = Habit.fromMap(ref.id, data);
-    await HabitScheduler.schedule(savedHabit);
+    await HabitScheduler.cancel(savedHabit); 
   }
 
   Future<void> toggleCompletion({
@@ -131,26 +137,25 @@ class HabitService {
     await _db.runTransaction((transaction) async {
       final habitSnap = await transaction.get(habitRef);
       if (!habitSnap.exists) throw Exception("Habit not found");
+      final habitData = habitSnap.data() ?? {};
 
       // 1. Update History
       if (completed) {
         transaction.set(historyRef, {
-          'date': dateKey,
-          'dateTimestamp': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
-          'completedAt': FieldValue.serverTimestamp(),
-          'value': value ?? 1, 
+          'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
+          't': FieldValue.serverTimestamp(),
+          'v': value ?? 1, 
         });
       } else {
         transaction.delete(historyRef);
       }
 
-      // 2. Update Stats (Totals only, Streak handled below)
-      final data = habitSnap.data();
-      final currentStats = data?['stats'] as Map<String, dynamic>? ?? {};
-      int total = currentStats['totalCompletions'] ?? 0;
+      // 2. Update Stats
+      final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
+      int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
       
-      final last7Map = data?['last7'] as Map<String, dynamic>? ?? {};
-      final alreadyCompleted = last7Map.containsKey(dateKey);
+      final l7Map = (habitData['l7'] ?? habitData['last7'] ?? {}) as Map<String, dynamic>;
+      final alreadyCompleted = l7Map.containsKey(dateKey);
 
       if (completed && !alreadyCompleted) {
         total++;
@@ -158,28 +163,52 @@ class HabitService {
         total = (total > 0) ? total - 1 : 0;
       }
 
-      final last7Key = 'last7.$dateKey';
+      // 3. Robust Update for l7
+      // If l7 is missing (e.g. after reset or migration), we can't use dot notation ('l7.dateKey').
+      // We must check if the map exists in the document snapshot.
+      final hasL7Container = habitData.containsKey('l7');
       
-      transaction.update(habitRef, {
-        'stats.totalCompletions': total,
-        last7Key: completed ? (value ?? 1.0) : FieldValue.delete(),
-      });
+      final updates = <String, dynamic>{
+        'st.tc': total, // 'st' might also be missing if legacy, but 'st.tc' auto-creates map.
+      };
+      
+      if (completed) {
+         if (hasL7Container) {
+            updates['l7.$dateKey'] = (value ?? 1.0);
+         } else {
+            // "l7" doesn't exist, we must create it.
+            // NOTE: We cannot mix 'l7.key' and 'l7' in same update if logic was complex, 
+            // but here we just write the whole map if it's missing.
+            // CAUTION: If we write 'l7': { dateKey: val }, we might overwrite if concurrency?
+            // Transaction protects us. 'habitData' is fresh. 
+            // If 'l7' is missing in 'habitData', it is really missing.
+            
+            // However, if we migrated from 'last7' but 'l7' is missing...
+            // We should ideally copy 'last7' to 'l7' or just start fresh 'l7'.
+            // For compacting, we just start fresh 'l7'. 
+            updates['l7'] = { dateKey: (value ?? 1.0) };
+         }
+      } else {
+         // Unchecking
+         if (hasL7Container) {
+            updates['l7.$dateKey'] = FieldValue.delete();
+         }
+         // If l7 missing, nothing to delete.
+      }
+      
+      transaction.update(habitRef, updates);
     });
 
-    // 3. Recalculate Streak (Outside transaction to avoid read limits/contention)
-    // Fire and forget? Or await? Await ensures UI updates after logic.
     await recalculateStreak(userId, habit);
   }
 
   /// Load history for a month/range
   Future<List<HabitHistoryEntry>> getHistory(
       String userId, String habitId, DateTime start, DateTime end) async {
-    // Start/End inclusive?
-    // Convert to string keys or timestamps depending on index.
-    // In toggleCompletion I wrote 'dateTimestamp' so let's use that.
     
-    final s = Timestamp.fromDate(start);
-    final e = Timestamp.fromDate(end);
+    // Query by ID range (IDs are YYYY-MM-DD strings)
+    final startKey = _dateKey(start);
+    final endKey = _dateKey(end);
 
     final snapshot = await _db
         .collection('users')
@@ -187,21 +216,50 @@ class HabitService {
         .collection('habits')
         .doc(habitId)
         .collection('history')
-        .where('dateTimestamp', isGreaterThanOrEqualTo: s)
-        .where('dateTimestamp', isLessThanOrEqualTo: e)
+        .where(FieldPath.documentId, isGreaterThanOrEqualTo: startKey)
+        .where(FieldPath.documentId, isLessThanOrEqualTo: endKey)
         .get();
 
     return snapshot.docs.map((d) => HabitHistoryEntry.fromFirestore(d)).toList();
   }
 
   Future<void> deleteHabit(String userId, String habitId) async {
-    // Cancel any scheduled reminders first
     await Notifs.cancel(habitId.hashCode.abs());
+    await Storage.removeHabitFromOrder(habitId);
+
+    final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habitId);
     
-    // Note: This does not delete subcollections (history) in Firestore.
-    // For a production app, we should use a Cloud Function or recursive delete.
-    // MVP: Just delete the habit document.
-    await _db.collection('users').doc(userId).collection('habits').doc(habitId).delete();
+    final historySnap = await habitRef.collection('history').get();
+    if (historySnap.docs.isNotEmpty) {
+      final batch = _db.batch();
+      for (var doc in historySnap.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+    }
+    
+    await habitRef.delete();
+  }
+
+  Future<void> reorderHabits(String userId, int oldIndex, int newIndex) async {
+    final habits = await getHabits(userId);
+    if (oldIndex < 0 || oldIndex >= habits.length) return;
+    if (newIndex < 0 || newIndex > habits.length) return;
+    
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    
+    final updated = List<Habit>.from(habits);
+    final moved = updated.removeAt(oldIndex);
+    updated.insert(newIndex, moved);
+    
+    final batch = _db.batch();
+    for (var i = 0; i < updated.length; i++) {
+      final ref = _db.collection('users').doc(userId).collection('habits').doc(updated[i].id);
+      batch.update(ref, {'so': i}); // New key 'so'
+    }
+    await batch.commit();
   }
 
   Future<void> resetStreak(String userId, String habitId) async {
@@ -210,128 +268,161 @@ class HabitService {
         .doc(userId)
         .collection('habits')
         .doc(habitId)
-        .update({'stats.currentStreak': 0});
+        .update({'st.cs': 0});
   }
 
   Future<void> resetHabitProgress(String userId, String habitId) async {
      final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habitId);
      
-     // 1. Delete all history docs (Batching for safety)
-     // Note: In client SDK we can't delete a collection easily. We must query and delete.
+     // 1. Delete all history docs (Chunked Batching)
      final historySnap = await habitRef.collection('history').get();
-     final batch = _db.batch();
-     
-     for (var doc in historySnap.docs) {
-        batch.delete(doc.reference);
+     final docs = historySnap.docs;
+
+     // Firestore batch limit is 500 operations
+     for (var i = 0; i < docs.length; i += 500) {
+        final batch = _db.batch();
+        final end = (i + 500 < docs.length) ? i + 500 : docs.length;
+        for (var j = i; j < end; j++) {
+           batch.delete(docs[j].reference);
+        }
+        await batch.commit();
      }
      
      // 2. Reset Stats
-     batch.update(habitRef, {
-        'stats': {
-           'totalCompletions': 0,
-           'currentStreak': 0,
-           'longestStreak': 0,
+     // We invoke 'l7': {} to initialize the map, preventing "missing field" errors on future updates.
+     await habitRef.update({
+        'st': {
+           'tc': 0,
+           'cs': 0,
+           'ls': 0,
         },
-        'last7': FieldValue.delete(), // Remove last7 map
+        'l7': {}, // Initialize empty map
+        'last7': FieldValue.delete(), // Remove legacy
      });
-     
-     await batch.commit();
   }
 
-  /// Recalculates and updates the streak based on history and schedule.
   Future<void> recalculateStreak(String userId, Habit habit) async {
+    // Fetch ALL history. Sort in memory.
     final historySnap = await _db
         .collection('users')
         .doc(userId)
         .collection('habits')
         .doc(habit.id)
         .collection('history')
-        .orderBy('dateTimestamp', descending: true)
         .get();
 
-    final historyDates = historySnap.docs.map((doc) {
-       // Convert timestamp to DateTime (midnight)
-       final ts = doc['dateTimestamp'] as Timestamp;
-       final d = ts.toDate();
-       return DateTime(d.year, d.month, d.day);
+    final historyDocs = historySnap.docs;
+    
+    // Sort descending by ID (YYYY-MM-DD)
+    historyDocs.sort((a, b) => b.id.compareTo(a.id));
+
+    final historyDates = historyDocs.where((doc) {
+       final data = doc.data();
+       final val = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 0.0;
+       return val >= habit.targetValue;
+    }).map((doc) {
+       final parts = doc.id.split('-');
+       if (parts.length == 3) {
+         return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+       }
+       return DateTime.now();
     }).toSet();
 
-    int streak = 0;
+    final fullCompletionMap = historyDocs.fold<Map<String, double>>({}, (map, doc) {
+      final data = doc.data();
+      map[doc.id] = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 0.0;
+      return map;
+    });
+
+    int currentStreakValue = 0;
+    int longestStreakValue = 0;
+    int tempStreak = 0;
+
     DateTime checkDate = DateTime.now();
     checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day);
     
-    // Safety break
-    int daysChecked = 0;
+    final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
     
-    // If we have no history at all, streak is 0.
-    if (historyDates.isEmpty) {
-       await _updateStreak(userId, habit.id, 0);
-       return;
-    }
-
-    // We iterate backwards. 
-    while (daysChecked < 365 * 5) { // Check up to 5 years back
-       final isScheduled = _isDayScheduled(habit, checkDate);
-       
+    DateTime currentCheck = checkDate;
+    while (!currentCheck.isBefore(start)) {
+       final isScheduled = _isDayScheduledForStreak(habit, currentCheck, fullCompletionMap);
        if (isScheduled) {
-         final isCompleted = historyDates.contains(checkDate);
-         
+         final isCompleted = historyDates.contains(currentCheck);
          if (isCompleted) {
-           streak++;
+           currentStreakValue++;
          } else {
-           // Not completed.
-           // If it's TODAY, allows being incomplete without breaking streak yet?
-           // Usually, if I haven't done it today, my streak is "what it was yesterday".
-           // But if I missed Yesterday (scheduled), streak is 0.
-           final isToday = checkDate.year == DateTime.now().year &&
-               checkDate.month == DateTime.now().month &&
-               checkDate.day == DateTime.now().day;
-               
-           if (!isToday) {
-             // Break streak
-             break;
-           }
-           // If today is scheduled but not done, we just don't increment, 
-           // but we continue to check yesterday to see the existing streak.
+           final isToday = currentCheck.year == DateTime.now().year &&
+               currentCheck.month == DateTime.now().month &&
+               currentCheck.day == DateTime.now().day;
+           if (!isToday) break;
          }
        }
-       // If not scheduled, skip (streak continues).
-       
-       checkDate = checkDate.subtract(const Duration(days: 1));
-       daysChecked++;
+       currentCheck = currentCheck.subtract(const Duration(days: 1));
+    }
+
+    DateTime longCheck = start;
+    while (!longCheck.isAfter(checkDate)) {
+       final isScheduled = _isDayScheduledForStreak(habit, longCheck, fullCompletionMap);
+       if (isScheduled) {
+          if (historyDates.contains(longCheck)) {
+             tempStreak++;
+             if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
+          } else {
+             if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+                if (_isLastDayOfPeriod(habit, longCheck)) {
+                   tempStreak = 0;
+                }
+             } else {
+                tempStreak = 0;
+             }
+          }
+       }
+       longCheck = longCheck.add(const Duration(days: 1));
     }
     
-    await _updateStreak(userId, habit.id, streak);
+    await _updateStreaks(userId, habit.id, currentStreakValue, longestStreakValue);
   }
 
-  Future<void> _updateStreak(String userId, String habitId, int streak) async {
+  bool _isDayScheduledForStreak(Habit habit, DateTime date, Map<String, double> completionMap) {
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+       final isCompletedToday = (completionMap[_dateKey(date)] ?? 0.0) >= habit.targetValue;
+       if (isCompletedToday) return true;
+
+       if (_isLastDayOfPeriod(habit, date)) {
+          return !habit.isGoalMetForPeriod(completionMap, date);
+       }
+       return false;
+    }
+
+    return habit.isScheduledFor(date);
+  }
+
+  bool _isLastDayOfPeriod(Habit habit, DateTime date) {
+    switch (habit.frequencyPeriod) {
+      case HabitPeriod.week:
+        return date.weekday == DateTime.sunday;
+      case HabitPeriod.month:
+        final nextDay = date.add(const Duration(days: 1));
+        return nextDay.day == 1;
+      case HabitPeriod.year:
+        return date.month == 12 && date.day == 31;
+      default:
+        return false;
+    }
+  }
+
+  Future<void> _updateStreaks(String userId, String habitId, int current, int longest) async {
     await _db
         .collection('users')
         .doc(userId)
         .collection('habits')
         .doc(habitId)
-        .update({'stats.currentStreak': streak});
+        .update({
+          'st.cs': current,
+          'st.ls': longest,
+        });
   }
 
-  bool _isDayScheduled(Habit habit, DateTime date) {
-    // If date is before start date, it's not scheduled (or rather, doesn't count)
-    final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
-    if (date.isBefore(start)) return false;
-
-    switch (habit.frequencyType) {
-      case HabitFrequencyType.daily:
-        return true;
-      case HabitFrequencyType.specificDays:
-        return habit.weekDays.contains(date.weekday);
-      case HabitFrequencyType.interval:
-        // habit.startDate is always set
-        final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
-        final diff = date.difference(start).inDays;
-        return diff % habit.intervalDays == 0;
-      case HabitFrequencyType.repeatsInPeriod:
-        return true; 
-    }
-  }
 
   Future<void> updateHabitProgressFromCourse({
     required String userId, 
@@ -341,25 +432,24 @@ class HabitService {
   }) async {
     if (deltaSeconds == 0) return;
 
-    // Query active habits that are connected to this course (or were)
     final snapshot = await _db
         .collection('users')
         .doc(userId)
         .collection('habits')
-        .where('archived', isEqualTo: false)
-        .where('connectedCourseIds', arrayContains: courseId)
         .get();
 
-    // We update each habit
-    for (var doc in snapshot.docs) {
-      final habit = Habit.fromFirestore(doc);
-      
+    final allHabits = snapshot.docs.map((d) => Habit.fromFirestore(d));
+    final relevantHabits = allHabits.where((h) => 
+       !h.archived && h.connectedCourseIds.contains(courseId)
+    ).toList();
+
+    for (var habit in relevantHabits) {
       // 1. Check start date
       final targetDate = DateTime(date.year, date.month, date.day);
       final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
       if (targetDate.isBefore(start)) continue; 
 
-      // 2. Check type logic - we only sync time habits (implied by "time added")
+      // 2. Check type logic
       if (habit.type != HabitType.time) continue; 
 
       final dateKey = _dateKey(targetDate);
@@ -370,38 +460,27 @@ class HabitService {
         final habitSnap = await transaction.get(habitRef);
         final historySnap = await transaction.get(historyRef);
         
-        // Calculate new value
-        double currentVal = 0.0;
-        if (historySnap.exists) {
-           currentVal = (historySnap.data()?['value'] as num?)?.toDouble() ?? 0.0;
-        }
+        final habitData = habitSnap.data() ?? {};
+        final historyData = historySnap.data() ?? {};
+
+        double currentVal = (historyData['v'] ?? historyData['value'] as num?)?.toDouble() ?? 0.0;
         
         double newVal = currentVal + deltaSeconds;
-        if (newVal < 0) newVal = 0; // Prevent negative
+        if (newVal < 0) newVal = 0; 
 
-        // Update History
         if (newVal > 0) {
           transaction.set(historyRef, {
-            'date': dateKey,
-            'dateTimestamp': Timestamp.fromDate(targetDate), 
-            'completedAt': FieldValue.serverTimestamp(), // Update completed at? Or keep original? For sync, maybe just leave it or update.
-            'value': newVal, 
+            'ts': Timestamp.fromDate(targetDate), 
+            't': FieldValue.serverTimestamp(), 
+            'v': newVal, 
           }, SetOptions(merge: true));
         } else {
-           // If reduced to 0, remove entry
            transaction.delete(historyRef);
         }
 
-        // Update Stats & Last 7 (Totals logic)
-        final data = habitSnap.data();
-        if (data == null) return;
+        final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
+        int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
         
-        final currentStats = data['stats'] as Map<String, dynamic>? ?? {};
-        int total = currentStats['totalCompletions'] ?? 0;
-        
-        // Actually reliance on last7 for 'wasCompleted' might be shaky if >7 days.
-        // But for transaction correctness of 'totalCompletions', we should rely on transition 0 -> >0 or >0 -> 0.
-
         final isCompletedNow = newVal > 0;
         final isCompletedBefore = currentVal > 0;
         
@@ -411,15 +490,14 @@ class HabitService {
           total = (total > 0) ? total - 1 : 0;
         }
 
-        final last7Key = 'last7.$dateKey';
+        final last7Key = 'l7.$dateKey';
         
         transaction.update(habitRef, {
-          'stats.totalCompletions': total,
+          'st.tc': total,
           last7Key: isCompletedNow ? newVal : FieldValue.delete(),
         });
       });
       
-      // Recalculate streak after update
       await recalculateStreak(userId, habit);
     }
   }

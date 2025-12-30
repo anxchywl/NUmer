@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/habit.dart';
 import '../../models/habit_category.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
-import '../../services/habit_scheduler.dart';
+
 import 'widgets/habit_schedule_editor.dart';
 import '../../app_state.dart';
 import 'swipe_selector.dart';
@@ -76,8 +77,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   bool _isDirty = false;
   // Scroll tracking for header fade
   late ScrollController _scrollController;
-  double _lastScrollOffset = 0.0;
-  bool _showHeader = true;
 
   @override
   void initState() {
@@ -122,20 +121,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     // Removed old frequency controllers as they are now handled by HabitScheduleEditor
 
     _loadCustomCategories();
-
-    _scrollController = ScrollController()..addListener(_onScroll);
+    _scrollController = ScrollController();
   }
 
-  void _onScroll() {
-    final offset = _scrollController.hasClients ? _scrollController.offset : 0.0;
-    final delta = offset - _lastScrollOffset;
-    if (delta > 2 && _showHeader) {
-      setState(() => _showHeader = false);
-    } else if (delta < -2 && !_showHeader) {
-      setState(() => _showHeader = true);
-    }
-    _lastScrollOffset = offset.clamp(0.0, double.infinity);
-  }
 
   void _markDirty() {
     setState(() => _isDirty = true);
@@ -212,7 +200,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     _timeCtrl.dispose();
     _targetCtrl.dispose();
     _unitCtrl.dispose();
-    _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -261,7 +248,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     await context.read<HabitService>().createHabit(uid, updatedHabit);
     
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Changes saved"), duration: Duration(seconds: 1)));
+      context.read<AppState>().triggerSync();
       setState(() => _isDirty = false);
     }
   }
@@ -282,6 +269,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     
     await context.read<HabitService>().createCategory(uid, cat);
     if (mounted) {
+       context.read<AppState>().triggerSync();
        setState(() {
           _isCreatingCategory = false;
           _categoryName = _newCatName.trim();
@@ -307,7 +295,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
       final uid = context.read<AuthController>().currentUser?.uid;
       if (uid != null) {
         await context.read<HabitService>().deleteHabit(uid, widget.habit.id);
-        if (mounted) Navigator.pop(context);
+        if (mounted) {
+           context.read<AppState>().triggerSync();
+           Navigator.pop(context);
+        }
       }
     }
   }
@@ -321,10 +312,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
         controller: _scrollController,
         slivers: [
           SliverAppBar(
-            title: const Text("Edit Habit"),
-            floating: true,
-            pinned: false,
-            snap: true,
+            title: const Text("Edit habit"),
             actions: [
                if (_isDirty)
                 TextButton(
@@ -346,12 +334,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                 TextFormField(
                   initialValue: _habitName,
               decoration: InputDecoration(
-                labelText: "Habit Name",
+                labelText: "Habit name",
                 filled: true,
                 fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
               ),
               onChanged: (v) { _habitName = v; _markDirty(); },
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(32),
+                FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+              ],
             ),
             const SizedBox(height: 24),
             
@@ -457,7 +449,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
               children: [
                  Icon(_isCreatingCategory ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right, color: theme.colorScheme.primary),
                  const SizedBox(width: 8),
-                 Text("Create Custom", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
+                 Text("Create custom", style: theme.textTheme.labelLarge?.copyWith(color: theme.colorScheme.primary, fontWeight: FontWeight.bold)),
               ],
            ),
         ),
@@ -479,9 +471,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
-          decoration: const InputDecoration(labelText: "Category Name", hintText: "e.g. Reading"),
+          decoration: const InputDecoration(labelText: "Category name", hintText: "e.g. reading"),
           onChanged: (v) => _newCatName = v,
           autofocus: true,
+          inputFormatters: [
+            LengthLimitingTextInputFormatter(32),
+            FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+          ],
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -537,7 +533,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
            children: [
              TextButton(onPressed: () => setState(() => _isCreatingCategory = false), child: const Text("Cancel")),
              const Spacer(),
-             FilledButton(onPressed: _saveNewCategory, child: const Text("Save Category")),
+             FilledButton(onPressed: _saveNewCategory, child: const Text("Save category")),
            ],
         )
       ],
@@ -551,7 +547,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
            Wrap(
              spacing: 8, runSpacing: 8,
              children: [
-                _buildTypeChip("Yes / No", HabitType.yesNo),
+                 _buildTypeChip("Yes / No", HabitType.yesNo),
                 _buildTypeChip("Numeric", HabitType.numeric),
                 _buildTypeChip("Time", HabitType.time),
              ],
@@ -584,9 +580,27 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(labelText: "Value", filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
                     onChanged: (v) {
-                      final val = double.tryParse(v) ?? 0;
+                      final trimmed = v.trim();
+                      if (trimmed.isEmpty) {
+                        if (_target != 0) { _target = 0; _markDirty(); }
+                        return;
+                      }
+                      
+                      double val = double.tryParse(trimmed) ?? 0;
+                      if (val > 10000) {
+                        val = 10000;
+                        _targetCtrl.value = TextEditingValue(
+                           text: "10000",
+                           selection: TextSelection.collapsed(offset: 5),
+                        );
+                      }
+                      
                       if (_target != val) { _target = val; _markDirty(); }
                     },
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(5),
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
                   ),
                ),
                const SizedBox(width: 12),
@@ -595,6 +609,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                     controller: _unitCtrl,
                     decoration: InputDecoration(labelText: "Unit", hintText: "e.g. pages", filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
                     onChanged: (v) { _unit = v; _markDirty(); },
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(16),
+                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                    ],
                   ),
                ),
             ]),
@@ -648,7 +666,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
              children: [
                Icon(Icons.link, size: 20, color: theme.colorScheme.primary),
                const SizedBox(width: 8),
-               Text("Connect Course", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+               Text("Connect course", style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
              ],
            ),
            const SizedBox(height: 8),
@@ -720,25 +738,24 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                _hasReminder ? Icons.notifications_active : Icons.notifications_active_outlined,
                color: _hasReminder ? theme.colorScheme.primary : null,
              ),
-             title: const Text("Remind Me"),
-             subtitle: _hasReminder && _reminderHour != null && _reminderMinute != null
-               ? Text("${_reminderHour!.toString().padLeft(2, '0')}:${_reminderMinute!.toString().padLeft(2, '0')}")
-               : const Text("Off"),
+             title: const Text("Remind me (disabled)"),
+             subtitle: const Text("This feature is currently disabled"),
              trailing: const Icon(Icons.chevron_right),
-             onTap: _showRemindMeModal,
+             enabled: false,
+             onTap: null, // _showRemindMeModal,
           ),
           
-          ListTile(
+           ListTile(
              contentPadding: EdgeInsets.zero,
              leading: const Icon(Icons.archive),
-             title: const Text("Archive Habit"),
+             title: const Text("Archive habit"),
              trailing: Switch(value: _archived, onChanged: (v) { setState(() { _archived = v; _markDirty(); }); }),
           ),
           
-          ListTile(
+           ListTile(
              contentPadding: EdgeInsets.zero,
              leading: const Icon(Icons.restart_alt, color: Colors.red),
-             title: const Text("Reset Habit Progress", style: TextStyle(color: Colors.red)), 
+             title: const Text("Reset habit progress", style: TextStyle(color: Colors.red)), 
              subtitle: const Text("Clears all history"),
              trailing: OutlinedButton(
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
@@ -749,7 +766,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                     final ok = await showDialog<bool>(
                        context: context, 
                        builder: (c) => AlertDialog(
-                         title: const Text("Reset Habit Progress?"), 
+                         title: const Text("Reset habit progress?"), 
                          content: const Text("This will delete all completion history for this habit. It cannot be undone."),
                          actions: [
                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text("Cancel")), 
@@ -759,11 +776,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                     );
                     
                     if (ok != true) return;
-                    
+
                     if (uid != null) {
                        await habitService.resetHabitProgress(uid, widget.habit.id);
                        if (mounted) {
-                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Habit progress reset")));
+                         context.read<AppState>().triggerSync();
+                         // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Habit progress reset"))); // Removed per request
                          setState(() {});
                        }
                     }
@@ -775,34 +793,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
      );
   }
 
-  void _showRemindMeModal() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) {
-         return HabitReminderSheet(
-           hasReminder: _hasReminder,
-           hour: _reminderHour ?? 12,
-           minute: _reminderMinute ?? 0,
-           frequencyType: _freq,
-           weekDays: _weekDays,
-           intervalDays: _interval,
-           frequencyPeriod: _period,
-           frequencyGoal: _frequencyGoal,
-           startDate: _startDate,
-           endDate: _endDate,
-           onSave: (hasReminder, hour, minute) {
-             setState(() {
-               _hasReminder = hasReminder;
-               _reminderHour = hour;
-               _reminderMinute = minute;
-               _markDirty();
-             });
-           },
-         );
-      },
-    );
-  }
+
 }
 
 // Extension for string capitalize
@@ -810,295 +801,3 @@ extension StringCamelCase on String {
   String capitalize() => isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }
 
-class HabitReminderSheet extends StatefulWidget {
-  final bool hasReminder;
-  final int hour;
-  final int minute;
-  final void Function(bool hasReminder, int hour, int minute) onSave;
-  final HabitFrequencyType frequencyType;
-  final Set<int> weekDays;
-  final int intervalDays;
-  final HabitPeriod? frequencyPeriod;
-  final int? frequencyGoal;
-  final DateTime startDate;
-  final DateTime? endDate;
-
-  const HabitReminderSheet({
-    super.key,
-    required this.hasReminder,
-    required this.hour,
-    required this.minute,
-    required this.onSave,
-    required this.frequencyType,
-    required this.weekDays,
-    required this.intervalDays,
-    required this.frequencyPeriod,
-    required this.frequencyGoal,
-    required this.startDate,
-    this.endDate,
-  });
-
-  @override
-  State<HabitReminderSheet> createState() => _HabitReminderSheetState();
-}
-
-class _HabitReminderSheetState extends State<HabitReminderSheet> {
-  late bool _enabled;
-  int _focusedIndex = 0; // 0: hour, 1: min
-  late FixedExtentScrollController _hourCtrl;
-  late FixedExtentScrollController _minCtrl;
-  DateTime? _nextTrigger;
-
-  @override
-  void initState() {
-    super.initState();
-    _enabled = widget.hasReminder;
-    _hourCtrl = FixedExtentScrollController(initialItem: widget.hour);
-    _minCtrl = FixedExtentScrollController(initialItem: widget.minute);
-    
-    _hourCtrl.addListener(_updateNextTrigger);
-    _minCtrl.addListener(_updateNextTrigger);
-    _updateNextTrigger();
-  }
-
-  void _updateNextTrigger() {
-    // Safely get selection, falling back to widget defaults if not yet attached
-    final currentHour = _hourCtrl.hasClients ? _hourCtrl.selectedItem : widget.hour;
-    final currentMin = _minCtrl.hasClients ? _minCtrl.selectedItem : widget.minute;
-
-    // Create a temporary habit for calculation
-    final tempHabit = Habit(
-      id: "temp",
-      name: "temp",
-      color: Colors.blue,
-      startDate: widget.startDate,
-      endDate: widget.endDate,
-      createdAt: DateTime.now(),
-      frequencyType: widget.frequencyType,
-      weekDays: widget.weekDays,
-      intervalDays: widget.intervalDays,
-      frequencyPeriod: widget.frequencyPeriod,
-      frequencyGoal: widget.frequencyGoal,
-      hasReminder: true,
-      reminderHour: currentHour,
-      reminderMinute: currentMin,
-    );
-
-    final next = HabitScheduler.getNextTriggerDateTime(
-      now: DateTime.now(),
-      habit: tempHabit,
-      history: [], // We don't have history in this sheet easily, acceptable for MVP feedback
-    );
-
-    if (_nextTrigger != next) {
-      if (mounted) setState(() => _nextTrigger = next);
-    }
-  }
-  
-  @override
-  void dispose() {
-    _hourCtrl.dispose();
-    _minCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-       width: double.infinity,
-       child: SingleChildScrollView(
-         child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-               Text("Set Reminder", style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-               const SizedBox(height: 24),
-               
-               // Time Selector (HH:MM)
-               Text("Time", style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-               const SizedBox(height: 8),
-               SizedBox(
-                 height: 150,
-                 child: Stack(
-                   alignment: Alignment.center,
-                   children: [
-                     // Interaction Indicators
-                     Container(
-                       height: 50,
-                       decoration: BoxDecoration(
-                         color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
-                         borderRadius: BorderRadius.circular(12),
-                       ),
-                     ),
-                     Row(
-                       mainAxisAlignment: MainAxisAlignment.center,
-                       children: [
-                          _buildPicker(0, _hourCtrl, 24, "h"),
-                          const Text(" : ", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.grey)),
-                          _buildPicker(1, _minCtrl, 60, "m"),
-                       ],
-                     ),
-                   ],
-                 ),
-               ),
-               
-               const SizedBox(height: 16),
-  
-               // Next Reminder Feedback
-               if (_nextTrigger != null)
-                 Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                   decoration: BoxDecoration(
-                     color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                     borderRadius: BorderRadius.circular(12),
-                   ),
-                   child: Row(
-                     children: [
-                       Icon(Icons.event_available, size: 20, color: theme.colorScheme.primary),
-                       const SizedBox(width: 12),
-                       Expanded(
-                         child: Text(
-                           "Next reminder: ${_formatNextTrigger(_nextTrigger!)}",
-                           style: theme.textTheme.bodyMedium?.copyWith(
-                             color: theme.colorScheme.onSurface,
-                             fontWeight: FontWeight.w600,
-                           ),
-                         ),
-                       ),
-                     ],
-                   ),
-                 )
-               else
-                 Container(
-                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                   decoration: BoxDecoration(
-                     color: theme.colorScheme.error.withValues(alpha: 0.1),
-                     borderRadius: BorderRadius.circular(12),
-                   ),
-                   child: Row(
-                     children: [
-                       Icon(Icons.event_busy, size: 20, color: theme.colorScheme.error),
-                       const SizedBox(width: 12),
-                       Expanded(
-                         child: Text(
-                           "No upcoming reminder found",
-                           style: theme.textTheme.bodyMedium?.copyWith(
-                             color: theme.colorScheme.error,
-                             fontWeight: FontWeight.w600,
-                           ),
-                         ),
-                       ),
-                     ],
-                   ),
-                 ),
-  
-               const SizedBox(height: 16),
-               Row(
-                 children: [
-                   if (_enabled) 
-                     Expanded(
-                       child: OutlinedButton(
-                         onPressed: () {
-                           widget.onSave(false, 0, 0);
-                           Navigator.pop(context);
-                         },
-                         child: const Text("Turn Off"),
-                       ),
-                     ),
-                   if (_enabled) const SizedBox(width: 12),
-  
-                   Expanded(
-                     child: FilledButton(
-                       onPressed: () {
-                          widget.onSave(
-                            true,
-                            _hourCtrl.selectedItem,
-                            _minCtrl.selectedItem,
-                          );
-                          Navigator.pop(context);
-                       }, 
-                       child: const Text("Save")
-                     ),
-                   ),
-                 ],
-               ),
-               const SizedBox(height: 8), // Minimal bottom padding
-            ],
-         ),
-       ),
-    );
-  }
-
-  Widget _buildPicker(int index, FixedExtentScrollController ctrl, int count, String label) {
-    final isFocused = _focusedIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _focusedIndex = index),
-        behavior: HitTestBehavior.opaque,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            NotificationListener<ScrollNotification>(
-              onNotification: (notification) {
-                if (notification is ScrollStartNotification) {
-                  if (_focusedIndex != index) {
-                    setState(() => _focusedIndex = index);
-                  }
-                }
-                return false;
-              },
-              child: ListWheelScrollView.useDelegate(
-                controller: ctrl,
-                itemExtent: 50,
-                perspective: 0.005,
-                diameterRatio: 1.2,
-                overAndUnderCenterOpacity: 0.2, // Tint/Dim non-selected items
-                physics: const FixedExtentScrollPhysics(),
-                childDelegate: ListWheelChildBuilderDelegate(
-                  childCount: count,
-                  builder: (context, itemIndex) {
-                    return Center(
-                      child: AnimatedDefaultTextStyle(
-                         duration: const Duration(milliseconds: 300),
-                         curve: Curves.easeOutCubic,
-                         style: Theme.of(context).textTheme.headlineMedium!.copyWith(
-                            fontWeight: isFocused ? FontWeight.w900 : FontWeight.normal,
-                            color: isFocused ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
-                            fontSize: isFocused ? 32 : 24,
-                         ),
-                         child: Text(itemIndex.toString().padLeft(2, '0')),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatNextTrigger(DateTime dt) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final triggerDay = DateTime(dt.year, dt.month, dt.day);
-
-    String dayStr;
-    if (triggerDay == today) {
-      dayStr = "Today";
-    } else if (triggerDay == tomorrow) {
-      dayStr = "Tomorrow";
-    } else {
-      final months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      dayStr = "${dt.day} ${months[dt.month - 1]}";
-    }
-
-    final hour = dt.hour.toString().padLeft(2, '0');
-    final min = dt.minute.toString().padLeft(2, '0');
-    return "$dayStr at $hour:$min";
-  }
-}

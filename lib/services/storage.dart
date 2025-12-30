@@ -23,6 +23,7 @@ class Storage {
   static const _metaProfilePromptShown = 'profile_prompt_shown_v1';
   static const _metaLocale = 'locale_v1';
   static const _metaHabitCategories = 'habit_categories_v1';
+  static const _metaProgressHabitOrder = 'progress_habit_order_v1';
 
   static Future<void> configureForUser(String uid) async {
     await _db.openForUser(uid);
@@ -936,5 +937,27 @@ class Storage {
     _ensureUser();
     final raw = categories.map((c) => c.toJson()).toList();
     await _db.putMeta(_metaHabitCategories, raw);
+  }
+
+  static Future<void> saveProgressHabitOrder(List<String> habitIds) async {
+    _ensureUser();
+    await _db.putMeta(_metaProgressHabitOrder, habitIds);
+  }
+
+  static List<String>? getProgressHabitOrder() {
+    if (_db.currentUid == null) return null;
+    final raw = _db.getMeta(_metaProgressHabitOrder);
+    if (raw is List) {
+      return raw.map((e) => e.toString()).toList();
+    }
+    return null;
+  }
+
+  static Future<void> removeHabitFromOrder(String habitId) async {
+    final order = getProgressHabitOrder();
+    if (order != null && order.contains(habitId)) {
+      order.remove(habitId);
+      await saveProgressHabitOrder(order);
+    }
   }
 }

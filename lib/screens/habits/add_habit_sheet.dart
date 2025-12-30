@@ -6,6 +6,7 @@ import '../../../models/habit_category.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/habit_service.dart';
 import 'swipe_selector.dart';
+import '../../../app_state.dart';
 
 class AddHabitSheet extends StatefulWidget {
   final HabitCategory? initialCategory;
@@ -323,8 +324,8 @@ final FocusNode _timeFocus = FocusNode();
                       focusNode: _habitNameFocus,
                       initialValue: _habitName.isNotEmpty ? _habitName : null, 
                       decoration: InputDecoration(
-                        labelText: "Habit Name",
-                        hintText: "e.g. Morning Jog",
+                        labelText: "Habit name",
+                        hintText: "e.g. morning jog",
                         filled: true,
                         fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                         border: OutlineInputBorder(
@@ -342,6 +343,10 @@ final FocusNode _timeFocus = FocusNode();
                         // prefixIcon: const Icon(Icons.edit_outlined),
                       ),
                       onChanged: (v) => _habitName = v,
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(32),
+                        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                      ],
                     ),
                     const SizedBox(height: 32),
 
@@ -353,7 +358,7 @@ final FocusNode _timeFocus = FocusNode();
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(_isCreatingCategory ? "New Category" : "Category", style: theme.textTheme.labelLarge),
+                              Text(_isCreatingCategory ? "New category" : "Category", style: theme.textTheme.labelLarge),
                               const SizedBox(height: 12),
                               AnimatedSwitcher(
                                 duration: const Duration(milliseconds: 400),
@@ -386,6 +391,10 @@ final FocusNode _timeFocus = FocusNode();
                                         decoration: const InputDecoration(labelText: "Category Name", hintText: "e.g. Reading"),
                                         onChanged: (v) => _newCatName = v,
                                         autofocus: true,
+                                        inputFormatters: [
+                                          LengthLimitingTextInputFormatter(32),
+                                          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                        ],
                                       ),
                                       const SizedBox(height: 12),
                                       SizedBox(
@@ -655,12 +664,28 @@ final FocusNode _timeFocus = FocusNode();
                                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
                                 ),
-                                onChanged: (v) {
-                                  final trimmed = v.trim();
-                                  final parsed = trimmed.isEmpty ? 0.0 : (double.tryParse(trimmed) ?? 0.0);
-                                  setState(() => _target = parsed);
-                                },
-                              ),
+                                  onChanged: (v) {
+                                    final trimmed = v.trim();
+                                    if (trimmed.isEmpty) {
+                                      setState(() => _target = 0.0);
+                                      return;
+                                    }
+                                    
+                                    double val = double.tryParse(trimmed) ?? 0.0;
+                                    if (val > 10000) {
+                                      val = 10000;
+                                      _targetCtrl.value = TextEditingValue(
+                                        text: "10000",
+                                        selection: TextSelection.collapsed(offset: 5),
+                                      );
+                                    }
+                                    setState(() => _target = val);
+                                  },
+                                  inputFormatters: [
+                                    LengthLimitingTextInputFormatter(5),
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                ),
                            ),
                            const SizedBox(width: 12),
                            Expanded(
@@ -669,14 +694,17 @@ final FocusNode _timeFocus = FocusNode();
                                 controller: _unitCtrl,
                                 decoration: InputDecoration(
                                   labelText: "Unit",
-                                  hintText: "e.g. pages", 
-                                  filled: true,
+                                   hintText: "e.g. pages",                                  filled: true,
                                   fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                                   focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
                                 ),
                                 onChanged: (v) => setState(() => _unit = v),
+                                inputFormatters: [
+                                  LengthLimitingTextInputFormatter(16),
+                                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s]')),
+                                ],
                               ),
                            ),
                         ]),
@@ -747,7 +775,7 @@ final FocusNode _timeFocus = FocusNode();
                                  _buildFreqOption(
                                     theme,
                                     type: HabitFrequencyType.daily,
-                                    title: "Every Day",
+                                    title: "Every day",
                                     child: Text("Do the habit daily without skipping.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                                  ),
                                  const SizedBox(height: 12),
@@ -821,6 +849,7 @@ final FocusNode _timeFocus = FocusNode();
                                                        textAlign: TextAlign.center,
                                                        inputFormatters: [
                                                           FilteringTextInputFormatter.digitsOnly,
+                                                          FilteringTextInputFormatter.deny(RegExp(r'^0')),
                                                           LengthLimitingTextInputFormatter(3),
                                                        ],
                                                        decoration: InputDecoration(
@@ -834,11 +863,15 @@ final FocusNode _timeFocus = FocusNode();
                                         onChanged: (v) {
                                                   final trimmed = v.trim();
                                                   if (trimmed.isEmpty) {
-                                                    setState(() => _frequencyGoal = 0);
+                                                    setState(() => _frequencyGoal = 1);
                                                     return;
                                                   }
                                                   int val = int.tryParse(trimmed) ?? 1;
-                                                  if (val < 1) val = 1;
+                                                  if (val < 1) {
+                                                    val = 1;
+                                                    _frequencyGoalCtrl.text = "$val";
+                                                    _frequencyGoalCtrl.selection = TextSelection.fromPosition(TextPosition(offset: 1));
+                                                  }
                                                   final maxVal = switch(_period) {
                                                     HabitPeriod.week => 7,
                                                     HabitPeriod.month => 31,
@@ -913,6 +946,7 @@ final FocusNode _timeFocus = FocusNode();
                                                   textAlign: TextAlign.center,
                                                   inputFormatters: [
                                                      FilteringTextInputFormatter.digitsOnly,
+                                                     FilteringTextInputFormatter.deny(RegExp(r'^0')),
                                                      LengthLimitingTextInputFormatter(3),
                                                   ],
                                                   decoration: InputDecoration(
@@ -927,11 +961,15 @@ final FocusNode _timeFocus = FocusNode();
                                                 onChanged: (v) {
                                                   final trimmed = v.trim();
                                                   if (trimmed.isEmpty) {
-                                                    setState(() => _interval = 0);
+                                                    setState(() => _interval = 1);
                                                     return;
                                                   }
-                                                  int val = int.tryParse(trimmed) ?? 0;
-                                                  if (val < 0) val = 0;
+                                                  int val = int.tryParse(trimmed) ?? 1;
+                                                  if (val < 1) {
+                                                    val = 1;
+                                                    _workDaysCtrl.text = "$val";
+                                                    _workDaysCtrl.selection = TextSelection.fromPosition(TextPosition(offset: 1));
+                                                  }
                                                   if (val > 365) {
                                                     val = 365;
                                                     _workDaysCtrl.text = "$val";
@@ -955,6 +993,7 @@ final FocusNode _timeFocus = FocusNode();
                                                   textAlign: TextAlign.center,
                                                   inputFormatters: [
                                                      FilteringTextInputFormatter.digitsOnly,
+                                                     FilteringTextInputFormatter.deny(RegExp(r'^0')),
                                                      LengthLimitingTextInputFormatter(3),
                                                   ],
                                                   decoration: InputDecoration(
@@ -969,11 +1008,15 @@ final FocusNode _timeFocus = FocusNode();
                                                 onChanged: (v) {
                                                   final trimmed = v.trim();
                                                   if (trimmed.isEmpty) {
-                                                    setState(() => _frequencyGoal = 0);
+                                                    setState(() => _frequencyGoal = 1);
                                                     return;
                                                   }
-                                                  int val = int.tryParse(trimmed) ?? 0;
-                                                  if (val < 0) val = 0;
+                                                  int val = int.tryParse(trimmed) ?? 1;
+                                                  if (val < 1) {
+                                                    val = 1;
+                                                    _restDaysCtrl.text = "$val";
+                                                    _restDaysCtrl.selection = TextSelection.fromPosition(TextPosition(offset: 1));
+                                                  }
                                                   if (val > 365) {
                                                     val = 365;
                                                     _restDaysCtrl.text = "$val";
@@ -1014,7 +1057,7 @@ final FocusNode _timeFocus = FocusNode();
                   const SizedBox(height: 16),
                   
                   ListTile(
-                    title: const Text("Start Date"),
+                    title: const Text("Start date"),
                     subtitle: Text("${_startDate.day}/${_startDate.month}/${_startDate.year}"),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
@@ -1029,7 +1072,7 @@ final FocusNode _timeFocus = FocusNode();
                   ),
                   const Divider(),
                   ListTile(
-                    title: const Text("End Date (Optional)"),
+                    title: const Text("End date (optional)"),
                     subtitle: Text(_endDate == null ? "No end date" : "${_endDate!.day}/${_endDate!.month}/${_endDate!.year}"),
                     trailing: _endDate == null ? const Icon(Icons.add) : const Icon(Icons.close),
                     onTap: () async {
@@ -1281,13 +1324,13 @@ final FocusNode _timeFocus = FocusNode();
       children: [
         const SizedBox(width: 48),
         Expanded(
-          child: Text(
+            child: Text(
             switch(_screen) {
-              0 => "Create New Habit",
+              0 => "Create new habit",
               1 => "Tracking type",
               2 => "Frequency",
               3 => "When should this habit take place?",
-              _ => "Create New Habit",
+              _ => "Create new habit",
             },
             style: theme.textTheme.titleLarge,
             textAlign: TextAlign.center,
@@ -1359,7 +1402,11 @@ final FocusNode _timeFocus = FocusNode();
       );
 
       await context.read<HabitService>().createHabit(uid, habit);
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+         // Trigger explicit sync
+         context.read<AppState>().triggerSync();
+         Navigator.pop(context);
+      }
       
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));

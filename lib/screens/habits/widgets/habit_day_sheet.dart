@@ -49,7 +49,7 @@ class HabitDaySheet extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                "Daily Overview",
+                "Daily overview",
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -63,7 +63,7 @@ class HabitDaySheet extends StatelessWidget {
                     children: [
                       Icon(Icons.event_busy, size: 48, color: theme.colorScheme.outline),
                       const SizedBox(height: 12),
-                      Text("No habits scheduled for this day.", style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline)),
+                      Text("No habits completed on this day.", style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline)),
                     ],
                   ),
                 )
@@ -92,10 +92,9 @@ class HabitDaySheet extends StatelessWidget {
   }
 
   List<Habit> _getDailyHabits() {
-    // Filter habits that are scheduled for this day OR have progress on this day
+    // Only show habits that were COMPLETED on this day
     return allHabits.where((h) {
-      if (progressMap.containsKey(h.id) && progressMap[h.id]! > 0) return true;
-      return h.isScheduledFor(date);
+      return progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
     }).toList();
   }
 }

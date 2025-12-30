@@ -183,13 +183,13 @@ enum StatisticsPeriod { today, last7Days, lastMonth }
 extension StatisticsPeriodX on StatisticsPeriod {
   String get label => switch (this) {
         StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => 'Last 7 Days',
-        StatisticsPeriod.lastMonth => 'Last Month',
+        StatisticsPeriod.last7Days => 'Last 7 days',
+        StatisticsPeriod.lastMonth => 'Last month',
       };
 
   String get shortLabel => switch (this) {
         StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => '7 Days',
+        StatisticsPeriod.last7Days => '7 days',
         StatisticsPeriod.lastMonth => 'Month',
       };
 

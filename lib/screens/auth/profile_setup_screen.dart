@@ -15,9 +15,6 @@ class ProfileSetupScreen extends StatelessWidget {
     
     
     if (auth.currentUser == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.of(context).pushReplacementNamed('/');
-      });
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -104,10 +101,6 @@ class ProfileSetupScreen extends StatelessWidget {
                             .collection('users')
                             .doc(userId)
                             .set(cloudData, SetOptions(merge: true));
-
-                        if (context.mounted) {
-                          Navigator.of(context).pushReplacementNamed('/shell');
-                        }
                       },
                     ),
                   ],

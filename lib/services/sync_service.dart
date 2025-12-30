@@ -17,19 +17,14 @@ class SyncService extends ChangeNotifier {
     FirebaseFirestore? firestore,
     Connectivity? connectivity,
     LocalDatabase? database,
-    Duration periodicInterval = const Duration(seconds: 45),
-    Duration heartbeatInterval = const Duration(seconds: 60),
+
   })  : _firestore = firestore ?? FirebaseFirestore.instance,
         _connectivity = connectivity ?? Connectivity(),
-        _db = database ?? LocalDatabase.instance,
-        _periodicInterval = periodicInterval,
-        _heartbeatInterval = heartbeatInterval;
+        _db = database ?? LocalDatabase.instance;
 
   final FirebaseFirestore _firestore;
   final Connectivity _connectivity;
   final LocalDatabase _db;
-  final Duration _periodicInterval;
-  final Duration _heartbeatInterval;
 
   SyncStatus _status = SyncStatus.offline;
   SyncStatus get status => _status;
@@ -43,8 +38,6 @@ class SyncService extends ChangeNotifier {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
       _activeSessionSub;
-  Timer? _periodicTimer;
-  Timer? _heartbeatTimer;
   Future<void> Function()? _onForcedLogout;
   Future<void> Function()? onBeforeStop;
   final List<Future<void> Function()> _afterPullListeners = [];
@@ -91,11 +84,6 @@ class SyncService extends ChangeNotifier {
       }
     });
 
-    _periodicTimer =
-        Timer.periodic(_periodicInterval, (_) => _online ? syncNow() : null);
-    _heartbeatTimer = Timer.periodic(
-        _heartbeatInterval, (_) => _online ? _sendHeartbeat() : null);
-
     if (_online) {
       await _claimSession();
     }
@@ -119,10 +107,6 @@ class SyncService extends ChangeNotifier {
     await _activeSessionSub?.cancel();
     _connectivitySub = null;
     _activeSessionSub = null;
-    _periodicTimer?.cancel();
-    _heartbeatTimer?.cancel();
-    _periodicTimer = null;
-    _heartbeatTimer = null;
     _uid = null;
     _deviceId = null;
     lastPull = null;

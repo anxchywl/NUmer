@@ -60,10 +60,10 @@
             android:exported="false"/>
         <receiver
             android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmReceiver"
-            android:exported="false"/>
+            android:exported="true"/>
         <receiver
             android:name="dev.fluttercommunity.plus.androidalarmmanager.RebootBroadcastReceiver"
-            android:exported="false">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>

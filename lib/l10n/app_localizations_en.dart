@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get settingsTitle => 'Account & Settings';
+  String get settingsTitle => 'Account & settings';
 
   @override
   String get account => 'Account';
@@ -107,7 +107,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '• Open this file and import it into your calendar app,\n• OR open your calendar app settings and import the file manually.';
 
   @override
-  String get deleteAccount => 'Delete Account';
+  String get deleteAccount => 'Delete account';
 
   @override
   String get deleteAccountSubtitle =>
@@ -143,13 +143,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groups => 'Groups';
 
   @override
-  String get addCourse => 'Add Course';
+  String get addCourse => 'Add course';
 
   @override
-  String get addTime => 'Add Time';
+  String get addTime => 'Add time';
 
   @override
-  String get courseName => 'Course Name';
+  String get courseName => 'Course name';
 
   @override
   String get courseNameHint => '';
@@ -182,7 +182,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get delete => 'Delete';
 
   @override
-  String get deleteCourseTitle => 'Delete Course';
+  String get deleteCourseTitle => 'Delete course';
 
   @override
   String get deleteCourseMessage =>
@@ -194,28 +194,28 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get courseAnalysis => 'Course Analysis';
+  String get courseAnalysis => 'Course analysis';
 
   @override
   String get noCoursesAvailable => 'No courses available.';
 
   @override
-  String get selectCourse => 'Select Course';
+  String get selectCourse => 'Select course';
 
   @override
-  String get timePeriod => 'Time Period';
+  String get timePeriod => 'Time period';
 
   @override
-  String get oneMonth => '1 Month';
+  String get oneMonth => '1 month';
 
   @override
-  String get threeMonths => '3 Months';
+  String get threeMonths => '3 months';
 
   @override
-  String get sixMonths => '6 Months';
+  String get sixMonths => '6 months';
 
   @override
-  String get generateInsight => 'Generate Insight';
+  String get generateInsight => 'Generate insight';
 
   @override
   String get analyzing => 'Analyzing...';
@@ -243,7 +243,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scrollUpHint => 'Scroll up';
 
   @override
-  String get topTopics => 'Top Topics';
+  String get topTopics => 'Top topics';
 
   @override
   String get insights => 'Insights';
@@ -261,7 +261,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get syncUpToDate => 'Up to date';
 
   @override
-  String get setGoals => 'Set Goals';
+  String get setGoals => 'Set goals';
 
   @override
   String get daily => 'Daily';
@@ -270,7 +270,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weekly => 'Weekly';
 
   @override
-  String get studyTimer => 'Study Timer';
+  String get studyTimer => 'Study timer';
 
   @override
   String get noCoursesYet => 'No courses yet. Add a course from Home.';
@@ -362,7 +362,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get session => 'session';
 
   @override
-  String get editCourse => 'Edit Course';
+  String get editCourse => 'Edit course';
 
   @override
   String get today => 'Today';
@@ -445,10 +445,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expLevelDefault => 'Comfortable';
 
   @override
-  String get dayStatistics => 'Day Statistics';
+  String get dayStatistics => 'Day statistics';
 
   @override
-  String get periodStatistics => 'Period Statistics';
+  String get periodStatistics => 'Period statistics';
 
   @override
   String get tip => 'Tip';
@@ -458,7 +458,7 @@ class AppLocalizationsEn extends AppLocalizations {
       '• Hold your finger on the chart and slide left or right to move between days or months.';
 
   @override
-  String get courseStatistics => 'Course Statistics';
+  String get courseStatistics => 'Course statistics';
 
   @override
   String get previousDay => 'Previous day';
@@ -520,7 +520,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leastStudied => 'Least studied';
 
   @override
-  String get adjustWeeklyGoal => 'Adjust Weekly Goal';
+  String get adjustWeeklyGoal => 'Adjust weekly goal';
 
   @override
   String get targetPerWeek => 'Target per week';
@@ -539,13 +539,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get createGroup => 'Create Group';
+  String get createGroup => 'Create group';
 
   @override
-  String get joinGroup => 'Join Group';
+  String get joinGroup => 'Join group';
 
   @override
-  String get groupName => 'Group Name';
+  String get groupName => 'Group name';
 
   @override
   String get description => 'Description';
@@ -560,19 +560,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get private => 'Private';
 
   @override
-  String get accessCode => 'Access Code';
+  String get accessCode => 'Access code';
 
   @override
   String get members => 'Members';
 
   @override
-  String get leaveGroup => 'Leave Group';
+  String get leaveGroup => 'Leave group';
 
   @override
-  String get deleteGroup => 'Delete Group';
+  String get deleteGroup => 'Delete group';
 
   @override
-  String get groupSettings => 'Group Settings';
+  String get groupSettings => 'Group settings';
 
   @override
   String get noGroupsYet => 'You\'re not in any groups yet';
@@ -593,7 +593,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get findPublicGroupHint => 'Find a group...';
 
   @override
-  String get searchResults => 'Search Results';
+  String get searchResults => 'Search results';
 
   @override
   String errorLoadingGroups(String error) {
@@ -619,7 +619,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get joinCodeHint => 'e.g. ABC123';
 
   @override
-  String get publicGroups => 'Public Groups';
+  String get publicGroups => 'Public groups';
 
   @override
   String joinError(String error) {
@@ -638,7 +638,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourGroup => 'Your group';
 
   @override
-  String get findStudyGroup => 'Find your Study Group';
+  String get findStudyGroup => 'Find your study group';
 
   @override
   String get joinCommunityPrompt =>
@@ -706,13 +706,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noMembersYetLabel => 'No members yet.';
 
   @override
-  String get youAdmin => 'You (Admin)';
+  String get youAdmin => 'You (admin)';
 
   @override
   String get youMember => 'You';
 
   @override
-  String get youOwner => 'You (Owner)';
+  String get youOwner => 'You (owner)';
 
   @override
   String get removeMemberTitle => 'Remove member?';
@@ -748,7 +748,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get groupCodeLabel => 'Group Code';
+  String get groupCodeLabel => 'Group code';
 
   @override
   String get dailyGoal => 'Daily';
@@ -774,7 +774,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDataAvailable => 'No data available for this period';
 
   @override
-  String get groupLeaderboard => 'Group Leaderboard';
+  String get groupLeaderboard => 'Group leaderboard';
 
   @override
   String rankLabel(int rank) {
@@ -868,7 +868,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get total => 'Total';
 
   @override
-  String get groupSummary => 'Group Summary';
+  String get groupSummary => 'Group summary';
 
   @override
   String get average => 'Average';
@@ -880,25 +880,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lowest => 'Lowest';
 
   @override
-  String get vsAverage => 'vs. Average';
+  String get vsAverage => 'vs. average';
 
   @override
-  String get studyTimeComparison => 'Study Time Comparison';
+  String get studyTimeComparison => 'Study time comparison';
 
   @override
-  String get performanceVsGroup => 'Performance vs. Group';
+  String get performanceVsGroup => 'Performance vs. group';
 
   @override
   String get ofAverage => 'of average';
 
   @override
-  String get studyTimeByDay => 'Study Time by Day';
+  String get studyTimeByDay => 'Study time by day';
 
   @override
-  String get bestDay => 'Best Day';
+  String get bestDay => 'Best day';
 
   @override
-  String get avgDay => 'Average/Day';
+  String get avgDay => 'Average/day';
 
   @override
   String get member => 'Member';
@@ -1013,7 +1013,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sessionDeleted => 'Session deleted';
 
   @override
-  String get leaveGroupTitle => 'Leave Group?';
+  String get leaveGroupTitle => 'Leave group?';
 
   @override
   String get leaveGroupMessage => 'Are you sure you want to leave this group?';
@@ -1022,14 +1022,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get leave => 'Leave';
 
   @override
-  String get deleteGroupTitle => 'Delete Group?';
+  String get deleteGroupTitle => 'Delete group?';
 
   @override
   String get deleteGroupMessage =>
       'This will permanently delete the group for all members.';
 
   @override
-  String get manageGroup => 'Manage Group';
+  String get manageGroup => 'Manage group';
 
   @override
   String get admin => 'Admin';
@@ -1047,10 +1047,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get owner => 'Owner';
 
   @override
-  String get memberPromoted => 'Member promoted to Admin';
+  String get memberPromoted => 'Member promoted to admin';
 
   @override
-  String get adminDemoted => 'Admin demoted to Member';
+  String get adminDemoted => 'Admin demoted to member';
 
   @override
   String get failedToPromote => 'Failed to promote member';
@@ -1117,7 +1117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotSaveProfile => 'Could not save profile. Please try again.';
 
   @override
-  String get yourName => 'Your Name';
+  String get yourName => 'Your name';
 
   @override
   String get addPersonalGoal => 'Add a personal goal';
@@ -1168,7 +1168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get resetAndLeave => 'Reset & Leave';
 
   @override
-  String get leavePomodoroTitle => 'Leave Pomodoro?';
+  String get leavePomodoroTitle => 'Leave pomodoro?';
 
   @override
   String get leavePomodoroMessage =>
@@ -1220,7 +1220,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedInSuccessfully => 'Signed in successfully';
 
   @override
-  String get resendEmail => 'Resend Email';
+  String get resendEmail => 'Resend email';
 
   @override
   String get enterEmail => 'Please enter your email address.';

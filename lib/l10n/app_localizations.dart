@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
-  /// **'Account & Settings'**
+  /// **'Account & settings'**
   String get settingsTitle;
 
   /// No description provided for @account.
@@ -289,7 +289,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteAccount.
   ///
   /// In en, this message translates to:
-  /// **'Delete Account'**
+  /// **'Delete account'**
   String get deleteAccount;
 
   /// No description provided for @deleteAccountSubtitle.
@@ -355,19 +355,19 @@ abstract class AppLocalizations {
   /// No description provided for @addCourse.
   ///
   /// In en, this message translates to:
-  /// **'Add Course'**
+  /// **'Add course'**
   String get addCourse;
 
   /// No description provided for @addTime.
   ///
   /// In en, this message translates to:
-  /// **'Add Time'**
+  /// **'Add time'**
   String get addTime;
 
   /// No description provided for @courseName.
   ///
   /// In en, this message translates to:
-  /// **'Course Name'**
+  /// **'Course name'**
   String get courseName;
 
   /// No description provided for @courseNameHint.
@@ -433,7 +433,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteCourseTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete Course'**
+  /// **'Delete course'**
   String get deleteCourseTitle;
 
   /// No description provided for @deleteCourseMessage.
@@ -451,7 +451,7 @@ abstract class AppLocalizations {
   /// No description provided for @courseAnalysis.
   ///
   /// In en, this message translates to:
-  /// **'Course Analysis'**
+  /// **'Course analysis'**
   String get courseAnalysis;
 
   /// No description provided for @noCoursesAvailable.
@@ -463,37 +463,37 @@ abstract class AppLocalizations {
   /// No description provided for @selectCourse.
   ///
   /// In en, this message translates to:
-  /// **'Select Course'**
+  /// **'Select course'**
   String get selectCourse;
 
   /// No description provided for @timePeriod.
   ///
   /// In en, this message translates to:
-  /// **'Time Period'**
+  /// **'Time period'**
   String get timePeriod;
 
   /// No description provided for @oneMonth.
   ///
   /// In en, this message translates to:
-  /// **'1 Month'**
+  /// **'1 month'**
   String get oneMonth;
 
   /// No description provided for @threeMonths.
   ///
   /// In en, this message translates to:
-  /// **'3 Months'**
+  /// **'3 months'**
   String get threeMonths;
 
   /// No description provided for @sixMonths.
   ///
   /// In en, this message translates to:
-  /// **'6 Months'**
+  /// **'6 months'**
   String get sixMonths;
 
   /// No description provided for @generateInsight.
   ///
   /// In en, this message translates to:
-  /// **'Generate Insight'**
+  /// **'Generate insight'**
   String get generateInsight;
 
   /// No description provided for @analyzing.
@@ -541,7 +541,7 @@ abstract class AppLocalizations {
   /// No description provided for @topTopics.
   ///
   /// In en, this message translates to:
-  /// **'Top Topics'**
+  /// **'Top topics'**
   String get topTopics;
 
   /// No description provided for @insights.
@@ -577,7 +577,7 @@ abstract class AppLocalizations {
   /// No description provided for @setGoals.
   ///
   /// In en, this message translates to:
-  /// **'Set Goals'**
+  /// **'Set goals'**
   String get setGoals;
 
   /// No description provided for @daily.
@@ -595,7 +595,7 @@ abstract class AppLocalizations {
   /// No description provided for @studyTimer.
   ///
   /// In en, this message translates to:
-  /// **'Study Timer'**
+  /// **'Study timer'**
   String get studyTimer;
 
   /// No description provided for @noCoursesYet.
@@ -763,7 +763,7 @@ abstract class AppLocalizations {
   /// No description provided for @editCourse.
   ///
   /// In en, this message translates to:
-  /// **'Edit Course'**
+  /// **'Edit course'**
   String get editCourse;
 
   /// No description provided for @today.
@@ -919,13 +919,13 @@ abstract class AppLocalizations {
   /// No description provided for @dayStatistics.
   ///
   /// In en, this message translates to:
-  /// **'Day Statistics'**
+  /// **'Day statistics'**
   String get dayStatistics;
 
   /// No description provided for @periodStatistics.
   ///
   /// In en, this message translates to:
-  /// **'Period Statistics'**
+  /// **'Period statistics'**
   String get periodStatistics;
 
   /// No description provided for @tip.
@@ -943,7 +943,7 @@ abstract class AppLocalizations {
   /// No description provided for @courseStatistics.
   ///
   /// In en, this message translates to:
-  /// **'Course Statistics'**
+  /// **'Course statistics'**
   String get courseStatistics;
 
   /// No description provided for @previousDay.
@@ -1063,7 +1063,7 @@ abstract class AppLocalizations {
   /// No description provided for @adjustWeeklyGoal.
   ///
   /// In en, this message translates to:
-  /// **'Adjust Weekly Goal'**
+  /// **'Adjust weekly goal'**
   String get adjustWeeklyGoal;
 
   /// No description provided for @targetPerWeek.
@@ -1093,19 +1093,19 @@ abstract class AppLocalizations {
   /// No description provided for @createGroup.
   ///
   /// In en, this message translates to:
-  /// **'Create Group'**
+  /// **'Create group'**
   String get createGroup;
 
   /// No description provided for @joinGroup.
   ///
   /// In en, this message translates to:
-  /// **'Join Group'**
+  /// **'Join group'**
   String get joinGroup;
 
   /// No description provided for @groupName.
   ///
   /// In en, this message translates to:
-  /// **'Group Name'**
+  /// **'Group name'**
   String get groupName;
 
   /// No description provided for @description.
@@ -1135,7 +1135,7 @@ abstract class AppLocalizations {
   /// No description provided for @accessCode.
   ///
   /// In en, this message translates to:
-  /// **'Access Code'**
+  /// **'Access code'**
   String get accessCode;
 
   /// No description provided for @members.
@@ -1147,19 +1147,19 @@ abstract class AppLocalizations {
   /// No description provided for @leaveGroup.
   ///
   /// In en, this message translates to:
-  /// **'Leave Group'**
+  /// **'Leave group'**
   String get leaveGroup;
 
   /// No description provided for @deleteGroup.
   ///
   /// In en, this message translates to:
-  /// **'Delete Group'**
+  /// **'Delete group'**
   String get deleteGroup;
 
   /// No description provided for @groupSettings.
   ///
   /// In en, this message translates to:
-  /// **'Group Settings'**
+  /// **'Group settings'**
   String get groupSettings;
 
   /// No description provided for @noGroupsYet.
@@ -1195,7 +1195,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchResults.
   ///
   /// In en, this message translates to:
-  /// **'Search Results'**
+  /// **'Search results'**
   String get searchResults;
 
   /// No description provided for @errorLoadingGroups.
@@ -1237,7 +1237,7 @@ abstract class AppLocalizations {
   /// No description provided for @publicGroups.
   ///
   /// In en, this message translates to:
-  /// **'Public Groups'**
+  /// **'Public groups'**
   String get publicGroups;
 
   /// No description provided for @joinError.
@@ -1267,7 +1267,7 @@ abstract class AppLocalizations {
   /// No description provided for @findStudyGroup.
   ///
   /// In en, this message translates to:
-  /// **'Find your Study Group'**
+  /// **'Find your study group'**
   String get findStudyGroup;
 
   /// No description provided for @joinCommunityPrompt.
@@ -1399,7 +1399,7 @@ abstract class AppLocalizations {
   /// No description provided for @youAdmin.
   ///
   /// In en, this message translates to:
-  /// **'You (Admin)'**
+  /// **'You (admin)'**
   String get youAdmin;
 
   /// No description provided for @youMember.
@@ -1411,7 +1411,7 @@ abstract class AppLocalizations {
   /// No description provided for @youOwner.
   ///
   /// In en, this message translates to:
-  /// **'You (Owner)'**
+  /// **'You (owner)'**
   String get youOwner;
 
   /// No description provided for @removeMemberTitle.
@@ -1465,7 +1465,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupCodeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Group Code'**
+  /// **'Group code'**
   String get groupCodeLabel;
 
   /// No description provided for @dailyGoal.
@@ -1513,7 +1513,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupLeaderboard.
   ///
   /// In en, this message translates to:
-  /// **'Group Leaderboard'**
+  /// **'Group leaderboard'**
   String get groupLeaderboard;
 
   /// No description provided for @rankLabel.
@@ -1693,7 +1693,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupSummary.
   ///
   /// In en, this message translates to:
-  /// **'Group Summary'**
+  /// **'Group summary'**
   String get groupSummary;
 
   /// No description provided for @average.
@@ -1717,19 +1717,19 @@ abstract class AppLocalizations {
   /// No description provided for @vsAverage.
   ///
   /// In en, this message translates to:
-  /// **'vs. Average'**
+  /// **'vs. average'**
   String get vsAverage;
 
   /// No description provided for @studyTimeComparison.
   ///
   /// In en, this message translates to:
-  /// **'Study Time Comparison'**
+  /// **'Study time comparison'**
   String get studyTimeComparison;
 
   /// No description provided for @performanceVsGroup.
   ///
   /// In en, this message translates to:
-  /// **'Performance vs. Group'**
+  /// **'Performance vs. group'**
   String get performanceVsGroup;
 
   /// No description provided for @ofAverage.
@@ -1741,19 +1741,19 @@ abstract class AppLocalizations {
   /// No description provided for @studyTimeByDay.
   ///
   /// In en, this message translates to:
-  /// **'Study Time by Day'**
+  /// **'Study time by day'**
   String get studyTimeByDay;
 
   /// No description provided for @bestDay.
   ///
   /// In en, this message translates to:
-  /// **'Best Day'**
+  /// **'Best day'**
   String get bestDay;
 
   /// No description provided for @avgDay.
   ///
   /// In en, this message translates to:
-  /// **'Average/Day'**
+  /// **'Average/day'**
   String get avgDay;
 
   /// No description provided for @member.
@@ -1981,7 +1981,7 @@ abstract class AppLocalizations {
   /// No description provided for @leaveGroupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Leave Group?'**
+  /// **'Leave group?'**
   String get leaveGroupTitle;
 
   /// No description provided for @leaveGroupMessage.
@@ -1999,7 +1999,7 @@ abstract class AppLocalizations {
   /// No description provided for @deleteGroupTitle.
   ///
   /// In en, this message translates to:
-  /// **'Delete Group?'**
+  /// **'Delete group?'**
   String get deleteGroupTitle;
 
   /// No description provided for @deleteGroupMessage.
@@ -2011,7 +2011,7 @@ abstract class AppLocalizations {
   /// No description provided for @manageGroup.
   ///
   /// In en, this message translates to:
-  /// **'Manage Group'**
+  /// **'Manage group'**
   String get manageGroup;
 
   /// No description provided for @admin.
@@ -2047,13 +2047,13 @@ abstract class AppLocalizations {
   /// No description provided for @memberPromoted.
   ///
   /// In en, this message translates to:
-  /// **'Member promoted to Admin'**
+  /// **'Member promoted to admin'**
   String get memberPromoted;
 
   /// No description provided for @adminDemoted.
   ///
   /// In en, this message translates to:
-  /// **'Admin demoted to Member'**
+  /// **'Admin demoted to member'**
   String get adminDemoted;
 
   /// No description provided for @failedToPromote.
@@ -2179,7 +2179,7 @@ abstract class AppLocalizations {
   /// No description provided for @yourName.
   ///
   /// In en, this message translates to:
-  /// **'Your Name'**
+  /// **'Your name'**
   String get yourName;
 
   /// No description provided for @addPersonalGoal.
@@ -2281,7 +2281,7 @@ abstract class AppLocalizations {
   /// No description provided for @leavePomodoroTitle.
   ///
   /// In en, this message translates to:
-  /// **'Leave Pomodoro?'**
+  /// **'Leave pomodoro?'**
   String get leavePomodoroTitle;
 
   /// No description provided for @leavePomodoroMessage.
@@ -2377,7 +2377,7 @@ abstract class AppLocalizations {
   /// No description provided for @resendEmail.
   ///
   /// In en, this message translates to:
-  /// **'Resend Email'**
+  /// **'Resend email'**
   String get resendEmail;
 
   /// No description provided for @enterEmail.

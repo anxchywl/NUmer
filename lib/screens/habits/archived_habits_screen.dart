@@ -21,7 +21,7 @@ class ArchivedHabitsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Archived Habits"),
+        title: const Text("Archived habits"),
       ),
       body: StreamBuilder<List<Habit>>(
         stream: habitService.archivedHabitsStream(uid),
@@ -97,8 +97,5 @@ class ArchivedHabitsScreen extends StatelessWidget {
 
   void _unarchive(BuildContext context, String uid, String habitId) {
     context.read<HabitService>().unarchiveHabit(uid, habitId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Habit unarchived"), duration: Duration(seconds: 2)),
-    );
   }
 }

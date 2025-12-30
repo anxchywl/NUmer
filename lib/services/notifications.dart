@@ -27,20 +27,31 @@ class Notifs {
                 debugPrint("Notifs: Timezone detection timed out/failed in background: $e");
             }
         } else {
-            final dynamic result = await FlutterTimezone.getLocalTimezone();
-            timeZoneName = result?.toString();
+            try {
+                final dynamic result = await FlutterTimezone.getLocalTimezone();
+                timeZoneName = result?.toString();
+            } catch (e) {
+                 debugPrint("Notifs: Timezone detection failed: $e");
+            }
         }
 
         if (timeZoneName != null) {
-            tz.setLocalLocation(tz.getLocation(timeZoneName));
-            debugPrint("Notifs: Timezone initialized to $timeZoneName");
+            try {
+                tz.setLocalLocation(tz.getLocation(timeZoneName));
+                debugPrint("Notifs: Timezone initialized to $timeZoneName");
+            } catch (e) {
+                debugPrint("Notifs: Invalid timezone '$timeZoneName', falling back to UTC. Error: $e");
+                tz.setLocalLocation(tz.UTC);
+            }
         } else {
             debugPrint("Notifs: No timezone name found, using UTC");
             tz.setLocalLocation(tz.UTC);
         }
     } catch (e) {
         debugPrint("Notifs: Timezone init failed: $e, falling back to UTC");
-        tz.setLocalLocation(tz.UTC);
+        try {
+            tz.setLocalLocation(tz.UTC);
+        } catch (_) {} 
     }
 
     // 2. Plugin Initialization
@@ -105,6 +116,8 @@ class Notifs {
     required String body,
     required DateTime whenLocal,
   }) async {
+    // Ensure ID is a valid 32-bit int
+    id = id & 0x7FFFFFFF;
     await init();
     
     try {
@@ -122,6 +135,8 @@ class Notifs {
             showWhen: true,
             enableVibration: true,
             playSound: true,
+            category: AndroidNotificationCategory.reminder,
+            visibility: NotificationVisibility.public,
           ),
           iOS: DarwinNotificationDetails(
             presentAlert: true,
@@ -161,13 +176,12 @@ class Notifs {
     }
   }
 
-  static Future<void> showNow({
+  static Future<void> showImmediate({
     required int id,
     required String title,
     required String body,
   }) async {
-    // Note: We don't strictly need timezone for immediate show, 
-    // but init handles other plugin registration.
+    // Background safe init
     await init(isBackground: true); 
 
     debugPrint("Notifs: Showing immediate notification $id");
@@ -184,6 +198,8 @@ class Notifs {
           showWhen: true,
           enableVibration: true,
           playSound: true,
+          category: AndroidNotificationCategory.reminder,
+          visibility: NotificationVisibility.public,
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
@@ -200,6 +216,8 @@ class Notifs {
     required String body,
     required DateTime timeLocal, 
   }) async {
+    // Ensure ID is a valid 32-bit int
+    id = id & 0x7FFFFFFF;
     await init();
     final now = DateTime.now();
     var first = DateTime(
@@ -227,6 +245,8 @@ class Notifs {
           showWhen: true,
           enableVibration: true,
           playSound: true,
+          category: AndroidNotificationCategory.reminder,
+          visibility: NotificationVisibility.public,
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
@@ -234,12 +254,14 @@ class Notifs {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle, 
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, 
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
   static Future<void> cancel(int id) async {
+    // Ensure ID matches the logic in schedule (32-bit positive int)
+    id = id & 0x7FFFFFFF;
     debugPrint("Notifs: Cancelling $id");
     await _plugin.cancel(id);
   }

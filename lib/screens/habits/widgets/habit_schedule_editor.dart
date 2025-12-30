@@ -115,7 +115,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
              Expanded(
                child: _buildDatePicker(
                  context, 
-                 label: "Start Date", 
+                     label: "Start date", 
                  date: _startDate, 
                  onPick: (d) {
                     setState(() { _startDate = d; _notify(); });
@@ -126,7 +126,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
              Expanded(
                child: _buildDatePicker(
                  context, 
-                 label: "End Date (Optional)", 
+                     label: "End date (optional)", 
                  date: _endDate, 
                  onPick: (d) {
                     setState(() { _endDate = d; _notify(); });
@@ -149,7 +149,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         _buildFreqOption(
            theme,
            type: HabitFrequencyType.daily,
-           title: "Every Day",
+           title: "Every day",
            child: Text("Do the habit daily without skipping.", style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
         ),
         const SizedBox(height: 12),
@@ -565,7 +565,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                  }
              }, 
              icon: const Icon(Icons.add), 
-             label: const Text("Add Date"),
+             label: const Text("Add date"),
            ),
         ],
       );

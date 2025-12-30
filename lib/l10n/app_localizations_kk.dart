@@ -705,13 +705,13 @@ class AppLocalizationsKk extends AppLocalizations {
   String get noMembersYetLabel => 'Әлі қатысушы жоқ.';
 
   @override
-  String get youAdmin => 'Сіз (Админ)';
+  String get youAdmin => 'Сіз (админ)';
 
   @override
   String get youMember => 'Сіз';
 
   @override
-  String get youOwner => 'Сіз (Иесі)';
+  String get youOwner => 'Сіз (иесі)';
 
   @override
   String get removeMemberTitle => 'Қатысушыны жою керек пе?';

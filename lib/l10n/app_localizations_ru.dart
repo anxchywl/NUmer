@@ -205,13 +205,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get timePeriod => 'Период времени';
 
   @override
-  String get oneMonth => '1 Месяц';
+  String get oneMonth => '1 месяц';
 
   @override
-  String get threeMonths => '3 Месяца';
+  String get threeMonths => '3 месяца';
 
   @override
-  String get sixMonths => '6 Месяцев';
+  String get sixMonths => '6 месяцев';
 
   @override
   String get generateInsight => 'Получить инсайт';
@@ -707,13 +707,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noMembersYetLabel => 'Участников пока нет.';
 
   @override
-  String get youAdmin => 'Вы (Админ)';
+  String get youAdmin => 'Вы (админ)';
 
   @override
   String get youMember => 'Вы';
 
   @override
-  String get youOwner => 'Вы (Владелец)';
+  String get youOwner => 'Вы (владелец)';
 
   @override
   String get removeMemberTitle => 'Удалить участника?';
