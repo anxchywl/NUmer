@@ -509,7 +509,7 @@ class _SessionNotesSheetState extends State<_SessionNotesSheet> {
             inputFormatters: [
               LengthLimitingTextInputFormatter(160),
               FilteringTextInputFormatter.allow(
-                RegExp(r'[\p{L}\p{N}]', unicode: true),
+                RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
               ),
             ],
           ),

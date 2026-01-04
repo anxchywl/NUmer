@@ -15,6 +15,10 @@ class HabitService {
     _loadLocalCategories(); // Initial load
     return _categoryController.stream;
   }
+  
+  // -- History Updates --
+  final _historyUpdateController = StreamController<void>.broadcast();
+  Stream<void> get historyUpdates => _historyUpdateController.stream;
 
   Future<void> _loadLocalCategories() async {
     final cats = await Storage.getHabitCategories();
@@ -112,7 +116,7 @@ class HabitService {
     final data = habit.toFirestore();
     
     await ref.set(data);
-    
+    await recalculateStreak(userId, habit);
   }
 
   Future<void> toggleCompletion({
@@ -139,7 +143,7 @@ class HabitService {
       if (completed) {
         transaction.set(historyRef, {
           'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
-          't': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
           'v': value ?? 1, 
         });
       } else {
@@ -196,6 +200,7 @@ class HabitService {
     });
 
     await recalculateStreak(userId, habit);
+    _historyUpdateController.add(null);
   }
 
   /// Load history for a month/range
@@ -234,6 +239,7 @@ class HabitService {
     }
     
     await habitRef.delete();
+    _historyUpdateController.add(null);
   }
 
   Future<void> reorderHabits(String userId, int oldIndex, int newIndex) async {
@@ -255,15 +261,6 @@ class HabitService {
       batch.update(ref, {'so': i}); // New key 'so'
     }
     await batch.commit();
-  }
-
-  Future<void> resetStreak(String userId, String habitId) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .doc(habitId)
-        .update({'st.cs': 0});
   }
 
   Future<void> resetHabitProgress(String userId, String habitId) async {
@@ -294,6 +291,7 @@ class HabitService {
         'l7': {}, // Initialize empty map
         'last7': FieldValue.delete(), // Remove legacy
      });
+     _historyUpdateController.add(null);
   }
 
   Future<void> recalculateStreak(String userId, Habit habit) async {
@@ -331,80 +329,139 @@ class HabitService {
 
     int currentStreakValue = 0;
     int longestStreakValue = 0;
-    int tempStreak = 0;
 
     DateTime checkDate = DateTime.now();
     checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day);
-    
     final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
-    
-    DateTime currentCheck = checkDate;
-    while (!currentCheck.isBefore(start)) {
-       final isScheduled = _isDayScheduledForStreak(habit, currentCheck, fullCompletionMap);
-       if (isScheduled) {
-         final isCompleted = historyDates.contains(currentCheck);
-         if (isCompleted) {
-           currentStreakValue++;
-         } else {
-           final isToday = currentCheck.year == DateTime.now().year &&
-               currentCheck.month == DateTime.now().month &&
-               currentCheck.day == DateTime.now().day;
-           if (!isToday) break;
-         }
-       }
-       currentCheck = currentCheck.subtract(const Duration(days: 1));
-    }
 
-    DateTime longCheck = start;
-    while (!longCheck.isAfter(checkDate)) {
-       final isScheduled = _isDayScheduledForStreak(habit, longCheck, fullCompletionMap);
-       if (isScheduled) {
-          if (historyDates.contains(longCheck)) {
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+       // --- Period-based Streak ---
+       DateTime currentPeriodCheck = checkDate;
+       // We move currentPeriodCheck to the start of its period
+       currentPeriodCheck = _getPeriodStart(habit, currentPeriodCheck);
+
+       // 1. Current Streak (Backwards)
+       while (!currentPeriodCheck.isBefore(start)) {
+          final met = habit.isGoalMetForPeriod(fullCompletionMap, currentPeriodCheck);
+          if (met) {
+             currentStreakValue++;
+          } else {
+             // If this is the active period (containing today), don't break yet
+             bool isActivePeriod = !checkDate.isBefore(currentPeriodCheck) && 
+                                   !checkDate.isAfter(_getPeriodEnd(habit, currentPeriodCheck));
+             if (!isActivePeriod) {
+                break;
+             }
+          }
+          currentPeriodCheck = _subtractPeriod(habit, currentPeriodCheck);
+       }
+
+       // 2. Longest Streak (Forwards)
+       int tempStreak = 0;
+       DateTime forwardPeriodCheck = _getPeriodStart(habit, start);
+       while (!forwardPeriodCheck.isAfter(checkDate)) {
+          final met = habit.isGoalMetForPeriod(fullCompletionMap, forwardPeriodCheck);
+          if (met) {
              tempStreak++;
              if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
           } else {
-             if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-                if (_isLastDayOfPeriod(habit, longCheck)) {
-                   tempStreak = 0;
-                }
+             tempStreak = 0;
+          }
+          forwardPeriodCheck = _addPeriod(habit, forwardPeriodCheck);
+       }
+    } else {
+       // --- Day-based Streak ---
+       int tempStreak = 0;
+       DateTime currentCheck = checkDate;
+       
+       while (!currentCheck.isBefore(start)) {
+          final isScheduled = habit.isScheduledFor(currentCheck);
+          if (isScheduled) {
+            final isCompleted = historyDates.contains(currentCheck);
+            if (isCompleted) {
+              currentStreakValue++;
+            } else {
+              final isToday = currentCheck.year == DateTime.now().year &&
+                  currentCheck.month == DateTime.now().month &&
+                  currentCheck.day == DateTime.now().day;
+              if (!isToday) break;
+            }
+          }
+          currentCheck = currentCheck.subtract(const Duration(days: 1));
+       }
+
+       DateTime longCheck = start;
+       while (!longCheck.isAfter(checkDate)) {
+          final isScheduled = habit.isScheduledFor(longCheck);
+          if (isScheduled) {
+             if (historyDates.contains(longCheck)) {
+                tempStreak++;
+                if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
              } else {
                 tempStreak = 0;
              }
           }
+          longCheck = longCheck.add(const Duration(days: 1));
        }
-       longCheck = longCheck.add(const Duration(days: 1));
     }
     
     await _updateStreaks(userId, habit.id, currentStreakValue, longestStreakValue);
   }
 
-  bool _isDayScheduledForStreak(Habit habit, DateTime date, Map<String, double> completionMap) {
-    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-       final isCompletedToday = (completionMap[_dateKey(date)] ?? 0.0) >= habit.targetValue;
-       if (isCompletedToday) return true;
-
-       if (_isLastDayOfPeriod(habit, date)) {
-          return !habit.isGoalMetForPeriod(completionMap, date);
-       }
-       return false;
-    }
-
-    return habit.isScheduledFor(date);
-  }
-
-  bool _isLastDayOfPeriod(Habit habit, DateTime date) {
+  DateTime _getPeriodStart(Habit habit, DateTime date) {
     switch (habit.frequencyPeriod) {
       case HabitPeriod.week:
-        return date.weekday == DateTime.sunday;
+        return DateTime(date.year, date.month, date.day - (date.weekday - 1));
       case HabitPeriod.month:
-        final nextDay = date.add(const Duration(days: 1));
-        return nextDay.day == 1;
+        return DateTime(date.year, date.month, 1);
       case HabitPeriod.year:
-        return date.month == 12 && date.day == 31;
+        return DateTime(date.year, 1, 1);
       default:
-        return false;
+        return date;
     }
   }
+
+  DateTime _getPeriodEnd(Habit habit, DateTime date) {
+    final start = _getPeriodStart(habit, date);
+    switch (habit.frequencyPeriod) {
+      case HabitPeriod.week:
+        return start.add(const Duration(days: 6));
+      case HabitPeriod.month:
+        return DateTime(start.year, start.month + 1, 0);
+      case HabitPeriod.year:
+        return DateTime(start.year, 12, 31);
+      default:
+        return date;
+    }
+  }
+
+  DateTime _addPeriod(Habit habit, DateTime date) {
+    switch (habit.frequencyPeriod) {
+      case HabitPeriod.week:
+        return date.add(const Duration(days: 7));
+      case HabitPeriod.month:
+        return DateTime(date.year, date.month + 1, 1);
+      case HabitPeriod.year:
+        return DateTime(date.year + 1, 1, 1);
+      default:
+        return date.add(const Duration(days: 1));
+    }
+  }
+
+  DateTime _subtractPeriod(Habit habit, DateTime date) {
+    switch (habit.frequencyPeriod) {
+      case HabitPeriod.week:
+        return date.subtract(const Duration(days: 7));
+      case HabitPeriod.month:
+        return DateTime(date.year, date.month - 1, 1);
+      case HabitPeriod.year:
+        return DateTime(date.year - 1, 1, 1);
+      default:
+        return date.subtract(const Duration(days: 1));
+    }
+  }
+
+
 
   Future<void> _updateStreaks(String userId, String habitId, int current, int longest) async {
     await _db
@@ -416,8 +473,45 @@ class HabitService {
           'st.cs': current,
           'st.ls': longest,
         });
+    _historyUpdateController.add(null);
   }
 
+  Future<void> updateHistory(String userId, String habitId, DateTime date, double value) async {
+    final dateKey = _dateKey(date);
+    final historyRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('habits')
+        .doc(habitId)
+        .collection('history')
+        .doc(dateKey);
+
+    if (value > 0) {
+      await historyRef.set({
+        'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'v': value,
+      }, SetOptions(merge: true));
+    } else {
+      await historyRef.delete();
+    }
+    
+    // Recalculate streak after history change
+    try {
+      final habitSnap = await _db
+          .collection('users')
+          .doc(userId)
+          .collection('habits')
+          .doc(habitId)
+          .get();
+      if (habitSnap.exists) {
+        final habit = Habit.fromFirestore(habitSnap);
+        await recalculateStreak(userId, habit);
+      }
+    } catch (_) {}
+
+    _historyUpdateController.add(null);
+  }
 
   Future<void> updateHabitProgressFromCourse({
     required String userId, 

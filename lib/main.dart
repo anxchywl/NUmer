@@ -620,6 +620,14 @@ class _ShellState extends State<_Shell> {
     if (_reflectionSheetActive || !mounted) return;
     if (state.pendingReflections.isEmpty) return;
     
+    // Gate by Quick Notes setting: if disabled, we clear and skip
+    if (!state.quickNotesEnabled) {
+      while (state.pendingReflections.isNotEmpty) {
+        state.popPendingReflection();
+      }
+      return;
+    }
+    
     // We only show if there is no other modal (profile dialog)
     if (_profileDialogActive) return;
 

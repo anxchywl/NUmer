@@ -660,6 +660,7 @@
   "habitWorkLabel": "Работа",
   "habitRestLabel": "Отдых",
   "habitChooseTimeRangeTitle": "Выберите период начала",
+  "habitSchedulingTitle": "Расписание",
   "habitStartDateLabel": "Дата начала",
   "habitEndDateLabel": "Дата окончания",
   "habitNoEndDate": "Без даты окончания",
@@ -697,5 +698,50 @@
   "habitCategoryQuitBadHabit": "Бросить плохую привычку",
   "habitCategoryHome": "Дом",
   "habitCategoryHealth": "Здоровье",
-  "habitCategoryWork": "Работа"
+  "habitCategoryWork": "Работа",
+  "habitResetProgressMessage": "Вся история этой привычки будет удалена. Это действие нельзя отменить.",
+  "habitResetProgressAction": "Сбросить",
+  "habitFrequencyRepeatsTitle": "Повторы",
+  "habitFrequencyEveryXDays": "Каждые {count} дн.",
+  "@habitFrequencyEveryXDays": {
+     "placeholders": {
+        "count": {"type": "int"}
+     }
+  },
+
+  "habitStatsEmptyState": "Привычек не найдено. Добавьте привычку, чтобы начать отслеживать прогресс. Это круто, поверьте!",
+  "habitStatsCompletionRate": "Процент выполнения",
+  "habitStatsCompleted": "Выполнено",
+  "habitStatsMissed": "Пропущено",
+  "habitReportDownload": "Скачать отчет",
+  "habitReportTitle": "Скачать отчет",
+  "habitReportDownloadAction": "Скачать",
+  "habitReportSaved": "Сохранено: {path}",
+  "@habitReportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "habitReportFailed": "Ошибка экспорта: {error}",
+  "@habitReportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "csvDay": "День",
+  "csvTotalCompleted": "Итого выполнено",
+  "csvTarget": "Цель",
+  "csvRate": "Процент",
+  "exportFormat": "Формат экспорта",
+  "exportFormatCSV": "CSV",
+  "exportFormatExcel": "Excel",
+  "exportSuccess": "Экспорт успешен",
+  "exportSuccessMessage": "Ваш файл успешно сохранён",
+  "openFile": "Открыть файл",
+  "done": "Готово",
+  "close": "Закрыть"
 }

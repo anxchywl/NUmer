@@ -76,7 +76,7 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
     return Stack(
       children: [
         TableCalendar(
-          firstDay: DateTime.now().subtract(const Duration(days: 365 * 5)),
+          firstDay: DateTime(2025, 1, 1),
       lastDay: DateTime.now().add(const Duration(days: 0)), 
       focusedDay: _currentFocusedDay,
       locale: Localizations.localeOf(context).languageCode,

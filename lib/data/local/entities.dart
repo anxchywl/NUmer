@@ -35,7 +35,7 @@ class LocalUserDoc extends HiveObject with SyncEntity {
     this.avatarImage,
     this.themeMode,
     this.weekStart = 'monday',
-    this.progressView = 'day',
+    this.progressView = 'week',
     this.homeSummaryRange = 'today',
     this.activeSessionDeviceId,
     this.activeSessionUpdatedAtMs,

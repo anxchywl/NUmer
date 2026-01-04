@@ -1098,10 +1098,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weekGoalLabel => 'week goal';
 
   @override
-  String get on => 'on';
+  String get on => 'On';
 
   @override
-  String get off => 'off';
+  String get off => 'Off';
 
   @override
   String get justSwipeIt => 'Just swipe it';
@@ -1609,6 +1609,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the time range when you want to start';
 
   @override
+  String get habitSchedulingTitle => 'Scheduling';
+
+  @override
   String get habitStartDateLabel => 'Start date';
 
   @override
@@ -1824,6 +1827,86 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get habitCategoryWork => 'Work';
+
+  @override
+  String get habitResetProgressMessage =>
+      'All progress history for this habit will be deleted. This cannot be undone.';
+
+  @override
+  String get habitResetProgressAction => 'Reset';
+
+  @override
+  String get habitFrequencyRepeatsTitle => 'Repeats';
+
+  @override
+  String habitFrequencyEveryXDays(int count) {
+    return 'Every $count days';
+  }
+
+  @override
+  String get habitStatsEmptyState =>
+      'No habits found. Add a habit to start tracking your progress. It is cool trust me!';
+
+  @override
+  String get habitStatsCompletionRate => 'Completion rate';
+
+  @override
+  String get habitStatsCompleted => 'Completed';
+
+  @override
+  String get habitStatsMissed => 'Missed';
+
+  @override
+  String get habitReportDownload => 'Download Report';
+
+  @override
+  String get habitReportTitle => 'Download report';
+
+  @override
+  String get habitReportDownloadAction => 'Download';
+
+  @override
+  String habitReportSaved(String path) {
+    return 'Saved to: $path';
+  }
+
+  @override
+  String habitReportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get csvDay => 'Day';
+
+  @override
+  String get csvTotalCompleted => 'Total completed';
+
+  @override
+  String get csvTarget => 'Target';
+
+  @override
+  String get csvRate => 'Rate';
+
+  @override
+  String get exportFormat => 'Export format';
+
+  @override
+  String get exportFormatCSV => 'CSV';
+
+  @override
+  String get exportFormatExcel => 'Excel';
+
+  @override
+  String get exportSuccess => 'Export successful';
+
+  @override
+  String get exportSuccessMessage => 'Your file has been saved successfully';
+
+  @override
+  String get openFile => 'Open file';
+
+  @override
+  String get close => 'Close';
 
   @override
   String get interactionCalendarTitle => 'Interaction Calendar';

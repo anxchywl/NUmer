@@ -2143,13 +2143,13 @@ abstract class AppLocalizations {
   /// No description provided for @on.
   ///
   /// In en, this message translates to:
-  /// **'on'**
+  /// **'On'**
   String get on;
 
   /// No description provided for @off.
   ///
   /// In en, this message translates to:
-  /// **'off'**
+  /// **'Off'**
   String get off;
 
   /// No description provided for @justSwipeIt.
@@ -3004,6 +3004,12 @@ abstract class AppLocalizations {
   /// **'Choose the time range when you want to start'**
   String get habitChooseTimeRangeTitle;
 
+  /// No description provided for @habitSchedulingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduling'**
+  String get habitSchedulingTitle;
+
   /// No description provided for @habitStartDateLabel.
   ///
   /// In en, this message translates to:
@@ -3423,6 +3429,150 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Work'**
   String get habitCategoryWork;
+
+  /// No description provided for @habitResetProgressMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'All progress history for this habit will be deleted. This cannot be undone.'**
+  String get habitResetProgressMessage;
+
+  /// No description provided for @habitResetProgressAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset'**
+  String get habitResetProgressAction;
+
+  /// No description provided for @habitFrequencyRepeatsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeats'**
+  String get habitFrequencyRepeatsTitle;
+
+  /// No description provided for @habitFrequencyEveryXDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Every {count} days'**
+  String habitFrequencyEveryXDays(int count);
+
+  /// No description provided for @habitStatsEmptyState.
+  ///
+  /// In en, this message translates to:
+  /// **'No habits found. Add a habit to start tracking your progress. It is cool trust me!'**
+  String get habitStatsEmptyState;
+
+  /// No description provided for @habitStatsCompletionRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Completion rate'**
+  String get habitStatsCompletionRate;
+
+  /// No description provided for @habitStatsCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get habitStatsCompleted;
+
+  /// No description provided for @habitStatsMissed.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed'**
+  String get habitStatsMissed;
+
+  /// No description provided for @habitReportDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Report'**
+  String get habitReportDownload;
+
+  /// No description provided for @habitReportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Download report'**
+  String get habitReportTitle;
+
+  /// No description provided for @habitReportDownloadAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get habitReportDownloadAction;
+
+  /// No description provided for @habitReportSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to: {path}'**
+  String habitReportSaved(String path);
+
+  /// No description provided for @habitReportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}'**
+  String habitReportFailed(String error);
+
+  /// No description provided for @csvDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day'**
+  String get csvDay;
+
+  /// No description provided for @csvTotalCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Total completed'**
+  String get csvTotalCompleted;
+
+  /// No description provided for @csvTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Target'**
+  String get csvTarget;
+
+  /// No description provided for @csvRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get csvRate;
+
+  /// No description provided for @exportFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Export format'**
+  String get exportFormat;
+
+  /// No description provided for @exportFormatCSV.
+  ///
+  /// In en, this message translates to:
+  /// **'CSV'**
+  String get exportFormatCSV;
+
+  /// No description provided for @exportFormatExcel.
+  ///
+  /// In en, this message translates to:
+  /// **'Excel'**
+  String get exportFormatExcel;
+
+  /// No description provided for @exportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Export successful'**
+  String get exportSuccess;
+
+  /// No description provided for @exportSuccessMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your file has been saved successfully'**
+  String get exportSuccessMessage;
+
+  /// No description provided for @openFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open file'**
+  String get openFile;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
 
   /// No description provided for @interactionCalendarTitle.
   ///

@@ -378,7 +378,7 @@ class _ProfileFormState extends State<ProfileForm> {
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(88),
                   FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N}\s]', unicode: true),
+                    RegExp(r'[\p{L}\p{N}\s,.]', unicode: true),
                   ),
                 ],
               ),

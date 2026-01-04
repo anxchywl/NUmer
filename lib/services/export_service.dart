@@ -2,7 +2,10 @@
 import 'dart:io';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:excel/excel.dart';
 import 'storage.dart';
+
+
 
 class ExportService {
   ExportService._();
@@ -95,6 +98,111 @@ class ExportService {
     final file = File(path);
     await file.writeAsString(buffer.toString());
 
+    return path;
+  }
+
+  static Future<String> generateCsvFile({
+    required String fileName,
+    required List<List<dynamic>> rows,
+  }) async {
+    final buffer = StringBuffer();
+    
+    for (final row in rows) {
+      buffer.writeln(row.map((e) {
+        final cell = e.toString();
+        // Escape quotes
+        if (cell.contains(',') || cell.contains('"') || cell.contains('\n')) {
+          return '"${cell.replaceAll('"', '""')}"';
+        }
+        return cell;
+      }).join(','));
+    }
+
+    // Reuse directory logic from exportSessionsToCalendar roughly
+    Directory targetDir;
+    if (Platform.isAndroid) {
+      targetDir = Directory('/storage/emulated/0/Download');
+      if (!await targetDir.exists()) {
+        targetDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+      }
+    } else {
+      targetDir = await getApplicationDocumentsDirectory();
+    }
+
+    final path = '${targetDir.path}/$fileName';
+    final file = File(path);
+    await file.writeAsString(buffer.toString());
+    return path;
+  }
+
+  static Future<String> generateExcelFile({
+    required String fileName,
+    required List<List<dynamic>> rows,
+  }) async {
+    final excel = Excel.createExcel();
+    final sheet = excel['Sheet1'];
+    
+    // Add data to sheet
+    for (int rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      final row = rows[rowIndex];
+      for (int colIndex = 0; colIndex < row.length; colIndex++) {
+        final cellValue = row[colIndex];
+        final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIndex, rowIndex: rowIndex));
+        
+        // Set cell value
+        if (cellValue is int) {
+          cell.value = IntCellValue(cellValue);
+        } else if (cellValue is double) {
+          cell.value = DoubleCellValue(cellValue);
+        } else {
+          cell.value = TextCellValue(cellValue.toString());
+        }
+        
+        // Apply alignment based on position
+        if (rowIndex == 0) {
+          // Header row: left-aligned
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Left,
+            verticalAlign: VerticalAlign.Center,
+            bold: true,
+          );
+        } else if (colIndex == 0) {
+          // First column (days): left-aligned
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Left,
+            verticalAlign: VerticalAlign.Center,
+          );
+        } else {
+          // All other cells: center-aligned
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Center,
+            verticalAlign: VerticalAlign.Center,
+          );
+        }
+      }
+    }
+
+    // Get target directory
+    Directory targetDir;
+    if (Platform.isAndroid) {
+      targetDir = Directory('/storage/emulated/0/Download');
+      if (!await targetDir.exists()) {
+        targetDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+      }
+    } else {
+      targetDir = await getApplicationDocumentsDirectory();
+    }
+
+    final path = '${targetDir.path}/$fileName';
+    final fileBytes = excel.encode();
+    
+    if (fileBytes != null) {
+      final file = File(path);
+      await file.writeAsBytes(fileBytes);
+    } else {
+      throw Exception('Failed to encode Excel file');
+    }
+    
     return path;
   }
 }

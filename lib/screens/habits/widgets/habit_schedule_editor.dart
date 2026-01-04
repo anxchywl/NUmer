@@ -336,7 +336,7 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
             final picked = await showDatePicker(
               context: context,
               initialDate: date ?? DateTime.now(),
-              firstDate: DateTime(2020),
+              firstDate: DateTime(2025, 1, 1),
               lastDate: DateTime(2030),
             );
             if (picked != null) onPick(picked);

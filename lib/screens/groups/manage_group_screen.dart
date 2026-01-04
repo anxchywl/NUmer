@@ -690,7 +690,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
              else
                IconButton(
                  tooltip: AppLocalizations.of(context)!.makeAdminTooltip,
-                 icon: const Text('👑', style: TextStyle(fontSize: 20)),
+                 icon: const Icon(Icons.arrow_upward),
                  onPressed: () => _promoteMember(service, member.userId),
                ),
               IconButton(

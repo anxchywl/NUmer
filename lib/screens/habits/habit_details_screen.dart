@@ -672,13 +672,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-           Row(
-             children: [
-               Icon(Icons.link, size: 20, color: theme.colorScheme.primary),
-               const SizedBox(width: 8),
-               Text(AppLocalizations.of(context)!.habitConnectCourse, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
-             ],
-           ),
+           Text(AppLocalizations.of(context)!.habitConnectCourse, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
            const SizedBox(height: 8),
            Text(
              AppLocalizations.of(context)!.habitCourseSyncHint,

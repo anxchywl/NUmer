@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
+import '../../../services/habit_service.dart';
+import '../../../app_state.dart';
+import 'habit_logging_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 
 class HabitDaySheet extends StatelessWidget {
   final DateTime date;
-  final List<Habit> allHabits; // Pass all to filter active ones for this day
-  final Map<String, double> progressMap; // habitId -> value for this day
+  final List<Habit> allHabits;
+  final Map<String, double> progressMap;
+  final String userId;
 
   const HabitDaySheet({
     super.key,
     required this.date,
     required this.allHabits,
     required this.progressMap,
+    required this.userId,
   });
 
   @override
@@ -82,6 +89,7 @@ class HabitDaySheet extends StatelessWidget {
                         habit: habit,
                         date: date,
                         progress: progressMap[habit.id] ?? 0,
+                        userId: userId,
                       );
                     },
                   ),
@@ -94,9 +102,11 @@ class HabitDaySheet extends StatelessWidget {
   }
 
   List<Habit> _getDailyHabits() {
-    // Only show habits that were COMPLETED on this day
+    // Show habits that were COMPLETED OR are SCHEDULED for this day
     return allHabits.where((h) {
-      return progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
+      final isScheduled = h.isScheduledFor(date);
+      final hasProgress = progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
+      return isScheduled || hasProgress;
     }).toList();
   }
 }
@@ -105,8 +115,14 @@ class _HabitRow extends StatelessWidget {
   final Habit habit;
   final DateTime date;
   final double progress;
+  final String userId;
 
-  const _HabitRow({required this.habit, required this.date, required this.progress});
+  const _HabitRow({
+    required this.habit,
+    required this.date,
+    required this.progress,
+    required this.userId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -125,16 +141,7 @@ class _HabitRow extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        // Option: Open edit/details or toggle
-        // Requirement: "Tapping a habit: Opens Edit Habit screen"
-        // But maybe HabitDetails is better context. Let's try HabitDetailsScreen or a bottom sheet for editing.
-        // Given existing code, maybe just open HabitDetailsScreen?
-        // Or AddHabitSheet in edit mode?
-        // Let's assume HabitDetailsScreen for now or just Show Toast "Edit not implemented" if we lack context.
-        // Actually, let's open AddHabitSheet(habit: habit) if possible, or show modal.
-        // For now, I'll put a placeholder or basic interaction.
-        // Better: Toggle completion for Yes/No, Show details for others.
-        // Re-reading request: "Opens Edit Habit screen (via 3 dots or row tap, your choice)"
+        _logProgress(context);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -212,5 +219,34 @@ class _HabitRow extends StatelessWidget {
     final target = numberFormat.format(habit.targetValue.toInt());
     final unit = habit.unit ?? '';
     return "$current / $target ${unit.isNotEmpty ? unit : ''}".trim();
+  }
+
+  void _logProgress(BuildContext context) async {
+    if (habit.type == HabitType.yesNo) {
+      HapticFeedback.lightImpact();
+      final isCompleted = progress >= habit.targetValue;
+      await context.read<HabitService>().toggleCompletion(
+            userId: userId,
+            habit: habit,
+            date: date,
+            completed: !isCompleted,
+          );
+      if (context.mounted) context.read<AppState>().triggerSync();
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => HabitLoggingSheet(
+          habit: habit,
+          date: date,
+          userId: userId,
+          initialValue: progress,
+        ),
+      );
+    }
   }
 }

@@ -100,7 +100,7 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
               inputFormatters: [
                 LengthLimitingTextInputFormatter(160),
                 FilteringTextInputFormatter.allow(
-                  RegExp(r'[\p{L}\p{N}]', unicode: true),
+                  RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
                 ),
               ],
             ),

@@ -1,14 +1,19 @@
-
+import 'package:numer_app/services/habit_service.dart';
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
-import '../app_state.dart';
+import 'package:numer_app/services/export_service.dart';
+
+
 import '../models.dart';
 import '../services/storage.dart'; 
 
 import '../widgets/heatmap_calendar.dart';
+import '../app_state.dart';
 import 'history.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/tip_icon.dart';
@@ -26,10 +31,16 @@ class _StatsScreenState extends State<StatsScreen> {
   bool get _isToday => _strip(DateTime.now()) == _day;
   _SliceTooltip? _sliceTooltip;
 
-  void _prevDay() => setState(() {
-    _day = _day.subtract(const Duration(days: 1));
-    _sliceTooltip = null;
-  });
+  void _prevDay() {
+    final minDate = DateTime(2025, 1, 1);
+    final prevDay = _day.subtract(const Duration(days: 1));
+    if (prevDay.isBefore(minDate)) return;
+    
+    setState(() {
+      _day = prevDay;
+      _sliceTooltip = null;
+    });
+  }
   void _nextDay() {
     if (_isToday) return;
     setState(() {
@@ -75,10 +86,18 @@ class _StatsScreenState extends State<StatsScreen> {
   _Range _range = _Range.week; 
   int _shift = 0;              
 
-  void _prevRange() => setState(() {
-    _shift -= 1;
-    _tooltip = null;
-  });
+  void _prevRange() {
+    final minDate = DateTime(2025, 1, 1);
+    final weekStart = context.read<AppState>().weekStart;
+    final (prevStart, _) = _rangeBounds(DateTime.now(), _range, _shift - 1, weekStart);
+    
+    if (prevStart.isBefore(minDate)) return;
+    
+    setState(() {
+      _shift -= 1;
+      _tooltip = null;
+    });
+  }
   void _nextRange() {
     if (_shift >= 0) return;
     setState(() {
@@ -94,6 +113,240 @@ class _StatsScreenState extends State<StatsScreen> {
 
   
   _BucketTooltip? _tooltip;
+
+  // -- Habit Stats State --
+  String? _selectedHabitId;
+
+  
+  Map<String, _HabitStatsResult>? _allHabitsStatsCache;
+  bool _loadingHabitsStats = false;
+  StreamSubscription<void>? _historyUpdatesSub;
+  
+  // Cache key to detect if we need to reload
+  // For now, load once or on demand.
+
+  final DateTime _habitStatsMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  late PageController _habitPageCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _habitPageCtrl = PageController(viewportFraction: 0.85);
+    
+    // Listen for history updates to invalidate cache
+    final habitService = context.read<HabitService>();
+    _historyUpdatesSub = habitService.historyUpdates.listen((_) {
+      // Invalidate cache and trigger reload
+      if (mounted) {
+        setState(() {
+          _allHabitsStatsCache = null;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _habitPageCtrl.dispose();
+    _historyUpdatesSub?.cancel();
+    super.dispose();
+  }
+
+
+  Future<void> _loadAllHabitsStats(List<Habit> habits, String uid) async {
+    if (_loadingHabitsStats) return;
+    setState(() => _loadingHabitsStats = true);
+    
+    final service = context.read<HabitService>();
+    final results = <String, _HabitStatsResult>{};
+    
+    for (final habit in habits) {
+      if (habit.archived) continue;
+      final stats = await _computeHabitStats(habit, service, uid);
+      results[habit.id] = stats;
+    }
+    
+    if (mounted) {
+      setState(() {
+        _allHabitsStatsCache = results;
+        _loadingHabitsStats = false;
+      });
+    }
+  }
+
+  Future<_HabitStatsResult> _computeHabitStats(Habit habit, HabitService service, String uid) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    // Start from habit start date, or a reasonable fallback
+    final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
+    
+    // If future start date, no stats
+    if (start.isAfter(today)) {
+      return const _HabitStatsResult(0, 0, 0, 0.0);
+    }
+
+    // End date: habit.endDate or Today
+    DateTime end = today;
+    if (habit.endDate != null) {
+      final e = DateTime(habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
+      if (e.isBefore(today)) end = e;
+    }
+
+    // We need history for this range
+    // Optimization: getHistory takes start/end.
+    final history = await service.getHistory(uid, habit.id, start, end);
+    final historyMap = <String, double>{};
+    for (final h in history) {
+      // HabitHistoryEntry.id is the dateKey YYYY-MM-DD
+      historyMap[h.id] = h.value ?? 0.0;
+    }
+    
+    int required = 0;
+    int completed = 0;
+    
+    // Iterate day by day? 
+    // For "repeatsInPeriod" (X times per period), we count periods.
+    // For others, we count days.
+    
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+       // Loop through periods
+       // We need to align with period boundaries (Week: Mon-Sun, Month: 1-End, Year: 1-365)
+       
+
+       // Align cursor to start of the period that contains 'start'
+       // But wait, if the habit started mid-week, do we count that week? 
+       // Usually yes, the goal applies to the period.
+       
+       // Let's iterate day by day to find period transitions, or just jump by period.
+       // Jumping by period is safer.
+       
+       // Helper to get period start for a date
+       DateTime getPeriodStart(DateTime d) {
+         switch (habit.frequencyPeriod!) {
+           case HabitPeriod.week:
+             // Mon=1...
+             return d.subtract(Duration(days: d.weekday - 1));
+           case HabitPeriod.month:
+             return DateTime(d.year, d.month, 1);
+           case HabitPeriod.year:
+             return DateTime(d.year, 1, 1);
+         }
+       }
+       
+       DateTime getNextPeriodStart(DateTime pStart) {
+          switch (habit.frequencyPeriod!) {
+           case HabitPeriod.week:
+             return pStart.add(const Duration(days: 7));
+           case HabitPeriod.month:
+             return DateTime(pStart.year, pStart.month + 1, 1);
+           case HabitPeriod.year:
+             return DateTime(pStart.year + 1, 1, 1);
+         }
+       }
+
+       DateTime pStart = getPeriodStart(start);
+       
+       while (!pStart.isAfter(end)) { // Include partial periods if they overlap with [start, end]
+          // Check if this period is relevant (overlap with habit duration)
+          // The period might start before 'start', but if it ends after 'start', it counts.
+          // The period might end after 'end', but if it starts before 'end', it counts.
+          
+          final pNext = getNextPeriodStart(pStart);
+          final pEnd = pNext.subtract(const Duration(days: 1));
+          
+          // Effective period range within habit constraints
+          // We care if the user completed the GOAL within this period.
+          // We count completions within [max(start, pStart), min(end, pEnd)]?
+          // Actually, the goal is "X times per period". 
+          // If the period overlaps the active duration, we typically count it as a "required completion opportunity".
+          // Unless the overlap is too small? Let's keep it simple: if valid days exist in period, it counts.
+          
+          // Check intersection
+          final iStart = pStart.isBefore(start) ? start : pStart;
+          final iEnd = pEnd.isAfter(end) ? end : pEnd;
+          
+          if (!iStart.isAfter(iEnd)) {
+             // Valid period
+             required += (habit.frequencyGoal ?? 1); 
+             
+             // Count actual completions in this period (using historyMap)
+             // We need to query history map for keys in this period.
+             
+             int periodCompletions = 0;
+             // Iterate days in this period to check history
+             // Optimization: History is sparse, but iterating 7-30 days is fast.
+             DateTime d = iStart; // Only count completions within the valid intersection? 
+             // Or allow completions from whole period? 
+             // Logic: "Count stats from the habit start date." -> implies strict bound.
+             
+             // Actually, for "Days per period", if I did 3 days monday, tuesday, wednesday, and habit started wednesday...
+             // I probably shouldn't count Mon/Tue.
+             
+             while (!d.isAfter(iEnd)) {
+               final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+               if ((historyMap[k] ?? 0) >= habit.targetValue) {
+                 periodCompletions++;
+               }
+               d = d.add(const Duration(days: 1));
+             }
+             
+             // Cap completions at goal?
+             // "Completed = number of completed days in that period (max N)"
+             // "Not completed = N - completed"
+             final goal = habit.frequencyGoal ?? 1;
+             final capped = periodCompletions > goal ? goal : periodCompletions;
+             
+             completed += capped;
+          }
+          
+          pStart = pNext;
+       }
+
+    } else {
+       // Daily / Specific Days / Interval
+       // Iterate days from start to end
+       
+       int totalDays = end.difference(start).inDays + 1;
+       for (var i = 0; i < totalDays; i++) {
+          final d = start.add(Duration(days: i));
+          
+          // Check if habit is scheduled for this day
+          if (habit.isScheduledFor(d)) {
+             required++;
+             
+             final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+             if ((historyMap[k] ?? 0) >= habit.targetValue) {
+                completed++;
+             }
+          }
+       }
+    }
+    
+    // "Do not count days where the habit is not supposed to be done." (Handled by isScheduledFor / logic above)
+    // "Do not include extra 'optional' days as missed" -> Handled by only counting required.
+    // "Work/Rest -> only Work days are required" -> Interval logic in isScheduledFor handles this.
+    
+    // Calculate Not Completed
+    final notCompleted = required - completed;
+    // (If completed > required due to logic drift, clamp it? Logic above shouldn't allow it for period, but for others?)
+    // For others, completed is subset of required (if we only count completions on scheduled days).
+    // What if I complete a task on a non-assigned day?
+    // "Only include required days, depending on the habit frequency"
+    // So if I do it on a rest day, it doesn't count towards stats?
+    // User says: "Completed instances" -- usually total completions matter.
+    // But "Completion % = completed / required". If I do extra, can I get > 100%?
+    // User says: "Completed = number of completed days in that period (max N)" for periods.
+    // For exact days: "Every day -> all days".
+    // I will assume strictly required days. Completions on off-days are "bonus" and maybe don't affect this specific "Efficiency" metric.
+    // Or maybe they count as completed but don't increase required? -> >100%.
+    // Given the "Completion percentage" context, usually capped at 100% or strictly based on required slots is best.
+    // I will stick to "Completed instances *on required days*".
+    
+    final rate = required > 0 ? (completed / required * 100) : 0.0;
+    
+    return _HabitStatsResult(required, completed, notCompleted, rate);
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -240,6 +493,7 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
 
           
+
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
@@ -575,6 +829,14 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           
+          SliverToBoxAdapter(
+            child: _buildSectionContainer(
+              context,
+              title: "Habit statistics", 
+              child: _buildHabitStatistics(context),
+            ),
+          ),
+
           const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
         ],
       ),
@@ -894,7 +1156,648 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     return items;
   }
+  Widget _buildHabitStatistics(BuildContext context) {
+    // Let's get it from FirebaseAuth for now or Provider.
+    final uid = context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ?? firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+    
+    if (uid == null) return const SizedBox.shrink();
+
+    return StreamBuilder<List<Habit>>(
+      stream: context.read<HabitService>().habitsStream(uid),
+      builder: (context, snapshot) {
+        final habits = snapshot.data ?? [];
+        if (habits.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context)!.habitStatsEmptyState,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        // Trigger stats load if needed
+        if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
+             WidgetsBinding.instance.addPostFrameCallback((_) {
+               _loadAllHabitsStats(habits, uid);
+             });
+        }
+        
+        // Initial Page Selection
+        if (_selectedHabitId == null && habits.isNotEmpty) {
+           _selectedHabitId = habits.first.id;
+        }
+
+        return _buildHabitLayout(context, habits, uid);
+      }
+    );
+  }
+  
+  // Refactored inner layout to handle the stream wrapping
+  Widget _buildHabitLayout(BuildContext context, List<Habit> habits, String uid) {
+      final l10n = AppLocalizations.of(context)!;
+      // Trigger stats load (idempotent-ish)
+      // If we want live updates, we need to know when to force reload.
+      // The StreamBuilder above rebuilds this widget on event.
+      // So every time this builds, we might want to ensure stats are fresh.
+      // But _loadSetState prevents loops.
+      // We need to invalidate _allHabitsStatsCache upon stream event.
+      // How does the stream builder pass "event" down? It doesn't.
+      
+      // Better approach: Listen in initState/didChangeDependencies?
+      // But we are in a mixin/state class.
+      // Let's just add the listener in initState and dispose in dispose.
+      
+      return Column(
+          children: [
+            // Month Chooser REMOVED (moved to dialog)
+            
+            // Swipe Selector (PageView)
+            SizedBox(
+              height: 180, 
+              child: PageView.builder(
+                controller: _habitPageCtrl,
+                itemCount: habits.length,
+                onPageChanged: (index) {
+                   setState(() => _selectedHabitId = habits[index].id);
+                },
+                itemBuilder: (context, index) {
+                   final habit = habits[index];
+                   final stats = _allHabitsStatsCache?[habit.id];
+                   
+                   return AnimatedBuilder(
+                     animation: _habitPageCtrl,
+                     builder: (context, child) {
+                        return Padding(
+                           padding: const EdgeInsets.symmetric(horizontal: 4), // Tighter padding
+                           child: child,
+                        );
+                     },
+                     // Refined Card Style
+                     child: Container(
+                       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                       decoration: BoxDecoration(
+                         color: Theme.of(context).colorScheme.surfaceContainerLow, // Softer background
+                         borderRadius: BorderRadius.circular(20),
+                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                       ),
+                       child: Padding(
+                         padding: const EdgeInsets.all(16),
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.stretch,
+                           children: [
+                             Row(
+                               children: [
+                                  Icon(IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage), color: habit.color),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      habit.name, 
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis
+                                    )
+                                  ),
+                               ],
+                             ),
+                             const Spacer(),
+                             if (stats == null)
+                               const Center(child: CircularProgressIndicator())
+                             else ...[
+                               _buildStatRow(context, l10n.habitStatsCompletionRate, "${stats.completionRate.toStringAsFixed(1)}%"),
+                               const SizedBox(height: 12),
+                               Row(
+                                 children: [
+                                   Expanded(child: _buildStatCard(context, l10n.habitStatsCompleted, "${stats.completed}", Colors.green)),
+                                   const SizedBox(width: 8),
+                                   Expanded(child: _buildStatCard(context, l10n.habitStatsMissed, "${stats.notCompleted}", Colors.redAccent)),
+                                 ],
+                               ),
+                             ]
+                           ],
+                         ),
+                       ),
+                     ),
+                   );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+            
+            // Export Button (Outlined Style)
+            
+            // Export Button (Centered)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                child: OutlinedButton.icon(
+                  onPressed: () => _showDownloadBottomSheet(context, habits, uid), 
+                  icon: const Icon(Icons.download, size: 18),
+                  label: Text(l10n.habitReportDownload),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        );
+  }
+
+  Widget _buildStatRow(BuildContext context, String label, String value) {
+     return Row(
+       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+       children: [
+         Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor)),
+         Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+       ],
+     );
+  }
+
+  Widget _buildStatCard(BuildContext context, String label, String value, Color color) {
+    // Cleaner stat card: no border, subtle background
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+           Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+           Text(label, style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
+        ],
+      ),
+    );
+  }
+  
+  Future<void> _showDownloadBottomSheet(BuildContext context, List<Habit> habits, String uid) async {
+    DateTime selectedMonth = _habitStatsMonth;
+    String selectedFormat = 'csv'; // Default to CSV
+    bool isExporting = false;
+    bool isSuccess = false;
+    String? filePath;
+    
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final l10n = AppLocalizations.of(context)!;
+          final theme = Theme.of(context);
+          final scheme = theme.colorScheme;
+          
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+              left: 24,
+              right: 24,
+              top: 24
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.habitReportTitle, 
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                
+                // Animated content switcher
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      alignment: Alignment.topCenter,
+                      children: <Widget>[
+                        ...previousChildren,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
+                  transitionBuilder: (child, animation) {
+                    final isIncoming = child.key == ValueKey(isSuccess);
+                    
+                    final offset = isIncoming 
+                      ? Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic))
+                      : Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeInCubic));
+                    
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: offset,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: isSuccess
+                    ? _buildSuccessView(l10n, theme, scheme, filePath, selectedFormat)
+                    : _buildSelectionView(
+                        context,
+                        l10n,
+                        theme,
+                        scheme,
+                        selectedMonth,
+                        selectedFormat,
+                        (newMonth) => setSheetState(() => selectedMonth = newMonth),
+                        (newFormat) => setSheetState(() => selectedFormat = newFormat),
+                      ),
+                ),
+                
+                const SizedBox(height: 32),
+                
+                FilledButton.icon(
+                  onPressed: isExporting 
+                    ? null 
+                    : (isSuccess 
+                        ? () => Navigator.pop(context)
+                        : () async {
+                            setSheetState(() => isExporting = true);
+                            try {
+                              final path = await _generateFile(context, habits, uid, selectedMonth, selectedFormat);
+                              if (context.mounted) {
+                                setSheetState(() {
+                                  isSuccess = true;
+                                  filePath = path;
+                                });
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.habitReportFailed(e.toString())),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            } finally {
+                              if (context.mounted) {
+                                setSheetState(() => isExporting = false);
+                              }
+                            }
+                          }),
+                  icon: isExporting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(isSuccess ? Icons.check_circle_outline : Icons.download),
+                  label: Text(
+                    isExporting
+                      ? l10n.exporting
+                      : (isSuccess ? l10n.done : l10n.habitReportDownloadAction),
+                  ),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          );
+        }
+      ),
+    );
+  }
+
+  Widget _buildSelectionView(
+    BuildContext context,
+    AppLocalizations l10n,
+    ThemeData theme,
+    ColorScheme scheme,
+    DateTime selectedMonth,
+    String selectedFormat,
+    Function(DateTime) onMonthChanged,
+    Function(String) onFormatChanged,
+  ) {
+    return Column(
+      key: const ValueKey(false),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Month Selector
+        Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                final minDate = DateTime(2025, 1, 1);
+                final prevMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
+                
+                if (prevMonth.isBefore(minDate)) {
+                  return;
+                }
+                
+                onMonthChanged(prevMonth);
+              },
+              icon: Icon(
+                Icons.chevron_left,
+                color: () {
+                  final minDate = DateTime(2025, 1, 1);
+                  final prevMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
+                  
+                  if (prevMonth.isBefore(minDate)) {
+                    return theme.disabledColor;
+                  }
+                  return null;
+                }(),
+              ),
+            ),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: theme.dividerColor),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    "${_monthName(context, selectedMonth.month)} ${selectedMonth.year}", 
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                final now = DateTime.now();
+                final currentMonth = DateTime(now.year, now.month);
+                final nextMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
+                
+                if (nextMonth.isAfter(currentMonth)) {
+                  return;
+                }
+                
+                onMonthChanged(nextMonth);
+              },
+              icon: Icon(
+                Icons.chevron_right,
+                color: () {
+                  final now = DateTime.now();
+                  final currentMonth = DateTime(now.year, now.month);
+                  final nextMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
+                  
+                  if (nextMonth.isAfter(currentMonth)) {
+                    return theme.disabledColor;
+                  }
+                  return null;
+                }(),
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 24),
+        
+        // Format Selector
+        Text(
+          l10n.exportFormat,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: ChoiceChip(
+                label: Text(l10n.exportFormatCSV),
+                selected: selectedFormat == 'csv',
+                onSelected: (selected) {
+                  if (selected) {
+                    onFormatChanged('csv');
+                  }
+                },
+                selectedColor: theme.colorScheme.primary,
+                labelStyle: TextStyle(
+                  color: selectedFormat == 'csv' 
+                    ? theme.colorScheme.onPrimary 
+                    : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ChoiceChip(
+                label: Text(l10n.exportFormatExcel),
+                selected: selectedFormat == 'excel',
+                onSelected: (selected) {
+                  if (selected) {
+                    onFormatChanged('excel');
+                  }
+                },
+                selectedColor: theme.colorScheme.primary,
+                labelStyle: TextStyle(
+                  color: selectedFormat == 'excel' 
+                    ? theme.colorScheme.onPrimary 
+                    : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSuccessView(
+    AppLocalizations l10n,
+    ThemeData theme,
+    ColorScheme scheme,
+    String? filePath,
+    String format,
+  ) {
+    return Column(
+      key: const ValueKey(true),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: scheme.primaryContainer.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: scheme.primary.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.file_download_done, color: scheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    l10n.fileSavedSuccessfully,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                l10n.fileSavedAt,
+                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              SelectableText(
+                filePath ?? l10n.unknownPath,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                  color: scheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<String> _generateFile(BuildContext context, List<Habit> habits, String uid, DateTime monthDate, String format) async {
+      // Removed "Generating CSV..." snackbar message
+      final l10n = AppLocalizations.of(context)!;
+      // Calculate month name early to avoid async gap usage of context
+      final monthName = _monthName(context, monthDate.month);
+
+      try {
+        final service = context.read<HabitService>();
+        final start = DateTime(monthDate.year, monthDate.month, 1);
+        final daysInMonth = DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+        final end = DateTime(monthDate.year, monthDate.month, daysInMonth);
+        
+        // 1. Fetch History
+        final activeHabits = habits.where((h) => !h.archived).toList();
+        final historyFutures = activeHabits.map((h) => service.getHistory(uid, h.id, start, end));
+        final histories = await Future.wait(historyFutures);
+        
+        final habitHistoryMap = <String, Map<String, double>>{};
+        for (int i = 0; i < activeHabits.length; i++) {
+           final hId = activeHabits[i].id;
+           final historyList = histories[i];
+           habitHistoryMap[hId] = { for (var entry in historyList) entry.id : entry.value ?? 0.0 };
+        }
+        
+        // 2. Prepare Rows (Pivoted)
+        // Header
+        final header = <dynamic>[l10n.csvDay];
+        for (final h in activeHabits) {
+          header.add(h.name);
+        }
+        final rows = <List<dynamic>>[header];
+        
+        // Days Rows
+        final habitCompletions = <String, int>{}; // Track total completions for Rate
+        final habitTargets = <String, int>{}; // Track total targets
+        
+        for (int day = 1; day <= daysInMonth; day++) {
+           final d = DateTime(monthDate.year, monthDate.month, day);
+           final dateKey = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+           final today = DateTime.now();
+           final todayDate = DateTime(today.year, today.month, today.day);
+           
+           final row = <dynamic>[day];
+           
+           // Check if this is a future date
+           final isFuture = d.isAfter(todayDate);
+           
+           for (final h in activeHabits) {
+              // For future dates, leave cell empty
+              if (isFuture) {
+                row.add('');
+                continue;
+              }
+              
+              // Calc Target (only for dates up to today)
+              bool isScheduled = h.isScheduledFor(d);
+              if (isScheduled) {
+                 habitTargets[h.id] = (habitTargets[h.id] ?? 0) + 1;
+              }
+              
+              final map = habitHistoryMap[h.id];
+              final val = map?[dateKey];
+              
+              if (val != null && val >= h.targetValue) {
+                 row.add('X'); 
+                 // If scheduled, it counts to completion rate
+                 if (isScheduled) {
+                    habitCompletions[h.id] = (habitCompletions[h.id] ?? 0) + 1;
+                 }
+              } else if (isScheduled) {
+                 // Undone required/scheduled day
+                 row.add('-');
+              } else {
+                 // Non-required day
+                 row.add('');
+              }
+           }
+           rows.add(row);
+        }
+        
+        // 3. Add Summary Rows (Total, Target, Rate)
+        final totalRow = <dynamic>[l10n.csvTotalCompleted];
+        final targetRow = <dynamic>[l10n.csvTarget];
+        final rateRow = <dynamic>[l10n.csvRate];
+        
+        for (final h in activeHabits) {
+           final comp = habitCompletions[h.id] ?? 0;
+           final targ = habitTargets[h.id] ?? 0;
+           final rate = targ > 0 ? (comp / targ * 100) : 0.0;
+           
+           totalRow.add(comp);
+           targetRow.add(targ);
+           rateRow.add("${rate.toStringAsFixed(1)}%");
+        }
+        
+        rows.add([]); // Spacer
+        rows.add(totalRow);
+        rows.add(targetRow);
+        rows.add(rateRow);
+        
+        // 4. Generate File
+        // Localized filename: habits_MonthName_YYYY.{format}
+        final fileExtension = format == 'excel' ? 'xlsx' : 'csv';
+        final fileName = "habits_${monthName}_${monthDate.year}.$fileExtension";
+        
+        final String path;
+        if (format == 'excel') {
+          path = await ExportService.generateExcelFile(fileName: fileName, rows: rows);
+        } else {
+          path = await ExportService.generateCsvFile(fileName: fileName, rows: rows);
+        }
+        
+        return path;
+
+      } catch (e) {
+        rethrow;
+      }
+  }
 }
+
+
 
 
 Offset? _extractLocal(FlTouchEvent e) {
@@ -1823,3 +2726,15 @@ String _nextLabel(BuildContext context, _Range r) {
     case _Range.year:  return l10n.nextYear;
   }
 }
+
+
+
+class _HabitStatsResult {
+  final int required;
+  final int completed;
+  final int notCompleted;
+  final double completionRate;
+
+  const _HabitStatsResult(this.required, this.completed, this.notCompleted, this.completionRate);
+}
+

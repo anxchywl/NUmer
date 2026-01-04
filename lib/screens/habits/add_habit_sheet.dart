@@ -62,6 +62,9 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   DateTime _startDate = DateTime.now();
   DateTime? _endDate;
   
+  // Connected Courses
+  List<String> _connectedCourseIds = [];
+  
   bool _isSaving = false;
 
   // Time Input Helpers
@@ -133,6 +136,10 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
     _restDaysCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
     _targetCtrl = TextEditingController(text: isEditing && _target > 0 ? "$_target" : "");
     _unitCtrl = TextEditingController(text: _unit);
+    
+    if (widget.habit != null) {
+      _connectedCourseIds = List.from(widget.habit!.connectedCourseIds);
+    }
 
   // Focus Listeners
   _habitNameFocus.addListener(_onFocusChanged);
@@ -352,37 +359,47 @@ final FocusNode _timeFocus = FocusNode();
                
                  if (_screen == 0) ...[
                     // -- Step 1: Details --
-                    Text(l10n.habitExplainHabit, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      focusNode: _habitNameFocus,
-                      initialValue: _habitName.isNotEmpty ? _habitName : null, 
-                      decoration: InputDecoration(
-                        labelText: l10n.habitNameLabel,
-                        hintText: l10n.habitNameHint,
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
-                        ),
-                        // prefixIcon: const Icon(Icons.edit_outlined),
-                      ),
-                      onChanged: (v) => _habitName = v,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(32),
-                        FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
-                      ],
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      child: _isCreatingCategory
+                        ? const SizedBox.shrink()
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                               Text(l10n.habitExplainHabit, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                               const SizedBox(height: 16),
+                               TextFormField(
+                                 focusNode: _habitNameFocus,
+                                 initialValue: _habitName.isNotEmpty ? _habitName : null, 
+                                 decoration: InputDecoration(
+                                   labelText: l10n.habitNameLabel,
+                                   hintText: l10n.habitNameHint,
+                                   filled: true,
+                                   fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                                   border: OutlineInputBorder(
+                                     borderRadius: BorderRadius.circular(16),
+                                     borderSide: BorderSide.none,
+                                   ),
+                                   enabledBorder: OutlineInputBorder(
+                                     borderRadius: BorderRadius.circular(16),
+                                     borderSide: BorderSide.none,
+                                   ),
+                                   focusedBorder: OutlineInputBorder(
+                                     borderRadius: BorderRadius.circular(16),
+                                     borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                                   ),
+                                 ),
+                                 onChanged: (v) => _habitName = v,
+                                 inputFormatters: [
+                                   LengthLimitingTextInputFormatter(32),
+                                   FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
+                                 ],
+                               ),
+                               const SizedBox(height: 32),
+                            ],
+                          ),
                     ),
-                    const SizedBox(height: 32),
 
                     AnimatedSize(
                       duration: const Duration(milliseconds: 300),
@@ -650,7 +667,7 @@ final FocusNode _timeFocus = FocusNode();
                                   },
                                   style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 8),
                               ],
                             ),
                     ),
@@ -742,13 +759,10 @@ final FocusNode _timeFocus = FocusNode();
                               ),
                            ),
                         ]),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         Center(child: Text(l10n.habitPerDay, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
                         
                      ] else if (_type == HabitType.time) ...[
-                        // Label ABOVE
-                        Center(child: Text(l10n.habitTimeLabel, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline))),
-                        const SizedBox(height: 8),
                         
                         Center(
                           child: SizedBox(
@@ -772,12 +786,20 @@ final FocusNode _timeFocus = FocusNode();
                             ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         Center(child: Text(l10n.habitPerDay, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
                      ],
                   ],
 
-                  const SizedBox(height: 32),
+                   const SizedBox(height: 16),
+                   AnimatedSize(
+                     duration: const Duration(milliseconds: 300),
+                     curve: Curves.easeOutCubic,
+                     child: _timeFocus.hasFocus
+                       ? const SizedBox.shrink()
+                       : _buildCourseSelector(theme),
+                   ),
+                   const SizedBox(height: 16),
                   
                   // Navigation
                   Row(
@@ -849,7 +871,7 @@ final FocusNode _timeFocus = FocusNode();
                                        ],
                                     ),
                                  ),
-                                 const SizedBox(height: 12),
+                                 const SizedBox(height: 8),
                                ],
                              ),
                        ),
@@ -1098,7 +1120,7 @@ final FocusNode _timeFocus = FocusNode();
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: _startDate,
-                        firstDate: DateTime(2000),
+                        firstDate: DateTime(2025, 1, 1),
                         lastDate: DateTime(2100),
                       );
                       if (picked != null) setState(() => _startDate = picked);
@@ -1117,7 +1139,7 @@ final FocusNode _timeFocus = FocusNode();
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: _startDate.add(const Duration(days: 30)),
-                        firstDate: _startDate,
+                        firstDate: _startDate.isAfter(DateTime(2025, 1, 1)) ? _startDate : DateTime(2025, 1, 1),
                         lastDate: DateTime(2100),
                       );
                       if (picked != null) setState(() => _endDate = picked);
@@ -1354,7 +1376,7 @@ final FocusNode _timeFocus = FocusNode();
               0 => l10n.habitCreateTitle,
               1 => l10n.habitTrackingTitle,
               2 => l10n.habitFrequencySectionTitle,
-              3 => l10n.habitChooseTimeRangeTitle,
+              3 => l10n.habitSchedulingTitle,
               _ => l10n.habitCreateTitle,
             },
             style: theme.textTheme.titleLarge,
@@ -1425,6 +1447,7 @@ final FocusNode _timeFocus = FocusNode();
          startDate: _startDate,
          endDate: _endDate,
          createdAt: DateTime.now(),
+         connectedCourseIds: _connectedCourseIds,
       );
 
       await context.read<HabitService>().createHabit(uid, habit);
@@ -1500,5 +1523,64 @@ final FocusNode _timeFocus = FocusNode();
           }
        }
     }
+  }
+
+  Widget _buildCourseSelector(ThemeData theme) {
+     final courses = context.watch<AppState>().courses;
+     if (courses.isEmpty) return const SizedBox.shrink();
+     
+     // Only show for Yes/No and Time
+     if (_type != HabitType.yesNo && _type != HabitType.time) return const SizedBox.shrink();
+     
+     return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+           Text(AppLocalizations.of(context)!.habitConnectCourse, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+           const SizedBox(height: 8),
+           Text(
+             AppLocalizations.of(context)!.habitCourseSyncHint,
+             style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+           ),
+           const SizedBox(height: 12),
+           SizedBox(
+             height: 40,
+             child: ListView.separated(
+               scrollDirection: Axis.horizontal,
+               itemCount: courses.length,
+               separatorBuilder: (_, __) => const SizedBox(width: 8),
+               itemBuilder: (context, index) {
+                  final c = courses[index];
+                  final isSelected = _connectedCourseIds.contains(c.id);
+                  return FilterChip(
+                     label: Text(c.name),
+                     selected: isSelected,
+                     onSelected: (selected) {
+                        setState(() {
+                           if (selected) {
+                             _connectedCourseIds.add(c.id);
+                           } else {
+                             _connectedCourseIds.remove(c.id);
+                           }
+                        });
+                     },
+                     avatar: CircleAvatar(
+                        backgroundColor: c.color,
+                        radius: 8,
+                     ),
+                     showCheckmark: false,
+                     labelStyle: TextStyle(
+                        color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurface,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                     ),
+                     selectedColor: theme.colorScheme.primary,
+                     backgroundColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSelected ? Colors.transparent : theme.colorScheme.outlineVariant)),
+                     padding: const EdgeInsets.symmetric(horizontal: 4),
+                  );
+               },
+             ),
+           ),
+        ],
+     );
   }
 }

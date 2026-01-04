@@ -137,7 +137,7 @@ class AppState extends ChangeNotifier {
 
   WeekStart _weekStart = WeekStart.monday;
   WeekStart get weekStart => _weekStart;
-  ProgressView _progressView = ProgressView.day;
+  ProgressView _progressView = ProgressView.week;
   ProgressView get progressView => _progressView;
   bool _quickNotesEnabled = true;
   bool get quickNotesEnabled => _quickNotesEnabled;
@@ -461,21 +461,6 @@ class AppState extends ChangeNotifier {
     _allowNudges = value;
     notifyListeners();
     await Storage.setAllowNudges(value);
-    
-    // Also update Firestore directly for quick leaderboard visibility
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({
-          'allowNudges': value,
-        }, SetOptions(merge: true));
-      }
-    } catch (_) {}
-
-    _triggerSync();
   }
 
   Future<void> setCourseGoalHours(String id, double? hours,

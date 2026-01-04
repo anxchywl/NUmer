@@ -1617,6 +1617,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitChooseTimeRangeTitle => 'Выберите период начала';
 
   @override
+  String get habitSchedulingTitle => 'Расписание';
+
+  @override
   String get habitStartDateLabel => 'Дата начала';
 
   @override
@@ -1832,6 +1835,86 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitCategoryWork => 'Работа';
+
+  @override
+  String get habitResetProgressMessage =>
+      'Вся история этой привычки будет удалена. Это действие нельзя отменить.';
+
+  @override
+  String get habitResetProgressAction => 'Сбросить';
+
+  @override
+  String get habitFrequencyRepeatsTitle => 'Повторы';
+
+  @override
+  String habitFrequencyEveryXDays(int count) {
+    return 'Каждые $count дн.';
+  }
+
+  @override
+  String get habitStatsEmptyState =>
+      'Привычек не найдено. Добавьте привычку, чтобы начать отслеживать прогресс. Это круто, поверьте!';
+
+  @override
+  String get habitStatsCompletionRate => 'Процент выполнения';
+
+  @override
+  String get habitStatsCompleted => 'Выполнено';
+
+  @override
+  String get habitStatsMissed => 'Пропущено';
+
+  @override
+  String get habitReportDownload => 'Скачать отчет';
+
+  @override
+  String get habitReportTitle => 'Скачать отчет';
+
+  @override
+  String get habitReportDownloadAction => 'Скачать';
+
+  @override
+  String habitReportSaved(String path) {
+    return 'Сохранено: $path';
+  }
+
+  @override
+  String habitReportFailed(String error) {
+    return 'Ошибка экспорта: $error';
+  }
+
+  @override
+  String get csvDay => 'День';
+
+  @override
+  String get csvTotalCompleted => 'Итого выполнено';
+
+  @override
+  String get csvTarget => 'Цель';
+
+  @override
+  String get csvRate => 'Процент';
+
+  @override
+  String get exportFormat => 'Формат экспорта';
+
+  @override
+  String get exportFormatCSV => 'CSV';
+
+  @override
+  String get exportFormatExcel => 'Excel';
+
+  @override
+  String get exportSuccess => 'Экспорт успешен';
+
+  @override
+  String get exportSuccessMessage => 'Ваш файл успешно сохранён';
+
+  @override
+  String get openFile => 'Открыть файл';
+
+  @override
+  String get close => 'Закрыть';
 
   @override
   String get interactionCalendarTitle => 'Interaction Calendar';

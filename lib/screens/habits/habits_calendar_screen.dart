@@ -112,6 +112,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
         date: date,
         allHabits: _allHabits,
         progressMap: progressMap,
+        userId: context.read<AuthController>().currentUser?.uid ?? '',
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:hive/hive.dart';
 export 'models/course.dart';
 export 'models/group.dart';
 export 'models/group_statistics.dart';
+export 'models/habit.dart';
 
 class AlarmItem {
   final int id;

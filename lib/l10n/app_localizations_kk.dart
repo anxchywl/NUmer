@@ -1593,6 +1593,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitChooseTimeRangeTitle => 'Бастау мерзімін таңдаңыз';
 
   @override
+  String get habitSchedulingTitle => 'Кесте';
+
+  @override
   String get habitStartDateLabel => 'Басталу күні';
 
   @override
@@ -1808,6 +1811,86 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get habitCategoryWork => 'Жұмыс';
+
+  @override
+  String get habitResetProgressMessage =>
+      'Бұл әдеттің барлық тарихы өшіріледі. Қайтару мүмкін емес.';
+
+  @override
+  String get habitResetProgressAction => 'Тазарту';
+
+  @override
+  String get habitFrequencyRepeatsTitle => 'Қайталау';
+
+  @override
+  String habitFrequencyEveryXDays(int count) {
+    return 'Әр $count күн';
+  }
+
+  @override
+  String get habitStatsEmptyState =>
+      'Әдеттер табылмады. Прогрессті қадағалау үшін әдет қосыңыз. Бұл өте керемет, сеніңіз!';
+
+  @override
+  String get habitStatsCompletionRate => 'Орындалу пайызы';
+
+  @override
+  String get habitStatsCompleted => 'Орындалды';
+
+  @override
+  String get habitStatsMissed => 'Жіберіп алдыңыз';
+
+  @override
+  String get habitReportDownload => 'Есепті жүктеп алу';
+
+  @override
+  String get habitReportTitle => 'Есепті жүктеп алу';
+
+  @override
+  String get habitReportDownloadAction => 'Жүктеп алу';
+
+  @override
+  String habitReportSaved(String path) {
+    return 'Сақталды: $path';
+  }
+
+  @override
+  String habitReportFailed(String error) {
+    return 'Экспорт қатесі: $error';
+  }
+
+  @override
+  String get csvDay => 'Күн';
+
+  @override
+  String get csvTotalCompleted => 'Барлығы орындалды';
+
+  @override
+  String get csvTarget => 'Мақсат';
+
+  @override
+  String get csvRate => 'Пайыз';
+
+  @override
+  String get exportFormat => 'Экспорт форматы';
+
+  @override
+  String get exportFormatCSV => 'CSV';
+
+  @override
+  String get exportFormatExcel => 'Excel';
+
+  @override
+  String get exportSuccess => 'Экспорт сәтті';
+
+  @override
+  String get exportSuccessMessage => 'Файл сәтті сақталды';
+
+  @override
+  String get openFile => 'Файлды ашу';
+
+  @override
+  String get close => 'Жабу';
 
   @override
   String get interactionCalendarTitle => 'Interaction Calendar';

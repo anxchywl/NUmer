@@ -774,6 +774,7 @@
   "habitWorkLabel": "Жұмыс",
   "habitRestLabel": "Демалыс",
   "habitChooseTimeRangeTitle": "Бастау мерзімін таңдаңыз",
+  "habitSchedulingTitle": "Кесте",
   "habitStartDateLabel": "Басталу күні",
   "habitEndDateLabel": "Аяқталу күні (қалауыңызша)",
   "habitNoEndDate": "Аяқтау күні жоқ",
@@ -811,5 +812,49 @@
   "habitCategoryQuitBadHabit": "Жаман әдеттен бас тарту",
   "habitCategoryHome": "Үй",
   "habitCategoryHealth": "Денсаулық",
-  "habitCategoryWork": "Жұмыс"
+  "habitCategoryWork": "Жұмыс",
+  "habitResetProgressMessage": "Бұл әдеттің барлық тарихы өшіріледі. Қайтару мүмкін емес.",
+  "habitResetProgressAction": "Тазарту",
+  "habitFrequencyRepeatsTitle": "Қайталау",
+  "habitFrequencyEveryXDays": "Әр {count} күн",
+  "@habitFrequencyEveryXDays": {
+     "placeholders": {
+        "count": {"type": "int"}
+     }
+  },
+  "habitStatsEmptyState": "Әдеттер табылмады. Прогрессті қадағалау үшін әдет қосыңыз. Бұл өте керемет, сеніңіз!",
+  "habitStatsCompletionRate": "Орындалу пайызы",
+  "habitStatsCompleted": "Орындалды",
+  "habitStatsMissed": "Жіберіп алдыңыз",
+  "habitReportDownload": "Есепті жүктеп алу",
+  "habitReportTitle": "Есепті жүктеп алу",
+  "habitReportDownloadAction": "Жүктеп алу",
+  "habitReportSaved": "Сақталды: {path}",
+  "@habitReportSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "habitReportFailed": "Экспорт қатесі: {error}",
+  "@habitReportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "csvDay": "Күн",
+  "csvTotalCompleted": "Барлығы орындалды",
+  "csvTarget": "Мақсат",
+  "csvRate": "Пайыз",
+  "exportFormat": "Экспорт форматы",
+  "exportFormatCSV": "CSV",
+  "exportFormatExcel": "Excel",
+  "exportSuccess": "Экспорт сәтті",
+  "exportSuccessMessage": "Файл сәтті сақталды",
+  "openFile": "Файлды ашу",
+  "done": "Дайын",
+  "close": "Жабу"
 }
