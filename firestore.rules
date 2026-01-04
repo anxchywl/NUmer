@@ -270,5 +270,14 @@ service cloud.firestore {
     match /users/{userId}/habit_categories/{catId} {
       allow read, write: if isOwner(userId);
     }
+
+    // Connections feature
+    match /users/{userId}/connections/{personId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/connectionGroups/{groupId} {
+      allow read, write: if isOwner(userId);
+    }
   }
 }

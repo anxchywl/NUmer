@@ -396,20 +396,58 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
           const SizedBox(height: 12),
           const _ProgressViewSelector(),
-          const SizedBox(height: 24),
-          Text(
-            AppLocalizations.of(context)!.quickNotes,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
           const SizedBox(height: 12),
-          const _QuickNotesToggle(),
-          const SizedBox(height: 24),
-          Text(
-            AppLocalizations.of(context)!.wantToReceiveNudges,
-            style: Theme.of(context).textTheme.titleMedium,
+          Center(
+            child: Text(
+              AppLocalizations.of(context)!.justSwipeIt,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Theme.of(context).colorScheme.outline),
+            ),
           ),
-          const SizedBox(height: 12),
-          const _NudgesToggle(),
+          const SizedBox(height: 24),
+          Divider(color: Colors.grey.shade300, thickness: 1),
+          const SizedBox(height: 24),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: SwitchListTile(
+              secondary: Icon(
+                Icons.notes_rounded,
+                color: state.quickNotesEnabled 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
+              ),
+              title: Text(AppLocalizations.of(context)!.quickNotes),
+              value: state.quickNotesEnabled,
+              onChanged: (v) => state.setQuickNotesEnabled(v),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: SwitchListTile(
+              secondary: Icon(
+                Icons.notifications_active_rounded,
+                color: state.allowNudges 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
+              ),
+              title: Text(AppLocalizations.of(context)!.wantToReceiveNudges),
+              value: state.allowNudges,
+              onChanged: (v) => state.setAllowNudges(v),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
           const SizedBox(height: 24),
           
           Divider(color: Colors.grey.shade300, thickness: 1),
@@ -790,184 +828,6 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
               ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-}
-
-class _QuickNotesToggle extends StatefulWidget {
-  const _QuickNotesToggle();
-
-  @override
-  State<_QuickNotesToggle> createState() => _QuickNotesToggleState();
-}
-
-class _QuickNotesToggleState extends State<_QuickNotesToggle>
-    with SingleTickerProviderStateMixin {
-  late int _index;
-  late AnimationController _anim;
-  late Animation<double> _slide;
-  double _slideDir = 1.0;
-
-  @override
-  void initState() {
-    super.initState();
-    final state = context.read<AppState>();
-    _index = state.quickNotesEnabled ? 0 : 1;
-    _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
-    _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
-  }
-
-  Future<void> _toggle(int dir) async {
-    final newIndex = (_index + dir).clamp(0, 1);
-    if (newIndex == _index) return;
-    HapticFeedback.selectionClick();
-    setState(() => _slideDir = dir.toDouble());
-    await _anim.forward(from: 0);
-    if (!mounted) return;
-    setState(() => _index = newIndex);
-    await context.read<AppState>().setQuickNotesEnabled(_index == 0);
-    if (!mounted) return;
-    await _anim.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final label = _index == 0 
-      ? AppLocalizations.of(context)!.on 
-      : AppLocalizations.of(context)!.off;
-    return GestureDetector(
-      onHorizontalDragEnd: (details) {
-        final velocity = details.primaryVelocity ?? 0;
-        if (velocity > 100) _toggle(-1);
-        if (velocity < -100) _toggle(1);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest
-              .withAlpha((0.4 * 255).round()),
-        ),
-        child: SlideTransition(
-          position: _slide.drive(Tween<Offset>(
-            begin: Offset.zero,
-            end: Offset(0.15 * -_slideDir, 0),
-          )),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _anim.dispose();
-    super.dispose();
-  }
-}
-
-class _NudgesToggle extends StatefulWidget {
-  const _NudgesToggle();
-
-  @override
-  State<_NudgesToggle> createState() => _NudgesToggleState();
-}
-
-class _NudgesToggleState extends State<_NudgesToggle>
-    with SingleTickerProviderStateMixin {
-  late int _index;
-  late AnimationController _anim;
-  late Animation<double> _slide;
-  double _slideDir = 1.0;
-
-  @override
-  void initState() {
-    super.initState();
-    final state = context.read<AppState>();
-    _index = state.allowNudges ? 0 : 1;
-    _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
-    _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
-  }
-
-  Future<void> _toggle(int dir) async {
-    final newIndex = (_index + dir).clamp(0, 1);
-    if (newIndex == _index) return;
-    HapticFeedback.selectionClick();
-    setState(() => _slideDir = dir.toDouble());
-    await _anim.forward(from: 0);
-    if (!mounted) return;
-    setState(() => _index = newIndex);
-    await context.read<AppState>().setAllowNudges(_index == 0);
-    if (!mounted) return;
-    await _anim.reverse();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final label = _index == 0 
-      ? AppLocalizations.of(context)!.yes 
-      : AppLocalizations.of(context)!.no;
-    return Column(
-      children: [
-        GestureDetector(
-          onHorizontalDragEnd: (details) {
-            final velocity = details.primaryVelocity ?? 0;
-            if (velocity > 100) _toggle(-1);
-            if (velocity < -100) _toggle(1);
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
-                  .withAlpha((0.4 * 255).round()),
-            ),
-            child: SlideTransition(
-              position: _slide.drive(Tween<Offset>(
-                begin: Offset.zero,
-                end: Offset(0.15 * -_slideDir, 0),
-              )),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          AppLocalizations.of(context)!.justSwipeIt,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.outline),
         ),
       ],
     );

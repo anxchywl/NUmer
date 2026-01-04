@@ -800,6 +800,49 @@
   "habitResetProgressSubtitle": "Clears all history",
   "habitResetProgressConfirmTitle": "Reset habit progress?",
   "habitResetProgressConfirmMessage": "This will delete all completion history for this habit. It cannot be undone.",
+  "habitUnarchived": "Habit unarchived",
+  "connectionsTabLabel": "People",
+  "addPersonTitle": "Add Person",
+  "editPersonTitle": "Edit Person",
+  "personNameLabel": "Name",
+  "personNameHint": "Enter full name",
+  "groupsLabel": "Groups",
+  "tagsLabel": "Tags",
+  "phoneLabel": "Phone",
+  "emailLabel": "Email",
+  "notesLabel": "Notes",
+  "lastContactedLabel": "Last contacted",
+  "remindMeLabel": "Remind me to reach out",
+  "manageGroupsTitle": "Manage Groups",
+  "interactionLogTitle": "Interaction Log",
+  "markContactedToday": "Mark contacted today",
+  "noConnectionsPlaceholder": "No people yet",
+  "searchConnectionsHint": "Search people...",
+  "filterAll": "All",
+  "sortByRecent": "Recent",
+  "sortByName": "Name",
+  "sortByPriority": "Priority",
+  "deleteContactTitle": "Delete Contact?",
+  "deleteContactMessage": "Are you sure you want to delete \"{name}\"?",
+  "@deleteContactMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteConnectionGroupTitle": "Delete Group?",
+  "deleteConnectionGroupMessage": "This will remove \"{name}\" from all contacts. This action cannot be undone.",
+  "@deleteConnectionGroupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "renameGroup": "Rename",
+  "newGroup": "New Group",
+  "editGroup": "Edit Group",
+  "groupNameLabel": "Group name",
+  "groupNameHint": "Enter group name",
+  "noInteractionsYet": "No interactions recorded yet",
+  "addInteractionHint": "What did you discuss?",
   "habitUnarchiveAction": "Unarchive",
   "archivedHabitsTitle": "Archived habits",
   "archivedHabitsEmpty": "No archived habits",
@@ -812,5 +855,15 @@
   "habitCategoryQuitBadHabit": "Quit a bad habit",
   "habitCategoryHome": "Home",
   "habitCategoryHealth": "Health",
-  "habitCategoryWork": "Work"
+  "habitCategoryWork": "Work",
+  "interactionCalendarTitle": "Interaction Calendar",
+  "signInToViewConnections": "Please sign in to view your people.",
+  "personNotFound": "Person not found",
+  "errorSaving": "Error saving: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "add": "Add"
 }

@@ -45,6 +45,34 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "connections",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "d",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "so",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "connectionGroups",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "d",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "n",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

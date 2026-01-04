@@ -377,16 +377,17 @@ class _HistoryCard extends StatelessWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                IconButton(
-                  tooltip: AppLocalizations.of(context)!.sessionNotes,
-                  icon: Icon(
-                    hasNotes
-                        ? Icons.sticky_note_2_outlined
-                        : Icons.note_add_outlined,
+                if (context.watch<AppState>().quickNotesEnabled)
+                  IconButton(
+                    tooltip: AppLocalizations.of(context)!.sessionNotes,
+                    icon: Icon(
+                      hasNotes
+                          ? Icons.sticky_note_2_outlined
+                          : Icons.note_add_outlined,
+                    ),
+                    onPressed: onNotes,
+                    splashRadius: 22,
                   ),
-                  onPressed: onNotes,
-                  splashRadius: 22,
-                ),
                 IconButton(
                   tooltip: AppLocalizations.of(context)!.delete,
                   icon: const Icon(Icons.delete),

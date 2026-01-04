@@ -157,7 +157,7 @@ class AppState extends ChangeNotifier {
   }
 
   void _queueReflection(String sessionId, int seconds) {
-    if (seconds <= 0) return;
+    if (!_quickNotesEnabled || seconds <= 0) return;
     // Avoid queuing the same reflection multiple times.
     final exists = _pendingReflections.any((e) => e.sessionId == sessionId);
     if (exists) return;
@@ -450,7 +450,6 @@ class AppState extends ChangeNotifier {
     _quickNotesEnabled = value;
     notifyListeners();
     await Storage.setQuickNotesEnabled(value);
-    _triggerSync();
   }
 
   Future<void> loadAllowNudges() async {

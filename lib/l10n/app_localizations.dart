@@ -1327,7 +1327,7 @@ abstract class AppLocalizations {
   /// No description provided for @groupNameHint.
   ///
   /// In en, this message translates to:
-  /// **'Enter a name for your group'**
+  /// **'Enter group name'**
   String get groupNameHint;
 
   /// No description provided for @visibility.
@@ -3154,6 +3154,198 @@ abstract class AppLocalizations {
   /// **'This will delete all completion history for this habit. It cannot be undone.'**
   String get habitResetProgressConfirmMessage;
 
+  /// No description provided for @habitUnarchived.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit unarchived'**
+  String get habitUnarchived;
+
+  /// No description provided for @connectionsTabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get connectionsTabLabel;
+
+  /// No description provided for @addPersonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Person'**
+  String get addPersonTitle;
+
+  /// No description provided for @editPersonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Person'**
+  String get editPersonTitle;
+
+  /// No description provided for @personNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get personNameLabel;
+
+  /// No description provided for @personNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter full name'**
+  String get personNameHint;
+
+  /// No description provided for @groupsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groupsLabel;
+
+  /// No description provided for @tagsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tagsLabel;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get phoneLabel;
+
+  /// No description provided for @emailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get emailLabel;
+
+  /// No description provided for @notesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesLabel;
+
+  /// No description provided for @lastContactedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Last contacted'**
+  String get lastContactedLabel;
+
+  /// No description provided for @remindMeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Remind me to reach out'**
+  String get remindMeLabel;
+
+  /// No description provided for @manageGroupsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage Groups'**
+  String get manageGroupsTitle;
+
+  /// No description provided for @interactionLogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interaction Log'**
+  String get interactionLogTitle;
+
+  /// No description provided for @markContactedToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark contacted today'**
+  String get markContactedToday;
+
+  /// No description provided for @noConnectionsPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'No people yet'**
+  String get noConnectionsPlaceholder;
+
+  /// No description provided for @searchConnectionsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search people...'**
+  String get searchConnectionsHint;
+
+  /// No description provided for @filterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get filterAll;
+
+  /// No description provided for @sortByRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get sortByRecent;
+
+  /// No description provided for @sortByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortByName;
+
+  /// No description provided for @sortByPriority.
+  ///
+  /// In en, this message translates to:
+  /// **'Priority'**
+  String get sortByPriority;
+
+  /// No description provided for @deleteContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Contact?'**
+  String get deleteContactTitle;
+
+  /// No description provided for @deleteContactMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String deleteContactMessage(String name);
+
+  /// No description provided for @deleteConnectionGroupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Group?'**
+  String get deleteConnectionGroupTitle;
+
+  /// No description provided for @deleteConnectionGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove \"{name}\" from all contacts. This action cannot be undone.'**
+  String deleteConnectionGroupMessage(String name);
+
+  /// No description provided for @renameGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get renameGroup;
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New Group'**
+  String get newGroup;
+
+  /// No description provided for @editGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Group'**
+  String get editGroup;
+
+  /// No description provided for @groupNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupNameLabel;
+
+  /// No description provided for @noInteractionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No interactions recorded yet'**
+  String get noInteractionsYet;
+
+  /// No description provided for @addInteractionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you discuss?'**
+  String get addInteractionHint;
+
   /// No description provided for @habitUnarchiveAction.
   ///
   /// In en, this message translates to:
@@ -3231,6 +3423,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Work'**
   String get habitCategoryWork;
+
+  /// No description provided for @interactionCalendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interaction Calendar'**
+  String get interactionCalendarTitle;
+
+  /// No description provided for @signInToViewConnections.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to view your people.'**
+  String get signInToViewConnections;
+
+  /// No description provided for @personNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Person not found'**
+  String get personNotFound;
+
+  /// No description provided for @errorSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Error saving: {error}'**
+  String errorSaving(String error);
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
 }
 
 class _AppLocalizationsDelegate

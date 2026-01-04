@@ -1695,6 +1695,106 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это удалит всю историю выполнения этой привычки. Действие необратимо.';
 
   @override
+  String get habitUnarchived => 'Habit unarchived';
+
+  @override
+  String get connectionsTabLabel => 'People';
+
+  @override
+  String get addPersonTitle => 'Add Person';
+
+  @override
+  String get editPersonTitle => 'Edit Person';
+
+  @override
+  String get personNameLabel => 'Name';
+
+  @override
+  String get personNameHint => 'Enter full name';
+
+  @override
+  String get groupsLabel => 'Groups';
+
+  @override
+  String get tagsLabel => 'Tags';
+
+  @override
+  String get phoneLabel => 'Phone';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get notesLabel => 'Notes';
+
+  @override
+  String get lastContactedLabel => 'Last contacted';
+
+  @override
+  String get remindMeLabel => 'Remind me to reach out';
+
+  @override
+  String get manageGroupsTitle => 'Manage Groups';
+
+  @override
+  String get interactionLogTitle => 'Interaction Log';
+
+  @override
+  String get markContactedToday => 'Mark contacted today';
+
+  @override
+  String get noConnectionsPlaceholder => 'No people yet';
+
+  @override
+  String get searchConnectionsHint => 'Search people...';
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get sortByRecent => 'Recent';
+
+  @override
+  String get sortByName => 'Name';
+
+  @override
+  String get sortByPriority => 'Priority';
+
+  @override
+  String get deleteContactTitle => 'Delete Contact?';
+
+  @override
+  String deleteContactMessage(String name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get deleteConnectionGroupTitle => 'Delete Group?';
+
+  @override
+  String deleteConnectionGroupMessage(String name) {
+    return 'This will remove \"$name\" from all contacts. This action cannot be undone.';
+  }
+
+  @override
+  String get renameGroup => 'Rename';
+
+  @override
+  String get newGroup => 'New Group';
+
+  @override
+  String get editGroup => 'Edit Group';
+
+  @override
+  String get groupNameLabel => 'Group name';
+
+  @override
+  String get noInteractionsYet => 'No interactions recorded yet';
+
+  @override
+  String get addInteractionHint => 'What did you discuss?';
+
+  @override
   String get habitUnarchiveAction => 'Разархивировать';
 
   @override
@@ -1732,4 +1832,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitCategoryWork => 'Работа';
+
+  @override
+  String get interactionCalendarTitle => 'Interaction Calendar';
+
+  @override
+  String get signInToViewConnections => 'Please sign in to view your people.';
+
+  @override
+  String get personNotFound => 'Person not found';
+
+  @override
+  String errorSaving(String error) {
+    return 'Error saving: $error';
+  }
+
+  @override
+  String get add => 'Add';
 }

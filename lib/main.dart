@@ -24,10 +24,12 @@ import 'screens/home.dart';
 import 'screens/stats.dart';
 import 'screens/timer.dart';
 import 'screens/groups/groups_screen.dart';
+import 'screens/connections/connections_screen.dart';
 import 'services/auth_service.dart';
 import 'services/group_service.dart';
 import 'services/habit_service.dart';
 import 'services/sync_service.dart';
+import 'services/connections_service.dart';
 import 'screens/habits/habits_screen.dart';
 import 'widgets/profile_form.dart';
 import 'widgets/app_toast.dart';
@@ -98,6 +100,9 @@ Future<void> main() async {
         ),
         Provider<HabitService>(
           create: (_) => HabitService(),
+        ),
+        ChangeNotifierProvider<ConnectionsService>(
+          create: (_) => ConnectionsService(),
         ),
         ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
           create: (_) => AppState(),
@@ -405,6 +410,7 @@ class _ShellState extends State<_Shell> {
       const HomeScreen(),
       const HabitsScreen(),
       const StatsScreen(),
+      const ConnectionsScreen(),
       const GroupsScreen(),
       AccountScreen(onThemeChange: widget.onThemeChange),
     ];
@@ -432,6 +438,11 @@ class _ShellState extends State<_Shell> {
             icon: const Icon(Icons.bar_chart_outlined),
             selectedIcon: const Icon(Icons.bar_chart),
             label: AppLocalizations.of(context)!.statistics,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.contacts_outlined),
+            selectedIcon: const Icon(Icons.contacts),
+            label: AppLocalizations.of(context)!.connectionsTabLabel,
           ),
           NavigationDestination(
             icon: const Icon(Icons.group_outlined),
