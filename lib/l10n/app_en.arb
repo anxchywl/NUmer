@@ -911,5 +911,10 @@
       "error": { "type": "String" }
     }
   },
-  "add": "Add"
+  "add": "Add",
+  "habitWeekNext": "Next week",
+  "habitWeekLast": "Last week",
+  "habitWeeksAgo": "weeks ago",
+  "habitWeekCurrent": "This week",
+  "copiedToClipboard": "Copied to clipboard"
 }

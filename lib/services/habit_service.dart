@@ -106,17 +106,34 @@ class HabitService {
   }
 
   Future<void> createHabit(String userId, Habit habit) async {
-    DocumentReference ref;
-    if (habit.id.isEmpty || habit.id.contains('_temp')) {
-       ref = _db.collection('users').doc(userId).collection('habits').doc();
-    } else {
-       ref = _db.collection('users').doc(userId).collection('habits').doc(habit.id);
+    // 1. Get current habits to find max sort order
+    final currentHabits = await getHabits(userId);
+    int maxSortOrder = -1;
+    if (currentHabits.isNotEmpty) {
+      maxSortOrder = currentHabits
+          .map((h) => h.sortOrder)
+          .reduce((curr, next) => curr > next ? curr : next);
     }
     
-    final data = habit.toFirestore();
+    // 2. Assign new sort order
+    final habitWithOrder = habit.copyWith(sortOrder: maxSortOrder + 1);
+
+    DocumentReference ref;
+    String finalId = habitWithOrder.id;
+    if (habitWithOrder.id.isEmpty || habitWithOrder.id.contains('_temp')) {
+       ref = _db.collection('users').doc(userId).collection('habits').doc();
+       finalId = ref.id;
+    } else {
+       ref = _db.collection('users').doc(userId).collection('habits').doc(habitWithOrder.id);
+    }
+    
+    final data = habitWithOrder.toFirestore();
     
     await ref.set(data);
-    await recalculateStreak(userId, habit);
+    
+    // Use the correctly identified ID for streak calculation
+    final habitWithId = habitWithOrder.copyWith(id: finalId);
+    await recalculateStreak(userId, habitWithId);
   }
 
   Future<void> toggleCompletion({
@@ -134,6 +151,27 @@ class HabitService {
         .doc(habit.id);
     final historyRef = habitRef.collection('history').doc(dateKey);
 
+    // If Time habit manual update (setting a value), we need to calculate 'm' (manual component).
+    double? manualComponent;
+    if (completed && habit.type == HabitType.time) {
+       // We need to know current Session Total (S) to deduce Manual (m = v - S)
+       // We can't do this inside transaction easily if using Storage (hive) + Firestore.
+       // So we fetch Storage data OUTSIDE.
+       final dayStart = DateTime(date.year, date.month, date.day);
+       final dayEnd = dayStart.add(const Duration(days: 1));
+       final secondsMap = await Storage.secondsByCourseBetween(dayStart, dayEnd);
+       
+       double autoSeconds = 0.0;
+       for (var cid in habit.connectedCourseIds) {
+          autoSeconds += (secondsMap[cid] ?? 0);
+       }
+       
+       final targetV = value ?? 1.0;
+       double m = targetV - autoSeconds;
+       if (m < 0) m = 0;
+       manualComponent = m;
+    }
+
     await _db.runTransaction((transaction) async {
       final habitSnap = await transaction.get(habitRef);
       if (!habitSnap.exists) throw Exception("Habit not found");
@@ -141,11 +179,15 @@ class HabitService {
 
       // 1. Update History
       if (completed) {
-        transaction.set(historyRef, {
+        final data = {
           'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
           'updatedAt': FieldValue.serverTimestamp(),
-          'v': value ?? 1, 
-        });
+          'v': value ?? 1.0, 
+        };
+        if (manualComponent != null) {
+           data['m'] = manualComponent;
+        }
+        transaction.set(historyRef, data, SetOptions(merge: true));
       } else {
         transaction.delete(historyRef);
       }
@@ -155,45 +197,38 @@ class HabitService {
       int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
       
       final l7Map = (habitData['l7'] ?? habitData['last7'] ?? {}) as Map<String, dynamic>;
-      final alreadyCompleted = l7Map.containsKey(dateKey);
+      // Refined logic:
+      final double oldVal = (l7Map[dateKey] as num?)?.toDouble() ?? 0.0;
+      final bool wasMet = oldVal >= habit.targetValue;
+      final bool nowMet = completed && (value ?? 1.0) >= habit.targetValue;
 
-      if (completed && !alreadyCompleted) {
+      if (nowMet && !wasMet) {
         total++;
-      } else if (!completed && alreadyCompleted) {
+      } else if (!nowMet && wasMet) {
         total = (total > 0) ? total - 1 : 0;
       }
 
       // 3. Robust Update for l7
-      // If l7 is missing (e.g. after reset or migration), we can't use dot notation ('l7.dateKey').
-      // We must check if the map exists in the document snapshot.
       final hasL7Container = habitData.containsKey('l7');
       
       final updates = <String, dynamic>{
-        'st.tc': total, // 'st' might also be missing if legacy, but 'st.tc' auto-creates map.
+        'st.tc': total, 
       };
       
-      if (completed) {
+      // We want to show partial progress in UI, so update l7 if value > 0
+      final double effectiveValue = value ?? ((habit.type == HabitType.yesNo) ? 1.0 : 0.0);
+      final shouldShowInL7 = completed && effectiveValue > 0;
+      
+      if (shouldShowInL7) {
          if (hasL7Container) {
             updates['l7.$dateKey'] = (value ?? 1.0);
          } else {
-            // "l7" doesn't exist, we must create it.
-            // NOTE: We cannot mix 'l7.key' and 'l7' in same update if logic was complex, 
-            // but here we just write the whole map if it's missing.
-            // CAUTION: If we write 'l7': { dateKey: val }, we might overwrite if concurrency?
-            // Transaction protects us. 'habitData' is fresh. 
-            // If 'l7' is missing in 'habitData', it is really missing.
-            
-            // However, if we migrated from 'last7' but 'l7' is missing...
-            // We should ideally copy 'last7' to 'l7' or just start fresh 'l7'.
-            // For compacting, we just start fresh 'l7'. 
             updates['l7'] = { dateKey: (value ?? 1.0) };
          }
       } else {
-         // Unchecking
          if (hasL7Container) {
             updates['l7.$dateKey'] = FieldValue.delete();
          }
-         // If l7 missing, nothing to delete.
       }
       
       transaction.update(habitRef, updates);
@@ -546,7 +581,9 @@ class HabitService {
       if (!habit.isScheduledFor(targetDate)) continue;
 
       // 2. Check type logic
-      if (habit.type != HabitType.time) continue; 
+      // Time habits are now handled by syncTimeHabitsForCourse (recalculation-based)
+      // This method only handles YesNo habits for auto-completion on session activity
+      if (habit.type != HabitType.yesNo) continue; 
 
       final dateKey = _dateKey(targetDate);
       final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habit.id);
@@ -561,9 +598,13 @@ class HabitService {
 
         double currentVal = (historyData['v'] ?? historyData['value'] as num?)?.toDouble() ?? 0.0;
         
-        double newVal = currentVal + deltaSeconds;
-        if (newVal < 0) newVal = 0; 
-        if (newVal > 86399) newVal = 86399;
+        // For YesNo, any session means "Done" (1.0). 
+        // If already done, we leave it. If not, we set it to target (usually 1.0).
+        if (currentVal >= habit.targetValue) {
+          // Already completed, do nothing
+          return; 
+        }
+        final newVal = habit.targetValue; // Mark as done
 
         if (newVal > 0) {
           transaction.set(historyRef, {
@@ -578,12 +619,13 @@ class HabitService {
         final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
         int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
         
-        final isCompletedNow = newVal > 0;
-        final isCompletedBefore = currentVal > 0;
+        final isCompletedBefore = currentVal >= habit.targetValue;
+        // Re-evaluate completion status based on NEW value vs target
+        final bool isNowMet = newVal >= habit.targetValue;
         
-        if (isCompletedNow && !isCompletedBefore) {
+        if (isNowMet && !isCompletedBefore) {
           total++;
-        } else if (!isCompletedNow && isCompletedBefore) {
+        } else if (!isNowMet && isCompletedBefore) {
           total = (total > 0) ? total - 1 : 0;
         }
 
@@ -591,7 +633,7 @@ class HabitService {
         
         transaction.update(habitRef, {
           'st.tc': total,
-          last7Key: isCompletedNow ? newVal : FieldValue.delete(),
+          last7Key: newVal > 0 ? newVal : FieldValue.delete(),
         });
       });
       
@@ -601,5 +643,161 @@ class HabitService {
 
   String _dateKey(DateTime date) {
     return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  Future<void> checkAndRevertHabitCompletion(String userId, String courseId, DateTime date) async {
+    // 1. Get all relevant habits
+    final habits = await getHabits(userId);
+    final relevant = habits.where((h) => 
+       !h.archived && 
+       h.type == HabitType.yesNo && 
+       h.connectedCourseIds.contains(courseId)
+    );
+
+    for (var habit in relevant) {
+       final dateKey = _dateKey(date);
+       // 2. Check if currently completed
+       // We need to fetch the history for this specific habit and day to be sure.
+       // Or simpler: check if 'v' > 0 in history.
+       final historyRef = _db
+        .collection('users')
+        .doc(userId)
+        .collection('habits')
+        .doc(habit.id)
+        .collection('history')
+        .doc(dateKey);
+       
+       final historySnap = await historyRef.get();
+       if (!historySnap.exists) continue; // Not completed, nothing to revert
+
+       // 3. Check if ANY connected course has sessions on this day
+       bool hasActivity = false;
+       final dayStart = DateTime(date.year, date.month, date.day);
+       final dayEnd = dayStart.add(const Duration(days: 1));
+       
+       // We check ALL connected sessions, not just the one deleted.
+       final secondsMap = await Storage.secondsByCourseBetween(dayStart, dayEnd);
+       
+       for (var cId in habit.connectedCourseIds) {
+          if (secondsMap.containsKey(cId) && (secondsMap[cId] ?? 0) > 0) {
+             hasActivity = true;
+             break;
+          }
+       }
+       
+       if (!hasActivity) {
+          // 4. Revert completion
+          await toggleCompletion(
+            userId: userId, 
+            habit: habit, 
+            date: date, 
+            completed: false
+          );
+       }
+    }
+  }
+
+  Future<void> syncTimeHabitsForCourse(String userId, String courseId, DateTime date, {double? knownDelta}) async {
+    final habits = await getHabits(userId);
+    final connected = habits.where((h) => 
+      !h.archived && 
+      h.type == HabitType.time && 
+      h.connectedCourseIds.contains(courseId)
+    );
+    
+    for (var habit in connected) {
+      if (habit.isScheduledFor(date)) {
+        await syncTimeHabitProgress(userId, habit, date, knownDelta: knownDelta);
+      }
+    }
+  }
+
+  Future<void> syncTimeHabitProgress(String userId, Habit habit, DateTime date, {double? knownDelta}) async {
+    if (habit.type != HabitType.time) return;
+
+    final dateKey = _dateKey(date);
+    final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habit.id);
+    final historyRef = habitRef.collection('history').doc(dateKey);
+
+    await _db.runTransaction((transaction) async {
+       // 1. Get current stats
+       final habitSnap = await transaction.get(habitRef);
+       final historySnap = await transaction.get(historyRef);
+       
+       final habitData = habitSnap.data() ?? {};
+       final historyData = historySnap.data() ?? {};
+       
+       // v = Total, m = Manual
+       double v = (historyData['v'] ?? historyData['value'] as num?)?.toDouble() ?? 0.0;
+       double? m = (historyData['m'] as num?)?.toDouble();
+       
+       // 2. Calculate Session Total (S)
+       final dayStart = DateTime(date.year, date.month, date.day);
+       final dayEnd = dayStart.add(const Duration(days: 1));
+       final secondsMap = await Storage.secondsByCourseBetween(dayStart, dayEnd);
+       
+       double autoSeconds = 0.0;
+       for (var cid in habit.connectedCourseIds) {
+          autoSeconds += (secondsMap[cid] ?? 0);
+       }
+       
+       // 3. Logic to determine m if missing (Migration)
+       if (m == null) {
+          if (autoSeconds > 0 || (knownDelta != null && knownDelta != 0)) {
+              // We deduce what S WAS before this change to know how much of v was manual.
+              final sOld = autoSeconds - (knownDelta ?? 0.0);
+              // m = v - sOld
+              m = v - sOld;
+              if (m < 0) m = 0; // Safety
+          } else {
+             // No info, assume v is mostly manual relative to current auto
+             m = v - autoSeconds;
+             if (m < 0) m = 0;
+          }
+       }
+       
+       // 4. Calculate New Total
+       double newTotal = m + autoSeconds;
+       
+       // 5. Update
+        if (newTotal > 0) {
+          transaction.set(historyRef, {
+            'ts': Timestamp.fromDate(date), 
+            't': FieldValue.serverTimestamp(), 
+            'v': newTotal,
+            'm': m, 
+          }, SetOptions(merge: true));
+        } else {
+           transaction.delete(historyRef);
+        }
+
+        final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
+        int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
+        
+        final isCompletedBefore = v >= habit.targetValue;
+        final isNowMet = newTotal >= habit.targetValue;
+        
+        if (isNowMet && !isCompletedBefore) {
+          total++;
+        } else if (!isNowMet && isCompletedBefore) {
+          total = (total > 0) ? total - 1 : 0;
+        }
+
+        final last7Key = 'l7.$dateKey';
+        if (newTotal > 0) {
+           transaction.update(habitRef, {
+            'st.tc': total,
+            last7Key: newTotal,
+           });
+        } else {
+           transaction.update(habitRef, {
+            'st.tc': total,
+            last7Key: FieldValue.delete(),
+           });
+        }
+    });
+
+    await recalculateStreak(userId, habit);
+    _historyUpdateController.add(null);
   }
 }

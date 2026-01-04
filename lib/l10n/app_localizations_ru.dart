@@ -1932,4 +1932,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get add => 'Add';
+
+  @override
+  String get habitWeekNext => 'Следующая неделя';
+
+  @override
+  String get habitWeekLast => 'Прошлая неделя';
+
+  @override
+  String get habitWeeksAgo => 'недель назад';
+
+  @override
+  String get habitWeekCurrent => 'Эта неделя';
+
+  @override
+  String get copiedToClipboard => 'Скопировано в буфер обмена';
 }

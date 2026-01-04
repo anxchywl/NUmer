@@ -36,6 +36,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   LoggingMode _mode = LoggingMode.set;
   Map<String, int> _courseContributions = {}; // courseId -> seconds
   Timer? _incrementTimer;
+  StreamSubscription<void>? _historySubscription;
 
   double _maxValueForHabit() => widget.habit.type == HabitType.time ? 86399.0 : 999999.0;
 
@@ -47,35 +48,92 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   @override
   void initState() {
     super.initState();
+    // Use widget.initialValue as fallback, but fetch fresh data immediately
     _initialValue = _clampValue(widget.initialValue ?? 0);
     _currentValue = _initialValue;
-    if (widget.habit.connectedCourseIds.isNotEmpty) {
-      _fetchCourseContributions();
-    }
+    
+    // Fetch fresh data from Storage (bypasses stale l7 cache)
+    _fetchFreshTotal();
+    
+    // Listen for history updates (e.g., session ended while popup is open)
+    final habitService = context.read<HabitService>();
+    _historySubscription = habitService.historyUpdates.listen((_) {
+      _fetchFreshTotal();
+    });
   }
 
-  Future<void> _fetchCourseContributions() async {
-    final contributions = <String, int>{};
+  /// Fetches fresh total from Storage (sessions) + Firestore history (manual value)
+  Future<void> _fetchFreshTotal() async {
+    if (!mounted) return;
     
-    try {
-       final start = DateTime(widget.date.year, widget.date.month, widget.date.day);
-       final end = start.add(const Duration(days: 1));
+    // Capture service before any async operations
+    final habitService = context.read<HabitService>();
+    
+       final contributions = <String, int>{};
        
-       final allContributions = await Storage.secondsByCourseBetween(start, end);
+       try {
+          final dateKey = '${widget.date.year}-${widget.date.month.toString().padLeft(2, '0')}-${widget.date.day.toString().padLeft(2, '0')}';
        
-       for (final id in widget.habit.connectedCourseIds) {
-          if (allContributions.containsKey(id)) {
-             contributions[id] = allContributions[id]!;
+       // Fetch history entry from Firestore
+       final history = await habitService.getHistory(widget.userId, widget.habit.id, widget.date, widget.date);
+       
+       double total = 0.0;
+       
+       // Only recalculate from sessions for Time habits with connected courses
+       if (widget.habit.type == HabitType.time && widget.habit.connectedCourseIds.isNotEmpty) {
+          final start = DateTime(widget.date.year, widget.date.month, widget.date.day);
+          final end = start.add(const Duration(days: 1));
+          
+          // 1. Get session contributions from Storage
+          final allContributions = await Storage.secondsByCourseBetween(start, end);
+          
+          double sessionTotal = 0.0;
+          for (final id in widget.habit.connectedCourseIds) {
+             if (allContributions.containsKey(id)) {
+                contributions[id] = allContributions[id]!;
+                sessionTotal += allContributions[id]!;
+             }
+          }
+          
+          // 2. Get manual value from history (if exists)
+          double manualValue = 0.0;
+          if (history.isNotEmpty) {
+             final entry = history.firstWhere(
+               (e) => e.id == dateKey,
+               orElse: () => history.first,
+             );
+             manualValue = entry.manualValue ?? 0.0;
+          }
+          
+          // 3. Total = sessions + manual
+          total = _clampValue(sessionTotal + manualValue);
+       } else {
+          // For Numeric habits or habits without connected courses:
+          // Just use the value from history directly
+          if (history.isNotEmpty) {
+             final entry = history.firstWhere(
+               (e) => e.id == dateKey,
+               orElse: () => history.first,
+             );
+             total = _clampValue(entry.value ?? 0.0);
+          } else {
+             // No history, keep the widget.initialValue
+             total = _clampValue(widget.initialValue ?? 0.0);
           }
        }
        
        if (mounted) {
          setState(() {
            _courseContributions = contributions;
+           _initialValue = total;
+           // Only update _currentValue if in "set" mode and user hasn't interacted yet
+           if (_mode == LoggingMode.set && _currentValue == _clampValue(widget.initialValue ?? 0)) {
+              _currentValue = total;
+           }
          });
        }
     } catch (e) {
-       debugPrint("Error fetching contributions: $e");
+       debugPrint("Error fetching fresh total: $e");
     }
   }
 
@@ -113,6 +171,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   @override
   void dispose() {
     _incrementTimer?.cancel();
+    _historySubscription?.cancel();
     super.dispose();
   }
 

@@ -2,7 +2,7 @@ name: numer_app
 description: Study Group app with onboarding, courses, timer, and alarms
 publish_to: "none"
 
-version: 1.0.0+8
+version: 1.0.0+9
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -46,6 +46,7 @@ dependencies:
   firebase_messaging: ^16.1.0
   flutter_timezone: ^5.0.1
   excel: ^4.0.6
+  package_info_plus: ^9.0.0
   # characters and material_color_utilities are provided by the Flutter SDK
   # and are often SDK-pinned. Remove explicit pins to avoid conflicts.
 

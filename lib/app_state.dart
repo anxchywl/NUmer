@@ -1046,6 +1046,26 @@ class AppState extends ChangeNotifier {
     _triggerSync();
     notifyListeners();
     _updateUserStatus(false);
+    
+    // Sync Time Habits matches Stopwatch logic
+    if (_habitService != null) {
+       final user = FirebaseAuth.instance.currentUser;
+       if (user != null) {
+          unawaited(_habitService!.syncTimeHabitsForCourse(
+            user.uid, 
+            id, 
+            start, 
+            knownDelta: totalSecs.toDouble(),
+          ));
+          unawaited(_habitService!.updateHabitProgressFromCourse(
+           userId: user.uid, 
+           courseId: id, 
+           date: start, 
+           deltaSeconds: totalSecs,
+          ));
+       }
+    }
+    
     return totalSecs;
   }
 
@@ -1148,11 +1168,33 @@ class AppState extends ChangeNotifier {
     if (sessionId != null) {
       _queueReflection(sessionId, totalSecs);
     }
-    
+
     await _saveActiveSession();
     _triggerSync();
     notifyListeners();
     _updateUserStatus(false);
+    
+    // Sync Time Habits
+    if (_habitService != null) {
+       final user = FirebaseAuth.instance.currentUser;
+       if (user != null) {
+          unawaited(_habitService!.syncTimeHabitsForCourse(
+            user.uid, 
+            id, 
+            start, 
+            knownDelta: totalSecs.toDouble(),
+          ));
+          // Provide 'Yes/No' habit completion update as well if needed?
+          // _habitService.updateHabitProgressFromCourse handles Yes/No.
+          unawaited(_habitService!.updateHabitProgressFromCourse(
+           userId: user.uid, 
+           courseId: id, 
+           date: start, 
+           deltaSeconds: totalSecs,
+          ));
+       }
+    }
+    
     return totalSecs;
   }
 
@@ -1458,6 +1500,25 @@ class AppState extends ChangeNotifier {
     await addMinutesToCourse(id, secs ~/ 60);
     if (sessionId != null) {
       _queueReflection(sessionId, secs);
+    }
+    
+    // Sync Time Habits
+    if (_habitService != null) {
+       final user = FirebaseAuth.instance.currentUser;
+       if (user != null) {
+          unawaited(_habitService!.syncTimeHabitsForCourse(
+            user.uid, 
+            id, 
+            start, 
+            knownDelta: secs.toDouble(),
+          ));
+          unawaited(_habitService!.updateHabitProgressFromCourse(
+           userId: user.uid, 
+           courseId: id, 
+           date: start, 
+           deltaSeconds: secs,
+          ));
+       }
     }
   }
 
@@ -2188,10 +2249,19 @@ class AppState extends ChangeNotifier {
     unawaited(_maybeCelebrateProgress(courseId));
 
     // Sync to Habits
+    // Sync to Habits
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Use start date for habit log
+        // Run Recalculation Sync for Time Habits
+        unawaited(_habitService!.syncTimeHabitsForCourse(
+            user.uid, 
+            courseId, 
+            start, 
+            knownDelta: totalSecs.toDouble(),
+        ));
+        
+        // Use legacy update for Yes/No completion
         unawaited(_habitService!.updateHabitProgressFromCourse(
           userId: user.uid, 
           courseId: courseId, 
@@ -2231,23 +2301,28 @@ class AppState extends ChangeNotifier {
         await _saveDailyState();
       }
     }
+    
+    // Sync habits for this course/date
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null && _habitService != null) {
+       // Time habits: recalculate from remaining sessions
+       unawaited(_habitService!.syncTimeHabitsForCourse(
+         user.uid,
+         courseId,
+         startLocal,
+         knownDelta: -duration.toDouble(),
+       ));
+       // Yes/No habits: check if should revert auto-completion
+       unawaited(_habitService!.checkAndRevertHabitCompletion(
+         user.uid, 
+         courseId, 
+         startLocal
+       ));
+    }
 
     _updateStreak();
     _triggerSync();
     notifyListeners();
-
-    // Sync to Habits
-    if (_habitService != null) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: courseId,
-          date: startLocal,
-          deltaSeconds: -duration, // Negative delta
-        ));
-      }
-    }
   }
 
   Future<void> saveSessionNotes({

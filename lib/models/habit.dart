@@ -423,12 +423,17 @@ class HabitHistoryEntry {
   final DateTime completedAt;
   final String? note;
   final double? value;
+  final double? manualValue; // Manual component (non-session time)
+  
+  // Helper to get timestamp from ID (for backwards compat)
+  DateTime get timestamp => DateTime.tryParse(id) ?? DateTime.now();
 
   HabitHistoryEntry({
     required this.id,
     required this.completedAt,
     this.note,
     this.value,
+    this.manualValue,
   });
   
   // Helper to get date from ID
@@ -451,9 +456,10 @@ class HabitHistoryEntry {
     return HabitHistoryEntry(
       id: doc.id,
       completedAt: cAt,
-      // Compact: 'n' (note), 'v' (value)
+      // Compact: 'n' (note), 'v' (value), 'm' (manual)
       note: data['n'] ?? data['note'],
       value: (data['v'] ?? data['value'] as num?)?.toDouble(),
+      manualValue: (data['m'] as num?)?.toDouble(),
     );
   }
 }

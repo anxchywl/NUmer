@@ -13,6 +13,7 @@ class HabitDaySheet extends StatelessWidget {
   final List<Habit> allHabits;
   final Map<String, double> progressMap;
   final String userId;
+  final bool isReadOnly;
 
   const HabitDaySheet({
     super.key,
@@ -20,6 +21,7 @@ class HabitDaySheet extends StatelessWidget {
     required this.allHabits,
     required this.progressMap,
     required this.userId,
+    this.isReadOnly = false,
   });
 
   @override
@@ -90,6 +92,7 @@ class HabitDaySheet extends StatelessWidget {
                         date: date,
                         progress: progressMap[habit.id] ?? 0,
                         userId: userId,
+                        isReadOnly: isReadOnly,
                       );
                     },
                   ),
@@ -116,12 +119,14 @@ class _HabitRow extends StatelessWidget {
   final DateTime date;
   final double progress;
   final String userId;
+  final bool isReadOnly;
 
   const _HabitRow({
     required this.habit,
     required this.date,
     required this.progress,
     required this.userId,
+    required this.isReadOnly,
   });
 
   @override
@@ -140,7 +145,7 @@ class _HabitRow extends StatelessWidget {
     final isPartial = !isCompleted && progress > 0;
 
     return InkWell(
-      onTap: () {
+      onTap: isReadOnly ? null : () {
         _logProgress(context);
       },
       borderRadius: BorderRadius.circular(12),

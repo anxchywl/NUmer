@@ -606,9 +606,9 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   }
 }
 
-class _HabitItem extends StatelessWidget {
+class _HabitItem extends StatefulWidget {
   final Habit habit;
-  final List<DateTime> weekDates;
+  final List<DateTime> weekDates; // Base week dates from parent (current week)
   final Function(DateTime) onToggle;
 
   const _HabitItem({
@@ -617,34 +617,110 @@ class _HabitItem extends StatelessWidget {
     required this.onToggle,
   });
 
+  @override
+  State<_HabitItem> createState() => _HabitItemState();
+}
+
+class _HabitItemState extends State<_HabitItem> {
+  int _weekOffset = 0; // 0 = current week, -1 = last week, +1 = next week
+
+  /// Calculate the allowed minimum week offset based on habit start date
+  int get _minWeekOffset {
+    final now = DateTime.now();
+    
+    // Find start of current week
+    final weekStart = context.read<AppState>().weekStart;
+    final today = DateTime(now.year, now.month, now.day);
+    final currentWeekStartOffset = _weekStartOffset(today, weekStart);
+    final currentWeekStart = today.subtract(Duration(days: currentWeekStartOffset));
+    
+    // Find start of the week containing start date
+    final startDate = DateTime(widget.habit.startDate.year, widget.habit.startDate.month, widget.habit.startDate.day);
+    final startWeekStartOffset = _weekStartOffset(startDate, weekStart);
+    final startWeekStart = startDate.subtract(Duration(days: startWeekStartOffset));
+    
+    // Calculate weeks between these two boundaries
+    final daysDiff = currentWeekStart.difference(startWeekStart).inDays;
+    final weeksDiff = (daysDiff / 7).round();
+    
+    // Minimum offset is negative (going back in time)
+    return -weeksDiff;
+  }
+
+  int _weekStartOffset(DateTime date, WeekStart weekStart) {
+    if (weekStart == WeekStart.monday) {
+      return (date.weekday - DateTime.monday).clamp(0, 6);
+    }
+    return date.weekday % 7;
+  }
+
+  String _formatWeekRange(List<DateTime> dates) {
+    if (dates.isEmpty) return "";
+    final start = dates.first;
+    final end = dates.last;
+    
+    // Format according to prompt: dd.mm.yy – dd.mm.yy
+    const startFormat = "dd.MM.yy";
+    const endFormat = "dd.MM.yy";
+    
+    return "${DateFormat(startFormat).format(start)} – ${DateFormat(endFormat).format(end)}";
+  }
+
+  /// Maximum week offset is 1 (allow one week future)
+  int get _maxWeekOffset => 1;
+
+  /// Get the week dates for the current offset
+  List<DateTime> get _currentWeekDates {
+    if (_weekOffset == 0) {
+      return widget.weekDates;
+    }
+    return widget.weekDates.map((d) => d.add(Duration(days: _weekOffset * 7))).toList();
+  }
+
+  void _handleSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    
+    if (velocity > 300) {
+      // Swiped right → go to previous week
+      if (_weekOffset > _minWeekOffset) {
+        setState(() => _weekOffset--);
+      }
+    } else if (velocity < -300) {
+      // Swiped left → go to next week
+      if (_weekOffset < _maxWeekOffset) {
+        setState(() => _weekOffset++);
+      }
+    }
+  }
+
   String _getFrequencyText(AppLocalizations l10n, String localeName) {
     final numberFormat = NumberFormat.decimalPattern(localeName);
-    switch (habit.frequencyType) {
+    switch (widget.habit.frequencyType) {
       case HabitFrequencyType.daily:
         return l10n.habitFrequencyEveryDay;
       case HabitFrequencyType.specificDays:
-        if (habit.frequencyPeriod == HabitPeriod.month) {
-          if (habit.weekDays.isEmpty) return l10n.habitFrequencySpecificMonth;
-          final days = habit.weekDays.toList()..sort();
+        if (widget.habit.frequencyPeriod == HabitPeriod.month) {
+          if (widget.habit.weekDays.isEmpty) return l10n.habitFrequencySpecificMonth;
+          final days = widget.habit.weekDays.toList()..sort();
           final dayLabels = days.map((d) => numberFormat.format(d)).join(", ");
           return l10n.habitFrequencyDaysLabel(dayLabels);
-        } else if (habit.frequencyPeriod == HabitPeriod.year) {
+        } else if (widget.habit.frequencyPeriod == HabitPeriod.year) {
           return l10n.habitFrequencySpecificDates;
         }
-        if (habit.weekDays.length == 7 || habit.weekDays.isEmpty) {
+        if (widget.habit.weekDays.length == 7 || widget.habit.weekDays.isEmpty) {
           return l10n.habitFrequencyEveryDay;
         }
-        final days = habit.weekDays.toList()..sort();
+        final days = widget.habit.weekDays.toList()..sort();
         final labels = days
             .where((d) => d >= 1 && d <= 7)
             .map((d) => _weekdayLabel(d, localeName))
             .join(", ");
         return l10n.habitFrequencyDaysLabel(labels);
       case HabitFrequencyType.interval:
-        return l10n.habitFrequencyInterval(habit.intervalDays);
+        return l10n.habitFrequencyInterval(widget.habit.intervalDays);
       case HabitFrequencyType.repeatsInPeriod:
-        final period = _periodLabel(habit.frequencyPeriod ?? HabitPeriod.week, l10n).toLowerCase();
-        final count = habit.frequencyGoal ?? 1;
+        final period = _periodLabel(widget.habit.frequencyPeriod ?? HabitPeriod.week, l10n).toLowerCase();
+        final count = widget.habit.frequencyGoal ?? 1;
         return l10n.habitFrequencyTimesPerPeriod(count, period);
     }
   }
@@ -673,6 +749,12 @@ class _HabitItem extends StatelessWidget {
     return dateMidnight.isAfter(today);
   }
 
+  bool _isBeforeStartDate(DateTime date) {
+    final dateMidnight = DateTime(date.year, date.month, date.day);
+    final startMidnight = DateTime(widget.habit.startDate.year, widget.habit.startDate.month, widget.habit.startDate.day);
+    return dateMidnight.isBefore(startMidnight);
+  }
+
   bool _isSamePeriod(DateTime a, DateTime b, HabitPeriod period) {
     DateTime startOfPeriod(DateTime d) {
       switch (period) {
@@ -694,19 +776,17 @@ class _HabitItem extends StatelessWidget {
 
   bool _shouldDisableFutureScheduled(DateTime date) {
     if (!_isFutureDate(date)) return false;
-    final isScheduled = habit.isScheduledFor(date);
+    final isScheduled = widget.habit.isScheduledFor(date);
     if (!isScheduled) return false;
 
-    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-      final period = habit.frequencyPeriod ?? HabitPeriod.week;
+    if (widget.habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+      final period = widget.habit.frequencyPeriod ?? HabitPeriod.week;
       if (!_isSamePeriod(DateTime.now(), date, period)) return false;
-      return habit.isGoalMetForPeriod(habit.last7, DateTime.now());
+      return widget.habit.isGoalMetForPeriod(widget.habit.last7, DateTime.now());
     }
 
     return true;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -715,6 +795,7 @@ class _HabitItem extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final localeName = l10n.localeName;
     final frequencyText = _getFrequencyText(l10n, localeName);
+    final weekDates = _currentWeekDates;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -747,13 +828,13 @@ class _HabitItem extends StatelessWidget {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: habit.color.withValues(alpha: 0.15),
+                        color: widget.habit.color.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       alignment: Alignment.center,
                       child: Icon(
-                        IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
-                        color: habit.color,
+                        IconData(widget.habit.iconCodePoint, fontFamily: widget.habit.iconFamily, fontPackage: widget.habit.iconPackage),
+                        color: widget.habit.color,
                         size: 20,
                       ),
                     ),
@@ -766,7 +847,7 @@ class _HabitItem extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  habit.name,
+                                  widget.habit.name,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -775,7 +856,7 @@ class _HabitItem extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (habit.currentStreak > 0) ...[
+                              if (widget.habit.currentStreak > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -789,7 +870,7 @@ class _HabitItem extends StatelessWidget {
                                       const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
                                       const SizedBox(width: 4),
                                       Text(
-                                        "${habit.currentStreak}",
+                                        "${widget.habit.currentStreak}",
                                         style: theme.textTheme.labelSmall?.copyWith(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
@@ -820,61 +901,164 @@ class _HabitItem extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => HabitDetailsScreen(habit: habit)),
+                          MaterialPageRoute(builder: (_) => HabitDetailsScreen(habit: widget.habit)),
                         );
                       },
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: weekDates.map((date) {
-                      final dateKey =
-                          "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-                      final isCompleted = habit.last7[dateKey] == 1 || (habit.last7[dateKey] ?? 0) >= habit.targetValue;
-                      final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
-                      final isDisabledFuture = _shouldDisableFutureScheduled(date);
-
-                      final isScheduled = habit.isScheduledFor(date);
-
-                      final dateItem = GestureDetector(
-                        onTap: (!isDisabledFuture && isScheduled) ? () => onToggle(date) : null,
-                        child: Column(
-                          children: [
-                            Text(
-                              DateFormat.E(localeName).format(date),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isDisabledFuture
-                                    ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
-                                    : (isToday ? habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
-                                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: isDisabledFuture
-                                    ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-                                    : (isCompleted
-                                        ? habit.color
-                                        : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent)),
-                                shape: BoxShape.circle,
-                                border: isToday && !isCompleted && !isDisabledFuture ? Border.all(color: habit.color, width: 2) : null,
-                              ),
-                              child: isCompleted && !isDisabledFuture ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
-                            ),
-                          ],
+                Divider(
+                  height: 32,
+                  thickness: 1,
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+                // Week navigation row with arrows and date range
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left arrow (go to previous week)
+                    GestureDetector(
+                      onTap: _weekOffset > _minWeekOffset 
+                          ? () => setState(() => _weekOffset--) 
+                          : null,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: _weekOffset > _minWeekOffset
+                              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
                         ),
-                      );
+                        child: Icon(
+                          Icons.chevron_left,
+                          size: 18,
+                          color: _weekOffset > _minWeekOffset
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                    // Week date range label
+                    Expanded(
+                      child: Center(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _weekOffset == 0 
+                                ? theme.colorScheme.primary.withValues(alpha: 0.08)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: _weekOffset == 0
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                  : Colors.transparent,
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            _formatWeekRange(_currentWeekDates),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: _weekOffset == 0 
+                                  ? theme.colorScheme.primary 
+                                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                              fontWeight: _weekOffset == 0 ? FontWeight.bold : FontWeight.w600,
+                              letterSpacing: 0.2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Right arrow (go to next week)
+                    GestureDetector(
+                      onTap: _weekOffset < _maxWeekOffset 
+                          ? () => setState(() => _weekOffset++) 
+                          : null,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: _weekOffset < _maxWeekOffset
+                              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.5)
+                              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: _weekOffset < _maxWeekOffset
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Swipeable 7-day row
+                GestureDetector(
+                  onHorizontalDragEnd: _handleSwipe,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: weekDates.map((date) {
+                        final dateKey =
+                            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                        final currentVal = widget.habit.last7[dateKey] ?? 0.0;
+                        final isCompleted = currentVal >= widget.habit.targetValue;
+                        final isPending = widget.habit.type != HabitType.yesNo && currentVal > 0 && currentVal < widget.habit.targetValue;
+                        
+                        final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
+                        final isDisabledFuture = _shouldDisableFutureScheduled(date);
+                        final isBeforeStart = _isBeforeStartDate(date);
 
-                      return isDisabledFuture ? Opacity(opacity: 0.5, child: dateItem) : dateItem;
-                    }).toList(),
+                        final isScheduled = widget.habit.isScheduledFor(date);
+
+                        // Determine if this day should be inactive
+                        final isInactive = isBeforeStart || isDisabledFuture;
+
+                        final dateItem = GestureDetector(
+                          onTap: (!isInactive && isScheduled) ? () => widget.onToggle(date) : null,
+                          child: Column(
+                            children: [
+                              Text(
+                                DateFormat.E(localeName).format(date),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isInactive
+                                      ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
+                                      : (isToday ? widget.habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
+                                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: isInactive
+                                      ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
+                                      : (isCompleted
+                                          ? widget.habit.color
+                                          : (isPending 
+                                              ? widget.habit.color.withValues(alpha: 0.15)
+                                              : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent))),
+                                  shape: BoxShape.circle,
+                                  border: (!isInactive && (isToday || isPending)) 
+                                      ? Border.all(color: widget.habit.color, width: isPending ? 2 : 2) 
+                                      : null,
+                                ),
+                                child: isCompleted && !isInactive ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                              ),
+                            ],
+                          ),
+                        );
+
+                        return isInactive ? Opacity(opacity: 0.5, child: dateItem) : dateItem;
+                      }).toList(),
+                    ),
                   ),
                 ),
               ],

@@ -3603,6 +3603,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add'**
   String get add;
+
+  /// No description provided for @habitWeekNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next week'**
+  String get habitWeekNext;
+
+  /// No description provided for @habitWeekLast.
+  ///
+  /// In en, this message translates to:
+  /// **'Last week'**
+  String get habitWeekLast;
+
+  /// No description provided for @habitWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'weeks ago'**
+  String get habitWeeksAgo;
+
+  /// No description provided for @habitWeekCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'This week'**
+  String get habitWeekCurrent;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied to clipboard'**
+  String get copiedToClipboard;
 }
 
 class _AppLocalizationsDelegate

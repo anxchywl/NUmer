@@ -856,5 +856,10 @@
   "exportSuccessMessage": "Файл сәтті сақталды",
   "openFile": "Файлды ашу",
   "done": "Дайын",
-  "close": "Жабу"
+  "close": "Жабу",
+  "habitWeekNext": "Келесі апта",
+  "habitWeekLast": "Өткен апта",
+  "habitWeeksAgo": "апта бұрын",
+  "habitWeekCurrent": "Осы апта",
+  "copiedToClipboard": "Алмасу буферіне көшірілді"
 }

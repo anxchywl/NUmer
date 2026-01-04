@@ -1908,4 +1908,19 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get add => 'Add';
+
+  @override
+  String get habitWeekNext => 'Келесі апта';
+
+  @override
+  String get habitWeekLast => 'Өткен апта';
+
+  @override
+  String get habitWeeksAgo => 'апта бұрын';
+
+  @override
+  String get habitWeekCurrent => 'Осы апта';
+
+  @override
+  String get copiedToClipboard => 'Алмасу буферіне көшірілді';
 }

@@ -743,5 +743,10 @@
   "exportSuccessMessage": "Ваш файл успешно сохранён",
   "openFile": "Открыть файл",
   "done": "Готово",
-  "close": "Закрыть"
+  "close": "Закрыть",
+  "habitWeekNext": "Следующая неделя",
+  "habitWeekLast": "Прошлая неделя",
+  "habitWeeksAgo": "недель назад",
+  "habitWeekCurrent": "Эта неделя",
+  "copiedToClipboard": "Скопировано в буфер обмена"
 }

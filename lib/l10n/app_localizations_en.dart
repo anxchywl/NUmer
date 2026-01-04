@@ -1924,4 +1924,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get add => 'Add';
+
+  @override
+  String get habitWeekNext => 'Next week';
+
+  @override
+  String get habitWeekLast => 'Last week';
+
+  @override
+  String get habitWeeksAgo => 'weeks ago';
+
+  @override
+  String get habitWeekCurrent => 'This week';
+
+  @override
+  String get copiedToClipboard => 'Copied to clipboard';
 }
