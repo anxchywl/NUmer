@@ -7,6 +7,7 @@ import '../data/local/entities.dart';
 import '../data/local/local_database.dart';
 import '../models.dart';
 import '../models/habit_category.dart';
+import 'ai_analysis_service.dart';
 
 class Storage {
   Storage._();
@@ -223,6 +224,46 @@ class Storage {
     final doc = _userDoc();
     doc.allowNudges = value;
     await _saveUser(doc);
+  }
+
+  static Future<bool> getEisenhowerMatrixEnabled() async => _userDoc().eisenhowerMatrixEnabled;
+
+  static Future<void> setEisenhowerMatrixEnabled(bool value) async {
+    final doc = _userDoc();
+    doc.eisenhowerMatrixEnabled = value;
+    await _saveUser(doc);
+  }
+
+  // Eisenhower Matrix quadrant placements (local-only, not synced)
+  static const _metaHabitQuadrants = 'habit_quadrants_v1';
+
+  /// Get habit → quadrant mapping (0-3 for quadrants, or null if unsorted)
+  static Map<String, int> getHabitQuadrantPlacements() {
+    _ensureUser();
+    final raw = _db.getMeta(_metaHabitQuadrants);
+    if (raw is Map) {
+      return raw.map<String, int>((key, value) =>
+          MapEntry(key.toString(), (value as num).toInt()));
+    }
+    return {};
+  }
+
+  /// Save habit → quadrant placement (quadrant 0-3)
+  static Future<void> saveHabitQuadrantPlacement(String habitId, int quadrant) async {
+    _ensureUser();
+    final placements = getHabitQuadrantPlacements();
+    placements[habitId] = quadrant.clamp(0, 3);
+    await _db.putMeta(_metaHabitQuadrants, placements);
+  }
+
+  /// Remove habit from quadrant placements
+  static Future<void> removeHabitFromQuadrant(String habitId) async {
+    _ensureUser();
+    final placements = getHabitQuadrantPlacements();
+    if (placements.containsKey(habitId)) {
+      placements.remove(habitId);
+      await _db.putMeta(_metaHabitQuadrants, placements);
+    }
   }
 
   static Future<String?> getLocale() async {
@@ -583,6 +624,55 @@ class Storage {
     doc.avatarIndex = null;
     doc.avatarImage = null;
     await _saveUser(doc);
+  }
+
+  static const _metaAnalysisLog = 'analysis_log_v1';
+
+  static Future<int?> getLastAnalysisTimestamp(String courseId, int periodMonths) async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAnalysisLog);
+    if (raw is Map) {
+      final key = '${courseId}_${periodMonths}m';
+      return raw[key] as int?;
+    }
+    return null;
+  }
+
+  static Future<void> setLastAnalysisTimestamp(String courseId, int periodMonths, int timestamp) async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAnalysisLog) ?? {};
+    final map = Map<String, dynamic>.from(raw as Map);
+    final key = '${courseId}_${periodMonths}m';
+    map[key] = timestamp;
+    await _db.putMeta(_metaAnalysisLog, map);
+  }
+
+  static const _metaAnalysisContent = 'analysis_content_v1';
+
+  static Future<AiCourseAnalysis?> getCourseAnalysis(String courseId, AnalysisPeriod period) async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAnalysisContent);
+    if (raw is Map) {
+      final key = '${courseId}_${period.months}m';
+      final json = raw[key];
+      if (json is Map) {
+        return AiCourseAnalysis.fromJson(
+          Map<String, dynamic>.from(json),
+          courseId,
+          period,
+        );
+      }
+    }
+    return null;
+  }
+
+  static Future<void> saveCourseAnalysis(String courseId, AiCourseAnalysis analysis) async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAnalysisContent) ?? {};
+    final map = Map<String, dynamic>.from(raw as Map);
+    final key = '${courseId}_${analysis.period.months}m';
+    map[key] = analysis.toJson();
+    await _db.putMeta(_metaAnalysisContent, map);
   }
 
   

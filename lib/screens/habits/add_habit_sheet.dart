@@ -448,39 +448,55 @@ final FocusNode _timeFocus = FocusNode();
                                         ],
                                       ),
                                       const SizedBox(height: 12),
+                                      const SizedBox(height: 12),
                                       SizedBox(
-                                         height: 40,
+                                         height: 48,
                                          child: ListView(
                                            scrollDirection: Axis.horizontal,
-                                           children: Colors.primaries.map((c) => Padding(
-                                             padding: const EdgeInsets.only(right: 8),
+                                           children: Colors.primaries.map((color) => Padding(
+                                             padding: const EdgeInsets.only(right: 12),
                                              child: GestureDetector(
-                                               onTap: () => setState(() => _newCatColor = c),
-                                               child: CircleAvatar(
-                                                 backgroundColor: c,
-                                                 radius: 16,
-                                                 child: _newCatColor == c ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                                               onTap: () => setState(() => _newCatColor = color),
+                                               child: Container(
+                                                 width: 34,
+                                                 height: 34,
+                                                 decoration: BoxDecoration(
+                                                   color: color,
+                                                   shape: BoxShape.circle,
+                                                   border: Border.all(
+                                                     color: _newCatColor == color ? Colors.black87 : Colors.transparent,
+                                                     width: 2.5,
+                                                   ),
+                                                   boxShadow: _newCatColor == color 
+                                                     ? [BoxShadow(color: color.withAlpha(100), blurRadius: 8, spreadRadius: 1)]
+                                                     : null,
+                                                 ),
+                                                 child: _newCatColor == color ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
                                                ),
                                              ),
                                            )).toList(),
                                          ),
                                       ),
                                       
-                                      const SizedBox(height: 24),
+                                      const SizedBox(height: 16),
                                       
-                                      // Text("Icon", style: theme.textTheme.labelLarge),
-                                      const SizedBox(height: 8),
                                       SizedBox(
-                                         height: 50,
+                                         height: 48,
                                          child: ListView(
                                            scrollDirection: Axis.horizontal,
                                            children: [
                                              Icons.local_fire_department, Icons.check_circle, Icons.calendar_today, Icons.access_time, 
-                                             Icons.track_changes, Icons.star, Icons.bolt, Icons.favorite, Icons.psychology, 
+                                             Icons.track_changes, Icons.star, Icons.bolt, Icons.favorite_border, Icons.psychology, 
                                              Icons.fitness_center, Icons.menu_book, Icons.eco, Icons.water_drop, Icons.nightlight_round, 
-                                             Icons.wb_sunny, Icons.directions_walk, Icons.emoji_events, Icons.auto_awesome, 
-                                             Icons.notifications, Icons.edit, Icons.trending_up, Icons.shield, Icons.battery_charging_full, 
-                                             Icons.sentiment_satisfied, Icons.rocket_launch,
+                                             Icons.wb_sunny, Icons.directions_walk, Icons.emoji_events, Icons.notifications, 
+                                             Icons.edit, Icons.trending_up, Icons.shield, Icons.battery_charging_full, 
+                                             Icons.sentiment_satisfied, Icons.rocket_launch, Icons.coffee, Icons.apple,
+                                             Icons.lunch_dining, Icons.bakery_dining, Icons.wine_bar, Icons.medication,
+                                             Icons.medical_services, Icons.health_and_safety, Icons.self_improvement, Icons.directions_bike,
+                                             Icons.pool, Icons.accessibility_new, Icons.spa, Icons.music_note,
+                                             Icons.headphones, Icons.palette, Icons.camera_alt, Icons.code,
+                                             Icons.laptop, Icons.account_balance_wallet, Icons.savings, Icons.shopping_cart,
+                                             Icons.bed,
                                            ].map((icon) {
                                              final selected = _newCatIcon == icon;
                                              return Padding(
@@ -488,20 +504,23 @@ final FocusNode _timeFocus = FocusNode();
                                                child: GestureDetector(
                                                  onTap: () => setState(() => _newCatIcon = icon),
                                                  child: Container(
-                                                   width: 48,
-                                                   height: 48,
+                                                   width: 34,
+                                                   height: 34,
                                                    decoration: BoxDecoration(
-                                                     color: selected ? _newCatColor.withAlpha((0.2 * 255).round()) : Colors.transparent,
+                                                     color: selected ? _newCatColor.withAlpha((0.15 * 255).round()) : theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                                                      shape: BoxShape.circle,
                                                      border: Border.all(
-                                                       color: selected ? _newCatColor : theme.colorScheme.outlineVariant,
-                                                       width: selected ? 2 : 1,
+                                                       color: selected ? _newCatColor : Colors.transparent,
+                                                       width: 2.5,
                                                      ),
+                                                     boxShadow: selected
+                                                       ? [BoxShadow(color: _newCatColor.withAlpha(80), blurRadius: 6, spreadRadius: 0)]
+                                                       : null,
                                                    ),
                                                    child: Icon(
                                                      icon, 
                                                      color: selected ? _newCatColor : theme.colorScheme.onSurfaceVariant,
-                                                     size: 24,
+                                                     size: 18,
                                                    ),
                                                  ),
                                                ),
@@ -594,7 +613,7 @@ final FocusNode _timeFocus = FocusNode();
                           ),
                     ),
 
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
                     FilledButton(
                       style: _nextButtonStyle(theme),
                       onPressed: _habitName.trim().isEmpty ? null : () => _navigateToStep(1),
@@ -1427,28 +1446,54 @@ final FocusNode _timeFocus = FocusNode();
       final color = _currentCatData['color'] as Color;
       final category = _currentCatData['name'] as String;
 
-      final habit = Habit(
-         id: '',
-         name: name,
-         color: color,
-         iconCodePoint: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).codePoint : 0xe156,
-         iconFamily: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontFamily : null,
-         iconPackage: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontPackage : null,
-         category: category,
-         type: _type,
-         targetValue: _target,
-         unit: _unit,
-         comparator: _comparator,
-         frequencyType: _freq,
-         weekDays: _weekDays,
-         intervalDays: _interval,
-         frequencyPeriod: _period,
-         frequencyGoal: _frequencyGoal,
-         startDate: _startDate,
-         endDate: _endDate,
-         createdAt: DateTime.now(),
-         connectedCourseIds: _connectedCourseIds,
-      );
+      Habit habit;
+      if (widget.habit != null) {
+        // Update existing habit, preserving ID/stats/sortOrder/history
+        habit = widget.habit!.copyWith(
+           name: name,
+           color: color,
+           iconCodePoint: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).codePoint : 0xe156,
+           iconFamily: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontFamily : null,
+           iconPackage: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontPackage : null,
+           category: category,
+           type: _type,
+           targetValue: _target,
+           unit: _unit,
+           comparator: _comparator,
+           frequencyType: _freq,
+           weekDays: _weekDays,
+           intervalDays: _interval,
+           frequencyPeriod: _period,
+           frequencyGoal: _frequencyGoal,
+           startDate: _startDate,
+           endDate: _endDate,
+           connectedCourseIds: _connectedCourseIds,
+        );
+      } else {
+        // Create new habit
+        habit = Habit(
+           id: '',
+           name: name,
+           color: color,
+           iconCodePoint: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).codePoint : 0xe156,
+           iconFamily: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontFamily : null,
+           iconPackage: _currentCatData['icon'] is IconData ? (_currentCatData['icon'] as IconData).fontPackage : null,
+           category: category,
+           type: _type,
+           targetValue: _target,
+           unit: _unit,
+           comparator: _comparator,
+           frequencyType: _freq,
+           weekDays: _weekDays,
+           intervalDays: _interval,
+           frequencyPeriod: _period,
+           frequencyGoal: _frequencyGoal,
+           startDate: _startDate,
+           endDate: _endDate,
+           createdAt: DateTime.now(),
+           connectedCourseIds: _connectedCourseIds,
+        );
+      }
 
       await context.read<HabitService>().createHabit(uid, habit);
       if (mounted) {

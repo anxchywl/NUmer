@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../services/ai_analysis_service.dart';
+import '../services/storage.dart';
 import '../l10n/app_localizations.dart';
 
 class AiAnalysisScreen extends StatefulWidget {
@@ -16,6 +17,11 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   String? _selectedCourseId;
   AnalysisPeriod _selectedPeriod = AnalysisPeriod.lastMonth;
   bool _isLoading = false;
+  // New state variables
+  int _notesCount = 0;
+  bool _isLimitReached = false;
+  bool _isChecking = true;
+  
   AiCourseAnalysis? _analysis;
   
   final ScrollController _scrollController = ScrollController();
@@ -45,8 +51,79 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         setState(() {
           _selectedCourseId = appState.courses.first.id;
         });
+        _fetchStatus();
       }
     });
+  }
+
+  Future<void> _fetchStatus() async {
+    if (_selectedCourseId == null) return;
+    setState(() => _isChecking = true);
+
+    final courseId = _selectedCourseId!;
+    final period = _selectedPeriod;
+
+    // 1. Check limit & Get last analysis timestamp
+    final lastTs = await Storage.getLastAnalysisTimestamp(courseId, period.months);
+    final lastAnalysisDate = lastTs != null ? DateTime.fromMillisecondsSinceEpoch(lastTs) : null;
+    final limitReached = _checkLimit(lastTs, period);
+    
+    // Load persisted analysis if we haven't already
+    if (_analysis == null) {
+      final saved = await Storage.getCourseAnalysis(courseId, period);
+      if (saved != null) {
+        if (mounted) {
+          setState(() {
+           _analysis = saved;
+          });
+        }
+      }
+    }
+
+    // 2. Count notes
+    // Efficiently count session notes in period window AND since last analysis
+    final reflections = await AiAnalysisService.fetchReflections(
+      courseId, 
+      period, 
+      since: lastAnalysisDate
+    );
+    
+    // Count sessions with non-empty comments
+    // Note: fetchReflections returns maps with 'comment'.
+    final count = reflections.where((r) {
+      final comment = r['comment'] as String?;
+      return comment != null && comment.trim().isNotEmpty;
+    }).length;
+
+    if (mounted && _selectedCourseId == courseId && _selectedPeriod == period) {
+      setState(() {
+        _notesCount = count;
+        _isLimitReached = limitReached;
+        _isChecking = false;
+      });
+    }
+  }
+
+  bool _checkLimit(int? lastTimestamp, AnalysisPeriod period) {
+    if (lastTimestamp == null) return false;
+    final lastDate = DateTime.fromMillisecondsSinceEpoch(lastTimestamp);
+    final now = DateTime.now();
+
+    // Check if last analysis was in the same "window"
+    if (period == AnalysisPeriod.lastMonth) {
+      // 1 month window: Calendar month
+      return lastDate.month == now.month && lastDate.year == now.year;
+    } else if (period == AnalysisPeriod.last2Months) {
+      // 2 month window: Jan-Feb, Mar-Apr, etc.
+      final lastBlock = (lastDate.month - 1) ~/ 2;
+      final currentBlock = (now.month - 1) ~/ 2;
+      return lastBlock == currentBlock && lastDate.year == now.year;
+    } else {
+      // 3 month window: Jan-Mar, Apr-Jun, etc.
+      final lastBlock = (lastDate.month - 1) ~/ 3;
+      final currentBlock = (now.month - 1) ~/ 3;
+      return lastBlock == currentBlock && lastDate.year == now.year;
+    }
   }
 
   @override
@@ -68,17 +145,24 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
       final course =
           appState.courses.firstWhere((c) => c.id == _selectedCourseId);
 
-      // Get user's language from locale
       final locale = Localizations.localeOf(context);
-      final languageCode = locale.languageCode; // 'en', 'ru', etc.
+      final languageCode = locale.languageCode;
 
       final result = await AiAnalysisService.analyzeCourse(
           _selectedCourseId!, course.name, _selectedPeriod, language: languageCode);
+      
+      // Save timestamp AND content on success
+      await Storage.setLastAnalysisTimestamp(
+          _selectedCourseId!, _selectedPeriod.months, DateTime.now().millisecondsSinceEpoch);
+      await Storage.saveCourseAnalysis(_selectedCourseId!, result);
+
       if (mounted) {
         setState(() {
           _analysis = result;
         });
         _scrollToBottom();
+        // Refresh status to update limit & button state
+        _fetchStatus();
       }
     } finally {
       if (mounted) {
@@ -110,52 +194,155 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 ],
               ),
             )
-          : SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  
-                  _buildControls(courses),
-                  const SizedBox(height: 24),
+          : Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        
+                        _buildControls(courses),
+                        const SizedBox(height: 24),
 
-                  
-                  FilledButton.icon(
-                    onPressed: _isLoading ? null : _runAnalysis,
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                        // Button Section
+                        _buildGenerateButton(),
+                        
+                        const SizedBox(height: 32),
+
+                        
+                        if (_analysis != null)
+                          _buildAnalysisResults(_analysis!)
+                        else if (!_isLoading)
+                          _buildEmptyPlaceholder(),
+                      ],
                     ),
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                        color: Colors.white,
+                  ),
+                ),
+                
+                // Limit info fixed at bottom
+                if (!_isChecking)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      border: Border(
+                        top: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.info_outline, size: 14, color: Theme.of(context).colorScheme.outline),
+                            const SizedBox(width: 6),
+                            Text(
+                              AppLocalizations.of(context)!.limitOneAnalysisPerPeriod,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
                               ),
-                            )
-                          : const Icon(Icons.auto_awesome),
-                      label: Text(_isLoading ? AppLocalizations.of(context)!.analyzing : AppLocalizations.of(context)!.generateInsight),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppLocalizations.of(context)!.analysisUpdatesEveryPeriod,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.outline,
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (_isLimitReached)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              AppLocalizations.of(context)!.analysisAlreadyGenerated,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                      ],
                     ),
-                  const SizedBox(height: 32),
-
-                  
-                  if (_analysis != null)
-                    _buildAnalysisResults(_analysis!)
-                  else if (!_isLoading)
-                    _buildEmptyPlaceholder(),
-                ],
-              ),
+                  ),
+              ],
             ),
     );
   }
 
+  Widget _buildGenerateButton() {
+    final l10n = AppLocalizations.of(context)!;
+    final notesRequirementMet = _notesCount >= 20;
+    final canGenerate = !_isLoading && !_isChecking && !_isLimitReached && notesRequirementMet;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        FilledButton.icon(
+          onPressed: canGenerate ? _runAnalysis : null,
+          style: FilledButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+          icon: _isLoading
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Icon(Icons.auto_awesome),
+          label: Text(_isLoading ? l10n.analyzing : l10n.generateInsight),
+        ),
+        const SizedBox(height: 12),
+        // Status Helpers
+        if (_isChecking)
+           const Center(child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))),
+        
+        if (!_isChecking) ...[
+          // Notes Requirement Text (Now distinct from limit text)
+          if (!notesRequirementMet)
+            Text(
+               l10n.minNotesRequired(_notesCount, 20),
+               textAlign: TextAlign.center,
+               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                 color: Theme.of(context).colorScheme.error,
+               ),
+            )
+          else 
+            // Optional: Show success message or nothing if requirement met
+             Text(
+               l10n.minNotesRequired(_notesCount, 20),
+               textAlign: TextAlign.center,
+               style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                 color: Theme.of(context).colorScheme.primary,
+                 fontWeight: FontWeight.bold,
+               ),
+            ),
+        ]
+      ],
+    );
+  }
+
   Widget _buildControls(List<Course> courses) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppLocalizations.of(context)!.selectCourse,
+          l10n.selectCourse,
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
@@ -181,6 +368,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                       _selectedCourseId = course.id;
                       _analysis = null;
                     });
+                    _fetchStatus();
                   }
                 },
               );
@@ -189,7 +377,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         ),
         const SizedBox(height: 20),
         Text(
-          AppLocalizations.of(context)!.timePeriod,
+          l10n.timePeriod,
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
@@ -199,11 +387,11 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
             showSelectedIcon: false,
             segments: [
               ButtonSegment(
-                  value: AnalysisPeriod.lastMonth, label: Text(AppLocalizations.of(context)!.oneMonth)),
+                  value: AnalysisPeriod.lastMonth, label: Text(l10n.oneMonth)),
               ButtonSegment(
-                  value: AnalysisPeriod.last3Months, label: Text(AppLocalizations.of(context)!.threeMonths)),
+                  value: AnalysisPeriod.last2Months, label: Text(l10n.twoMonths)),
               ButtonSegment(
-                  value: AnalysisPeriod.last6Months, label: Text(AppLocalizations.of(context)!.sixMonths)),
+                  value: AnalysisPeriod.last3Months, label: Text(l10n.threeMonths)),
             ],
             selected: {_selectedPeriod},
             onSelectionChanged: (newSelection) {
@@ -211,6 +399,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 _selectedPeriod = newSelection.first;
                 _analysis = null;
               });
+              _fetchStatus();
             },
           ),
         ),

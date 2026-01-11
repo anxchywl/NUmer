@@ -58,6 +58,36 @@ class AppLocalizationsRu extends AppLocalizations {
   String get wantToReceiveNudges => 'Получать подталкивания?';
 
   @override
+  String get eisenhowerMatrix => 'Матрица Эйзенхауэра';
+
+  @override
+  String get quickNotesDescription =>
+      'Существующие заметки сохранятся, но новые окна заметок после сессий появляться не будут.';
+
+  @override
+  String get wantToReceiveNudgesDescription =>
+      'Разрешить участникам группы отправлять вам мягкие напоминания.';
+
+  @override
+  String get eisenhowerMatrixDescription =>
+      'Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.';
+
+  @override
+  String get eisenhowerQuadrant1 => 'Срочно и важно';
+
+  @override
+  String get eisenhowerQuadrant2 => 'Не срочно, но важно';
+
+  @override
+  String get eisenhowerQuadrant3 => 'Срочно, но не важно';
+
+  @override
+  String get eisenhowerQuadrant4 => 'Не срочно и не важно';
+
+  @override
+  String get eisenhowerHint => 'Перетащите привычки в матрицу для организации';
+
+  @override
   String get yes => 'Да';
 
   @override
@@ -208,10 +238,29 @@ class AppLocalizationsRu extends AppLocalizations {
   String get oneMonth => '1 месяц';
 
   @override
+  String get twoMonths => '2 месяца';
+
+  @override
   String get threeMonths => '3 месяца';
 
   @override
   String get sixMonths => '6 месяцев';
+
+  @override
+  String get limitOneAnalysisPerPeriod => 'Лимит: 1 анализ за период.';
+
+  @override
+  String get analysisUpdatesEveryPeriod =>
+      'Анализ обновляется с началом каждого нового периода.';
+
+  @override
+  String get analysisAlreadyGenerated =>
+      'Вы уже создали анализ для этого периода.';
+
+  @override
+  String minNotesRequired(int current, int total) {
+    return 'Минимум заметок: $current/$total. Чем больше заметок, тем точнее анализ.';
+  }
 
   @override
   String get generateInsight => 'Получить инсайт';
@@ -1342,6 +1391,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitsNavLabel => 'Привычки';
+
+  @override
+  String get habitStatistics => 'Статистика привычек';
 
   @override
   String get habitsTabProgress => 'Прогресс';

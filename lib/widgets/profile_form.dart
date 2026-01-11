@@ -16,7 +16,6 @@ class ProfileFormData {
     this.contact,
     this.avatarIndex,
     this.avatarColorValue,
-    this.avatarBytes,
   });
 
   final String name;
@@ -25,7 +24,6 @@ class ProfileFormData {
   final String? contact;
   final int? avatarIndex;
   final int? avatarColorValue;
-  final Uint8List? avatarBytes;
 }
 
 class ProfileForm extends StatefulWidget {
@@ -67,11 +65,11 @@ class _ProfileFormState extends State<ProfileForm> {
 
   int? _avatarIndex;
   int? _avatarColorValue;
-  Uint8List? _customAvatarBytes;
   bool _saving = false;
   bool _saved = false;
   bool _showColorPicker = false;
   Timer? _savedTimer;
+  ScrollController? _scrollController;
 
   @override
   void initState() {
@@ -82,11 +80,23 @@ class _ProfileFormState extends State<ProfileForm> {
     _goalCtrl = TextEditingController(text: widget.initialGoal ?? '');
     _avatarIndex = widget.initialAvatarIndex;
     _avatarColorValue = widget.initialAvatarColorValue;
-    _customAvatarBytes = widget.initialAvatarBytes;
+    
+    _scrollController = ScrollController(
+      initialScrollOffset: (_avatarIndex ?? 0) * 68.0, 
+    );
+
     _nameCtrl.addListener(_handleFieldChange);
     _majorCtrl.addListener(_handleFieldChange);
     _contactCtrl.addListener(_handleFieldChange);
     _goalCtrl.addListener(_handleFieldChange);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _scrollController ??= ScrollController(
+      initialScrollOffset: (_avatarIndex ?? 0) * 68.0, 
+    );
   }
 
   @override
@@ -109,18 +119,23 @@ class _ProfileFormState extends State<ProfileForm> {
       _goalCtrl.text = widget.initialGoal ?? '';
     }
     if (oldWidget.initialAvatarIndex != widget.initialAvatarIndex) {
-      setState(() {
-        _avatarIndex = widget.initialAvatarIndex;
-      });
+      if (widget.initialAvatarIndex != _avatarIndex) {
+        setState(() {
+          _avatarIndex = widget.initialAvatarIndex;
+        });
+        // Optional: Scroll to new index if updated externally
+        if (_scrollController != null && _scrollController!.hasClients && _avatarIndex != null) {
+          _scrollController!.animateTo(
+            _avatarIndex! * 68.0, 
+            duration: const Duration(milliseconds: 300), 
+            curve: Curves.easeOut,
+          );
+        }
+      }
     }
     if (oldWidget.initialAvatarColorValue != widget.initialAvatarColorValue) {
       setState(() {
         _avatarColorValue = widget.initialAvatarColorValue;
-      });
-    }
-    if (oldWidget.initialAvatarBytes != widget.initialAvatarBytes) {
-      setState(() {
-        _customAvatarBytes = widget.initialAvatarBytes;
       });
     }
   }
@@ -140,6 +155,7 @@ class _ProfileFormState extends State<ProfileForm> {
     _goalCtrl
       ..removeListener(_handleFieldChange)
       ..dispose();
+    _scrollController?.dispose();
     super.dispose();
   }
 
@@ -147,22 +163,7 @@ class _ProfileFormState extends State<ProfileForm> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _pickCustomAvatar() async {
-    try {
-      showAppMessage(
-        context,
-        AppLocalizations.of(context)!.customPhotosUnavailable,
-        isError: true,
-      );
-    } catch (err) {
-      if (!mounted) return;
-      showAppMessage(
-        context,
-        AppLocalizations.of(context)!.unableToPickImage,
-        isError: true,
-      );
-    }
-  }
+
 
   bool get _isNameValid => _nameCtrl.text.trim().isNotEmpty;
 
@@ -182,7 +183,6 @@ class _ProfileFormState extends State<ProfileForm> {
       goal: _goalCtrl.text.trim().isEmpty ? null : _goalCtrl.text.trim(),
       avatarIndex: _avatarIndex,
       avatarColorValue: _avatarColorValue,
-      avatarBytes: _customAvatarBytes,
     );
 
     try {
@@ -224,62 +224,33 @@ class _ProfileFormState extends State<ProfileForm> {
         : (option?.background ?? theme.colorScheme.primaryContainer);
     final isDark = ThemeData.estimateBrightnessForColor(effectiveBgColor) == Brightness.dark;
     final optionIconColor = isDark ? Colors.white : Colors.black87;
-    final hasCustomAvatar =
-        _customAvatarBytes != null && _customAvatarBytes!.isNotEmpty;
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            GestureDetector(
-              onTap: () {
-                if (hasCustomAvatar) {
-                  _pickCustomAvatar();
-                  return;
-                }
-                setState(() {
-                  if (profileAvatarOptions.isEmpty) return;
-                  if (_avatarIndex == null) {
-                    _avatarIndex = 0;
-                  } else {
-                    _avatarIndex =
-                        (_avatarIndex! + 1) % profileAvatarOptions.length;
-                  }
-                });
-              },
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 250),
-                scale: hasCustomAvatar || option != null ? 1.0 : 0.95,
-                child: CircleAvatar(
-                  radius: 34,
-                  backgroundColor: hasCustomAvatar
-                      ? Colors.transparent
-                      : (_avatarColorValue != null
-                          ? Color(_avatarColorValue!)
-                          : (option?.background ??
-                              theme.colorScheme.primaryContainer)),
-                  child: hasCustomAvatar
-                      ? ClipOval(
-                          child: Image.memory(
-                            _customAvatarBytes!,
-                            width: 68,
-                            height: 68,
-                            fit: BoxFit.cover,
-                          ),
-                        )
-                      : Icon(
-                          option?.icon ?? Icons.person_rounded,
-                          size: 32,
-                          color: _avatarColorValue != null
-                              ? (ThemeData.estimateBrightnessForColor(
-                                          Color(_avatarColorValue!)) ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black87)
-                              : optionIconColor,
-                        ),
-                ),
+            AnimatedScale(
+              duration: const Duration(milliseconds: 250),
+              scale: 1.0,
+              child: CircleAvatar(
+                radius: 34,
+                backgroundColor: (_avatarColorValue != null
+                        ? Color(_avatarColorValue!)
+                        : (option?.background ??
+                            theme.colorScheme.primaryContainer)),
+                child: Icon(
+                        option?.icon ?? Icons.person_rounded,
+                        size: 32,
+                        color: _avatarColorValue != null
+                            ? (ThemeData.estimateBrightnessForColor(
+                                        Color(_avatarColorValue!)) ==
+                                    Brightness.dark
+                                ? Colors.white
+                                : Colors.black87)
+                            : optionIconColor,
+                      ),
               ),
             ),
             const SizedBox(width: 16),
@@ -386,34 +357,33 @@ class _ProfileFormState extends State<ProfileForm> {
           ),
         ),
         const SizedBox(height: 24),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text(
-            AppLocalizations.of(context)!.chooseAvatar,
-            style: theme.textTheme.labelLarge,
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            itemCount: profileAvatarOptions.length,
+            padding: EdgeInsets.zero,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Center(
+                  child: _AvatarChip(
+                    option: profileAvatarOptions[index],
+                    backgroundColor: effectiveBgColor,
+                    selected: _avatarIndex == index,
+                    onTap: () {
+                      setState(() {
+                        _avatarIndex = index;
+                        _showColorPicker = true; 
+                        // Ensure color picker stays visible
+                      });
+                    },
+                  ),
+                ),
+              );
+            },
           ),
-        ),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _CustomAvatarChip(
-              bytes: _customAvatarBytes,
-              selected: hasCustomAvatar,
-              onTap: _pickCustomAvatar,
-            ),
-            for (var i = 0; i < profileAvatarOptions.length; i++)
-              _AvatarChip(
-                option: profileAvatarOptions[i],
-                selected: !hasCustomAvatar && _avatarIndex == i,
-                onTap: () => setState(() {
-                  _avatarIndex = i;
-                  _customAvatarBytes = null;
-                  _showColorPicker = true;
-                }),
-              ),
-          ],
         ),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 300),
@@ -478,73 +448,29 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 }
 
-class _CustomAvatarChip extends StatelessWidget {
-  const _CustomAvatarChip({
-    required this.bytes,
-    required this.selected,
-    required this.onTap,
-  });
 
-  final Uint8List? bytes;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final borderColor =
-        selected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant;
-    final bg = theme.colorScheme.surfaceContainerHighest
-      .withAlpha(((selected ? 1 : 0.5) * 255).round());
-
-    return Tooltip(
-      message: AppLocalizations.of(context)!.photoLibraryUnavailable,
-      child: AnimatedScale(
-        duration: const Duration(milliseconds: 200),
-        scale: selected ? 1.05 : 1.0,
-        child: Opacity(
-          opacity: 0.6,
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: bytes != null ? Colors.transparent : bg,
-              shape: BoxShape.circle,
-              border: Border.all(color: borderColor, width: selected ? 3 : 1),
-            ),
-            child: bytes == null
-                ? Icon(Icons.photo_library_rounded,
-                    color: theme.colorScheme.onSurfaceVariant)
-                : ClipOval(
-                    child: Image.memory(
-                      bytes!,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _AvatarChip extends StatelessWidget {
   const _AvatarChip({
     required this.option,
+    required this.backgroundColor,
     required this.selected,
     required this.onTap,
   });
 
   final ProfileAvatarOption option;
+  final Color backgroundColor;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.dark;
+    final iconColor = isDark ? Colors.white : Colors.black87;
     final borderColor = selected
-        ? option.background
+        ? backgroundColor
         : Theme.of(context).colorScheme.outlineVariant;
-    final iconColor = profileAvatarForeground(option);
+        
     return AnimatedScale(
       duration: const Duration(milliseconds: 200),
       scale: selected ? 1.05 : 1.0,
@@ -555,7 +481,7 @@ class _AvatarChip extends StatelessWidget {
           width: 56,
           height: 56,
             decoration: BoxDecoration(
-            color: option.background.withAlpha(((selected ? 1 : 0.7) * 255).round()),
+            color: backgroundColor.withAlpha(((selected ? 1 : 0.7) * 255).round()),
             shape: BoxShape.circle,
             border: Border.all(color: borderColor, width: selected ? 3 : 1),
           ),

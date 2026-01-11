@@ -1461,6 +1461,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       if (_sCtrl.text.length >= 2 && _sNode.hasFocus) _sNode.unfocus();
     });
 
+    _hNode.addListener(_handleFocusChange);
+    _mNode.addListener(_handleFocusChange);
+    _sNode.addListener(_handleFocusChange);
+
     
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) async {
       if (!mounted) return;
@@ -1509,11 +1513,35 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     _hCtrl.dispose();
     _mCtrl.dispose();
     _sCtrl.dispose();
+    _hNode.removeListener(_handleFocusChange);
+    _mNode.removeListener(_handleFocusChange);
+    _sNode.removeListener(_handleFocusChange);
     _hNode.dispose();
     _mNode.dispose();
     _sNode.dispose();
     _tabs.dispose();
     super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!mounted) return;
+    _updateCondensedMode();
+  }
+
+  void _updateCondensedMode() {
+    final bool timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
+    final bool shouldBeCondensed = _kbOpen && timerFocused;
+
+    if (shouldBeCondensed) {
+      _kbCtrl.forward();
+      // Only force-switch to Timer tab if not already there
+      if (_tabs.index != 0) {
+        _tabs.animateTo(0);
+      }
+    } else {
+      _kbCtrl.reverse();
+    }
+    setState(() {});
   }
 
   @override
@@ -1530,13 +1558,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final nowOpen = bottom > 0;
     if (nowOpen == _kbOpen) return;
     _kbOpen = nowOpen;
-    if (_kbOpen) {
-      _kbCtrl.forward();
-      if (_tabs.index != 0) _tabs.animateTo(0);
-    } else {
-      _kbCtrl.reverse();
-    }
-    setState(() {});
+    _updateCondensedMode();
   }
 
   String _fmt(int s) => _fmtHMS(s);
@@ -1854,10 +1876,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       ),
                       const SizedBox(height: 8),
                       Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
+                        spacing: 12,
+                        runSpacing: 12,
                         children: [
-                          
                           for (final c in _colorChoices.take(9))
                             GestureDetector(
                               onTap: () => setLocal(() {
@@ -1865,8 +1886,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                                 showCustomPicker = false;
                               }),
                               child: Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
                                   color: c,
                                   shape: BoxShape.circle,
@@ -1972,10 +1993,12 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
             double ay(double yPx) => ((yPx / h) * 2 - 1).clamp(-1.0, 1.0);
 
+            final timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
+            final bool isCondensed = _kbOpen && timerFocused;
             const double gapPx = 100;
             const double hintGapPx = 84;
 
-            final inputsY = _kbOpen ? usable / 2 : h / 2;
+            final inputsY = isCondensed ? usable / 2 : h / 2;
             final timerY = inputsY + gapPx;
             final hintY = inputsY - hintGapPx;
 
@@ -2344,9 +2367,12 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         (state.pomodoroRunning[widget.course.id] ?? false) ||
             (state.pomodoroPaused[widget.course.id] ?? false);
     
-    final isAnyRunning = isTimerRunningForThis || 
+    final isAnyRunningCombined = isTimerRunningForThis || 
         isStopwatchRunningForThis || 
         isPomodoroActiveForThis;
+
+    final timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
+    final bool isCondensed = _kbOpen && timerFocused;
 
     final shouldGuardPop = isPomodoroActiveForThis;
 
@@ -2391,16 +2417,16 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                   IconButton(
                     tooltip: AppLocalizations.of(context)!.edit,
                     icon: Icon(Icons.edit, 
-                      color: isAnyRunning ? Colors.grey : Colors.blueGrey
+                      color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey
                     ),
-                    onPressed: isAnyRunning ? null : () => _openEditCourseDialog(context),
+                    onPressed: isAnyRunningCombined ? null : () => _openEditCourseDialog(context),
                   ),
                   IconButton(
                     icon: Icon(Icons.delete, 
-                      color: isAnyRunning ? Colors.grey : Colors.red
+                      color: isAnyRunningCombined ? Colors.grey : Colors.red
                     ),
                     tooltip: 'Delete Course',
-                    onPressed: isAnyRunning ? null : () async {
+                    onPressed: isAnyRunningCombined ? null : () async {
                       
                       final appState = context.read<AppState>();
                       final navigator = Navigator.of(context);
@@ -2445,7 +2471,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                 duration: const Duration(milliseconds: 300),
                 firstCurve: Curves.easeInOut,
                 secondCurve: Curves.easeInOut,
-                crossFadeState: _kbOpen
+                crossFadeState: isCondensed
                     ? CrossFadeState.showFirst
                     : CrossFadeState.showSecond,
                 firstChild: Center(
@@ -2491,7 +2517,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       duration: const Duration(milliseconds: 250),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
-                      child: _kbOpen
+                      child: isCondensed
                           ? const SizedBox.shrink()
                           : _buildStopwatchTab(),
                     ),

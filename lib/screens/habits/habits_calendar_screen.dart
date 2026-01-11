@@ -22,6 +22,13 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   bool _isLoading = true;
   StreamSubscription<List<Habit>>? _habitsSub;
   String? _activeLoadKey;
+  
+  // Calendar navigation boundaries
+  static final DateTime _minMonth = DateTime(2025, 1);
+  DateTime get _maxMonth {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month + 1);
+  }
 
   @override
   void initState() {
@@ -79,8 +86,11 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   }
 
   void _prevMonth() {
+    final prevMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+    if (prevMonth.isBefore(_minMonth)) return;
+    
     setState(() {
-      _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month - 1);
+      _focusedMonth = prevMonth;
       _loadMonthData();
     });
   }
@@ -92,8 +102,11 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   }
 
   void _nextMonth() {
+    final nextMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+    if (nextMonth.isAfter(_maxMonth)) return;
+    
     setState(() {
-      _focusedMonth = DateTime(_focusedMonth.year, _focusedMonth.month + 1);
+      _focusedMonth = nextMonth;
       _loadMonthData();
     });
   }
@@ -144,12 +157,18 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(onPressed: _prevMonth, icon: const Icon(Icons.chevron_left)),
+                IconButton(
+                  onPressed: _focusedMonth.isAfter(_minMonth) ? _prevMonth : null,
+                  icon: const Icon(Icons.chevron_left),
+                ),
                 Text(
                   DateFormat.yMMMM(l10n.localeName).format(_focusedMonth),
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
-                IconButton(onPressed: _nextMonth, icon: const Icon(Icons.chevron_right)),
+                IconButton(
+                  onPressed: _focusedMonth.isBefore(_maxMonth) ? _nextMonth : null,
+                  icon: const Icon(Icons.chevron_right),
+                ),
               ],
             ),
           ),

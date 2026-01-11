@@ -6,6 +6,7 @@ class ProgressCircle extends StatelessWidget {
   final double goal;
   final double size;
   final Color? color;
+  final double? strokeWidth;
 
   const ProgressCircle({
     super.key,
@@ -13,6 +14,7 @@ class ProgressCircle extends StatelessWidget {
     required this.goal,
     this.size = 24.0,
     this.color,
+    this.strokeWidth,
   });
 
   @override
@@ -31,23 +33,19 @@ class ProgressCircle extends StatelessWidget {
         duration: const Duration(milliseconds: 500),
         curve: Curves.easeOutCubic,
         builder: (context, animatedProgress, child) {
-          // If we are animating towards completion, we might want to handle the checkmark transition smoothly.
-          // However, the requirement says "Smooth animation from old -> new value".
-          // The stroke width change is discrete steps based on the *target* value usually, or instantaneous?
-          // "0-24% -> thin" implies it depends on the value.
-          // Let's base stroke width on the *animated* progress to make it feel organic, 
-          // OR base it on the target to match the "state". 
-          // Users usually prefer the visual weight to match the current fill. Let's use animatedProgress.
-          
-          double currentStrokeWidth;
-          if (animatedProgress < 0.25) {
-            currentStrokeWidth = 2.0;
-          } else if (animatedProgress < 0.50) {
-            currentStrokeWidth = 3.0;
-          } else if (animatedProgress < 0.75) {
-            currentStrokeWidth = 4.0;
-          } else {
-            currentStrokeWidth = 5.0;
+          // If strokeWidth is provided, use it. Otherwise use dynamic width.
+          double currentStrokeWidth = strokeWidth ?? 2.0;
+
+          if (strokeWidth == null) {
+            if (animatedProgress < 0.25) {
+              currentStrokeWidth = 2.0;
+            } else if (animatedProgress < 0.50) {
+              currentStrokeWidth = 3.0;
+            } else if (animatedProgress < 0.75) {
+              currentStrokeWidth = 4.0;
+            } else {
+              currentStrokeWidth = 5.0;
+            }
           }
           
           // Special case: if it's fully complete (target is 1.0), we want to show the checkmark.

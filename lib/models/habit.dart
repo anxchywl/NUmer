@@ -349,13 +349,13 @@ class Habit {
       if (y == null || m == null || d == null) continue;
       
       final entryDate = DateTime(y, m, d);
-      // Use inclusive check for start and end of period
+      // Use inclusive check: periodStart <= entryDate <= periodEnd
       if (!entryDate.isBefore(periodStart) && !entryDate.isAfter(periodEnd)) {
         if ((completionMap[dateKey] ?? 0.0) >= targetValue) count++;
       }
     }
     
-    return count >= frequencyGoal!;
+    return count >= (frequencyGoal ?? 1);
   }
 
   Habit copyWith({

@@ -159,26 +159,13 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.copy_rounded,
-                                        size: 14,
-                                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Flexible(
-                                        child: Text(
-                                          contact,
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          softWrap: true,
-                                        ),
-                                      ),
-                                    ],
+                                  child: Text(
+                                    contact,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    softWrap: true,
                                   ),
                                 ),
                               ),

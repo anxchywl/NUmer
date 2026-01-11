@@ -9,9 +9,12 @@ import '../../app_state.dart';
 import 'habits_calendar_screen.dart';
 import 'archived_habits_screen.dart';
 import 'widgets/habit_logging_sheet.dart';
+import 'widgets/eisenhower_matrix_widget.dart';
+import 'widgets/habit_sorter_card.dart';
+import 'widgets/habit_completion_indicator.dart';
 import 'habit_details_screen.dart';
 import 'add_habit_sheet.dart';
-import '../../widgets/progress_circle.dart';
+
 import '../../services/storage.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -30,6 +33,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   int _selectedTabIndex = 0; // 0 for Today, 1 for Habits
   late DateTime _selectedDate;
   late ScrollController _dateScrollController;
+  bool _hasScrolledToToday = false;
+  final GlobalKey _calendarKey = GlobalKey();
 
   @override
   void initState() {
@@ -55,8 +60,13 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   }
 
   void _scrollToToday({bool animate = false}) {
+    if (!mounted) return;
     if (_dateScrollController.hasClients) {
       final screenWidth = MediaQuery.of(context).size.width;
+      if (screenWidth == 0) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToToday(animate: animate));
+        return;
+      }
       final itemWidth = (screenWidth - 24) / 7;
       final offset = 12 + 30 * itemWidth + itemWidth / 2 - screenWidth / 2;
       if (animate) {
@@ -140,36 +150,133 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
               actions: [
                 IconButton(
                   icon: const Icon(Icons.archive_outlined),
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const ArchivedHabitsScreen(),
                       ),
                     );
+                    if (mounted && _selectedDate.day == DateTime.now().day) {
+                      _scrollToToday(animate: true);
+                    }
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.calendar_month),
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const HabitsCalendarScreen(),
                       ),
                     );
+                    if (mounted && _selectedDate.day == DateTime.now().day) {
+                      _scrollToToday(animate: true);
+                    }
                   },
                 ),
               ],
             ),
             
             if (_selectedTabIndex == 0) ...[
-              // Today View: Date Picker
-              SliverToBoxAdapter(
-                child: _buildHorizontalDatePicker(theme),
-              ),
-              // Today View: Habit List
+              // Today View: Check if Eisenhower Matrix is enabled
               StreamBuilder<List<Habit>>(
+                stream: habitService.habitsStream(uid),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) return const SliverToBoxAdapter(child: SizedBox());
+                  final allHabits = snapshot.data!;
+                  final appState = context.watch<AppState>();
+                  
+                  // If Eisenhower Matrix is enabled, show matrix UI
+                  if (appState.eisenhowerMatrixEnabled) {
+                    final placements = Storage.getHabitQuadrantPlacements();
+                    
+                    // Filter: Hide habits if period goal is met AND not done today
+                    final filteredHabits = allHabits.where((h) {
+                      if (!h.isScheduledFor(_selectedDate)) return false;
+                      // Check completion status for the selected date
+                      final dateKey = _dateKey(_selectedDate); 
+                      final currentValue = h.last7[dateKey] ?? 0.0;
+                      final isCompletedOnDate = currentValue >= h.targetValue;
+                      
+                      // Show if completed on this date OR period goal NOT met.
+                      if (isCompletedOnDate) return true;
+                      return !h.isGoalMetForPeriod(h.last7, _selectedDate);
+                    }).toList();
+
+                    final unsortedHabits = filteredHabits.where((h) => !placements.containsKey(h.id)).toList();
+                    
+                    // Full-screen matrix layout
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final topPadding = MediaQuery.of(context).padding.top;
+                    final bottomPadding = MediaQuery.of(context).padding.bottom;
+                    final availableHeight = screenHeight - topPadding - kToolbarHeight - bottomPadding - 20;
+                    
+                    return SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: availableHeight,
+                        child: Column(
+                          children: [
+                            // Top Area: Sorter OR Calendar Strip
+                            unsortedHabits.isNotEmpty
+                                ? HabitSorterCard(
+                                    key: ValueKey(unsortedHabits.first.id),
+                                    habit: unsortedHabits.first,
+                                    onPlaced: () {
+                                      setState(() {});
+                                      // After placing, check if all sorted - scroll to today
+                                      if (unsortedHabits.length == 1) {
+                                        Future.delayed(const Duration(milliseconds: 100), () => _scrollToToday(animate: true));
+                                      }
+                                    },
+                                  )
+                                : KeyedSubtree(
+                                    key: _calendarKey,
+                                    child: _buildHorizontalDatePicker(theme),
+                                  ),
+                            
+                            // Matrix grid
+                            Expanded(
+                              child: EisenhowerMatrixWidget(
+                                habits: filteredHabits.where((h) => placements.containsKey(h.id)).toList(),
+                                selectedDate: _selectedDate,
+                                onHabitTap: (habit) => _toggleHabit(habit, _selectedDate),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                  
+                  // Regular view - render date picker first
+                  return const SliverToBoxAdapter(child: SizedBox());
+                },
+              ),
+              // Regular Today View components (only when matrix is disabled)
+              Builder(
+                builder: (context) {
+                  final appState = context.watch<AppState>();
+                  if (appState.eisenhowerMatrixEnabled) {
+                    return const SliverToBoxAdapter(child: SizedBox());
+                  }
+                  return SliverToBoxAdapter(
+                    child: KeyedSubtree(
+                      key: _calendarKey,
+                      child: _buildHorizontalDatePicker(theme),
+                    ),
+                  );
+                },
+              ),
+              // Today View: Habit List (only when matrix is disabled)
+              Builder(
+                builder: (context) {
+                  final appState = context.watch<AppState>();
+                  if (appState.eisenhowerMatrixEnabled) {
+                    return const SliverToBoxAdapter(child: SizedBox());
+                  }
+                  return StreamBuilder<List<Habit>>(
                 stream: habitService.habitsStream(uid),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) return const SliverToBoxAdapter(child: SizedBox());
@@ -237,6 +344,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     },
                   );
                 },
+              );
+                },
               ),
             ] else 
             // Stream Builder for Habits (Overiew)
@@ -300,6 +409,11 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                           habit: habit,
                           weekDates: _weekDates,
                           onToggle: (date) => _toggleHabit(habit, date),
+                          onReturn: () {
+                            if (_selectedDate.day == DateTime.now().day) {
+                              _scrollToToday(animate: true);
+                            }
+                          },
                         ),
                       );
                     },
@@ -412,6 +526,16 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     
+    // Trigger centering when calendar is first rendered (especially in matrix mode)
+    if (!_hasScrolledToToday && _selectedDate.day == today.day && _selectedDate.month == today.month && _selectedDate.year == today.year) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_hasScrolledToToday) {
+          _scrollToToday(animate: false);
+          setState(() => _hasScrolledToToday = true);
+        }
+      });
+    }
+    
     final screenWidth = MediaQuery.of(context).size.width;
     final itemWidth = (screenWidth - 24) / 7; // 24 is the combined horizontal padding (12 * 2)
 
@@ -475,7 +599,6 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   Widget _buildTodayHabitItem(Habit habit, ThemeData theme, AppLocalizations l10n) {
     final dateKey = _dateKey(_selectedDate);
     final currentValue = habit.last7[dateKey] ?? 0.0;
-    final isCompleted = currentValue >= habit.targetValue;
     final isFuture = _isFutureDate(_selectedDate);
     final isDark = theme.brightness == Brightness.dark;
     final localeName = l10n.localeName;
@@ -544,44 +667,11 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
           const SizedBox(width: 12),
           GestureDetector(
             onTap: isFuture ? null : () => _toggleHabit(habit, _selectedDate),
-            child: habit.type == HabitType.yesNo
-                ? AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: isCompleted ? habit.color : Colors.transparent,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isCompleted ? habit.color : theme.colorScheme.outline.withValues(alpha: 0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: isCompleted ? const Icon(Icons.check, color: Colors.white, size: 20) : null,
-                  )
-                : Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Background track
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      ProgressCircle(
-                        current: currentValue,
-                        goal: habit.targetValue,
-                        color: habit.color,
-                        size: 36,
-                      ),
-                    ],
-                  ),
+            child: HabitCompletionIndicator(
+              habit: habit,
+              currentValue: currentValue,
+              size: 36,
+            ),
           ),
         ],
       ),
@@ -610,11 +700,13 @@ class _HabitItem extends StatefulWidget {
   final Habit habit;
   final List<DateTime> weekDates; // Base week dates from parent (current week)
   final Function(DateTime) onToggle;
+  final VoidCallback? onReturn;
 
   const _HabitItem({
     required this.habit,
     required this.weekDates,
     required this.onToggle,
+    this.onReturn,
   });
 
   @override
@@ -755,38 +847,7 @@ class _HabitItemState extends State<_HabitItem> {
     return dateMidnight.isBefore(startMidnight);
   }
 
-  bool _isSamePeriod(DateTime a, DateTime b, HabitPeriod period) {
-    DateTime startOfPeriod(DateTime d) {
-      switch (period) {
-        case HabitPeriod.week:
-          return DateTime(d.year, d.month, d.day - (d.weekday - 1));
-        case HabitPeriod.month:
-          return DateTime(d.year, d.month, 1);
-        case HabitPeriod.year:
-          return DateTime(d.year, 1, 1);
-      }
-    }
 
-    final aStart = startOfPeriod(a);
-    final bStart = startOfPeriod(b);
-    return aStart.year == bStart.year &&
-        aStart.month == bStart.month &&
-        aStart.day == bStart.day;
-  }
-
-  bool _shouldDisableFutureScheduled(DateTime date) {
-    if (!_isFutureDate(date)) return false;
-    final isScheduled = widget.habit.isScheduledFor(date);
-    if (!isScheduled) return false;
-
-    if (widget.habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-      final period = widget.habit.frequencyPeriod ?? HabitPeriod.week;
-      if (!_isSamePeriod(DateTime.now(), date, period)) return false;
-      return widget.habit.isGoalMetForPeriod(widget.habit.last7, DateTime.now());
-    }
-
-    return true;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -898,11 +959,13 @@ class _HabitItemState extends State<_HabitItem> {
                     ),
                     IconButton(
                       icon: Icon(Icons.more_vert, size: 20, color: theme.colorScheme.onSurfaceVariant),
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(builder: (_) => HabitDetailsScreen(habit: widget.habit)),
                         );
+                        // Re-center on return if today is selected
+                        widget.onReturn?.call();
                       },
                     ),
                   ],
@@ -1011,52 +1074,88 @@ class _HabitItemState extends State<_HabitItem> {
                         final isPending = widget.habit.type != HabitType.yesNo && currentVal > 0 && currentVal < widget.habit.targetValue;
                         
                         final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
-                        final isDisabledFuture = _shouldDisableFutureScheduled(date);
-                        final isBeforeStart = _isBeforeStartDate(date);
 
+                        // Determine styling state
+                        final isPreStart = _isBeforeStartDate(date);
+                        final isFuture = _isFutureDate(date);
                         final isScheduled = widget.habit.isScheduledFor(date);
+                        final isGoalMet = widget.habit.isGoalMetForPeriod(widget.habit.last7, date);
+                        final isLocked = !isCompleted && isGoalMet;
+                        
+                        // Active: Today or past scheduled days
+                        final isActive = !isPreStart && !isFuture && isScheduled;
+                        
+                        // Interaction only allowed on active days and NOT locked
+                        final canInteract = isActive && !isLocked;
 
-                        // Determine if this day should be inactive
-                        final isInactive = isBeforeStart || isDisabledFuture;
+                        // Styling Logic
+                        Color textColor;
+                        if (isPreStart || !isScheduled || isLocked) {
+                           // A, C & Locked: Not required, pre-start or locked -> Muted
+                           textColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3);
+                        } else if (isFuture) {
+                           // B: Future Required -> Regular normal color (same as active)
+                           textColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+                        } else {
+                           // Active
+                           textColor = isToday ? widget.habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+                        }
+
+                        // Determine Circle Decoration
+                        BoxDecoration circleDeco;
+                        Widget? circleChild;
+                        
+                        if (isPreStart || !isScheduled) {
+                           // Hidden (transparent)
+                           circleDeco = const BoxDecoration(color: Colors.transparent);
+                        } else if (isFuture || isLocked) {
+                           // Visible but disabled (muted background)
+                           circleDeco = BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                              shape: BoxShape.circle,
+                           );
+                        } else {
+                           // Active / Today / Past
+                            circleDeco = BoxDecoration(
+                              color: isCompleted
+                                  ? widget.habit.color
+                                  : (isPending 
+                                      ? widget.habit.color.withValues(alpha: 0.15)
+                                      : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent)),
+                              shape: BoxShape.circle,
+                              border: (isToday || isPending) 
+                                  ? Border.all(color: widget.habit.color, width: isPending ? 2 : 2) 
+                                  : null,
+                            );
+                            if (isCompleted) {
+                               circleChild = const Icon(Icons.check, size: 18, color: Colors.white);
+                            }
+                        }
 
                         final dateItem = GestureDetector(
-                          onTap: (!isInactive && isScheduled) ? () => widget.onToggle(date) : null,
+                          onTap: canInteract ? () => widget.onToggle(date) : null,
                           child: Column(
                             children: [
                               Text(
                                 DateFormat.E(localeName).format(date),
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: isInactive
-                                      ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3)
-                                      : (isToday ? widget.habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7)),
-                                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+                                  color: textColor,
+                                  fontWeight: (isToday && isScheduled) ? FontWeight.bold : FontWeight.normal,
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Container(
                                 width: 32,
                                 height: 32,
-                                decoration: BoxDecoration(
-                                  color: isInactive
-                                      ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
-                                      : (isCompleted
-                                          ? widget.habit.color
-                                          : (isPending 
-                                              ? widget.habit.color.withValues(alpha: 0.15)
-                                              : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent))),
-                                  shape: BoxShape.circle,
-                                  border: (!isInactive && (isToday || isPending)) 
-                                      ? Border.all(color: widget.habit.color, width: isPending ? 2 : 2) 
-                                      : null,
-                                ),
-                                child: isCompleted && !isInactive ? const Icon(Icons.check, size: 18, color: Colors.white) : null,
+                                decoration: circleDeco,
+                                child: circleChild,
                               ),
                             ],
                           ),
                         );
 
-                        return isInactive ? Opacity(opacity: 0.5, child: dateItem) : dateItem;
+                        return dateItem;
                       }).toList(),
                     ),
                   ),

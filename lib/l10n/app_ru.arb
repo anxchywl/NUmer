@@ -15,6 +15,15 @@
   "displayProgressBar": "Показывать прогресс за",
   "quickNotes": "Быстрые заметки",
   "wantToReceiveNudges": "Получать подталкивания?",
+  "eisenhowerMatrix": "Матрица Эйзенхауэра",
+  "quickNotesDescription": "Существующие заметки сохранятся, но новые окна заметок после сессий появляться не будут.",
+  "wantToReceiveNudgesDescription": "Разрешить участникам группы отправлять вам мягкие напоминания.",
+  "eisenhowerMatrixDescription": "Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.",
+  "eisenhowerQuadrant1": "Срочно и важно",
+  "eisenhowerQuadrant2": "Не срочно, но важно",
+  "eisenhowerQuadrant3": "Срочно, но не важно",
+  "eisenhowerQuadrant4": "Не срочно и не важно",
+  "eisenhowerHint": "Перетащите привычки в матрицу для организации",
   "yes": "Да",
   "no": "Нет",
   "data": "Данные",
@@ -70,8 +79,26 @@
   "selectCourse": "Выберите курс",
   "timePeriod": "Период времени",
   "oneMonth": "1 месяц",
+  "twoMonths": "2 месяца",
   "threeMonths": "3 месяца",
   "sixMonths": "6 месяцев",
+  "limitOneAnalysisPerPeriod": "Лимит: 1 анализ за период.",
+  "analysisUpdatesEveryPeriod": "Анализ обновляется с началом каждого нового периода.",
+  "analysisAlreadyGenerated": "Вы уже создали анализ для этого периода.",
+  "minNotesRequired": "Минимум заметок: {current}/{total}. Чем больше заметок, тем точнее анализ.",
+  "@minNotesRequired": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "@notesRequiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "generateInsight": "Получить инсайт",
   "analyzing": "Анализ...",
   "analysisPlaceholder": "Выберите курс и период, чтобы получить AI-анализ вашей учебы.",
@@ -492,6 +519,7 @@
   "userProhibitedNudge": "Этот пользователь отключил уведомления.",
   "leaderboardHintMessage": "• Вы можете нажать на любого пользователя в таблице лидеров, чтобы просмотреть его время обучения.\n• Нажмите на иконку руки рядом с аватаркой участника, чтобы подтолкнуть его.",
   "habitsNavLabel": "Привычки",
+  "habitStatistics": "Статистика привычек",
   "habitsTabProgress": "Прогресс",
   "habitsTabList": "Мои привычки",
   "habitsPleaseSignIn": "Пожалуйста, войдите",

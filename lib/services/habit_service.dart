@@ -106,17 +106,24 @@ class HabitService {
   }
 
   Future<void> createHabit(String userId, Habit habit) async {
-    // 1. Get current habits to find max sort order
-    final currentHabits = await getHabits(userId);
-    int maxSortOrder = -1;
-    if (currentHabits.isNotEmpty) {
-      maxSortOrder = currentHabits
-          .map((h) => h.sortOrder)
-          .reduce((curr, next) => curr > next ? curr : next);
+    // 1. Determine if updating or creating
+    bool isUpdate = habit.id.isNotEmpty && !habit.id.contains('_temp');
+    
+    // 1. Get current habits to find max sort order if NEW
+    int newSortOrder = habit.sortOrder;
+    if (!isUpdate) {
+      final currentHabits = await getHabits(userId);
+      int maxSortOrder = -1;
+      if (currentHabits.isNotEmpty) {
+        maxSortOrder = currentHabits
+            .map((h) => h.sortOrder)
+            .reduce((curr, next) => curr > next ? curr : next);
+      }
+      newSortOrder = maxSortOrder + 1;
     }
     
-    // 2. Assign new sort order
-    final habitWithOrder = habit.copyWith(sortOrder: maxSortOrder + 1);
+    // 2. Assign sort order
+    final habitWithOrder = habit.copyWith(sortOrder: newSortOrder);
 
     DocumentReference ref;
     String finalId = habitWithOrder.id;
@@ -370,22 +377,41 @@ class HabitService {
     final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
 
     if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-       // --- Period-based Streak ---
-       DateTime currentPeriodCheck = checkDate;
-       // We move currentPeriodCheck to the start of its period
-       currentPeriodCheck = _getPeriodStart(habit, currentPeriodCheck);
+       // --- Period-based Streak (count DAYS, not periods) ---
+       DateTime currentPeriodCheck = _getPeriodStart(habit, checkDate);
 
        // 1. Current Streak (Backwards)
-       while (!currentPeriodCheck.isBefore(start)) {
-          final met = habit.isGoalMetForPeriod(fullCompletionMap, currentPeriodCheck);
-          if (met) {
-             currentStreakValue++;
+       while (!_getPeriodEnd(habit, currentPeriodCheck).isBefore(start)) {
+          final pStart = currentPeriodCheck;
+          final pEnd = _getPeriodEnd(habit, pStart);
+          final isCurrent = !checkDate.isBefore(pStart) && !checkDate.isAfter(pEnd);
+          
+          // Count only valid completed days in this period
+          int completed = 0;
+          for (final dateKey in fullCompletionMap.keys) {
+             final parts = dateKey.split('-');
+             if (parts.length != 3) continue;
+             final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+             
+             // Must be within period AND NOT before habit start
+             if (!d.isBefore(pStart) && !d.isAfter(pEnd) && !d.isBefore(start)) {
+                if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
+                   completed++;
+                }
+             }
+          }
+          
+          final bool met = completed >= (habit.frequencyGoal ?? 1);
+          
+          if (isCurrent) {
+             // Current active period: always add progress so far
+             currentStreakValue += completed;
           } else {
-             // If this is the active period (containing today), don't break yet
-             bool isActivePeriod = !checkDate.isBefore(currentPeriodCheck) && 
-                                   !checkDate.isAfter(_getPeriodEnd(habit, currentPeriodCheck));
-             if (!isActivePeriod) {
-                break;
+             // Past period: only add if goal was met
+             if (met) {
+                currentStreakValue += completed;
+             } else {
+                break; // Streak broken
              }
           }
           currentPeriodCheck = _subtractPeriod(habit, currentPeriodCheck);
@@ -394,10 +420,27 @@ class HabitService {
        // 2. Longest Streak (Forwards)
        int tempStreak = 0;
        DateTime forwardPeriodCheck = _getPeriodStart(habit, start);
-       while (!forwardPeriodCheck.isAfter(checkDate)) {
-          final met = habit.isGoalMetForPeriod(fullCompletionMap, forwardPeriodCheck);
-          if (met) {
-             tempStreak++;
+       while (!_getPeriodEnd(habit, forwardPeriodCheck).isBefore(start) && !forwardPeriodCheck.isAfter(checkDate)) {
+          final pStart = forwardPeriodCheck;
+          final pEnd = _getPeriodEnd(habit, pStart);
+          final isCurrent = !checkDate.isBefore(pStart) && !checkDate.isAfter(pEnd);
+          
+          int completed = 0;
+          for (final dateKey in fullCompletionMap.keys) {
+             final parts = dateKey.split('-');
+             if (parts.length != 3) continue;
+             final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+             if (!d.isBefore(pStart) && !d.isAfter(pEnd) && !d.isBefore(start)) {
+                if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
+                   completed++;
+                }
+             }
+          }
+          
+          final bool met = completed >= (habit.frequencyGoal ?? 1);
+          
+          if (met || isCurrent) {
+             tempStreak += completed;
              if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
           } else {
              tempStreak = 0;
@@ -495,7 +538,6 @@ class HabitService {
         return date.subtract(const Duration(days: 1));
     }
   }
-
 
 
   Future<void> _updateStreaks(String userId, String habitId, int current, int longest) async {

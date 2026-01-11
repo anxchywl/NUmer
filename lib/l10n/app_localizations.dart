@@ -196,6 +196,60 @@ abstract class AppLocalizations {
   /// **'Want to receive nudges?'**
   String get wantToReceiveNudges;
 
+  /// No description provided for @eisenhowerMatrix.
+  ///
+  /// In en, this message translates to:
+  /// **'Eisenhower matrix'**
+  String get eisenhowerMatrix;
+
+  /// No description provided for @quickNotesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing notes will stay saved, but no new note popups will appear after sessions.'**
+  String get quickNotesDescription;
+
+  /// No description provided for @wantToReceiveNudgesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow group members to send you gentle nudges to stay on track.'**
+  String get wantToReceiveNudgesDescription;
+
+  /// No description provided for @eisenhowerMatrixDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.'**
+  String get eisenhowerMatrixDescription;
+
+  /// No description provided for @eisenhowerQuadrant1.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent & Important'**
+  String get eisenhowerQuadrant1;
+
+  /// No description provided for @eisenhowerQuadrant2.
+  ///
+  /// In en, this message translates to:
+  /// **'Not urgent & Important'**
+  String get eisenhowerQuadrant2;
+
+  /// No description provided for @eisenhowerQuadrant3.
+  ///
+  /// In en, this message translates to:
+  /// **'Urgent & Not important'**
+  String get eisenhowerQuadrant3;
+
+  /// No description provided for @eisenhowerQuadrant4.
+  ///
+  /// In en, this message translates to:
+  /// **'Not urgent & Not important'**
+  String get eisenhowerQuadrant4;
+
+  /// No description provided for @eisenhowerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag habits into the matrix to organize them'**
+  String get eisenhowerHint;
+
   /// No description provided for @yes.
   ///
   /// In en, this message translates to:
@@ -478,6 +532,12 @@ abstract class AppLocalizations {
   /// **'1 month'**
   String get oneMonth;
 
+  /// No description provided for @twoMonths.
+  ///
+  /// In en, this message translates to:
+  /// **'2 months'**
+  String get twoMonths;
+
   /// No description provided for @threeMonths.
   ///
   /// In en, this message translates to:
@@ -489,6 +549,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'6 months'**
   String get sixMonths;
+
+  /// No description provided for @limitOneAnalysisPerPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit: 1 analysis per selected period.'**
+  String get limitOneAnalysisPerPeriod;
+
+  /// No description provided for @analysisUpdatesEveryPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Your analysis updates every new period.'**
+  String get analysisUpdatesEveryPeriod;
+
+  /// No description provided for @analysisAlreadyGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve already generated an analysis for this period.'**
+  String get analysisAlreadyGenerated;
+
+  /// No description provided for @minNotesRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum notes required: {current}/{total}. More notes give better insights.'**
+  String minNotesRequired(int current, int total);
 
   /// No description provided for @generateInsight.
   ///
@@ -2547,6 +2631,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Habits'**
   String get habitsNavLabel;
+
+  /// No description provided for @habitStatistics.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit statistics'**
+  String get habitStatistics;
 
   /// No description provided for @habitsTabProgress.
   ///

@@ -6,28 +6,28 @@ import 'dart:convert';
 
 enum AnalysisPeriod {
   lastMonth,
-  last3Months,
-  last6Months;
+  last2Months,
+  last3Months;
 
   String label(String language) {
     if (language == 'ru') {
       return switch (this) {
         AnalysisPeriod.lastMonth => 'последний 1 месяц',
+        AnalysisPeriod.last2Months => 'последние 2 месяца',
         AnalysisPeriod.last3Months => 'последние 3 месяца',
-        AnalysisPeriod.last6Months => 'последние 6 месяцев',
       };
     }
     return switch (this) {
       AnalysisPeriod.lastMonth => 'Last 1 Month',
+      AnalysisPeriod.last2Months => 'Last 2 Months',
       AnalysisPeriod.last3Months => 'Last 3 Months',
-      AnalysisPeriod.last6Months => 'Last 6 Months',
     };
   }
 
   int get months => switch (this) {
         AnalysisPeriod.lastMonth => 1,
+        AnalysisPeriod.last2Months => 2,
         AnalysisPeriod.last3Months => 3,
-        AnalysisPeriod.last6Months => 6,
       };
 }
 
@@ -45,6 +45,11 @@ class AiTopic {
       count: json['count'] as int,
     );
   }
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'category': category,
+        'count': count,
+      };
 }
 
 class AiRecommendation {
@@ -59,6 +64,11 @@ class AiRecommendation {
       type: json['type'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'type': type,
+      };
 }
 
 class AiCourseAnalysis {
@@ -87,7 +97,7 @@ class AiCourseAnalysis {
     return AiCourseAnalysis(
       courseId: courseId,
       period: period,
-      summary: json['summary'] as String,
+      summary: json['summary'] as String? ?? '',
       topTopics: (json['topTopics'] as List?)
               ?.map((e) => AiTopic.fromJson(e))
               .toList() ??
@@ -102,15 +112,36 @@ class AiCourseAnalysis {
           "Keep up the great work!",
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'summary': summary,
+        'topTopics': topTopics.map((e) => e.toJson()).toList(),
+        'patterns': patterns,
+        'weakSpots': weakSpots,
+        'recommendations': recommendations.map((e) => e.toJson()).toList(),
+        'motivationalMessage': motivationalMessage,
+      };
 }
 
 class AiAnalysisService {
   AiAnalysisService._();
 
   static Future<List<Map<String, dynamic>>> fetchReflections(
-      String courseId, AnalysisPeriod period) async {
+      String courseId, AnalysisPeriod period, {DateTime? since}) async {
     final now = DateTime.now();
-    final start = DateTime(now.year, now.month - period.months, now.day);
+    
+    // Period start date window (e.g. 1 month ago)
+    final periodStart = DateTime(now.year, now.month - period.months, now.day);
+    
+    // Use the LATER of (periodStart) or (since) as the effective start time
+    // But we still need to respect period window.
+    // Actually, the requirement is: "count new notes since the last analysis AND within the selected window logic."
+    // So effectiveStart = max(periodStart, since)
+    DateTime effectiveStart = periodStart;
+    if (since != null && since.isAfter(periodStart)) {
+      effectiveStart = since;
+    }
+
     final sessions = await Storage.getSessions();
     final results = <Map<String, dynamic>>[];
 
@@ -118,7 +149,7 @@ class AiAnalysisService {
       final sid = s['courseId'] as String?;
       if (sid != courseId) continue;
       final endUtc = s['endUtc'] as DateTime?;
-      if (endUtc == null || endUtc.isBefore(start)) continue;
+      if (endUtc == null || endUtc.isBefore(effectiveStart)) continue;
       results.add({
         'comment': (s['notes'] as String?) ?? '',
         'createdAt': Timestamp.fromDate(endUtc),

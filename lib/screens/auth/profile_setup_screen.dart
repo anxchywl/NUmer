@@ -4,7 +4,7 @@ import '../../app_state.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/profile_form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:convert';
+
 
 class ProfileSetupScreen extends StatelessWidget {
   const ProfileSetupScreen({super.key});
@@ -66,7 +66,7 @@ class ProfileSetupScreen extends StatelessWidget {
                           majorText: data.major,
                           contact: data.contact,
                           avatarIndex: data.avatarIndex,
-                          avatarBytes: data.avatarBytes,
+                          avatarColorValue: data.avatarColorValue,
                           uid: userId,
                         );
 
@@ -83,16 +83,11 @@ class ProfileSetupScreen extends StatelessWidget {
                         };
                         
                         
-                        if (data.avatarBytes != null && data.avatarBytes!.isNotEmpty) {
-                          
-                          cloudData['profileAvatarImageBase64'] = base64Encode(data.avatarBytes!);
-                          cloudData['avatarImageBase64'] = base64Encode(data.avatarBytes!);
-                          cloudData['profileAvatarIndex'] = FieldValue.delete();
-                          cloudData['avatarIndex'] = FieldValue.delete();
-                        } else if (data.avatarIndex != null) {
-                          
+                        if (data.avatarIndex != null) {
                           cloudData['profileAvatarIndex'] = data.avatarIndex;
                           cloudData['avatarIndex'] = data.avatarIndex;
+                          cloudData['profileAvatarColorValue'] = data.avatarColorValue;
+                          // Ensure legacy image fields are cleared
                           cloudData['profileAvatarImageBase64'] = FieldValue.delete();
                           cloudData['avatarImageBase64'] = FieldValue.delete();
                         }

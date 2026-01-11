@@ -45,6 +45,7 @@ class LocalUserDoc extends HiveObject with SyncEntity {
     this.profileComplete = false,
     this.profileContact,
     this.allowNudges = true,
+    this.eisenhowerMatrixEnabled = false,
   });
 
   @override
@@ -117,6 +118,9 @@ class LocalUserDoc extends HiveObject with SyncEntity {
 
   @HiveField(21)
   bool allowNudges;
+
+  @HiveField(22)
+  bool eisenhowerMatrixEnabled;
 }
 
 @HiveType(typeId: 11)
@@ -365,6 +369,7 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       profileComplete: (reader.availableBytes > 0 ? reader.read() : false) as bool,
       profileContact: (reader.availableBytes > 0 ? reader.read() : null) as String?,
       allowNudges: (reader.availableBytes > 0 ? reader.read() : true) as bool,
+      eisenhowerMatrixEnabled: (reader.availableBytes > 0 ? reader.read() : false) as bool,
     );
   }
 
@@ -392,7 +397,8 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       ..write(obj.avatarColorValue)
       ..write(obj.profileComplete)
       ..write(obj.profileContact)
-      ..write(obj.allowNudges);
+      ..write(obj.allowNudges)
+      ..write(obj.eisenhowerMatrixEnabled);
   }
 }
 

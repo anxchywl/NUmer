@@ -143,6 +143,8 @@ class AppState extends ChangeNotifier {
   bool get quickNotesEnabled => _quickNotesEnabled;
   bool _allowNudges = true;
   bool get allowNudges => _allowNudges;
+  bool _eisenhowerMatrixEnabled = false;
+  bool get eisenhowerMatrixEnabled => _eisenhowerMatrixEnabled;
   Map<String, double> _courseGoalHours = {};
   double? goalHoursForCourse(String id) => _courseGoalHours[id];
 
@@ -316,6 +318,7 @@ class AppState extends ChangeNotifier {
     await loadProgressView();
     await loadQuickNotesEnabled();
     await loadAllowNudges();
+    await loadEisenhowerMatrixEnabled();
     final storedLongBreaks = await Storage.getPomodoroLongBreakMinutes();
 
     for (final c in courses) {
@@ -461,6 +464,17 @@ class AppState extends ChangeNotifier {
     _allowNudges = value;
     notifyListeners();
     await Storage.setAllowNudges(value);
+  }
+
+  Future<void> loadEisenhowerMatrixEnabled() async {
+    _eisenhowerMatrixEnabled = await Storage.getEisenhowerMatrixEnabled();
+    notifyListeners();
+  }
+
+  Future<void> setEisenhowerMatrixEnabled(bool value) async {
+    _eisenhowerMatrixEnabled = value;
+    notifyListeners();
+    await Storage.setEisenhowerMatrixEnabled(value);
   }
 
   Future<void> setCourseGoalHours(String id, double? hours,
@@ -630,7 +644,6 @@ class AppState extends ChangeNotifier {
     String? contact,
     int? avatarIndex,
     int? avatarColorValue,
-    Uint8List? avatarBytes,
     String? uid, // Optional UID for direct remote update
   }) async {
     final normalizedName = name.trim();
@@ -641,13 +654,9 @@ class AppState extends ChangeNotifier {
     profileGoal = _cleanOptional(goal);
     profileContact = _cleanOptional(contact);
     
-    if (avatarBytes != null && avatarBytes.isNotEmpty) {
-      profileAvatarImage = avatarBytes;
-      profileAvatarIndex = null;
-    } else {
-      profileAvatarIndex = avatarIndex;
-      profileAvatarImage = null;
-    }
+    profileAvatarIndex = avatarIndex;
+    profileAvatarImage = null; // Enforce no custom image
+
     profileAvatarColorValue = avatarColorValue;
     profileComplete = true;
 

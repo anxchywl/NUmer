@@ -7,6 +7,7 @@ import '../services/auth_service.dart';
 import '../services/sync_service.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/export_session_dialog.dart';
+import '../widgets/universal_avatar.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
@@ -120,6 +121,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final mode = state.themeMode;
     final auth = context.watch<AuthController>();
     final user = auth.currentUser;
+    final theme = Theme.of(context);
     
     
     if (user == null) {
@@ -174,14 +176,13 @@ class _AccountScreenState extends State<AccountScreen> {
                       children: [
                         ListTile(
                           contentPadding: EdgeInsets.zero,
-                          leading: CircleAvatar(
-                            radius: 24,
-                            child: Text(
-                              displayName.isNotEmpty
-                                  ? displayName[0].toUpperCase()
-                                  : '?',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
+                          leading: UniversalAvatar(
+                            userId: user.uid,
+                            name: displayName,
+                            initialAvatarIndex: state.profileAvatarIndex,
+                            initialAvatarColorValue: state.profileAvatarColorValue,
+                            alwaysShowSilhouette: true,
+                            size: 48,
                           ),
                           title: Text(displayName),
                           subtitle: Column(
@@ -194,64 +195,62 @@ class _AccountScreenState extends State<AccountScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Expanded(
-                              flex:
-                                  Localizations.localeOf(context).languageCode ==
-                                          'ru'
-                                      ? 2
-                                      : 1,
-                              child: TextButton.icon(
-                                onPressed: auth.isBusy
-                                    ? null
-                                    : () async {
-                                        final authController =
-                                            context.read<AuthController>();
-                                        final appState = context.read<AppState>();
-                                        final syncService = context.read<SyncService>();
-                                        final navigator = Navigator.of(context);
-                                        
-                                        await appState.stopAndSaveAllActiveSessions();
-                                        await appState.waitForPendingReflections();
-                                        await syncService.syncNow();
-                                        
-                                        await authController.signOut();
-                                        if (!mounted) return;
-                                        appState.reset();
-                                        navigator.pushReplacementNamed('/auth');
-                                      },
-                                icon: const Icon(Icons.logout),
+                            TextButton.icon(
+                              onPressed: auth.isBusy
+                                  ? null
+                                  : () async {
+                                      final authController =
+                                          context.read<AuthController>();
+                                      final appState = context.read<AppState>();
+                                      final syncService = context.read<SyncService>();
+                                      final navigator = Navigator.of(context);
+                                      
+                                      await appState.stopAndSaveAllActiveSessions();
+                                      await appState.waitForPendingReflections();
+                                      await syncService.syncNow();
+                                      
+                                      await authController.signOut();
+                                      if (!mounted) return;
+                                      appState.reset();
+                                      navigator.pushReplacementNamed('/auth');
+                                    },
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  textStyle: const TextStyle(fontSize: 13),
+                                ),
+                                icon: const Icon(Icons.logout, size: 18),
                                 label: Text(AppLocalizations.of(context)!.signOut),
-                              ),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              flex:
-                                  Localizations.localeOf(context).languageCode ==
-                                          'ru'
-                                      ? 3
-                                      : 1,
-                              child: FilledButton.icon(
-                                onPressed: context.watch<SyncService>().status ==
-                                        SyncStatus.syncing
-                                    ? null
-                                    : () => context
-                                        .read<SyncService>()
-                                        .syncNow(full: true),
+                            const Spacer(),
+                            FilledButton.icon(
+                              onPressed: context.watch<SyncService>().status ==
+                                      SyncStatus.syncing
+                                  ? null
+                                  : () => context
+                                      .read<SyncService>()
+                                      .syncNow(full: true),
+                                style: FilledButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                  textStyle: const TextStyle(fontSize: 13),
+                                ),
                                 icon: context.watch<SyncService>().status ==
                                         SyncStatus.syncing
                                     ? const SizedBox(
-                                        height: 18,
-                                        width: 18,
+                                        height: 16,
+                                        width: 16,
                                         child: CircularProgressIndicator(
                                             strokeWidth: 2),
                                       )
-                                    : const Icon(Icons.sync),
+                                    : const Icon(Icons.sync, size: 18),
                                 label: FittedBox(
                                   fit: BoxFit.scaleDown,
                                   child:
                                       Text(AppLocalizations.of(context)!.syncNow),
                                 ),
-                              ),
                             ),
                           ],
                         ),
@@ -293,7 +292,6 @@ class _AccountScreenState extends State<AccountScreen> {
                                 contact: data.contact,
                                 avatarIndex: data.avatarIndex,
                                 avatarColorValue: data.avatarColorValue,
-                                avatarBytes: data.avatarBytes,
                               );
                             },
                           ),
@@ -311,57 +309,101 @@ class _AccountScreenState extends State<AccountScreen> {
           
           Text(AppLocalizations.of(context)!.appearance, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          SegmentedButton<ThemeMode>(
-            segments: [
-              ButtonSegment(
-                  value: ThemeMode.light,
-                  icon: const Icon(Icons.light_mode_outlined),
-                  label: Text(AppLocalizations.of(context)!.light)),
-              ButtonSegment(
-                  value: ThemeMode.system,
-                  icon: const Icon(Icons.settings_suggest_outlined),
-                  label: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(AppLocalizations.of(context)!.system),
-                  )),
-              ButtonSegment(
-                  value: ThemeMode.dark,
-                  icon: const Icon(Icons.dark_mode_outlined),
-                  label: Text(AppLocalizations.of(context)!.dark)),
-            ],
-            selected: {mode},
-            onSelectionChanged: (s) async {
-              final mode = s.first;
-              final appState = context.read<AppState>();
-              await widget.onThemeChange?.call(mode);
-              if (!mounted) return;
-              appState.setThemeMode(mode);
-            },
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<ThemeMode>(
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+              ),
+              segments: [
+                ButtonSegment(
+                    value: ThemeMode.light,
+                    icon: const Icon(Icons.light_mode_outlined),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(AppLocalizations.of(context)!.light, style: const TextStyle(fontSize: 12)),
+                    )),
+                ButtonSegment(
+                    value: ThemeMode.system,
+                    icon: const Icon(Icons.settings_suggest_outlined),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(AppLocalizations.of(context)!.system, style: const TextStyle(fontSize: 12)),
+                    )),
+                ButtonSegment(
+                    value: ThemeMode.dark,
+                    icon: const Icon(Icons.dark_mode_outlined),
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(AppLocalizations.of(context)!.dark, style: const TextStyle(fontSize: 12)),
+                    )),
+              ],
+              selected: {mode},
+              onSelectionChanged: (s) async {
+                final mode = s.first;
+                final appState = context.read<AppState>();
+                await widget.onThemeChange?.call(mode);
+                if (!mounted) return;
+                appState.setThemeMode(mode);
+              },
+            ),
           ),
           const SizedBox(height: 32),
           
           Text(AppLocalizations.of(context)!.language, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: [
-              ButtonSegment(
-                  value: 'ru',
-                  label: Text(AppLocalizations.of(context)!.russian)),
-              ButtonSegment(
-                  value: 'en',
-                  label: Text(AppLocalizations.of(context)!.english)),
-              ButtonSegment(
-                  value: 'kk',
-                  label: Text(AppLocalizations.of(context)!.kazakh)),
-            ],
-            selected: {Localizations.localeOf(context).languageCode},
-            onSelectionChanged: (Set<String> newSelection) async {
-              final newLocale = newSelection.first;
-              if (newLocale == Localizations.localeOf(context).languageCode) return;
-              
-              final appState = context.read<AppState>();
-              await appState.setLocale(Locale(newLocale));
-            },
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<String>(
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+              ),
+              segments: const [
+                ButtonSegment(
+                    value: 'ru',
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Русский', 
+                        maxLines: 1, 
+                        softWrap: false, 
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    )),
+                ButtonSegment(
+                    value: 'en',
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'English', 
+                        maxLines: 1, 
+                        softWrap: false, 
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    )),
+                ButtonSegment(
+                    value: 'kk',
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Қазақша', 
+                        maxLines: 1, 
+                        softWrap: false, 
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    )),
+              ],
+              selected: {Localizations.localeOf(context).languageCode},
+              onSelectionChanged: (Set<String> newSelection) async {
+                final newLocale = newSelection.first;
+                if (newLocale == Localizations.localeOf(context).languageCode) return;
+                
+                final appState = context.read<AppState>();
+                await appState.setLocale(Locale(newLocale));
+              },
+            ),
           ),
           const SizedBox(height: 32),
 
@@ -370,14 +412,33 @@ class _AccountScreenState extends State<AccountScreen> {
           Text(AppLocalizations.of(context)!.weekStartsOn,
               style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 12),
-          SegmentedButton<WeekStart>(
-            segments: [
-              ButtonSegment(value: WeekStart.monday, label: Text(AppLocalizations.of(context)!.mon)),
-              ButtonSegment(value: WeekStart.sunday, label: Text(AppLocalizations.of(context)!.sun)),
-            ],
-            selected: {state.weekStart},
-            onSelectionChanged: (s) =>
-                context.read<AppState>().setWeekStart(s.first),
+          SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<WeekStart>(
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                minimumSize: const Size(0, 48),
+              ),
+              segments: [
+                ButtonSegment(
+                  value: WeekStart.monday, 
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(AppLocalizations.of(context)!.mon, style: const TextStyle(fontSize: 12)),
+                  ),
+                ),
+                ButtonSegment(
+                  value: WeekStart.sunday, 
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(AppLocalizations.of(context)!.sun, style: const TextStyle(fontSize: 12)),
+                  ),
+                ),
+              ],
+              selected: {state.weekStart},
+              onSelectionChanged: (s) =>
+                  context.read<AppState>().setWeekStart(s.first),
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -416,6 +477,8 @@ class _AccountScreenState extends State<AccountScreen> {
               side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
             child: SwitchListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
               secondary: Icon(
                 Icons.notes_rounded,
                 color: state.quickNotesEnabled 
@@ -423,6 +486,13 @@ class _AccountScreenState extends State<AccountScreen> {
                   : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
               ),
               title: Text(AppLocalizations.of(context)!.quickNotes),
+              subtitle: Text(
+                AppLocalizations.of(context)!.quickNotesDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
               value: state.quickNotesEnabled,
               onChanged: (v) => state.setQuickNotesEnabled(v),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -436,6 +506,8 @@ class _AccountScreenState extends State<AccountScreen> {
               side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
             child: SwitchListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
               secondary: Icon(
                 Icons.notifications_active_rounded,
                 color: state.allowNudges 
@@ -443,20 +515,48 @@ class _AccountScreenState extends State<AccountScreen> {
                   : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
               ),
               title: Text(AppLocalizations.of(context)!.wantToReceiveNudges),
+              subtitle: Text(
+                AppLocalizations.of(context)!.wantToReceiveNudgesDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
               value: state.allowNudges,
               onChanged: (v) => state.setAllowNudges(v),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             ),
           ),
-          const SizedBox(height: 24),
-          
-          Divider(color: Colors.grey.shade300, thickness: 1),
-          const SizedBox(height: 24),
-
-          
-          Text(AppLocalizations.of(context)!.data,
-              style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: SwitchListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              secondary: Icon(
+                Icons.grid_view_rounded,
+                color: state.eisenhowerMatrixEnabled 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
+              ),
+              title: Text(AppLocalizations.of(context)!.eisenhowerMatrix),
+              subtitle: Text(
+                AppLocalizations.of(context)!.eisenhowerMatrixDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
+              value: state.eisenhowerMatrixEnabled,
+              onChanged: (v) => state.setEisenhowerMatrixEnabled(v),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+          const SizedBox(height: 16),
           Card(
             elevation: 0,
             shape: RoundedRectangleBorder(
@@ -464,20 +564,17 @@ class _AccountScreenState extends State<AccountScreen> {
               side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
             child: ListTile(
-              contentPadding: const EdgeInsets.all(16),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.calendar_today_rounded,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              title: Text(AppLocalizations.of(context)!.exportToCalendar),
+              subtitle: Text(
+                AppLocalizations.of(context)!.exportToCalendarSubtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
                 ),
               ),
-              title: Text(AppLocalizations.of(context)!.exportToCalendar),
-              subtitle: Text(AppLocalizations.of(context)!.exportToCalendarSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 showModalBottomSheet(
@@ -495,15 +592,22 @@ class _AccountScreenState extends State<AccountScreen> {
 
           
           ListTile(
+            dense: true,
+            visualDensity: VisualDensity.compact,
             leading: Icon(Icons.delete_forever, 
-              color: Theme.of(context).colorScheme.error
+              color: Theme.of(context).colorScheme.error,
+              size: 20,
             ),
             title: Text(AppLocalizations.of(context)!.deleteAccount, 
               style: TextStyle(
-                color: Theme.of(context).colorScheme.error
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 14,
               )
             ),
-            subtitle: Text(AppLocalizations.of(context)!.deleteAccountSubtitle),
+            subtitle: Text(
+              AppLocalizations.of(context)!.deleteAccountSubtitle,
+              style: const TextStyle(fontSize: 12),
+            ),
             enabled: !auth.isBusy,
             onTap: auth.isBusy ? null : _confirmDeleteAccount,
           ),

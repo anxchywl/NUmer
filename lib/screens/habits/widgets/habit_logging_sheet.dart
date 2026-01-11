@@ -33,12 +33,14 @@ enum LoggingMode { set, add }
 class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   late double _initialValue;
   late double _currentValue;
+  late TextEditingController _numericController;
+  final FocusNode _numericFocusNode = FocusNode();
   LoggingMode _mode = LoggingMode.set;
   Map<String, int> _courseContributions = {}; // courseId -> seconds
   Timer? _incrementTimer;
   StreamSubscription<void>? _historySubscription;
 
-  double _maxValueForHabit() => widget.habit.type == HabitType.time ? 86399.0 : 999999.0;
+  double _maxValueForHabit() => widget.habit.type == HabitType.time ? 86399.0 : 10000.0;
 
   double _clampValue(double raw) {
     if (raw.isNaN || raw.isInfinite) return 0;
@@ -52,6 +54,13 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     _initialValue = _clampValue(widget.initialValue ?? 0);
     _currentValue = _initialValue;
     
+    _numericController = TextEditingController(
+      text: widget.habit.type == HabitType.numeric 
+        ? _currentValue.toInt().toString() 
+        : ""
+    );
+    _numericController.addListener(_onNumericControllerChanged);
+    
     // Fetch fresh data from Storage (bypasses stale l7 cache)
     _fetchFreshTotal();
     
@@ -60,6 +69,24 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     _historySubscription = habitService.historyUpdates.listen((_) {
       _fetchFreshTotal();
     });
+  }
+
+  void _onNumericControllerChanged() {
+    final val = double.tryParse(_numericController.text);
+    if (val != null) {
+      final clamped = _clampValue(val);
+      if (_currentValue != clamped) {
+        setState(() {
+          _currentValue = clamped;
+        });
+      }
+    } else if (_numericController.text.isEmpty) {
+      if (_currentValue != 0) {
+        setState(() {
+          _currentValue = 0;
+        });
+      }
+    }
   }
 
   /// Fetches fresh total from Storage (sessions) + Firestore history (manual value)
@@ -126,9 +153,13 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
          setState(() {
            _courseContributions = contributions;
            _initialValue = total;
-           // Only update _currentValue if in "set" mode and user hasn't interacted yet
-           if (_mode == LoggingMode.set && _currentValue == _clampValue(widget.initialValue ?? 0)) {
+           // Only update _currentValue if user hasn't interacted yet (still at widget.initialValue)
+           // This prevents overwriting user edits during background refreshes
+           if (_currentValue == _clampValue(widget.initialValue ?? 0) && _mode == LoggingMode.set) {
               _currentValue = total;
+              if (widget.habit.type == HabitType.numeric) {
+                _numericController.text = _currentValue.toInt().toString();
+              }
            }
          });
        }
@@ -172,6 +203,9 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   void dispose() {
     _incrementTimer?.cancel();
     _historySubscription?.cancel();
+    _numericController.removeListener(_onNumericControllerChanged);
+    _numericController.dispose();
+    _numericFocusNode.dispose();
     super.dispose();
   }
 
@@ -232,9 +266,18 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
               selected: {_mode},
               onSelectionChanged: (val) {
                 setState(() {
-                  _mode = val.first;
-                  // Reset value when switching modes
-                  _currentValue = (_mode == LoggingMode.set) ? _initialValue : 0;
+                  final newMode = val.first;
+                  if (newMode == LoggingMode.set) {
+                    // Switching to Set: show current total
+                    _currentValue = _initialValue;
+                  } else {
+                    // Switching to Add: start with 0 (amount to add on top of _initialValue)
+                    _currentValue = 0;
+                  }
+                  _mode = newMode;
+                  if (widget.habit.type == HabitType.numeric) {
+                    _numericController.text = _currentValue.toInt().toString();
+                  }
                 });
               },
               showSelectedIcon: false,
@@ -259,7 +302,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
             width: double.infinity,
             height: 56,
             child: FilledButton(
-              onPressed: _onConfirm,
+              onPressed: (isNumeric && _numericController.text.isEmpty) ? null : _onConfirm,
               style: FilledButton.styleFrom(
                 backgroundColor: widget.habit.color,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -279,57 +322,44 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       children: [
         _buildStepButton(Icons.remove, -1.0, theme),
         const SizedBox(width: 24),
-        GestureDetector(
-          onTap: _showManualValueDialog,
-          child: Column(
-            children: [
-              Text(
-                _currentValue % 1 == 0 ? _currentValue.toInt().toString() : _currentValue.toStringAsFixed(1),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 140,
+              child: TextField(
+                controller: _numericController,
+                focusNode: _numericFocusNode,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
                 style: theme.textTheme.displayMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
+                  height: 1.1,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  MaxValueFormatter(10000),
+                ],
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
                 ),
               ),
-              if (widget.habit.unit != null)
-                Text(widget.habit.unit!, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-            ],
-          ),
+            ),
+            if (widget.habit.unit != null && widget.habit.unit!.isNotEmpty)
+              Text(
+                widget.habit.unit!,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
         const SizedBox(width: 24),
         _buildStepButton(Icons.add, 1.0, theme),
       ],
-    );
-  }
-
-  void _showManualValueDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final ctrl = TextEditingController(text: _currentValue % 1 == 0 ? _currentValue.toInt().toString() : _currentValue.toStringAsFixed(1));
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.habitLogSetValueTitle),
-        content: TextField(
-          controller: ctrl,
-          keyboardType: TextInputType.number,
-          autofocus: true,
-          decoration: InputDecoration(
-            suffixText: widget.habit.unit,
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          FilledButton(
-            onPressed: () {
-              final val = double.tryParse(ctrl.text);
-              if (val != null) {
-                setState(() => _currentValue = _clampValue(val));
-              }
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.done),
-          ),
-        ],
-      ),
     );
   }
 
@@ -365,12 +395,23 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     _stopAdjusting();
     _adjustValue(step); // First one is immediate
 
-    _incrementTimer = Timer(const Duration(milliseconds: 500), () {
-      _incrementTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    int count = 0;
+    void tick() {
+      _incrementTimer = Timer(_getTickDuration(count), () {
         _adjustValue(step);
         HapticFeedback.selectionClick();
+        count++;
+        tick();
       });
-    });
+    }
+    tick();
+  }
+
+  Duration _getTickDuration(int count) {
+    if (count > 25) return const Duration(milliseconds: 40);
+    if (count > 15) return const Duration(milliseconds: 80);
+    if (count > 5) return const Duration(milliseconds: 120);
+    return const Duration(milliseconds: 250);
   }
 
   void _stopAdjusting() {
@@ -381,6 +422,9 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   void _adjustValue(double step) {
     setState(() {
       _currentValue = _clampValue(_currentValue + step);
+      if (widget.habit.type == HabitType.numeric) {
+        _numericController.text = _currentValue.toInt().toString();
+      }
     });
   }
 
@@ -458,7 +502,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(l10n.habitProgressLabel(dateStr), style: theme.textTheme.labelMedium),
-            Text("$totalLabel / $targetLabel", style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text("$totalLabel / $targetLabel (${(total / target * 100).toInt()}%)", style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 8),
@@ -589,5 +633,24 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     final mStr = minutes.toString().padLeft(2, '0');
     final sStr = secs.toString().padLeft(2, '0');
     return "$hStr:$mStr:$sStr";
+  }
+}
+
+class MaxValueFormatter extends TextInputFormatter {
+  final double max;
+  MaxValueFormatter(this.max);
+
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (newValue.text.isEmpty) return newValue;
+    final val = double.tryParse(newValue.text);
+    if (val == null) return oldValue;
+    if (val > max) {
+      return TextEditingValue(
+        text: max.toInt().toString(),
+        selection: TextSelection.collapsed(offset: max.toInt().toString().length),
+      );
+    }
+    return newValue;
   }
 }

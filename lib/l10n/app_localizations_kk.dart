@@ -12,7 +12,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsTitle => 'Есептік жазба және баптаулар';
 
   @override
-  String get account => 'Есептік жазба';
+  String get account => 'Параметрлер';
 
   @override
   String get profile => 'Профиль';
@@ -55,6 +55,36 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get wantToReceiveNudges => 'Ньюдж ескертулерін алғыңыз келе ме?';
+
+  @override
+  String get eisenhowerMatrix => 'Эйзенхауэр матрицасы';
+
+  @override
+  String get quickNotesDescription =>
+      'Бар жазбалар сақталады, бірақ сессиядан кейін жаңа жазба терезелері көрсетілмейді.';
+
+  @override
+  String get wantToReceiveNudgesDescription =>
+      'Топ мүшелеріне сізге жұмсақ еске салулар жіберуге рұқсат беру.';
+
+  @override
+  String get eisenhowerMatrixDescription =>
+      'Әдеттерді маңыздылығы мен шұғылдығына қарай реттеу үшін Эйзенхауэр матрицасын қолданыңыз.';
+
+  @override
+  String get eisenhowerQuadrant1 => 'Шұғыл және маңызды';
+
+  @override
+  String get eisenhowerQuadrant2 => 'Шұғыл емес, бірақ маңызды';
+
+  @override
+  String get eisenhowerQuadrant3 => 'Шұғыл, бірақ маңызды емес';
+
+  @override
+  String get eisenhowerQuadrant4 => 'Шұғыл емес және маңызды емес';
+
+  @override
+  String get eisenhowerHint => 'Әдеттерді ұйымдастыру үшін матрицаға сүйреңіз';
 
   @override
   String get yes => 'Иә';
@@ -209,10 +239,29 @@ class AppLocalizationsKk extends AppLocalizations {
   String get oneMonth => '1 ай';
 
   @override
+  String get twoMonths => '2 months';
+
+  @override
   String get threeMonths => '3 ай';
 
   @override
   String get sixMonths => '6 ай';
+
+  @override
+  String get limitOneAnalysisPerPeriod => 'Шектеу: таңдалған кезеңге 1 талдау.';
+
+  @override
+  String get analysisUpdatesEveryPeriod =>
+      'Талдау әр жаңа кезеңде жаңартылады.';
+
+  @override
+  String get analysisAlreadyGenerated =>
+      'Бұл кезең үшін талдау бұрын жасалған.';
+
+  @override
+  String minNotesRequired(int current, int total) {
+    return 'Жазбалардың минималды саны: $current/$total. Көбірек жазба — сапалы талдау.';
+  }
 
   @override
   String get generateInsight => 'Инсайт алу';
@@ -285,7 +334,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get stop => 'Тоқтату';
 
   @override
-  String get reset => 'Қалпына келтіру';
+  String get reset => 'Қалпына\nкелтіру';
 
   @override
   String get ok => 'ОК';
@@ -1323,6 +1372,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitsNavLabel => 'Әдеттер';
 
   @override
+  String get habitStatistics => 'Әдеттер статистикасы';
+
+  @override
   String get habitsTabProgress => 'Прогресс';
 
   @override
@@ -1661,7 +1713,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitArchivedLabel => 'Архивте';
 
   @override
-  String get habitResetProgressTitle => 'Әдет прогресін тазарту';
+  String get habitResetProgressTitle => 'Қалпына келтіру';
 
   @override
   String get habitResetProgressSubtitle => 'Барлық тарих өшіріледі';

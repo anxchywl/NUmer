@@ -832,7 +832,7 @@ class _StatsScreenState extends State<StatsScreen> {
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
-              title: "Habit statistics", 
+              title: AppLocalizations.of(context)!.habitStatistics, 
               child: _buildHabitStatistics(context),
             ),
           ),
@@ -1259,8 +1259,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                     child: Text(
                                       habit.name, 
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis
-                                    )
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
                                   ),
                                ],
                              ),
@@ -1312,16 +1313,29 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildStatRow(BuildContext context, String label, String value) {
+     final isKK = Localizations.localeOf(context).languageCode == 'kk';
      return Row(
        mainAxisAlignment: MainAxisAlignment.spaceBetween,
        children: [
-         Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).hintColor)),
+         Expanded(
+           child: Text(
+             label, 
+             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+               color: Theme.of(context).hintColor,
+               fontSize: isKK ? 13 : null,
+             ),
+             maxLines: 2,
+             overflow: TextOverflow.visible,
+           ),
+         ),
+         const SizedBox(width: 8),
          Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
        ],
      );
   }
 
   Widget _buildStatCard(BuildContext context, String label, String value, Color color) {
+    final isKK = Localizations.localeOf(context).languageCode == 'kk';
     // Cleaner stat card: no border, subtle background
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -1332,7 +1346,16 @@ class _StatsScreenState extends State<StatsScreen> {
       child: Column(
         children: [
            Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-           Text(label, style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8))),
+           Text(
+             label, 
+             style: TextStyle(
+               fontSize: isKK ? 10 : 11, 
+               color: color.withValues(alpha: 0.8)
+             ),
+             textAlign: TextAlign.center,
+             maxLines: 2,
+             softWrap: true,
+           ),
         ],
       ),
     );
@@ -1702,8 +1725,9 @@ class _StatsScreenState extends State<StatsScreen> {
         }
         
         // 2. Prepare Rows (Pivoted)
-        // Header
-        final header = <dynamic>[l10n.csvDay];
+        // Header - use English for CSV, localized for Excel
+        final dayLabel = format == 'csv' ? 'Day' : l10n.csvDay;
+        final header = <dynamic>[dayLabel];
         for (final h in activeHabits) {
           header.add(h.name);
         }
@@ -1757,10 +1781,14 @@ class _StatsScreenState extends State<StatsScreen> {
            rows.add(row);
         }
         
-        // 3. Add Summary Rows (Total, Target, Rate)
-        final totalRow = <dynamic>[l10n.csvTotalCompleted];
-        final targetRow = <dynamic>[l10n.csvTarget];
-        final rateRow = <dynamic>[l10n.csvRate];
+        // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
+        final totalLabel = format == 'csv' ? 'Total completed' : l10n.csvTotalCompleted;
+        final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
+        final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
+        
+        final totalRow = <dynamic>[totalLabel];
+        final targetRow = <dynamic>[targetLabel];
+        final rateRow = <dynamic>[rateLabel];
         
         for (final h in activeHabits) {
            final comp = habitCompletions[h.id] ?? 0;

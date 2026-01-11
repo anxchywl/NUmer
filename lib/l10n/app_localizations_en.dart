@@ -58,6 +58,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wantToReceiveNudges => 'Want to receive nudges?';
 
   @override
+  String get eisenhowerMatrix => 'Eisenhower matrix';
+
+  @override
+  String get quickNotesDescription =>
+      'Existing notes will stay saved, but no new note popups will appear after sessions.';
+
+  @override
+  String get wantToReceiveNudgesDescription =>
+      'Allow group members to send you gentle nudges to stay on track.';
+
+  @override
+  String get eisenhowerMatrixDescription =>
+      'Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.';
+
+  @override
+  String get eisenhowerQuadrant1 => 'Urgent & Important';
+
+  @override
+  String get eisenhowerQuadrant2 => 'Not urgent & Important';
+
+  @override
+  String get eisenhowerQuadrant3 => 'Urgent & Not important';
+
+  @override
+  String get eisenhowerQuadrant4 => 'Not urgent & Not important';
+
+  @override
+  String get eisenhowerHint => 'Drag habits into the matrix to organize them';
+
+  @override
   String get yes => 'Yes';
 
   @override
@@ -209,10 +239,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get oneMonth => '1 month';
 
   @override
+  String get twoMonths => '2 months';
+
+  @override
   String get threeMonths => '3 months';
 
   @override
   String get sixMonths => '6 months';
+
+  @override
+  String get limitOneAnalysisPerPeriod =>
+      'Limit: 1 analysis per selected period.';
+
+  @override
+  String get analysisUpdatesEveryPeriod =>
+      'Your analysis updates every new period.';
+
+  @override
+  String get analysisAlreadyGenerated =>
+      'You\'ve already generated an analysis for this period.';
+
+  @override
+  String minNotesRequired(int current, int total) {
+    return 'Minimum notes required: $current/$total. More notes give better insights.';
+  }
 
   @override
   String get generateInsight => 'Generate insight';
@@ -1337,6 +1387,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get habitsNavLabel => 'Habits';
+
+  @override
+  String get habitStatistics => 'Habit statistics';
 
   @override
   String get habitsTabProgress => 'Progress';

@@ -311,6 +311,39 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     }
   }
 
+  Future<void> _confirmDeleteCategory(HabitCategory cat) async {
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showDialog<bool>(
+       context: context,
+       builder: (ctx) => AlertDialog(
+          title: Text(l10n.habitCategoryDeleteTitle),
+          content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
+          actions: [
+             TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(l10n.cancel)),
+             FilledButton(
+               onPressed: () => Navigator.pop(ctx, true), 
+               style: FilledButton.styleFrom(backgroundColor: Colors.red),
+               child: Text(l10n.delete)
+             ),
+          ],
+       )
+    );
+    
+    if (ok == true && mounted) {
+       final auth = context.read<AuthController>();
+       final uid = auth.currentUser?.uid;
+       if (uid != null) {
+          await context.read<HabitService>().deleteCategory(uid, cat.id);
+          if (mounted) {
+             setState(() {
+                _categoryName = _defaultCategories[0]['name'];
+                _markDirty();
+             });
+          }
+       }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -437,12 +470,26 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
             final icon = isCustom ? cat.icon : cat['icon'];
             final color = isCustom ? cat.color : cat['color'];
             
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            return Stack(
+              alignment: Alignment.center,
               children: [
-                Text(_localizedCategoryName(item, l10n), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
-                const SizedBox(width: 8),
-                Icon(icon, color: color, size: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(_localizedCategoryName(item, l10n), style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 8),
+                    Icon(icon, color: color, size: 20),
+                  ],
+                ),
+                if (isCustom)
+                  Positioned(
+                    right: 0,
+                    child: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
+                      onPressed: () => _confirmDeleteCategory(cat),
+                      tooltip: l10n.habitCategoryDeleteTitle,
+                    ),
+                  ),
               ],
             );
           },
@@ -491,32 +538,51 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
         ),
         const SizedBox(height: 12),
         SizedBox(
-           height: 40,
+           height: 48,
            child: ListView(
              scrollDirection: Axis.horizontal,
-             children: Colors.primaries.map((c) => Padding(
-               padding: const EdgeInsets.only(right: 8),
+             children: Colors.primaries.map((color) => Padding(
+               padding: const EdgeInsets.only(right: 12),
                child: GestureDetector(
-                 onTap: () => setState(() => _newCatColor = c),
-                 child: CircleAvatar(
-                   backgroundColor: c,
-                   radius: 16,
-                   child: _newCatColor == c ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
+                 onTap: () => setState(() => _newCatColor = color),
+                 child: Container(
+                   width: 34,
+                   height: 34,
+                   decoration: BoxDecoration(
+                     color: color,
+                     shape: BoxShape.circle,
+                     border: Border.all(
+                       color: _newCatColor == color ? Colors.black87 : Colors.transparent,
+                       width: 2.5,
+                     ),
+                     boxShadow: _newCatColor == color 
+                       ? [BoxShadow(color: color.withAlpha(100), blurRadius: 8, spreadRadius: 1)]
+                       : null,
+                   ),
+                   child: _newCatColor == color ? const Icon(Icons.check, color: Colors.white, size: 16) : null,
                  ),
                ),
              )).toList(),
            ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         SizedBox(
-           height: 50,
+           height: 48,
            child: ListView(
              scrollDirection: Axis.horizontal,
              children: [
                Icons.local_fire_department, Icons.check_circle, Icons.calendar_today, Icons.access_time, 
-               Icons.track_changes, Icons.star, Icons.bolt, Icons.favorite, Icons.psychology, 
+               Icons.track_changes, Icons.star, Icons.bolt, Icons.favorite_border, Icons.psychology, 
                Icons.fitness_center, Icons.menu_book, Icons.eco, Icons.water_drop, Icons.nightlight_round, 
-               Icons.wb_sunny, Icons.directions_walk, Icons.emoji_events, Icons.auto_awesome, 
+               Icons.wb_sunny, Icons.directions_walk, Icons.emoji_events, Icons.notifications, 
+               Icons.edit, Icons.trending_up, Icons.shield, Icons.battery_charging_full, 
+               Icons.sentiment_satisfied, Icons.rocket_launch, Icons.coffee, Icons.apple,
+               Icons.lunch_dining, Icons.bakery_dining, Icons.wine_bar, Icons.medication,
+               Icons.medical_services, Icons.health_and_safety, Icons.self_improvement, Icons.directions_bike,
+               Icons.pool, Icons.accessibility_new, Icons.spa, Icons.music_note,
+               Icons.headphones, Icons.palette, Icons.camera_alt, Icons.code,
+               Icons.laptop, Icons.account_balance_wallet, Icons.savings, Icons.shopping_cart,
+               Icons.bed,
              ].map((icon) {
                final selected = _newCatIcon == icon;
                return Padding(
@@ -524,14 +590,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                  child: GestureDetector(
                    onTap: () => setState(() => _newCatIcon = icon),
                    child: Container(
-                     width: 48,
-                     height: 48,
+                     width: 34,
+                     height: 34,
                      decoration: BoxDecoration(
-                       color: selected ? _newCatColor.withAlpha(50) : Colors.transparent,
+                       color: selected ? _newCatColor.withAlpha((0.15 * 255).round()) : theme.colorScheme.surfaceContainerHighest.withAlpha(80),
                        shape: BoxShape.circle,
-                       border: Border.all(color: selected ? _newCatColor : theme.colorScheme.outlineVariant, width: selected ? 2 : 1),
+                       border: Border.all(color: selected ? _newCatColor : Colors.transparent, width: 2.5),
+                       boxShadow: selected
+                         ? [BoxShadow(color: _newCatColor.withAlpha(80), blurRadius: 6, spreadRadius: 0)]
+                         : null,
                      ),
-                     child: Icon(icon, color: selected ? _newCatColor : theme.colorScheme.onSurfaceVariant, size: 24),
+                     child: Icon(icon, color: selected ? _newCatColor : theme.colorScheme.onSurfaceVariant, size: 18),
                    ),
                  ),
                );
@@ -759,7 +828,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.restart_alt, color: Colors.red),
-            title: Text(AppLocalizations.of(context)!.habitResetProgressTitle, style: const TextStyle(color: Colors.red)), 
+            title: Text(
+               AppLocalizations.of(context)!.habitResetProgressTitle, 
+               style: const TextStyle(color: Colors.red, fontSize: 13),
+               maxLines: 1,
+               overflow: TextOverflow.ellipsis,
+             ), 
             subtitle: Text(AppLocalizations.of(context)!.habitResetProgressSubtitle),
             trailing: OutlinedButton(
                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
@@ -774,7 +848,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                         content: Text(AppLocalizations.of(context)!.habitResetProgressConfirmMessage),
                         actions: [
                            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(AppLocalizations.of(context)!.cancel)), 
-                           TextButton(onPressed: () => Navigator.pop(c, true), style: TextButton.styleFrom(foregroundColor: Colors.red), child: Text(AppLocalizations.of(context)!.reset))
+                           TextButton(
+                             onPressed: () => Navigator.pop(c, true), 
+                             style: TextButton.styleFrom(foregroundColor: Colors.red), 
+                             child: Text(
+                               AppLocalizations.of(context)!.reset,
+                               textAlign: TextAlign.center,
+                             ),
+                           )
                          ]
                       )
                     );

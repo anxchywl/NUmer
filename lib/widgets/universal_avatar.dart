@@ -12,6 +12,7 @@ class UniversalAvatar extends StatelessWidget {
   final int? initialAvatarIndex;
   final int? initialAvatarColorValue;
   final String? initialAvatarBase64;
+  final bool alwaysShowSilhouette;
   final double size;
   final double? fontSize;
 
@@ -22,12 +23,19 @@ class UniversalAvatar extends StatelessWidget {
     this.initialAvatarIndex,
     this.initialAvatarColorValue,
     this.initialAvatarBase64,
+    this.alwaysShowSilhouette = false,
     required this.size,
     this.fontSize,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (alwaysShowSilhouette) {
+      return _buildContent(
+        avatarColorValue: initialAvatarColorValue,
+        forceSilhouette: true,
+      );
+    }
     if (userId == null || userId!.isEmpty) {
       return _buildContent(
         avatarIndex: initialAvatarIndex,
@@ -67,8 +75,14 @@ class UniversalAvatar extends StatelessWidget {
     int? avatarColorValue,
     String? avatarBase64,
     Uint8List? avatarBytes,
+    bool forceSilhouette = false,
   }) {
-    // 1. Try Image (Memory)
+    // 1. Force Silhouette if requested
+    if (forceSilhouette) {
+      return _buildSilhouette(avatarColorValue);
+    }
+
+    // 2. Try Image (Memory)
     if (avatarBytes != null && avatarBytes.isNotEmpty) {
       return _wrapImage(Image.memory(avatarBytes, fit: BoxFit.cover));
     }
@@ -101,7 +115,11 @@ class UniversalAvatar extends StatelessWidget {
       );
     }
 
-    // 4. Fallback to Initials
+    // 4. Fallback to Silhouette
+    return _buildSilhouette(avatarColorValue);
+  }
+
+  Widget _buildSilhouette(int? avatarColorValue) {
     final Color bgColor = Color(avatarColorValue ?? 0xFF6366F1);
     return Container(
       width: size,
@@ -111,13 +129,10 @@ class UniversalAvatar extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Center(
-        child: Text(
-          (name != null && name!.isNotEmpty) ? name![0].toUpperCase() : '?',
-          style: TextStyle(
-            fontSize: fontSize ?? size * 0.4,
-            fontWeight: FontWeight.bold,
-            color: ThemeData.estimateBrightnessForColor(bgColor) == Brightness.dark ? Colors.white : Colors.black87,
-          ),
+        child: Icon(
+          Icons.person,
+          size: size * 0.7,
+          color: ThemeData.estimateBrightnessForColor(bgColor) == Brightness.dark ? Colors.white : Colors.black87,
         ),
       ),
     );

@@ -423,45 +423,72 @@ class _ShellState extends State<_Shell> {
         bottom: false,
         child: IndexedStack(index: _index, children: pages),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: AppLocalizations.of(context)!.home,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.check_circle_outline),
-            selectedIcon: const Icon(Icons.check_circle),
-            label: AppLocalizations.of(context)!.habitsNavLabel,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            selectedIcon: const Icon(Icons.bar_chart),
-            label: AppLocalizations.of(context)!.statistics,
-          ),
-          /*
-          NavigationDestination(
-            icon: const Icon(Icons.contacts_outlined),
-            selectedIcon: const Icon(Icons.contacts),
-            label: AppLocalizations.of(context)!.connectionsTabLabel,
-          ),
-          */
-          NavigationDestination(
-            icon: const Icon(Icons.group_outlined),
-            selectedIcon: const Icon(Icons.group),
-            label: AppLocalizations.of(context)!.groups,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            selectedIcon: const Icon(Icons.settings),
-            label: AppLocalizations.of(context)!.account,
-          ),
-        ],
-        onDestinationSelected: (i) {
-          setState(() => _index = i);
-        },
+        bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          height: 64,
+          indicatorColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final theme = Theme.of(context);
+            if (states.contains(WidgetState.selected)) {
+              return theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              );
+            }
+            return theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              fontSize: 12,
+            );
+          }),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            final theme = Theme.of(context);
+            if (states.contains(WidgetState.selected)) {
+              return IconThemeData(
+                color: theme.colorScheme.primary,
+                size: 26,
+              );
+            }
+            return IconThemeData(
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              size: 24,
+            );
+          }),
+        ),
+        child: NavigationBar(
+          selectedIndex: _index,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.home_outlined),
+              selectedIcon: const Icon(Icons.home),
+              label: AppLocalizations.of(context)!.home,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.check_circle_outline),
+              selectedIcon: const Icon(Icons.check_circle),
+              label: AppLocalizations.of(context)!.habitsNavLabel,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.bar_chart_outlined),
+              selectedIcon: const Icon(Icons.bar_chart),
+              label: AppLocalizations.of(context)!.statistics,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.group_outlined),
+              selectedIcon: const Icon(Icons.group),
+              label: AppLocalizations.of(context)!.groups,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: const Icon(Icons.settings),
+              label: AppLocalizations.of(context)!.account,
+            ),
+          ],
+          onDestinationSelected: (i) {
+            setState(() => _index = i);
+          },
+        ),
       ),
     );
   }
@@ -534,7 +561,6 @@ class _ShellState extends State<_Shell> {
                                     : remoteContact,
                             initialGoal: appState.profileGoal,
                             initialAvatarIndex: appState.profileAvatarIndex,
-                            initialAvatarBytes: appState.profileAvatarImage,
                             primaryButtonLabel: 'Save profile',
                             autofocusName: true,
                             onSubmit: (data) async {
@@ -549,7 +575,6 @@ class _ShellState extends State<_Shell> {
                                 contact: data.contact,
                                 avatarIndex: data.avatarIndex,
                                 avatarColorValue: data.avatarColorValue,
-                                avatarBytes: data.avatarBytes,
                                 uid: uid,
                               );
 

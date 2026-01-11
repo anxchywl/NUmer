@@ -15,6 +15,15 @@
   "displayProgressBar": "Display progress bar of",
   "quickNotes": "Quick notes",
   "wantToReceiveNudges": "Want to receive nudges?",
+  "eisenhowerMatrix": "Eisenhower matrix",
+  "quickNotesDescription": "Existing notes will stay saved, but no new note popups will appear after sessions.",
+  "wantToReceiveNudgesDescription": "Allow group members to send you gentle nudges to stay on track.",
+  "eisenhowerMatrixDescription": "Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.",
+  "eisenhowerQuadrant1": "Urgent & Important",
+  "eisenhowerQuadrant2": "Not urgent & Important",
+  "eisenhowerQuadrant3": "Urgent & Not important",
+  "eisenhowerQuadrant4": "Not urgent & Not important",
+  "eisenhowerHint": "Drag habits into the matrix to organize them",
   "yes": "Yes",
   "no": "No",
   "data": "Data",
@@ -78,8 +87,26 @@
   "selectCourse": "Select course",
   "timePeriod": "Time period",
   "oneMonth": "1 month",
+  "twoMonths": "2 months",
   "threeMonths": "3 months",
   "sixMonths": "6 months",
+  "limitOneAnalysisPerPeriod": "Limit: 1 analysis per selected period.",
+  "analysisUpdatesEveryPeriod": "Your analysis updates every new period.",
+  "analysisAlreadyGenerated": "You've already generated an analysis for this period.",
+  "minNotesRequired": "Minimum notes required: {current}/{total}. More notes give better insights.",
+  "@minNotesRequired": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "@notesRequiredCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "generateInsight": "Generate insight",
   "analyzing": "Analyzing...",
   "analysisPlaceholder": "Select a course and time period, then get AI-powered feedback of your studies.",
@@ -607,6 +634,7 @@
   "userProhibitedNudge": "This user has disabled nudges.",
   "leaderboardHintMessage": "• You can tap any user in the leaderboard to view their study time.\n• Tap the hand icon next to a friend’s avatar to nudge him.",
   "habitsNavLabel": "Habits",
+  "habitStatistics": "Habit statistics",
   "habitsTabProgress": "Progress",
   "habitsTabList": "My habits",
   "habitsPleaseSignIn": "Please sign in",
