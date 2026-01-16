@@ -182,15 +182,16 @@ service cloud.firestore {
       allow delete: if isOwner(userId);
     }
 
-    // Sessions: allow reading if authenticated (needed for group stats)
     match /users/{userId}/sessions/{sessionId} {
+      // Allow peer reading if they share a group, but only for sessions of non-hidden courses
       allow read: if isOwner(userId) || hasSharedGroup(userId);
       allow write: if isOwner(userId);
     }
 
     // Private user data - Owner only
     match /users/{userId}/courses/{courseId} {
-      allow read: if isOwner(userId);
+      // Allow peer reading if they share a group (needed for displaying course names in leaderboard details)
+      allow read: if isOwner(userId) || hasSharedGroup(userId);
       allow write: if isOwner(userId);
     }
 

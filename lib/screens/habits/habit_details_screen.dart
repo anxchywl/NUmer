@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
 
 import 'widgets/habit_schedule_editor.dart';
+import 'widgets/habit_time_picker.dart';
 import '../../app_state.dart';
 import 'swipe_selector.dart';
 import '../../l10n/app_localizations.dart';
@@ -66,7 +67,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   late bool _archived;
 
   // Time Helpers
-  final _timeCtrl = TextEditingController(text: "00:00:00");
   late TextEditingController _targetCtrl;
   late TextEditingController _unitCtrl;
 
@@ -96,15 +96,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     _connectedCourseIds = List.from(h.connectedCourseIds);
 
     // Time Control Init
-    if (_type == HabitType.time) {
-      final totalSeconds = _target.toInt();
-      final hh = (totalSeconds ~/ 3600).toString().padLeft(2, '0');
-      final mm = ((totalSeconds % 3600) ~/ 60).toString().padLeft(2, '0');
-      final ss = (totalSeconds % 60).toString().padLeft(2, '0');
-      _timeCtrl.text = "$hh:$mm:$ss";
-    }
 
-    _timeCtrl.addListener(_onTimeChanged);
     
     // Initialize Controllers
     _targetCtrl = TextEditingController(text: _type == HabitType.numeric ? "$_target" : "");
@@ -120,49 +112,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     setState(() => _isDirty = true);
   }
 
-  String _normalizeHms(String raw) {
-    final d = raw.replaceAll(RegExp(r'[^0-9]'), '');
-    if (d.isEmpty) return '00:00:00';
-    String hh = '00', mm = '00', ss = '00';
-    if (d.length <= 2) {
-      hh = d.padLeft(2, '0');
-    } else if (d.length <= 4) {
-      hh = d.substring(0, d.length - 2).padLeft(2, '0');
-      mm = d.substring(d.length - 2);
-    } else {
-      final takeLast6 = d.length > 6 ? d.substring(d.length - 6) : d.padLeft(6, '0');
-      hh = takeLast6.substring(0, 2);
-      mm = takeLast6.substring(2, 4);
-      ss = takeLast6.substring(4, 6);
-    }
-    int H = int.tryParse(hh) ?? 0;
-    int M = int.tryParse(mm) ?? 0;
-    int S = int.tryParse(ss) ?? 0;
-    if (H > 23) H = 23; 
-    if (M > 59) M = 59;
-    if (S > 59) S = 59;
-    return '${H.toString().padLeft(2, '0')}:${M.toString().padLeft(2, '0')}:${S.toString().padLeft(2, '0')}';
-  }
-
-  void _onTimeChanged() {
-    final raw = _timeCtrl.text;
-    final norm = _normalizeHms(raw);
-    if (raw != norm) {
-        _timeCtrl.value = TextEditingValue(
-            text: norm,
-            selection: TextSelection.collapsed(offset: norm.length),
-        );
-    }
-    final parts = norm.split(':');
-    final h = int.tryParse(parts[0]) ?? 0;
-    final m = int.tryParse(parts[1]) ?? 0;
-    final s = int.tryParse(parts[2]) ?? 0;
-    final newTarget = (h * 3600 + m * 60 + s).toDouble();
-    if (_target != newTarget) {
-      _target = newTarget;
-      _markDirty();
-    }
-  }
 
   void _loadCustomCategories() {
     final auth = context.read<AuthController>();
@@ -207,7 +156,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
 
   @override
   void dispose() {
-    _timeCtrl.dispose();
     _targetCtrl.dispose();
     _unitCtrl.dispose();
     _scrollController.dispose();
@@ -695,23 +643,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                   ),
                ),
             ]),
-           if (_type == HabitType.time)
-             Center(
-               child: SizedBox(
-                 width: 200,
-                 child: TextFormField(
-                   controller: _timeCtrl,
-                   keyboardType: TextInputType.number,
-                   textAlign: TextAlign.center,
-                   style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-                   decoration: InputDecoration(
-                     hintText: AppLocalizations.of(context)!.habitTimePlaceholder, filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                   ),
-                   onChanged: (v) => _markDirty(),
-                 ),
-               ),
-             ),
+            if (_type == HabitType.time)
+              HabitTimePicker(
+                value: _target,
+                activeColor: theme.colorScheme.primary,
+                onChanged: (v) {
+                  setState(() {
+                    _target = v;
+                    _markDirty();
+                  });
+                },
+              ),
            const SizedBox(height: 24),
            
            _buildCourseSelector(theme),

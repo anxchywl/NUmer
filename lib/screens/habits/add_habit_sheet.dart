@@ -7,6 +7,7 @@ import '../../../models/habit_category.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/habit_service.dart';
 import 'swipe_selector.dart';
+import 'widgets/habit_time_picker.dart';
 import '../../../app_state.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -50,7 +51,7 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   int _interval = 2; // Every 2 days
   
   // Numeric/Time targets
-  double _target = 1.0; 
+  double _target = 0.0; 
   String _unit = ""; 
   HabitComparator _comparator = HabitComparator.atLeast;
 
@@ -68,59 +69,16 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   bool _isSaving = false;
 
   // Time Input Helpers
-  final _timeCtrl = TextEditingController(text: "00:00:00");
   late TextEditingController _targetCtrl;
   late TextEditingController _unitCtrl;
   // Persistent controllers for numeric inputs to avoid recreating each build
   late TextEditingController _frequencyGoalCtrl;
   late TextEditingController _workDaysCtrl;
   late TextEditingController _restDaysCtrl;
-  
-  String _normalizeHms(String raw) {
-    final d = raw.replaceAll(RegExp(r'[^0-9]'), '');
-    String hh = '00', mm = '00', ss = '00';
-    if (d.isEmpty) return '00:00:00';
-    if (d.length <= 2) {
-      hh = d.padLeft(2, '0');
-    } else if (d.length <= 4) {
-      hh = d.substring(0, d.length - 2).padLeft(2, '0');
-      mm = d.substring(d.length - 2);
-    } else {
-      final takeLast6 = d.length > 6 ? d.substring(d.length - 6) : d.padLeft(6, '0');
-      hh = takeLast6.substring(0, 2);
-      mm = takeLast6.substring(2, 4);
-      ss = takeLast6.substring(4, 6);
-    }
-    int H = int.tryParse(hh) ?? 0;
-    int M = int.tryParse(mm) ?? 0;
-    int S = int.tryParse(ss) ?? 0;
-    if (H > 23) H = 23; 
-    if (M > 59) M = 59;
-    if (S > 59) S = 59;
-    return '${H.toString().padLeft(2, '0')}:${M.toString().padLeft(2, '0')}:${S.toString().padLeft(2, '0')}';
-  }
-
-  void _onTimeChanged() {
-    final raw = _timeCtrl.text;
-    final norm = _normalizeHms(raw);
-    if (raw != norm) {
-        _timeCtrl.value = TextEditingValue(
-            text: norm,
-            selection: TextSelection.collapsed(offset: norm.length),
-        );
-    }
-    // Update target value in seconds
-    final parts = norm.split(':');
-    final h = int.tryParse(parts[0]) ?? 0;
-    final m = int.tryParse(parts[1]) ?? 0;
-    final s = int.tryParse(parts[2]) ?? 0;
-    setState(() => _target = (h * 3600 + m * 60 + s).toDouble());
-  }
 
   @override
   void initState() {
     super.initState();
-    _timeCtrl.addListener(_onTimeChanged);
     
     // Initial State for Editing
     if (widget.initialCategory != null) {
@@ -148,13 +106,10 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   _restDaysFocus.addListener(_onFocusChanged);
   _targetFocus.addListener(_onFocusChanged);
   _unitFocus.addListener(_onFocusChanged);
-  _timeFocus.addListener(_onFocusChanged);
   }
   
   @override 
   void dispose() {
-    _timeCtrl.removeListener(_onTimeChanged);
-    _timeCtrl.dispose();
     _frequencyGoalCtrl.dispose();
     _workDaysCtrl.dispose();
     _restDaysCtrl.dispose();
@@ -167,7 +122,6 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   _restDaysFocus.removeListener(_onFocusChanged);
   _targetFocus.removeListener(_onFocusChanged);
   _unitFocus.removeListener(_onFocusChanged);
-  _timeFocus.removeListener(_onFocusChanged);
     
     _habitNameFocus.dispose();
     _freqGoalFocus.dispose();
@@ -175,7 +129,6 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   _restDaysFocus.dispose();
   _targetFocus.dispose();
   _unitFocus.dispose();
-  _timeFocus.dispose();
     super.dispose();
   }
   
@@ -192,7 +145,6 @@ final FocusNode _workDaysFocus = FocusNode();
 final FocusNode _restDaysFocus = FocusNode();
 final FocusNode _targetFocus = FocusNode();
 final FocusNode _unitFocus = FocusNode();
-final FocusNode _timeFocus = FocusNode();
 
   // -- Focus State --
   bool _isHabitNameFocused = false;
@@ -205,18 +157,10 @@ final FocusNode _timeFocus = FocusNode();
   _isHabitNameFocused = _habitNameFocus.hasFocus;
   _isFreqGoalFocused = _freqGoalFocus.hasFocus;
   _isWorkRestFocused = _workDaysFocus.hasFocus || _restDaysFocus.hasFocus;
-  _isTrackingInputFocused = _targetFocus.hasFocus || _unitFocus.hasFocus || _timeFocus.hasFocus;
+  _isTrackingInputFocused = _targetFocus.hasFocus || _unitFocus.hasFocus;
 });
   }
 
-  int _currentTimeSeconds() {
-    final parts = _timeCtrl.text.split(':');
-    if (parts.length != 3) return 0;
-    final h = int.tryParse(parts[0]) ?? 0;
-    final m = int.tryParse(parts[1]) ?? 0;
-    final s = int.tryParse(parts[2]) ?? 0;
-    return h * 3600 + m * 60 + s;
-  }
 
   bool get _isNumericValid {
     final valueText = _targetCtrl.text.trim();
@@ -230,7 +174,7 @@ final FocusNode _timeFocus = FocusNode();
     return switch (_type) {
       HabitType.yesNo => true,
       HabitType.numeric => _isNumericValid,
-      HabitType.time => _currentTimeSeconds() > 0,
+      HabitType.time => _target > 0,
     };
   }
 
@@ -783,27 +727,10 @@ final FocusNode _timeFocus = FocusNode();
                         
                      ] else if (_type == HabitType.time) ...[
                         
-                        Center(
-                          child: SizedBox(
-                            width: 200,
-                            child: TextFormField(
-                              controller: _timeCtrl,
-                              focusNode: _timeFocus,
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                              decoration: InputDecoration(
-                                hintText: l10n.habitTimePlaceholder,
-                                filled: true,
-                                fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
-                                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                              ),
-                              inputFormatters: [],
-                            ),
-                          ),
+                        HabitTimePicker(
+                          value: _target,
+                          activeColor: theme.colorScheme.primary,
+                          onChanged: (v) => setState(() => _target = v),
                         ),
                         const SizedBox(height: 16),
                         Center(child: Text(l10n.habitPerDay, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline))),
@@ -811,13 +738,7 @@ final FocusNode _timeFocus = FocusNode();
                   ],
 
                    const SizedBox(height: 16),
-                   AnimatedSize(
-                     duration: const Duration(milliseconds: 300),
-                     curve: Curves.easeOutCubic,
-                     child: _timeFocus.hasFocus
-                       ? const SizedBox.shrink()
-                       : _buildCourseSelector(theme),
-                   ),
+                   _buildCourseSelector(theme),
                    const SizedBox(height: 16),
                   
                   // Navigation

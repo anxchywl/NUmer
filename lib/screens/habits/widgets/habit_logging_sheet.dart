@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'habit_time_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -248,7 +249,6 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(widget.habit.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    Text(_getGoalText(l10n), style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
                   ],
                 ),
               ),
@@ -287,13 +287,11 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
             ),
           ),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           
           if (isNumeric) _buildNumericPicker(theme) else _buildTimePicker(theme, l10n),
           
-          if (!isNumeric) const SizedBox(height: 16),
-          
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           
           _buildProgressInfo(theme, l10n),
           
@@ -364,36 +362,16 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   }
 
   Widget _buildTimePicker(ThemeData theme, AppLocalizations l10n) {
-    final h = _currentValue ~/ 3600;
-    final m = (_currentValue % 3600) ~/ 60;
-    final s = _currentValue % 60;
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildTimeUnit(h.toInt().toString().padLeft(2, '0'), l10n.habitTimeHourShort, 3600, theme),
-        _buildTimeSeparator(theme),
-        _buildTimeUnit(m.toInt().toString().padLeft(2, '0'), l10n.habitTimeMinuteShort, 60, theme),
-        _buildTimeSeparator(theme),
-        _buildTimeUnit(s.toInt().toString().padLeft(2, '0'), l10n.habitTimeSecondShort, 1, theme),
-        const SizedBox(width: 8),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 20),
-          child: IconButton(
-            onPressed: () => setState(() => _currentValue = 0),
-            icon: Icon(Icons.refresh, color: theme.colorScheme.error.withValues(alpha: 0.8)),
-            tooltip: l10n.habitClearTime,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-          ),
-        ),
-      ],
+    return HabitTimePicker(
+      value: _currentValue,
+      onChanged: (v) => setState(() => _currentValue = v),
+      activeColor: widget.habit.color,
     );
   }
 
   void _startAdjusting(double step) {
     _stopAdjusting();
-    _adjustValue(step); // First one is immediate
+    _adjustValue(step);
 
     int count = 0;
     void tick() {
@@ -428,43 +406,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     });
   }
 
-  Widget _buildTimeUnit(String val, String label, double step, ThemeData theme) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTapDown: (_) {
-            _startAdjusting(step);
-            HapticFeedback.lightImpact();
-          },
-          onTapUp: (_) => _stopAdjusting(),
-          onTapCancel: () => _stopAdjusting(),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(val, style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            )),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant,
-          fontWeight: FontWeight.bold,
-        )),
-      ],
-    );
-  }
 
-  Widget _buildTimeSeparator(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, right: 4, bottom: 20),
-      child: Text(":", style: theme.textTheme.displaySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-    );
-  }
 
   Widget _buildStepButton(IconData icon, double step, ThemeData theme) {
     return GestureDetector(
@@ -611,29 +553,6 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       );
   }
 
-  String _getGoalText(AppLocalizations l10n) {
-    final target = widget.habit.targetValue;
-    if (widget.habit.type == HabitType.time) {
-      final targetLabel = _formatDurationHms(target);
-      return l10n.habitGoalLabel(targetLabel);
-    }
-    final numberFormat = NumberFormat.decimalPattern(l10n.localeName);
-    final targetLabel = numberFormat.format(target.toInt());
-    final unit = widget.habit.unit ?? '';
-    final goalText = unit.isNotEmpty ? "$targetLabel $unit" : targetLabel;
-    return l10n.habitGoalLabel(goalText.trim());
-  }
-
-  String _formatDurationHms(double seconds) {
-    final totalSeconds = seconds.round().clamp(0, 359999).toInt();
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final secs = totalSeconds % 60;
-    final hStr = hours.toString().padLeft(2, '0');
-    final mStr = minutes.toString().padLeft(2, '0');
-    final sStr = secs.toString().padLeft(2, '0');
-    return "$hStr:$mStr:$sStr";
-  }
 }
 
 class MaxValueFormatter extends TextInputFormatter {

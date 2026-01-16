@@ -75,6 +75,10 @@ Future<void> main() async {
       bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
   await Firebase.initializeApp();
   
+  if (!kIsWeb) {
+    FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  }
+  
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
@@ -420,76 +424,78 @@ class _ShellState extends State<_Shell> {
     return Scaffold(
       body: SafeArea(
         top: true,
-        bottom: false,
         child: IndexedStack(index: _index, children: pages),
       ),
-        bottomNavigationBar: NavigationBarTheme(
+      bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           height: 64,
+          backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+          surfaceTintColor: Colors.transparent,
           indicatorColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            final theme = Theme.of(context);
-            if (states.contains(WidgetState.selected)) {
-              return theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              );
-            }
-            return theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              fontSize: 12,
-            );
-          }),
-          iconTheme: WidgetStateProperty.resolveWith((states) {
-            final theme = Theme.of(context);
-            if (states.contains(WidgetState.selected)) {
-              return IconThemeData(
-                color: theme.colorScheme.primary,
-                size: 26,
-              );
-            }
-            return IconThemeData(
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              size: 24,
-            );
-          }),
-        ),
-        child: NavigationBar(
-          selectedIndex: _index,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.home_outlined),
-              selectedIcon: const Icon(Icons.home),
-              label: AppLocalizations.of(context)!.home,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final theme = Theme.of(context);
+                if (states.contains(WidgetState.selected)) {
+                  return theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  );
+                }
+                return theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  fontSize: 12,
+                );
+              }),
+              iconTheme: WidgetStateProperty.resolveWith((states) {
+                final theme = Theme.of(context);
+                if (states.contains(WidgetState.selected)) {
+                  return IconThemeData(
+                    color: theme.colorScheme.primary,
+                    size: 26,
+                  );
+                }
+                return IconThemeData(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  size: 24,
+                );
+              }),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.check_circle_outline),
-              selectedIcon: const Icon(Icons.check_circle),
-              label: AppLocalizations.of(context)!.habitsNavLabel,
+            child: NavigationBar(
+              backgroundColor: Colors.transparent,
+              selectedIndex: _index,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              destinations: [
+                NavigationDestination(
+                  icon: const Icon(Icons.home_outlined),
+                  selectedIcon: const Icon(Icons.home),
+                  label: AppLocalizations.of(context)!.home,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.check_circle_outline),
+                  selectedIcon: const Icon(Icons.check_circle),
+                  label: AppLocalizations.of(context)!.habitsNavLabel,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.bar_chart_outlined),
+                  selectedIcon: const Icon(Icons.bar_chart),
+                  label: AppLocalizations.of(context)!.statistics,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.group_outlined),
+                  selectedIcon: const Icon(Icons.group),
+                  label: AppLocalizations.of(context)!.groups,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.person_outline),
+                  selectedIcon: const Icon(Icons.settings),
+                  label: AppLocalizations.of(context)!.account,
+                ),
+              ],
+              onDestinationSelected: (i) {
+                setState(() => _index = i);
+              },
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.bar_chart_outlined),
-              selectedIcon: const Icon(Icons.bar_chart),
-              label: AppLocalizations.of(context)!.statistics,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.group_outlined),
-              selectedIcon: const Icon(Icons.group),
-              label: AppLocalizations.of(context)!.groups,
-            ),
-            NavigationDestination(
-              icon: const Icon(Icons.person_outline),
-              selectedIcon: const Icon(Icons.settings),
-              label: AppLocalizations.of(context)!.account,
-            ),
-          ],
-          onDestinationSelected: (i) {
-            setState(() => _index = i);
-          },
-        ),
-      ),
+          ),
     );
   }
 

@@ -1367,6 +1367,8 @@ class _StatsScreenState extends State<StatsScreen> {
     bool isExporting = false;
     bool isSuccess = false;
     String? filePath;
+    int countdown = 0;
+    Timer? timer;
     
     await showModalBottomSheet(
       context: context,
@@ -1380,7 +1382,72 @@ class _StatsScreenState extends State<StatsScreen> {
           final l10n = AppLocalizations.of(context)!;
           final theme = Theme.of(context);
           final scheme = theme.colorScheme;
+
+          Future<void> triggerExport() async {
+            ExportService.markExportStarted();
+            setSheetState(() {
+              isExporting = true;
+              countdown = 0;
+            });
+            try {
+              final path = await _generateFile(context, habits, uid, selectedMonth, selectedFormat);
+              if (context.mounted) {
+                setSheetState(() {
+                  isSuccess = true;
+                  filePath = path;
+                });
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.habitReportFailed(e.toString())),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            } finally {
+              if (context.mounted) {
+                setSheetState(() => isExporting = false);
+              }
+            }
+          }
           
+          void startCountdown() {
+            final remaining = ExportService.remainingCooldownSeconds;
+            if (remaining == 0) {
+              triggerExport();
+              return;
+            }
+
+            setSheetState(() {
+              isExporting = true;
+              countdown = remaining;
+            });
+            timer = Timer.periodic(const Duration(seconds: 1), (t) {
+              if (countdown > 1) {
+                setSheetState(() => countdown--);
+              } else {
+                t.cancel();
+                triggerExport();
+              }
+            });
+          }
+
+          void cancelCountdown() {
+            timer?.cancel();
+            setSheetState(() {
+              isExporting = false;
+              countdown = 0;
+            });
+          }
+
+          // Update the periodic timer to call triggerExport
+          if (timer != null && !timer!.isActive && countdown == 1) {
+             // This is a bit tricky inside build. 
+             // Better to handle it in the timer callback itself.
+          }
+
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -1443,48 +1510,26 @@ class _StatsScreenState extends State<StatsScreen> {
                 const SizedBox(height: 32),
                 
                 FilledButton.icon(
-                  onPressed: isExporting 
-                    ? null 
-                    : (isSuccess 
-                        ? () => Navigator.pop(context)
-                        : () async {
-                            setSheetState(() => isExporting = true);
-                            try {
-                              final path = await _generateFile(context, habits, uid, selectedMonth, selectedFormat);
-                              if (context.mounted) {
-                                setSheetState(() {
-                                  isSuccess = true;
-                                  filePath = path;
-                                });
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.habitReportFailed(e.toString())),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            } finally {
-                              if (context.mounted) {
-                                setSheetState(() => isExporting = false);
-                              }
-                            }
-                          }),
+                  onPressed: isSuccess 
+                    ? () => Navigator.pop(context)
+                    : (isExporting 
+                        ? (countdown > 0 ? cancelCountdown : null) 
+                        : startCountdown),
                   icon: isExporting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
+                    ? (countdown > 0 
+                        ? const Icon(Icons.close, color: Colors.white)
+                        : const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          ))
                     : Icon(isSuccess ? Icons.check_circle_outline : Icons.download),
                   label: Text(
                     isExporting
-                      ? l10n.exporting
+                      ? (countdown > 0 ? l10n.cancel : l10n.exporting)
                       : (isSuccess ? l10n.done : l10n.habitReportDownloadAction),
                   ),
                   style: FilledButton.styleFrom(
@@ -1492,13 +1537,22 @@ class _StatsScreenState extends State<StatsScreen> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
+                if (isExporting && countdown > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      l10n.habitReportDownloadCountdown(countdown),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(color: scheme.primary),
+                    ),
+                  ),
                 const SizedBox(height: 16),
               ],
             ),
           );
         }
       ),
-    );
+    ).then((_) => timer?.cancel());
   }
 
   Widget _buildSelectionView(
@@ -1669,8 +1723,6 @@ class _StatsScreenState extends State<StatsScreen> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.file_download_done, color: scheme.primary),
-                  const SizedBox(width: 8),
                   Text(
                     l10n.fileSavedSuccessfully,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -1687,10 +1739,11 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
               const SizedBox(height: 4),
               SelectableText(
-                filePath ?? l10n.unknownPath,
+                _getDisplayPath(filePath),
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontFamily: 'monospace',
                   color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
@@ -1698,6 +1751,29 @@ class _StatsScreenState extends State<StatsScreen> {
         ),
       ],
     );
+  }
+
+  String _getDisplayPath(String? fullPath) {
+    if (fullPath == null) return '';
+    final path = fullPath.replaceAll('\\', '/');
+    final fileName = path.split('/').last;
+
+    // Detect Downloads folder (common on Android/macOS)
+    if (path.toLowerCase().contains('/download/') || path.toLowerCase().contains('/downloads/')) {
+      return 'Downloads/$fileName';
+    }
+
+    // Detect Documents folder (common on iOS)
+    if (path.toLowerCase().contains('/documents/')) {
+      return 'Documents/$fileName';
+    }
+
+    // Default fallback
+    if (path.length > 40) {
+      return fileName;
+    }
+
+    return path;
   }
 
   Future<String> _generateFile(BuildContext context, List<Habit> habits, String uid, DateTime monthDate, String format) async {

@@ -46,6 +46,20 @@ class GroupStatistics {
       return null;
     }
   }
+
+  GroupStatistics copyWith({
+    String? groupId,
+    List<MemberStudyData>? members,
+    DateTime? periodStart,
+    DateTime? periodEnd,
+  }) {
+    return GroupStatistics(
+      groupId: groupId ?? this.groupId,
+      members: members ?? this.members,
+      periodStart: periodStart ?? this.periodStart,
+      periodEnd: periodEnd ?? this.periodEnd,
+    );
+  }
 }
 
 class MemberStudyData {
@@ -166,6 +180,19 @@ class SubjectStat {
     required this.colorValue,
     required this.seconds,
   });
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'colorValue': colorValue,
+        'seconds': seconds,
+      };
+
+  factory SubjectStat.fromJson(Map<dynamic, dynamic> json) {
+    return SubjectStat(
+      name: json['name'] as String,
+      colorValue: (json['colorValue'] as num).toInt(),
+      seconds: (json['seconds'] as num).toInt(),
+    );
+  }
 }
 
 class MemberSubjectStats {
@@ -176,6 +203,29 @@ class MemberSubjectStats {
     required this.totalSeconds,
     required this.subjectStats,
   });
+
+  Map<String, dynamic> toJson() => {
+        'totalSeconds': totalSeconds,
+        'subjectStats': subjectStats.map((k, v) => MapEntry(k, v.toJson())),
+      };
+
+  factory MemberSubjectStats.fromJson(Map<String, dynamic> json) {
+    final rawStatsMap = json['subjectStats'] as Map?;
+    final subjectStats = <String, SubjectStat>{};
+    
+    if (rawStatsMap != null) {
+      for (final entry in rawStatsMap.entries) {
+        final key = entry.key.toString();
+        final val = entry.value as Map;
+        subjectStats[key] = SubjectStat.fromJson(val);
+      }
+    }
+
+    return MemberSubjectStats(
+      totalSeconds: (json['totalSeconds'] as num).toInt(),
+      subjectStats: subjectStats,
+    );
+  }
 }
 
 enum StatisticsPeriod { today, last7Days, lastMonth }
@@ -183,64 +233,53 @@ enum StatisticsPeriod { today, last7Days, lastMonth }
 extension StatisticsPeriodX on StatisticsPeriod {
   String get label => switch (this) {
         StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => 'Last 7 days',
-        StatisticsPeriod.lastMonth => 'Last month',
+        StatisticsPeriod.last7Days => 'This week',
+        StatisticsPeriod.lastMonth => 'This month',
       };
 
   String get shortLabel => switch (this) {
         StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => '7 days',
+        StatisticsPeriod.last7Days => 'Week',
         StatisticsPeriod.lastMonth => 'Month',
       };
 
   
-  (DateTime start, DateTime end) getDateRange(DateTime referenceDate) {
-    final now = DateTime(referenceDate.year, referenceDate.month, referenceDate.day, 23, 59, 59);
+  (DateTime start, DateTime end) getDateRange() {
+    final now = DateTime.now();
     
     return switch (this) {
       StatisticsPeriod.today => (
         DateTime(now.year, now.month, now.day, 0, 0, 0),
-        now,
+        now, // End is now (current moment)
       ),
-      StatisticsPeriod.last7Days => _getCalendarWeekRange(now),
+      StatisticsPeriod.last7Days => _getCurrentWeekRange(now),
       StatisticsPeriod.lastMonth => (
         DateTime(now.year, now.month, 1, 0, 0, 0),
-        now,
+        now, // End is now
       ),
     };
   }
 
   
-  (DateTime start, DateTime end) _getCalendarWeekRange(DateTime referenceDate) {
-    
-    final weekday = referenceDate.weekday;
-    
-    
+  (DateTime start, DateTime end) _getCurrentWeekRange(DateTime now) {
+    // Mon = 1 ... Sun = 7
+    final weekday = now.weekday;
     final daysFromMonday = weekday - 1; 
-    
-    
+
     final monday = DateTime(
-      referenceDate.year,
-      referenceDate.month,
-      referenceDate.day,
+      now.year,
+      now.month,
+      now.day,
       0,
       0,
       0,
     ).subtract(Duration(days: daysFromMonday));
+
+    // We can just return 'now' as the end, effectively "This Week (so far)"
+    // Or we can return the end of the week. 
+    // The prompt says "browsing past/future ranges" is removed.
+    // "Today / This week / This month".
     
-    
-    final sunday = DateTime(
-      monday.year,
-      monday.month,
-      monday.day,
-      23,
-      59,
-      59,
-    ).add(const Duration(days: 6));
-    
-    
-    final end = referenceDate.isBefore(sunday) ? referenceDate : sunday;
-    
-    return (monday, end);
+    return (monday, now); 
   }
 }

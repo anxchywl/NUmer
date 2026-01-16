@@ -1,61 +1,59 @@
-import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import '../services/storage.dart';
 
-class HeatmapService {
-  final FirebaseFirestore _firestore;
-  final FirebaseAuth _auth;
+class HeatmapService extends ChangeNotifier {
+  static final HeatmapService _instance = HeatmapService._internal();
+  factory HeatmapService() => _instance;
 
-  HeatmapService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  HeatmapService._internal() {
+    Storage.sessionUpdates.listen(_onSessionUpdates);
+  }
 
-  
-  
-  Future<Map<DateTime, int>> fetchDailyTotals(
-      DateTime start, DateTime end) async {
-    final uid = _auth.currentUser?.uid;
-    if (uid == null) return {};
+  // Cache: MonthStart -> Daily Totals
+  final Map<DateTime, Map<DateTime, int>> _cache = {};
 
+  void _onSessionUpdates(List<DateTime> dates) {
+    if (dates.isEmpty) return;
     
-    final startUtc = start.toUtc();
-    final endUtc = end.toUtc();
-
-    try {
-      final query = _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('sessions')
-          .where('startUtc', isGreaterThanOrEqualTo: startUtc)
-          .where('startUtc', isLessThanOrEqualTo: endUtc);
-
-      final snapshot = await query.get();
-      final minutes = <DateTime, int>{};
-
-      for (final doc in snapshot.docs) {
-        final data = doc.data();
-        final seconds = (data['seconds'] as num?)?.toInt() ?? 0;
-        if (seconds <= 0) continue;
-
-        
-        
-        final sUtc = (data['startUtc'] as Timestamp).toDate();
-        final sLocal = sUtc.toLocal();
-        final dayKey = DateTime(sLocal.year, sLocal.month, sLocal.day);
-
-        final min = _toMinutes(seconds);
-        minutes.update(dayKey, (v) => v + min, ifAbsent: () => min);
+    // Invalidate cache for affected months
+    bool changed = false;
+    for (final date in dates) {
+      final monthKey = DateTime(date.year, date.month, 1);
+      if (_cache.containsKey(monthKey)) {
+        _cache.remove(monthKey);
+        changed = true;
       }
-      return minutes;
-    } catch (e) {
-      
-      return {};
+    }
+    
+    // Notify listeners so UI can re-fetch if needed
+    if (changed) {
+      notifyListeners();
     }
   }
 
-  int _toMinutes(int seconds) {
-    if (seconds <= 0) return 0;
+  /// Fetches daily totals for the given month (and adjacent days if needed by calendar grid).
+  /// To support lazy-loading "current month only", we expect [month] to be the 1st of the month.
+  /// We will actually fetch a slight range around it or just the month.
+  /// Given TableCalendar works with "focusedDay", we should probably cache by month.
+  Future<Map<DateTime, int>> fetchMonth(DateTime month) async {
+    final monthKey = DateTime(month.year, month.month, 1);
     
-    return (seconds / 60).floor();
+    if (_cache.containsKey(monthKey)) {
+      return _cache[monthKey]!;
+    }
+
+    // Calculate range: First day of month to last day of month.
+    // We strictly fetch this month's data. 
+    // If TableCalendar shows surrounding days, they will be fetched when "focusedDay" changes 
+    // OR we should perhaps fetch a bit more. 
+    // Requirement: "Load current month only".
+    // "Update if changed day is in currently loaded month".
+    
+    final start = monthKey;
+    final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+
+    final data = await Storage.getDailyTotals(start, end);
+    _cache[monthKey] = data;
+    return data;
   }
 }

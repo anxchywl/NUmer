@@ -28,6 +28,12 @@
   "no": "No",
   "data": "Data",
   "exportToCalendar": "Export to calendar",
+  "exportWillStartIn": "Export will start in {seconds} seconds",
+  "@exportWillStartIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "exportToCalendarSubtitle": "Save your sessions as calendar events",
   "allCourses": "All courses",
   "courseFallback": "Course",
@@ -39,6 +45,12 @@
       "error": {
         "type": "String"
       }
+    }
+  },
+  "habitReportDownloadCountdown": "Report generation will start in {seconds} seconds",
+  "@habitReportDownloadCountdown": {
+    "placeholders": {
+      "seconds": { "type": "int" }
     }
   },
   "fileSavedSuccessfully": "File saved successfully",
@@ -54,6 +66,7 @@
   "pleaseSignInToViewAccount": "Please sign in to view your account.",
   "signOut": "Sign out",
   "syncNow": "Sync now",
+  "syncing": "Syncing",
   "home": "Home",
   "statistics": "Statistics",
   "groups": "Groups",
@@ -755,7 +768,7 @@
   "habitTrackingTitle": "Tracking type",
   "habitExplainHabit": "Explain your habit",
   "habitNameLabel": "Habit name",
-  "habitNameHint": "e.g. morning jog",
+  "habitNameHint": "",
   "habitCategoryLabel": "Category",
   "habitCategoryNew": "New category",
   "habitCategoryNameLabel": "Category name",

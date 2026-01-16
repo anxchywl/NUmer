@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
 
@@ -25,6 +26,7 @@ class Storage {
   static const _metaLocale = 'locale_v1';
   static const _metaHabitCategories = 'habit_categories_v1';
   static const _metaProgressHabitOrder = 'progress_habit_order_v1';
+  static const _metaLastExportMonth = 'last_export_month_v1';
 
   static Future<void> configureForUser(String uid) async {
     await _db.openForUser(uid);
@@ -62,6 +64,9 @@ class Storage {
     }
     await _db.putUser(doc);
   }
+
+  static final _sessionUpdateController = StreamController<List<DateTime>>.broadcast();
+  static Stream<List<DateTime>> get sessionUpdates => _sessionUpdateController.stream;
 
   
   
@@ -294,6 +299,7 @@ class Storage {
             credits: c.credits,
             expLevel: c.expLevel,
             sortOrder: c.sortOrder,
+            hiddenFromLeaderboard: c.hiddenFromLeaderboard,
           ),
         )
         .toList();
@@ -344,6 +350,7 @@ class Storage {
           totalMinutes: 0,
           pomodoroLongBreakMinutes: null,
           sortOrder: course.sortOrder,
+          hiddenFromLeaderboard: course.hiddenFromLeaderboard,
           dirty: true,
           deleted: false,
         );
@@ -371,6 +378,8 @@ class Storage {
         update(existing.sortOrder, course.sortOrder,
             (v) => existing.sortOrder = v);
       }
+      update(existing.hiddenFromLeaderboard, course.hiddenFromLeaderboard,
+          (v) => existing.hiddenFromLeaderboard = v);
       if (existing.deleted) {
         existing.deleted = false;
         changed = true;
@@ -628,6 +637,21 @@ class Storage {
 
   static const _metaAnalysisLog = 'analysis_log_v1';
 
+  static DateTime? getLastExportMonth() {
+    _ensureUser();
+    final raw = LocalDatabase.instance.getMeta(_metaLastExportMonth);
+    if (raw is String) {
+      return DateTime.tryParse(raw);
+    }
+    return null;
+  }
+
+  static Future<void> setLastExportMonth(DateTime date) async {
+    _ensureUser();
+    final key = '${date.year}-${date.month.toString().padLeft(2, "0")}-01';
+    await LocalDatabase.instance.putMeta(_metaLastExportMonth, key);
+  }
+
   static Future<int?> getLastAnalysisTimestamp(String courseId, int periodMonths) async {
     _ensureUser();
     final raw = _db.getMeta(_metaAnalysisLog);
@@ -673,6 +697,22 @@ class Storage {
     final key = '${courseId}_${analysis.period.months}m';
     map[key] = analysis.toJson();
     await _db.putMeta(_metaAnalysisContent, map);
+  }
+
+  static const _metaGroupMemberStatsCache = 'group_member_stats_cache_v1';
+
+  static Future<Map<String, dynamic>?> getGroupMemberStatsCache() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaGroupMemberStatsCache);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
+  static Future<void> saveGroupMemberStatsCache(Map<String, dynamic> data) async {
+    _ensureUser();
+    await _db.putMeta(_metaGroupMemberStatsCache, data);
   }
 
   
@@ -725,6 +765,7 @@ class Storage {
       deleted: false,
     );
     await _db.putSession(session);
+    _sessionUpdateController.add([DateTime(startLocal.year, startLocal.month, startLocal.day)]);
     return id;
   }
 
@@ -762,6 +803,57 @@ class Storage {
     }
   }
 
+  static Future<List<LocalSession>> getPeerSessions(String targetUid) async {
+    _ensureUser();
+    return _db.peerSessions(targetUid).toList();
+  }
+
+  static Future<void> putPeerSession(LocalSession session) async {
+    _ensureUser();
+    // We use a composite key of targetUid_sessionId for the Hive box key
+    // But the session object itself has its own ID. 
+    // The box is per-current-user, so we just need to ensure uniqueness within the box.
+    // Since session IDs are UUIDs (mostly), they are unique.
+    // However, to follow the pattern I added in LocalDatabase:
+    await _db.putPeerSession(session, '${session.uid}_${session.id}');
+  }
+
+  static Future<int> getLastPeerSync(String targetUid) async {
+    _ensureUser();
+    final entry = _db.syncStateForKey('peer_$targetUid');
+    return entry.lastPullMs;
+  }
+
+  static Future<void> setLastPeerSync(String targetUid, int timestamp) async {
+    _ensureUser();
+    final entry = _db.syncStateForKey('peer_$targetUid');
+    entry.lastPullMs = timestamp;
+    await _db.putSyncState(entry);
+  }
+
+  static Future<List<LocalCourse>> getPeerCourses(String targetUid) async {
+    _ensureUser();
+    return _db.peerCourses(targetUid).toList();
+  }
+
+  static Future<void> putPeerCourse(LocalCourse course) async {
+    _ensureUser();
+    await _db.putPeerCourse(course, '${course.uid}_${course.id}');
+  }
+
+  static Future<int> getLastPeerCourseSync(String targetUid) async {
+    _ensureUser();
+    final entry = _db.syncStateForKey('peer_courses_$targetUid');
+    return entry.lastPullMs;
+  }
+
+  static Future<void> setLastPeerCourseSync(String targetUid, int timestamp) async {
+    _ensureUser();
+    final entry = _db.syncStateForKey('peer_courses_$targetUid');
+    entry.lastPullMs = timestamp;
+    await _db.putSyncState(entry);
+  }
+
   static Future<Map<String, int>> secondsByCourseBetween(
       DateTime startLocal, DateTime endLocal) async {
     if (!endLocal.isAfter(startLocal)) return {};
@@ -781,6 +873,54 @@ class Storage {
       if (secs <= 0) continue;
       result.update(session.courseId, (value) => value + secs,
           ifAbsent: () => secs);
+    }
+    return result;
+  }
+  static Future<Map<DateTime, int>> getDailyTotals(
+      DateTime start, DateTime end) async {
+    _ensureUser();
+    final startUtc = DateTime.utc(start.year, start.month, start.day);
+    final endUtc = DateTime.utc(end.year, end.month, end.day, 23, 59, 59);
+
+    final result = <DateTime, int>{};
+
+    for (final session in _db.sessions()) {
+      if (session.deleted) continue;
+
+      final sStart =
+          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
+      final sEnd =
+          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+
+      // Check overlap
+      if (sEnd.isBefore(startUtc) || sStart.isAfter(endUtc)) continue;
+
+      // We attribute the session to its start day (local time logic usually prefers start day attribution for simple heatmaps, 
+      // or split across days? HeatmapService previously split?
+      // HeatmapService previously did: "final dayKey = DateTime(sLocal.year ...)"
+      // It took the whole session and put it in the start day. 
+      // Let's stick to that for consistency unless split is better.
+      // Wait, original HeatmapService:
+      // final sUtc = (data['startUtc'] as Timestamp).toDate();
+      // final sLocal = sUtc.toLocal();
+      // final dayKey = DateTime(sLocal.year, sLocal.month, sLocal.day);
+      // minutes.update(dayKey, (v) => v + min, ...)
+      // It didn't split. It just dumped the whole duration into the start day.
+      // I will do the same but verify timezone. Storage.dailySeries splits. 
+      // If I want "Heatmap reflects changes instantly", maybe I should improve it to split?
+      // The user just said "Heatmap reflects changes instantly".
+      // Let's match previous behavior first: attribute to local start day.
+      
+      final sLocal = sStart.toLocal();
+      final dayKey = DateTime(sLocal.year, sLocal.month, sLocal.day);
+      
+      // Filter by range based on dayKey
+      if (dayKey.isBefore(start) || dayKey.isAfter(end)) continue;
+
+      final minutes = (session.seconds / 60).floor();
+      if (minutes > 0) {
+        result.update(dayKey, (v) => v + minutes, ifAbsent: () => minutes);
+      }
     }
     return result;
   }
@@ -923,27 +1063,56 @@ class Storage {
       session.dirty = true;
       session.updatedAtMs = _now();
       await session.save();
+      
+      final d = DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true).toLocal();
+      _sessionUpdateController.add([DateTime(d.year, d.month, d.day)]);
       return;
     }
 
     
-    if (courseId == null || startUtc == null || endUtc == null) return;
+    // bool deletedAnyLocal = false; // REMOVED unused variable
+    final affectedDays = <DateTime>[];
+
+    // Scan all sessions (fallback if key lookup failed or for timestamp match)
     for (final item in _db.sessions(includeDeleted: true)) {
-      final sStart =
-          DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true);
-      final sEnd =
-          DateTime.fromMillisecondsSinceEpoch(item.endUtcMs, isUtc: true);
-      if (item.courseId == courseId &&
-          sStart.microsecondsSinceEpoch ==
-              startUtc.toUtc().microsecondsSinceEpoch &&
-          sEnd.microsecondsSinceEpoch ==
-              endUtc.toUtc().microsecondsSinceEpoch) {
+      bool match = false;
+      if (item.id == id) {
+        match = true;
+      } else if (courseId != null && startUtc != null && endUtc != null) {
+        final sStart =
+            DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true);
+        final sEnd =
+            DateTime.fromMillisecondsSinceEpoch(item.endUtcMs, isUtc: true);
+        if (item.courseId == courseId &&
+            sStart.microsecondsSinceEpoch ==
+                startUtc.toUtc().microsecondsSinceEpoch &&
+            sEnd.microsecondsSinceEpoch ==
+                endUtc.toUtc().microsecondsSinceEpoch) {
+          match = true;
+        }
+      }
+
+      if (match) {
         item.deleted = true;
         item.dirty = true;
         item.updatedAtMs = _now();
         await item.save();
+        // deletedAnyLocal = true; // REMOVED
+        // Track unique days affected
+        final d = DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true).toLocal();
+        final day = DateTime(d.year, d.month, d.day);
+        if (!affectedDays.contains(day)) affectedDays.add(day);
       }
     }
+
+    if (affectedDays.isNotEmpty) {
+      _sessionUpdateController.add(affectedDays);
+    }
+
+    // if (deletedAnyLocal) return; // REMOVED: potentially we still need to sync delete to cloud if IDs match
+
+
+    if (courseId == null || startUtc == null || endUtc == null) return;
 
     
     final firestore = FirebaseFirestore.instance;
@@ -963,7 +1132,10 @@ class Storage {
       
       final batch = firestore.batch();
       for (final doc in querySnapshot.docs) {
-        batch.delete(doc.reference);
+        batch.update(doc.reference, {
+          'deleted': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
 
       
@@ -975,7 +1147,10 @@ class Storage {
       
       final sessionSnapshot = await sessionDoc.get();
       if (sessionSnapshot.exists) {
-        batch.delete(sessionDoc);
+        batch.update(sessionDoc, {
+          'deleted': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
 
       await batch.commit();

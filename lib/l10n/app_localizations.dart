@@ -274,6 +274,12 @@ abstract class AppLocalizations {
   /// **'Export to calendar'**
   String get exportToCalendar;
 
+  /// No description provided for @exportWillStartIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Export will start in {seconds} seconds'**
+  String exportWillStartIn(int seconds);
+
   /// No description provided for @exportToCalendarSubtitle.
   ///
   /// In en, this message translates to:
@@ -309,6 +315,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Export failed: {error}'**
   String exportFailedMessage(String error);
+
+  /// No description provided for @habitReportDownloadCountdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Report generation will start in {seconds} seconds'**
+  String habitReportDownloadCountdown(int seconds);
 
   /// No description provided for @fileSavedSuccessfully.
   ///
@@ -387,6 +399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync now'**
   String get syncNow;
+
+  /// No description provided for @syncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing'**
+  String get syncing;
 
   /// No description provided for @home.
   ///
@@ -2851,7 +2869,7 @@ abstract class AppLocalizations {
   /// No description provided for @habitNameHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. morning jog'**
+  /// **''**
   String get habitNameHint;
 
   /// No description provided for @habitCategoryLabel.

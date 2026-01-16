@@ -227,14 +227,18 @@ class HomeScreen extends StatelessWidget {
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  FutureBuilder<Map<String, int>>(
-                                    future: _loadCourseSeconds(context, c.id),
-                                    builder: (context, snap) {
-                                      final secs = snap.data?[c.id] ?? 0;
-                                      final label = state.homeSummaryLabel(context);
-                                      return Text('$label: ${_fmtHMS(secs)}');
-                                    },
-                                  ),
+                                  if (state.homeSummaryRange !=
+                                      HomeSummaryRange.off)
+                                    FutureBuilder<Map<String, int>>(
+                                      future:
+                                          _loadCourseSeconds(context, c.id),
+                                      builder: (context, snap) {
+                                        final secs = snap.data?[c.id] ?? 0;
+                                        final label =
+                                            state.homeSummaryLabel(context);
+                                        return Text('$label: ${_fmtHMS(secs)}');
+                                      },
+                                    ),
                                   if (showProgress)
                                     FutureBuilder<int>(
                                       future:
@@ -2358,7 +2362,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       (c) => c.id == widget.course.id,
       orElse: () => widget.course,
     );
-    final studiedToday = _fmtHMS(state.todaySecondsFor(widget.course.id));
 
     final isTimerRunningForThis = state.timerRunning[widget.course.id] ?? false;
     final isStopwatchRunningForThis =
@@ -2410,17 +2413,50 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             ListTile(
               leading: CircleAvatar(backgroundColor: live.color),
               title: Text(live.name),
-              subtitle: Text('${AppLocalizations.of(context)!.today}: $studiedToday'),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    tooltip: AppLocalizations.of(context)!.edit,
-                    icon: Icon(Icons.edit, 
-                      color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey
-                    ),
-                    onPressed: isAnyRunningCombined ? null : () => _openEditCourseDialog(context),
+                IconButton(
+                  tooltip: live.hiddenFromLeaderboard
+                      ? 'Unhide from Leaderboard'
+                      : 'Hide from Leaderboard',
+                  icon: Icon(
+                    live.hiddenFromLeaderboard
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                    color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey,
                   ),
+                  onPressed: isAnyRunningCombined
+                      ? null
+                      : () async {
+                          final appState = context.read<AppState>();
+                          final updated = live.copyWith(
+                              hiddenFromLeaderboard:
+                                  !live.hiddenFromLeaderboard);
+                          await appState.updateCourse(updated);
+                          setState(() {}); // Toggle icon state immediately
+                          
+                          if (!mounted || !context.mounted) return;
+                          
+                          // Brief delay so the user sees the icon change before the popup closes
+                          await Future.delayed(const Duration(milliseconds: 300));
+                          if (!mounted || !context.mounted) return;
+                          
+                          Navigator.pop(context);
+
+                          final msg = updated.hiddenFromLeaderboard
+                              ? 'Course hidden. Your progress is now private.'
+                              : 'Course restored. Your current stats are now visible to the group.';
+                          showAppMessage(context, msg);
+                        },
+                ),
+                IconButton(
+                  tooltip: AppLocalizations.of(context)!.edit,
+                  icon: Icon(Icons.edit, 
+                    color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey
+                  ),
+                  onPressed: isAnyRunningCombined ? null : () => _openEditCourseDialog(context),
+                ),
                   IconButton(
                     icon: Icon(Icons.delete, 
                       color: isAnyRunningCombined ? Colors.grey : Colors.red

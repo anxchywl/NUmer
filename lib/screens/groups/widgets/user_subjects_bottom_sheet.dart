@@ -15,6 +15,7 @@ class UserSubjectsBottomSheet extends StatefulWidget {
   final int avatarColorValue;
   final StatisticsPeriod period;
   final MemberSubjectStats? preloadedStats;
+  final bool shouldRefresh;
 
   const UserSubjectsBottomSheet({
     super.key,
@@ -24,6 +25,7 @@ class UserSubjectsBottomSheet extends StatefulWidget {
     required this.avatarColorValue,
     required this.period,
     this.preloadedStats,
+    this.shouldRefresh = true,
   });
 
   @override
@@ -31,30 +33,33 @@ class UserSubjectsBottomSheet extends StatefulWidget {
 }
 
 class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
-  Future<MemberSubjectStats>? _statsFuture;
+  late Stream<MemberSubjectStats> _statsStream;
+  late bool _isUpdating;
 
   @override
   void initState() {
     super.initState();
-    if (widget.preloadedStats != null) {
-      _statsFuture = Future.value(widget.preloadedStats);
-    } else {
-      _loadStats();
-    }
-  }
-
-  @override
-  void dispose() {
-    _statsFuture = null;
-    super.dispose();
-  }
-
-  void _loadStats() {
     final groupService = context.read<GroupService>();
-    _statsFuture = groupService.fetchMemberSubjectStats(
+    final stale = widget.shouldRefresh ||
+        groupService.isMemberStatsStale(
+          groupId: widget.groupId,
+          userId: widget.userId,
+          period: widget.period,
+        );
+    _isUpdating = stale;
+
+    // Initialize stream for delta sync
+    _statsStream = groupService.watchMemberStats(
       groupId: widget.groupId,
-      userId: widget.userId,
+      targetUserId: widget.userId,
       period: widget.period,
+      forceRefresh: stale,
+      onDeltaApplied: () {
+        if (!mounted) return;
+        setState(() {
+          _isUpdating = false;
+        });
+      },
     );
   }
 
@@ -175,55 +180,80 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                     },
                   ),
                 ),
-                FutureBuilder<MemberSubjectStats>(
-                  future: _statsFuture,
+                StreamBuilder<MemberSubjectStats>(
+                  stream: _statsStream,
+                  initialData: widget.preloadedStats,
                   builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(20),
+                     final stats = snapshot.data;
+                     if (stats == null) return const SizedBox.shrink();
+
+                     return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        _formatSeconds(stats.totalSeconds),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
                         ),
-                        child: Text(
-                          _formatSeconds(snapshot.data!.totalSeconds),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
+                      ),
+                    );
+                  }
                 ),
               ],
             ),
           ),
+          if (_isUpdating)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Updating...',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const Divider(height: 1),
           
           Flexible(
-            child: FutureBuilder<MemberSubjectStats>(
-              future: _statsFuture,
+            child: StreamBuilder<MemberSubjectStats>(
+              stream: _statsStream,
+              initialData: widget.preloadedStats,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(48.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
                 if (snapshot.hasError) {
                   return Padding(
                     padding: const EdgeInsets.all(32),
                     child: Center(
                       child: Text(
-                        AppLocalizations.of(context)!.failedToLoadUserData(''),
+                        AppLocalizations.of(context)!.failedToLoadUserData(snapshot.error.toString()),
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: colorScheme.error,
                         ),
                       ),
                     ),
+                  );
+                }
+
+                if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(48.0),
+                    child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
@@ -242,14 +272,13 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                   );
                 }
 
-                
                 final subjects = stats.subjectStats.values
                     .where((s) => s.seconds > 0)
                     .toList()
                   ..sort((a, b) => b.seconds.compareTo(a.seconds));
 
                 if (subjects.isEmpty) {
-                  return Padding(
+                   return Padding(
                     padding: const EdgeInsets.all(32),
                     child: Center(
                       child: Text(

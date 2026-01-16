@@ -32,12 +32,14 @@ class UniversalAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (alwaysShowSilhouette) {
       return _buildContent(
+        context,
         avatarColorValue: initialAvatarColorValue,
         forceSilhouette: true,
       );
     }
     if (userId == null || userId!.isEmpty) {
       return _buildContent(
+        context,
         avatarIndex: initialAvatarIndex,
         avatarColorValue: initialAvatarColorValue,
         avatarBase64: initialAvatarBase64,
@@ -53,6 +55,7 @@ class UniversalAvatar extends StatelessWidget {
         if (snapshot.hasData && snapshot.data?.data() != null) {
           final data = snapshot.data!.data()!;
           return _buildContent(
+            context,
             avatarIndex: _readAvatarIndex(data),
             avatarColorValue: _readAvatarColorValue(data),
             avatarBase64: _readAvatarBase64(data),
@@ -62,6 +65,7 @@ class UniversalAvatar extends StatelessWidget {
 
         // Fallback to initial data while loading or if no data
         return _buildContent(
+          context,
           avatarIndex: initialAvatarIndex,
           avatarColorValue: initialAvatarColorValue,
           avatarBase64: initialAvatarBase64,
@@ -70,7 +74,8 @@ class UniversalAvatar extends StatelessWidget {
     );
   }
 
-  Widget _buildContent({
+  Widget _buildContent(
+    BuildContext context, {
     int? avatarIndex,
     int? avatarColorValue,
     String? avatarBase64,
@@ -79,7 +84,7 @@ class UniversalAvatar extends StatelessWidget {
   }) {
     // 1. Force Silhouette if requested
     if (forceSilhouette) {
-      return _buildSilhouette(avatarColorValue);
+      return _buildSilhouette(context);
     }
 
     // 2. Try Image (Memory)
@@ -116,23 +121,21 @@ class UniversalAvatar extends StatelessWidget {
     }
 
     // 4. Fallback to Silhouette
-    return _buildSilhouette(avatarColorValue);
+    return _buildSilhouette(context);
   }
 
-  Widget _buildSilhouette(int? avatarColorValue) {
-    final Color bgColor = Color(avatarColorValue ?? 0xFF6366F1);
+  Widget _buildSilhouette(BuildContext context) {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: bgColor,
+      decoration: const BoxDecoration(
         shape: BoxShape.circle,
       ),
       child: Center(
         child: Icon(
           Icons.person,
-          size: size * 0.7,
-          color: ThemeData.estimateBrightnessForColor(bgColor) == Brightness.dark ? Colors.white : Colors.black87,
+          size: size * 0.85,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
         ),
       ),
     );

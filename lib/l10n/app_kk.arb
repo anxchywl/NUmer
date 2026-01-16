@@ -28,6 +28,12 @@
   "no": "Жоқ",
   "data": "Деректер",
   "exportToCalendar": "Күнтізбеге экспорттау",
+  "exportWillStartIn": "Экспорт {seconds} секундтан кейін басталады",
+  "@exportWillStartIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "exportToCalendarSubtitle": "Сеанстарыңызды күнтізбе оқиғалары ретінде сақтаңыз",
   "allCourses": "Барлық курстар",
   "courseFallback": "Курс",
@@ -54,6 +60,7 @@
   "pleaseSignInToViewAccount": "Есептік жазбаңызды көру үшін кіріңіз.",
   "signOut": "Шығу",
   "syncNow": "Қазір синхрондау",
+  "syncing": "Синхрондалуда",
   "home": "Басты бет",
   "statistics": "Статистика",
   "groups": "Топтар",
@@ -746,7 +753,7 @@
   "habitTrackingTitle": "Бақылау түрі",
   "habitExplainHabit": "Әдетті сипаттаңыз",
   "habitNameLabel": "Әдет атауы",
-  "habitNameHint": "мысалы, таңғы жүгіру",
+  "habitNameHint": "",
   "habitCategoryLabel": "Санат",
   "habitCategoryNew": "Жаңа санат",
   "habitCategoryNameLabel": "Санат атауы",
@@ -857,7 +864,13 @@
       }
     }
   },
-  "habitReportFailed": "Экспорт қатесі: {error}",
+  "habitReportFailed": "Экспорттау қатесі: {error}",
+  "habitReportDownloadCountdown": "Есепті дайындау {seconds} секундтан кейін басталады",
+  "@habitReportDownloadCountdown": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "@habitReportFailed": {
     "placeholders": {
       "error": {

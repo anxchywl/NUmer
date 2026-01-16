@@ -140,6 +140,7 @@ class LocalCourse extends HiveObject with SyncEntity {
     this.totalMinutes = 0,
     this.pomodoroLongBreakMinutes,
     this.sortOrder,
+    this.hiddenFromLeaderboard = false,
     this.dirty = true,
     this.deleted = false,
   });
@@ -196,6 +197,9 @@ class LocalCourse extends HiveObject with SyncEntity {
 
   @HiveField(15)
   int? sortOrder;
+
+  @HiveField(16)
+  bool hiddenFromLeaderboard;
 }
 
 @HiveType(typeId: 12)
@@ -425,6 +429,8 @@ class LocalCourseAdapter extends TypeAdapter<LocalCourse> {
       dirty: reader.read() as bool,
       deleted: reader.read() as bool,
       sortOrder: reader.availableBytes > 0 ? reader.read() as int? : null,
+      hiddenFromLeaderboard:
+          reader.availableBytes > 0 ? reader.read() as bool : false,
     );
   }
 
@@ -446,7 +452,8 @@ class LocalCourseAdapter extends TypeAdapter<LocalCourse> {
       ..write(obj.pomodoroLongBreakMinutes)
       ..write(obj.dirty)
       ..write(obj.deleted)
-      ..write(obj.sortOrder);
+      ..write(obj.sortOrder)
+      ..write(obj.hiddenFromLeaderboard);
   }
 }
 

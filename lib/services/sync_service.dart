@@ -90,7 +90,18 @@ class SyncService extends ChangeNotifier {
     _listenActiveSession();
 
     if (_online) {
-      await syncNow(full: bootstrap);
+      // Optimization: If we are asked to bootstrap (full sync) but we already have
+      // a valid sync state (e.g. we have pulled courses before), then we don't
+      // need to do a full pull. We can just do a delta pull.
+      // This supports "logout -> login" flows where local data is preserved.
+      var shouldBootstrap = bootstrap;
+      if (shouldBootstrap) {
+        final state = _db.syncStateForKey(_coursesStateKey);
+        if (state.lastPullMs > 0) {
+          shouldBootstrap = false;
+        }
+      }
+      await syncNow(full: shouldBootstrap);
     } else {
       _setStatus(SyncStatus.offline);
     }
@@ -139,97 +150,116 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> pushDirty() async {
-    if (_uid == null) return;
-    const maxOperations = 450; 
-    final userDoc = _db.userDocOrNull;
-    if (userDoc != null && userDoc.dirty) {
-      await _pushUser(userDoc);
+    if (!_isRunning  || !_online || _uid == null) {
+      if (_uid == null) return;
+    }
+    
+    // Only set status if not already part of a larger sync
+    final rootCall = !_isSyncing;
+    if (rootCall) {
+      _isSyncing = true;
+      _setStatus(SyncStatus.syncing);
     }
 
-    Future<void> pushChunk<T extends HiveObject>(
-      List<T> items,
-      Future<void> Function(
-        WriteBatch batch,
-        T item,
-      )
-          writer,
-    ) async {
-      if (items.isEmpty) return;
-      var offset = 0;
-      while (offset < items.length) {
-        final slice = items.sublist(
-          offset,
-          min(offset + maxOperations, items.length),
-        );
-        final batch = _firestore.batch();
-        for (final item in slice) {
-          await writer(batch, item);
+    try {
+      const maxOperations = 450; 
+      final userDoc = _db.userDocOrNull;
+
+      if (userDoc != null && userDoc.dirty) {
+        await _pushUser(userDoc);
+      }
+
+      Future<void> pushChunk<T extends HiveObject>(
+        List<T> items,
+        Future<void> Function(
+          WriteBatch batch,
+          T item,
+        )
+            writer,
+      ) async {
+        if (items.isEmpty) return;
+        var offset = 0;
+        while (offset < items.length) {
+          final slice = items.sublist(
+            offset,
+            min(offset + maxOperations, items.length),
+          );
+          final batch = _firestore.batch();
+          for (final item in slice) {
+            await writer(batch, item);
+          }
+          await batch.commit();
+          offset += slice.length;
         }
-        await batch.commit();
-        offset += slice.length;
+      }
+
+      final dirtyCourses = _db.dirtyCourses();
+      await pushChunk<LocalCourse>(dirtyCourses, (batch, course) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('courses')
+            .doc(course.id);
+        batch.set(ref, _courseToRemote(course), SetOptions(merge: true));
+        course.dirty = false;
+        course.updatedAtMs = _now();
+      });
+
+      final dirtySessions = _db.dirtySessions();
+      await pushChunk<LocalSession>(dirtySessions, (batch, session) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('sessions')
+            .doc(session.id);
+        batch.set(ref, _sessionToRemote(session), SetOptions(merge: true));
+        session.dirty = false;
+        session.updatedAtMs = _now();
+      });
+
+      final dirtyGoals = _db.dirtyGoals();
+      await pushChunk<LocalGoal>(dirtyGoals, (batch, goal) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('goals')
+            .doc(goal.id);
+        if (goal.deleted) {
+          batch.delete(ref);
+        } else {
+          batch.set(ref, _goalToRemote(goal), SetOptions(merge: true));
+        }
+        goal.dirty = false;
+        goal.updatedAtMs = _now();
+      });
+
+      await Future.wait([
+        for (final c in dirtyCourses) c.save(),
+        for (final s in dirtySessions)
+          s.deleted ? s.delete() : s.save(),
+        for (final g in dirtyGoals) g.save(),
+        if (userDoc != null && userDoc.dirty == false) userDoc.save(),
+      ]);
+
+      final state = _db.syncStateForKey(_coursesStateKey);
+      state.lastPushMs = _now();
+      await _db.putSyncState(state);
+      lastPush = DateTime.now();
+      
+      if (rootCall) {
+        _setStatus(SyncStatus.upToDate);
+      }
+    } catch (err) {
+       if (rootCall) {
+         lastError = err.toString();
+         _setStatus(SyncStatus.offline);
+       }
+       rethrow;
+    } finally {
+      if (rootCall) {
+        _isSyncing = false;
       }
     }
-
-    final dirtyCourses = _db.dirtyCourses();
-    await pushChunk<LocalCourse>(dirtyCourses, (batch, course) async {
-      final ref = _firestore
-          .collection('users')
-          .doc(_uid)
-          .collection('courses')
-          .doc(course.id);
-      if (course.deleted) {
-        batch.delete(ref);
-      } else {
-        batch.set(ref, _courseToRemote(course), SetOptions(merge: true));
-      }
-      course.dirty = false;
-      course.updatedAtMs = _now();
-    });
-
-    final dirtySessions = _db.dirtySessions();
-    await pushChunk<LocalSession>(dirtySessions, (batch, session) async {
-      final ref = _firestore
-          .collection('users')
-          .doc(_uid)
-          .collection('sessions')
-          .doc(session.id);
-      if (session.deleted) {
-        batch.delete(ref);
-      } else {
-        batch.set(ref, _sessionToRemote(session), SetOptions(merge: true));
-      }
-      session.dirty = false;
-      session.updatedAtMs = _now();
-    });
-
-    final dirtyGoals = _db.dirtyGoals();
-    await pushChunk<LocalGoal>(dirtyGoals, (batch, goal) async {
-      final ref = _firestore
-          .collection('users')
-          .doc(_uid)
-          .collection('goals')
-          .doc(goal.id);
-      if (goal.deleted) {
-        batch.delete(ref);
-      } else {
-        batch.set(ref, _goalToRemote(goal), SetOptions(merge: true));
-      }
-      goal.dirty = false;
-      goal.updatedAtMs = _now();
-    });
-
-    await Future.wait([
-      for (final c in dirtyCourses) c.save(),
-      for (final s in dirtySessions)
-        s.deleted ? s.delete() : s.save(),
-      for (final g in dirtyGoals) g.save(),
-      if (userDoc != null && userDoc.dirty == false) userDoc.save(),
-    ]);
-
-    final state = _db.syncStateForKey(_coursesStateKey);
-    state.lastPushMs = _now();
-    await _db.putSyncState(state);
-    lastPush = DateTime.now();
   }
 
   Future<void> pullSince({bool full = false}) async {
@@ -275,9 +305,55 @@ class SyncService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateActiveSession({
+    required bool isStudying,
+    String? courseId,
+    String? kind,
+    DateTime? start,
+    DateTime? expectedEnd,
+  }) async {
+    if (_uid == null || _deviceId == null) return;
+    final docRef = _firestore.collection('users').doc(_uid);
+    
+    if (!isStudying) {
+      // Keep the device claim, but clear study data
+      await docRef.set({
+        'activeSession': {
+          'deviceId': _deviceId,
+          'updatedAt': FieldValue.serverTimestamp(),
+          // Explicitly clear study fields by setting to null or omitting them if we replaced the map
+          'courseId': null,
+          'kind': null,
+          'startUtc': null,
+          'expectedEndUtc': null,
+        },
+        'isStudying': false,
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } else {
+      await docRef.set({
+        'activeSession': {
+          'deviceId': _deviceId,
+          'updatedAt': FieldValue.serverTimestamp(),
+          'courseId': courseId,
+          'kind': kind,
+          'startUtc': start != null ? Timestamp.fromDate(start.toUtc()) : null,
+          'expectedEndUtc': expectedEnd != null ? Timestamp.fromDate(expectedEnd.toUtc()) : null,
+        },
+        'isStudying': true,
+        'lastActive': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+  }
+
   Future<void> _sendHeartbeat() async {
     if (_uid == null || _deviceId == null) return;
     final docRef = _firestore.collection('users').doc(_uid);
+    // Just update timestamp and deviceId, preserving other fields if we are syncing?
+    // Actually, _sendHeartbeat is called on app start. We typically assume no study session is active on fresh start unless we restore it?
+    // But local state restoration happens in AppState.
+    // So here we just claim the device.
+    
     await docRef.set({
       'activeSession': {
         'deviceId': _deviceId,
@@ -452,6 +528,7 @@ class SyncService extends ChangeNotifier {
         pomodoroLongBreakMinutes:
             (data['pomodoroLongBreakMinutes'] as num?)?.toInt(),
         sortOrder: (data['sortOrder'] as num?)?.toInt(),
+        hiddenFromLeaderboard: data['hiddenFromLeaderboard'] == true,
         updatedAtMs: updatedAt,
         dirty: false,
         deleted: data['deleted'] == true,
@@ -483,7 +560,9 @@ class SyncService extends ChangeNotifier {
       ..credits = (data['credits'] as num?)?.toDouble()
       ..expLevel = (data['expLevel'] as num?)?.toInt()
       ..goalHours = (data['goalHours'] as num?)?.toDouble()
+      ..goalHours = (data['goalHours'] as num?)?.toDouble()
       ..sortOrder = (data['sortOrder'] as num?)?.toInt() ?? course.sortOrder
+      ..hiddenFromLeaderboard = data['hiddenFromLeaderboard'] == true
       ..deleted = data['deleted'] == true
       ..updatedAtMs = updatedAt
       ..dirty = false;
@@ -522,7 +601,7 @@ class SyncService extends ChangeNotifier {
         createdAtMs: _timestampToMs(data['createdAt']),
         updatedAtMs: updatedAt,
         dirty: false,
-        deleted: false,
+        deleted: data['deleted'] == true,
       );
       await _db.putSession(session);
       return;
@@ -641,6 +720,7 @@ class SyncService extends ChangeNotifier {
       'totalMinutes': course.totalMinutes,
       'pomodoroLongBreakMinutes': course.pomodoroLongBreakMinutes,
       'sortOrder': course.sortOrder,
+      'hiddenFromLeaderboard': course.hiddenFromLeaderboard,
       'deleted': course.deleted,
       'updatedAt': FieldValue.serverTimestamp(),
     };

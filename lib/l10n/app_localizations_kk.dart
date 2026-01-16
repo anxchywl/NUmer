@@ -99,6 +99,11 @@ class AppLocalizationsKk extends AppLocalizations {
   String get exportToCalendar => 'Күнтізбеге экспорттау';
 
   @override
+  String exportWillStartIn(int seconds) {
+    return 'Экспорт $seconds секундтан кейін басталады';
+  }
+
+  @override
   String get exportToCalendarSubtitle =>
       'Сеанстарыңызды күнтізбе оқиғалары ретінде сақтаңыз';
 
@@ -117,6 +122,11 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String exportFailedMessage(String error) {
     return 'Экспорттау сәтсіз аяқталды: $error';
+  }
+
+  @override
+  String habitReportDownloadCountdown(int seconds) {
+    return 'Есепті дайындау $seconds секундтан кейін басталады';
   }
 
   @override
@@ -161,6 +171,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get syncNow => 'Қазір синхрондау';
+
+  @override
+  String get syncing => 'Синхрондалуда';
 
   @override
   String get home => 'Басты бет';
@@ -1512,7 +1525,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitNameLabel => 'Әдет атауы';
 
   @override
-  String get habitNameHint => 'мысалы, таңғы жүгіру';
+  String get habitNameHint => '';
 
   @override
   String get habitCategoryLabel => 'Санат';
@@ -1908,7 +1921,7 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String habitReportFailed(String error) {
-    return 'Экспорт қатесі: $error';
+    return 'Экспорттау қатесі: $error';
   }
 
   @override

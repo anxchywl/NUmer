@@ -28,6 +28,12 @@
   "no": "Нет",
   "data": "Данные",
   "exportToCalendar": "Экспорт в календарь",
+  "exportWillStartIn": "Экспорт начнется через {seconds} сек.",
+  "@exportWillStartIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "exportToCalendarSubtitle": "Сохраните свои сессии как события календаря",
   "allCourses": "Все курсы",
   "courseFallback": "Курс",
@@ -54,6 +60,7 @@
   "pleaseSignInToViewAccount": "Пожалуйста, войдите, чтобы просмотреть ваш аккаунт.",
   "signOut": "Выйти",
   "syncNow": "Синхронизировать",
+  "syncing": "Синхронизация",
   "home": "Главная",
   "statistics": "Статистика",
   "groups": "Группы",
@@ -640,7 +647,7 @@
   "habitTrackingTitle": "Тип отслеживания",
   "habitExplainHabit": "Опишите привычку",
   "habitNameLabel": "Название привычки",
-  "habitNameHint": "например, утренняя пробежка",
+  "habitNameHint": "",
   "habitCategoryLabel": "Категория",
   "habitCategoryNew": "Новая категория",
   "habitCategoryNameLabel": "Название категории",
@@ -753,6 +760,12 @@
     }
   },
   "habitReportFailed": "Ошибка экспорта: {error}",
+  "habitReportDownloadCountdown": "Генерация отчета начнется через {seconds} сек.",
+  "@habitReportDownloadCountdown": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
   "@habitReportFailed": {
     "placeholders": {
       "error": {

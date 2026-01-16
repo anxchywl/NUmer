@@ -29,60 +29,41 @@ class GroupLeaderboard extends StatefulWidget {
 class _GroupLeaderboardState extends State<GroupLeaderboard> {
   StatisticsPeriod _selectedPeriod = StatisticsPeriod.today;
 
-  Future<void> _showUserSubjects(MemberStudyData member) async {
-    
-    bool isDialogOpen = true; 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    ).then((_) => isDialogOpen = false);
 
-    try {
-      final groupService = context.read<GroupService>();
-      final stats = await groupService.fetchMemberSubjectStats(
+  void _showUserSubjects(MemberStudyData member) async {
+    if (!mounted) return;
+
+    final groupService = context.read<GroupService>();
+    final cachedRecord = await groupService.getCachedMemberSubjectStats(
+      groupId: widget.groupId,
+      userId: member.userId,
+      period: _selectedPeriod,
+    );
+    final cachedStats = cachedRecord?.stats;
+
+    // Refresh if no cache, or if total seconds mismatch (content changed)
+    final shouldRefresh = cachedStats == null || cachedStats.totalSeconds != member.studyTimeSeconds;
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => UserSubjectsBottomSheet(
         groupId: widget.groupId,
         userId: member.userId,
+        name: member.name,
+        avatarColorValue: member.avatarColorValue,
         period: _selectedPeriod,
-      );
-
-      if (!mounted) return;
-      
-      if (isDialogOpen) {
-        Navigator.pop(context); 
-      } else {
-        return; 
-      }
-
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (context) => UserSubjectsBottomSheet(
-          groupId: widget.groupId,
-          userId: member.userId,
-          name: member.name,
-          avatarColorValue: member.avatarColorValue,
-          period: _selectedPeriod,
-          preloadedStats: stats,
-        ),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      
-      if (isDialogOpen) {
-        Navigator.pop(context); 
-        final errorMessage = e is StateError ? e.message : e.toString();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToLoadUserData(errorMessage))),
-        );
-      }
-    }
+        preloadedStats: cachedStats,
+        shouldRefresh: shouldRefresh,
+      ),
+    );
   }
 
   String _getDateRangeLabel(StatisticsPeriod period) {
-    final now = DateTime.now();
-    final range = period.getDateRange(now);
+    final range = period.getDateRange();
     final start = range.$1;
     final end = range.$2;
 
@@ -109,6 +90,9 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
   @override
   Widget build(BuildContext context) {
     final groupService = context.read<GroupService>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
 
     return Column(
       children: [
@@ -126,11 +110,16 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
                 },
               ),
               const SizedBox(height: 8),
-              Text(
-                _getDateRangeLabel(_selectedPeriod),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                    Text(
+                      _getDateRangeLabel(_selectedPeriod),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
                     ),
+                ],
               ),
             ],
           ),
@@ -458,7 +447,7 @@ class _PodiumMemberState extends State<_PodiumMember>
                 bool isStudying = false;
                 if (snapshot.hasData && snapshot.data?.data() != null) {
                   final data = snapshot.data!.data()!;
-                  isStudying = data['isStudying'] == true;
+                  isStudying = _isSessionActive(data);
                 }
 
                 final avatar = AnimatedBuilder(
@@ -667,7 +656,7 @@ class _RankListTile extends StatelessWidget {
               stream: FirebaseFirestore.instance.collection('users').doc(member.userId).snapshots(),
               builder: (context, snapshot) {
                 final data = snapshot.data?.data();
-                final isStudying = data?['isStudying'] == true;
+                final isStudying = _isSessionActive(data);
                 final allowsNudges = data?['allowNudges'] != false;
                 final canReceiveNudges = data?['fcmEnabled'] == true;
 
@@ -981,7 +970,7 @@ class _UserStatusDot extends StatelessWidget {
         bool isStudying = false;
         if (snapshot.hasData && snapshot.data?.data() != null) {
           final data = snapshot.data!.data() as Map<String, dynamic>;
-          isStudying = data['isStudying'] == true;
+          isStudying = _isSessionActive(data);
         }
 
         return _buildDot(context, isStudying);
@@ -1038,4 +1027,34 @@ String _formatStudyTime(BuildContext context, int totalSeconds) {
   } else {
     return '$seconds${l10n.sUnit}';
   }
+}
+
+bool _isSessionActive(Map<String, dynamic>? data) {
+  if (data == null) return false;
+  if (data['isStudying'] != true) return false;
+  
+  final activeSession = data['activeSession'];
+  if (activeSession is! Map) return false; 
+
+  final now = DateTime.now();
+  
+  final startVal = activeSession['startUtc'];
+  final endVal = activeSession['expectedEndUtc'];
+  
+  if (startVal is Timestamp) {
+     final start = startVal.toDate();
+     if (start.isAfter(now)) return false; 
+     
+     DateTime limit;
+     if (endVal is Timestamp) {
+       limit = endVal.toDate();
+     } else {
+       limit = start.add(const Duration(hours: 3));
+     }
+     
+     if (now.isAfter(limit)) return false;
+     return true;
+  }
+  
+  return false;
 }

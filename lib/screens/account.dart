@@ -159,9 +159,7 @@ class _AccountScreenState extends State<AccountScreen> {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                Text(AppLocalizations.of(context)!.account,
-                    style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 12),
+
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -248,8 +246,11 @@ class _AccountScreenState extends State<AccountScreen> {
                                     : const Icon(Icons.sync, size: 18),
                                 label: FittedBox(
                                   fit: BoxFit.scaleDown,
-                                  child:
-                                      Text(AppLocalizations.of(context)!.syncNow),
+                                  child: Text(
+                                    context.watch<SyncService>().status == SyncStatus.syncing
+                                        ? AppLocalizations.of(context)!.syncing
+                                        : AppLocalizations.of(context)!.syncNow,
+                                  ),
                                 ),
                             ),
                           ],
@@ -765,6 +766,7 @@ class _HomeSummarySwipeSelector extends StatefulWidget {
 class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
     with SingleTickerProviderStateMixin {
   final List<HomeSummaryRange> _ranges = [
+    HomeSummaryRange.off,
     HomeSummaryRange.today,
     HomeSummaryRange.week,
     HomeSummaryRange.month,
@@ -804,6 +806,7 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
   @override
   Widget build(BuildContext context) {
     final label = switch (_ranges[_index]) {
+      HomeSummaryRange.off => AppLocalizations.of(context)!.off,
       HomeSummaryRange.today => AppLocalizations.of(context)!.currentDay,
       HomeSummaryRange.week => AppLocalizations.of(context)!.thisWeekShort,
       HomeSummaryRange.month => AppLocalizations.of(context)!.thisMonthShort,

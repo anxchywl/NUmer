@@ -100,6 +100,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get exportToCalendar => 'Экспорт в календарь';
 
   @override
+  String exportWillStartIn(int seconds) {
+    return 'Экспорт начнется через $seconds сек.';
+  }
+
+  @override
   String get exportToCalendarSubtitle =>
       'Сохраните свои сессии как события календаря';
 
@@ -118,6 +123,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String exportFailedMessage(String error) {
     return 'Экспорт не удался: $error';
+  }
+
+  @override
+  String habitReportDownloadCountdown(int seconds) {
+    return 'Генерация отчета начнется через $seconds сек.';
   }
 
   @override
@@ -161,6 +171,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get syncNow => 'Синхронизировать';
+
+  @override
+  String get syncing => 'Синхронизация';
 
   @override
   String get home => 'Главная';
@@ -1537,7 +1550,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitNameLabel => 'Название привычки';
 
   @override
-  String get habitNameHint => 'например, утренняя пробежка';
+  String get habitNameHint => '';
 
   @override
   String get habitCategoryLabel => 'Категория';

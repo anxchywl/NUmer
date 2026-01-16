@@ -11,6 +11,7 @@ class Course {
   final double? credits;
   final int? expLevel;
   final int? sortOrder;
+  final bool hiddenFromLeaderboard;
 
   const Course({
     required this.id,
@@ -22,6 +23,7 @@ class Course {
     this.credits,
     this.expLevel,
     this.sortOrder,
+    this.hiddenFromLeaderboard = false,
   });
 
   Color get color => Color(colorValue);
@@ -38,6 +40,7 @@ class Course {
         'credits': credits,
         'expLevel': expLevel,
         'sortOrder': sortOrder,
+        'hiddenFromLeaderboard': hiddenFromLeaderboard,
       };
 
   static Course fromJson(Map<String, dynamic> j) => Course(
@@ -51,6 +54,7 @@ class Course {
         credits: (j['credits'] as num?)?.toDouble(),
         expLevel: j['expLevel'] as int?,
         sortOrder: (j['sortOrder'] as num?)?.toInt(),
+        hiddenFromLeaderboard: j['hiddenFromLeaderboard'] as bool? ?? false,
       );
 
   Course copyWith({
@@ -63,6 +67,7 @@ class Course {
     double? credits,
     int? expLevel,
     int? sortOrder,
+    bool? hiddenFromLeaderboard,
   }) {
     return Course(
       id: id ?? this.id,
@@ -74,6 +79,8 @@ class Course {
       credits: credits ?? this.credits,
       expLevel: expLevel ?? this.expLevel,
       sortOrder: sortOrder ?? this.sortOrder,
+      hiddenFromLeaderboard:
+          hiddenFromLeaderboard ?? this.hiddenFromLeaderboard,
     );
   }
 }

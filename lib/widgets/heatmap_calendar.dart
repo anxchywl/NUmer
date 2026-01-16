@@ -22,8 +22,6 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
   late final HeatmapService _service;
   Map<DateTime, int> _dailyMinutes = {};
   late DateTime _currentFocusedDay;
-  bool _isLoading = false;
-
   
   static const List<Color> _greens = [
     Colors.transparent, 
@@ -40,19 +38,29 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
     super.initState();
     _service = HeatmapService();
     _currentFocusedDay = widget.focusedDay;
-    _fetchMonthData(_currentFocusedDay);
+    _service.addListener(_onServiceUpdate);
+    _fetchMonth(_currentFocusedDay);
   }
 
-  Future<void> _fetchMonthData(DateTime date) async {
-    final start = DateTime(date.year, date.month - 1, 1);
-    final end = DateTime(date.year, date.month + 2, 0);
+  @override
+  void dispose() {
+    _service.removeListener(_onServiceUpdate);
+    super.dispose();
+  }
 
-    setState(() => _isLoading = true);
-    final data = await _service.fetchDailyTotals(start, end);
+  void _onServiceUpdate() {
+    if (mounted) {
+      _fetchMonth(_currentFocusedDay);
+    }
+  }
+
+  Future<void> _fetchMonth(DateTime date) async {
+    // Only fetch for the currently focused month. 
+    // The service handles caching.
+    final data = await _service.fetchMonth(date);
     if (!mounted) return;
     setState(() {
       _dailyMinutes = data;
-      _isLoading = false;
     });
   }
 
@@ -73,18 +81,16 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        TableCalendar(
-          firstDay: DateTime(2025, 1, 1),
-      lastDay: DateTime.now().add(const Duration(days: 0)), 
+    return TableCalendar(
+      firstDay: DateTime(2025, 1, 1),
+      lastDay: DateTime.now().add(const Duration(days: 365)), 
       focusedDay: _currentFocusedDay,
       locale: Localizations.localeOf(context).languageCode,
       selectedDayPredicate: (day) => isSameDay(widget.selectedDay, day),
       onDaySelected: widget.onDaySelected,
       onPageChanged: (focusedDay) {
         _currentFocusedDay = focusedDay;
-        _fetchMonthData(focusedDay);
+        _fetchMonth(focusedDay);
       },
       calendarFormat: CalendarFormat.month,
       headerStyle: const HeaderStyle(
@@ -102,25 +108,13 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
            return _buildCell(day, isToday: isSameDay(day, DateTime.now()), isSelected: true);
         },
         outsideBuilder: (context, day, focusedDay) {
-          
-          
           return null; 
         },
       ),
-    ),
-      if (_isLoading)
-        const Positioned.fill(
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-    ],
-  );
+    );
   }
 
-  
   Widget _buildCell(DateTime day, {bool isToday = false, bool isSelected = false}) {
-    
     final key = DateTime(day.year, day.month, day.day);
     final minutes = _dailyMinutes[key] ?? 0;
     final color = _getColor(minutes);
@@ -129,7 +123,6 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
     BoxDecoration? decoration;
     TextStyle? textStyle;
 
-    
     textStyle = Theme.of(context).textTheme.bodyMedium;
 
     if (isSelected) {

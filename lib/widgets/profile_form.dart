@@ -81,9 +81,7 @@ class _ProfileFormState extends State<ProfileForm> {
     _avatarIndex = widget.initialAvatarIndex;
     _avatarColorValue = widget.initialAvatarColorValue;
     
-    _scrollController = ScrollController(
-      initialScrollOffset: (_avatarIndex ?? 0) * 68.0, 
-    );
+
 
     _nameCtrl.addListener(_handleFieldChange);
     _majorCtrl.addListener(_handleFieldChange);
@@ -94,8 +92,27 @@ class _ProfileFormState extends State<ProfileForm> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _scrollController ??= ScrollController(
-      initialScrollOffset: (_avatarIndex ?? 0) * 68.0, 
+    if (_scrollController == null) {
+      final viewportWidth = MediaQuery.of(context).size.width -
+          72; // Padding: 16(screen) + 20(card) * 2
+      final itemWidth = 68.0;
+      final offset =
+          ((_avatarIndex ?? 0) * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
+      _scrollController =
+          ScrollController(initialScrollOffset: offset < 0 ? 0 : offset);
+    }
+  }
+
+  void _scrollToIndex(int index) {
+    if (_scrollController == null || !_scrollController!.hasClients) return;
+    final viewportWidth = _scrollController!.position.viewportDimension;
+    final itemWidth = 68.0;
+    final offset =
+        (index * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
+    _scrollController!.animateTo(
+      offset,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
     );
   }
 
@@ -124,12 +141,9 @@ class _ProfileFormState extends State<ProfileForm> {
           _avatarIndex = widget.initialAvatarIndex;
         });
         // Optional: Scroll to new index if updated externally
-        if (_scrollController != null && _scrollController!.hasClients && _avatarIndex != null) {
-          _scrollController!.animateTo(
-            _avatarIndex! * 68.0, 
-            duration: const Duration(milliseconds: 300), 
-            curve: Curves.easeOut,
-          );
+        // Optional: Scroll to new index if updated externally
+        if (_avatarIndex != null) {
+          _scrollToIndex(_avatarIndex!);
         }
       }
     }
@@ -236,21 +250,24 @@ class _ProfileFormState extends State<ProfileForm> {
               scale: 1.0,
               child: CircleAvatar(
                 radius: 34,
-                backgroundColor: (_avatarColorValue != null
+                backgroundColor: option == null
+                    ? Colors.transparent
+                    : (_avatarColorValue != null
                         ? Color(_avatarColorValue!)
-                        : (option?.background ??
-                            theme.colorScheme.primaryContainer)),
+                        : option.background),
                 child: Icon(
-                        option?.icon ?? Icons.person_rounded,
-                        size: 32,
-                        color: _avatarColorValue != null
-                            ? (ThemeData.estimateBrightnessForColor(
-                                        Color(_avatarColorValue!)) ==
-                                    Brightness.dark
-                                ? Colors.white
-                                : Colors.black87)
-                            : optionIconColor,
-                      ),
+                  option?.icon ?? Icons.person,
+                  size: option == null ? 48 : 32,
+                  color: option == null
+                      ? theme.colorScheme.onSurfaceVariant
+                      : (_avatarColorValue != null
+                          ? (ThemeData.estimateBrightnessForColor(
+                                      Color(_avatarColorValue!)) ==
+                                  Brightness.dark
+                              ? Colors.white
+                              : Colors.black87)
+                          : optionIconColor),
+                ),
               ),
             ),
             const SizedBox(width: 16),
@@ -375,9 +392,10 @@ class _ProfileFormState extends State<ProfileForm> {
                     onTap: () {
                       setState(() {
                         _avatarIndex = index;
-                        _showColorPicker = true; 
+                        _showColorPicker = true;
                         // Ensure color picker stays visible
                       });
+                      _scrollToIndex(index);
                     },
                   ),
                 ),

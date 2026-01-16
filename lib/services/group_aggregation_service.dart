@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../models/group_statistics.dart';
 
 
@@ -15,10 +16,10 @@ class GroupAggregationService {
     List<String> memberIds,
     StatisticsPeriod period,
     FirebaseFirestore firestore,
-    String? currentUserId,
-  ) async {
-    final now = DateTime.now();
-    final dateRange = period.getDateRange(now);
+    String? currentUserId, {
+    DateTime? referenceDate,
+  }) async {
+    final dateRange = period.getDateRange();
     final periodStart = dateRange.$1;
     final periodEnd = dateRange.$2;
 
@@ -65,25 +66,24 @@ class GroupAggregationService {
   }) async {
     final isCurrentUser = userId == currentUserId;
 
-    try {
-      final sessionData = await _computeFromSessions(
-        userId: userId,
-        period: period,
-        periodStart: periodStart,
-        periodEnd: periodEnd,
-        firestore: firestore,
-      );
-      return sessionData.copyWith(isCurrentUser: isCurrentUser);
-    } on FirebaseException catch (e) {
-      // If it's not a permission issue, rethrow so calling code can handle it.
-      if (e.code != 'permission-denied') {
-        rethrow;
+    if (isCurrentUser) {
+      try {
+        final sessionData = await computeMemberStats(
+          userId: userId,
+          period: period,
+          periodStart: periodStart,
+          periodEnd: periodEnd,
+          firestore: firestore,
+        );
+        return sessionData.copyWith(isCurrentUser: isCurrentUser);
+      } on FirebaseException catch (e) {
+        if (e.code != 'permission-denied') {
+          rethrow;
+        }
+      } catch (e) {
+        // ignore: avoid_print
+        print('Error computing sessions for user $userId: $e');
       }
-      // Permission denied: fall through to fallback aggregate reads.
-    } catch (e) {
-      // Log unexpected errors and fall back to aggregates or defaults.
-      // ignore: avoid_print
-      print('Error computing sessions for user $userId: $e');
     }
 
     
@@ -100,6 +100,24 @@ class GroupAggregationService {
     if (groupAggregate != null) return groupAggregate;
 
     
+    // For the current user, always compute from sessions to ensure local changes 
+    // (like course visibility) are reflected immediately without waiting for server sync.
+    if (isCurrentUser) {
+      try {
+        final sessionData = await computeMemberStats(
+          userId: userId,
+          period: period,
+          periodStart: period.getDateRange().$1,
+          periodEnd: period.getDateRange().$2,
+          firestore: firestore,
+        );
+        return sessionData.copyWith(isCurrentUser: isCurrentUser);
+      } catch (e) {
+        debugPrint('Error computing current user stats from sessions: $e');
+        // Fall back to aggregates if computation fails
+      }
+    }
+
     final userAggregate = await _readAggregate(
       firestore
           .collection('users')
@@ -112,7 +130,22 @@ class GroupAggregationService {
     );
     if (userAggregate != null) return userAggregate;
 
-    
+    // Fallback for others or if aggregate doesn't exist
+    if (!isCurrentUser) {
+      try {
+        final sessionData = await computeMemberStats(
+          userId: userId,
+          period: period,
+          periodStart: period.getDateRange().$1,
+          periodEnd: period.getDateRange().$2,
+          firestore: firestore,
+        );
+        return sessionData.copyWith(isCurrentUser: isCurrentUser);
+      } catch (e) {
+        debugPrint('Error computing stats from sessions for $userId: $e');
+      }
+    }
+
     return _emptyMemberData(
       userId: userId,
       firestore: firestore,
@@ -121,7 +154,7 @@ class GroupAggregationService {
   }
 
   
-  Future<MemberStudyData> _computeFromSessions({
+  Future<MemberStudyData> computeMemberStats({
     required String userId,
     required StatisticsPeriod period,
     required DateTime periodStart,
@@ -148,6 +181,20 @@ class GroupAggregationService {
         .where('startUtc', isLessThanOrEqualTo: Timestamp.fromDate(periodEndUtc))
         .get();
 
+    // Fetch courses to check for hidden status
+    final coursesSnap = await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('courses')
+        .get();
+        
+    final hiddenCourseIds = <String>{};
+    for (final doc in coursesSnap.docs) {
+      if (doc.data()['hiddenFromLeaderboard'] == true) {
+        hiddenCourseIds.add(doc.id);
+      }
+    }
+
     int periodSeconds = 0;
     int todaySeconds = 0;
     int monthSeconds = 0;
@@ -169,6 +216,9 @@ class GroupAggregationService {
 
       
       
+      final courseId = (sessionData['courseId'] as String?) ?? '';
+      if (hiddenCourseIds.contains(courseId)) continue;
+
       if (startUtc.isAfter(periodStartUtc.subtract(const Duration(seconds: 1))) && 
           startUtc.isBefore(periodEndUtc.add(const Duration(seconds: 1)))) {
         periodSeconds += seconds;
@@ -182,11 +232,44 @@ class GroupAggregationService {
 
       
       if (startLocal.year == monthStart.year && startLocal.month == monthStart.month) {
-        monthSeconds += seconds;
+      monthSeconds += seconds;
+    }
+  }
+
+  // Include ongoing active session time if applicable
+  if (userData['isStudying'] == true) {
+    final active = userData['activeSession'] as Map<String, dynamic>?;
+    if (active != null) {
+      final aStartVal = active['startUtc'];
+      final aCourseId = active['courseId'] as String?;
+      
+      if (aStartVal is Timestamp && !hiddenCourseIds.contains(aCourseId)) {
+        final startUtc = aStartVal.toDate();
+        final now = DateTime.now();
+        final startLocal = startUtc.toLocal();
+        final diff = now.difference(startUtc).inSeconds;
+        
+        // Sanity check: cap at 3h and ignore future starts
+        if (diff > 0 && diff < 3600 * 3) {
+          if (startUtc.isAfter(periodStartUtc.subtract(const Duration(seconds: 1))) && 
+              startUtc.isBefore(periodEndUtc.add(const Duration(seconds: 1)))) {
+            periodSeconds += diff;
+          }
+
+          final sessionDay = DateTime(startLocal.year, startLocal.month, startLocal.day);
+          if (sessionDay.isAtSameMomentAs(today)) {
+            todaySeconds += diff;
+          }
+
+          if (startLocal.year == monthStart.year && startLocal.month == monthStart.month) {
+            monthSeconds += diff;
+          }
+        }
       }
     }
+  }
 
-    return MemberStudyData(
+  return MemberStudyData(
       userId: userId,
       name: name,
       avatarUrl: null,
@@ -298,7 +381,7 @@ class GroupAggregationService {
     
     // For "Last 7 Days", we want the current calendar week (Monday to Sunday) or just last 7 days?
     // The StatisticsPeriod.getDateRange uses calendar week (Monday start).
-    final (periodStart, periodEnd) = period.getDateRange(now);
+    final (periodStart, periodEnd) = period.getDateRange();
     
     int periodSeconds = 0;
     int observerTodaySeconds = 0;
@@ -363,10 +446,12 @@ class GroupAggregationService {
     required StatisticsPeriod period,
     required FirebaseFirestore firestore,
   }) async {
-    final now = DateTime.now();
-    final range = period.getDateRange(now);
+    final range = period.getDateRange();
     final start = DateTime(range.$1.year, range.$1.month, range.$1.day);
     final end = DateTime(range.$2.year, range.$2.month, range.$2.day, 23, 59, 59, 999);
+
+    final userDoc = await firestore.collection('users').doc(userId).get();
+    final userData = userDoc.data() ?? <String, dynamic>{};
 
     final sessionsSnap = await firestore
         .collection('users')
@@ -375,6 +460,20 @@ class GroupAggregationService {
         .where('startUtc', isGreaterThanOrEqualTo: Timestamp.fromDate(start.toUtc()))
         .where('startUtc', isLessThanOrEqualTo: Timestamp.fromDate(end.toUtc()))
         .get();
+
+    // Fetch courses to check for hidden status
+    final coursesSnap = await firestore
+        .collection('users')
+        .doc(userId)
+        .collection('courses')
+        .get();
+        
+    final hiddenCourseIds = <String>{};
+    for (final doc in coursesSnap.docs) {
+      if (doc.data()['hiddenFromLeaderboard'] == true) {
+        hiddenCourseIds.add(doc.id);
+      }
+    }
 
     int totalSeconds = 0;
     final courseTotals = <String, int>{};
@@ -385,12 +484,41 @@ class GroupAggregationService {
       final seconds = (data['seconds'] as int?) ?? 0;
       if (deleted || seconds <= 0) continue;
 
-      totalSeconds += seconds;
       final courseId = (data['courseId'] as String?) ?? 'unknown';
-      courseTotals.update(courseId, (value) => value + seconds, ifAbsent: () => seconds);
-    }
+      if (hiddenCourseIds.contains(courseId)) continue;
+      
+      totalSeconds += seconds;
+    courseTotals.update(courseId, (value) => value + seconds, ifAbsent: () => seconds);
+  }
 
-    if (courseTotals.isEmpty) {
+  // Include ongoing active session if applicable
+  if (userData['isStudying'] == true) {
+    final active = userData['activeSession'] as Map<String, dynamic>?;
+    if (active != null) {
+      final aStartVal = active['startUtc'];
+      final aCourseId = active['courseId'] as String?;
+
+      if (aStartVal is Timestamp && !hiddenCourseIds.contains(aCourseId)) {
+        final startUtc = aStartVal.toDate();
+        final now = DateTime.now();
+        final diff = now.difference(startUtc).inSeconds;
+
+        if (diff > 0 && diff < 3600 * 3) {
+           final rangeStart = start.toUtc();
+           final rangeEnd = end.toUtc();
+           
+           if (startUtc.isAfter(rangeStart.subtract(const Duration(seconds: 1))) && 
+               startUtc.isBefore(rangeEnd.add(const Duration(seconds: 1)))) {
+             final cid = aCourseId ?? 'unknown';
+             totalSeconds += diff;
+             courseTotals.update(cid, (value) => value + diff, ifAbsent: () => diff);
+           }
+        }
+      }
+    }
+  }
+
+  if (courseTotals.isEmpty) {
       return const MemberSubjectStats(totalSeconds: 0, subjectStats: {});
     }
 
@@ -407,6 +535,9 @@ class GroupAggregationService {
       final query = await coursesRef.where(FieldPath.documentId, whereIn: chunk).get();
       for (final courseDoc in query.docs) {
         final data = courseDoc.data();
+        // Skip hidden courses
+        if (data['hiddenFromLeaderboard'] == true) continue;
+        
         final rawName = data['name'] as String?;
         courseInfo[courseDoc.id] = (
           name: rawName != null && rawName.trim().isNotEmpty ? rawName : 'Unknown Course',

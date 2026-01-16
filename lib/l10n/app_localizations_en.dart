@@ -100,6 +100,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportToCalendar => 'Export to calendar';
 
   @override
+  String exportWillStartIn(int seconds) {
+    return 'Export will start in $seconds seconds';
+  }
+
+  @override
   String get exportToCalendarSubtitle =>
       'Save your sessions as calendar events';
 
@@ -118,6 +123,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String exportFailedMessage(String error) {
     return 'Export failed: $error';
+  }
+
+  @override
+  String habitReportDownloadCountdown(int seconds) {
+    return 'Report generation will start in $seconds seconds';
   }
 
   @override
@@ -162,6 +172,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncNow => 'Sync now';
+
+  @override
+  String get syncing => 'Syncing';
 
   @override
   String get home => 'Home';
@@ -1529,7 +1542,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get habitNameLabel => 'Habit name';
 
   @override
-  String get habitNameHint => 'e.g. morning jog';
+  String get habitNameHint => '';
 
   @override
   String get habitCategoryLabel => 'Category';

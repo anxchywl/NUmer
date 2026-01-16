@@ -1,11 +1,14 @@
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../l10n/app_localizations.dart';
 import '../services/export_service.dart';
+import '../services/storage.dart';
 import 'app_toast.dart';
+import 'package:intl/intl.dart';
 
 class ExportSessionSheet extends StatefulWidget {
   const ExportSessionSheet({super.key});
@@ -17,10 +20,14 @@ class ExportSessionSheet extends StatefulWidget {
 class _ExportSessionSheetState extends State<ExportSessionSheet> {
   late PageController _pageCtrl;
   int _index = 0;
-  int _selectedMonths = 1;
+  late DateTime _selectedMonth;
   bool _isExporting = false;
+  int _countdown = 0;
+  Timer? _timer;
   bool _isSuccess = false;
   String? _filePath;
+  int _sessionCount = 0;
+  bool _isLoadingCount = false;
   
   // Items for the carousel: null represents "All Courses", otherwise Course object
   late List<Course?> _carouselItems;
@@ -29,30 +36,71 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
   void initState() {
     super.initState();
     _pageCtrl = PageController(viewportFraction: 0.6); // Adjusted for visibility
-    
     final state = context.read<AppState>();
-    // Prepend "All Courses" (null) to the list of courses
+    final now = DateTime.now();
+    _selectedMonth = Storage.getLastExportMonth() ?? DateTime(now.year, now.month);
+    
+    // Ensure default is within limits
+    final earliest = DateTime(2025, 1);
+    final latest = DateTime(now.year, now.month + 1);
+    if (_selectedMonth.isBefore(earliest)) _selectedMonth = earliest;
+    if (_selectedMonth.isAfter(latest)) _selectedMonth = latest;
+
     _carouselItems = [null, ...state.courses];
+    _loadSessionCount();
   }
 
   @override
   void dispose() {
     _pageCtrl.dispose();
+    _timer?.cancel();
     super.dispose();
   }
 
+  void _startCountdown() {
+    final remaining = ExportService.remainingCooldownSeconds;
+    if (remaining == 0) {
+      _export();
+      return;
+    }
+
+    setState(() {
+      _isExporting = true;
+      _countdown = remaining;
+    });
+
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdown > 1) {
+        setState(() {
+          _countdown--;
+        });
+      } else {
+        timer.cancel();
+        _export();
+      }
+    });
+  }
+
+  void _cancelCountdown() {
+    _timer?.cancel();
+    setState(() {
+      _isExporting = false;
+      _countdown = 0;
+    });
+  }
+
   Future<void> _export() async {
-    setState(() => _isExporting = true);
+    ExportService.markExportStarted();
+    setState(() {
+      _isExporting = true;
+      _countdown = 0;
+    });
 
     try {
       final l10n = AppLocalizations.of(context)!;
       final state = context.read<AppState>();
-      final now = DateTime.now();
-      final sinceDate = DateTime(
-        now.year,
-        now.month - _selectedMonths,
-        now.day,
-      );
+      final startOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month);
+      final endOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
 
       // Prepare course names map
       final courseNames = {
@@ -69,7 +117,8 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
       final path = await ExportService.exportSessionsToCalendar(
         courseId: selectedCourseId,
         exportTitle: exportTitle,
-        sinceDate: sinceDate,
+        sinceDate: startOfMonth,
+        untilDate: endOfMonth,
         courseNames: courseNames,
         studiedLabel: l10n.studiedLabel,
       );
@@ -97,16 +146,64 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
     }
   }
 
+  Future<void> _loadSessionCount() async {
+    if (!mounted) return;
+    setState(() => _isLoadingCount = true);
+    try {
+      final allSessions = await Storage.getSessions();
+      final startOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month);
+      final endOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+      final selectedItem = _carouselItems[_index];
+      final String? selectedCourseId = selectedItem?.id;
+
+      final count = allSessions.where((s) {
+        if (selectedCourseId != null && s['courseId'] != selectedCourseId) return false;
+        final start = s['startUtc'] as DateTime;
+        return (start.isAtSameMomentAs(startOfMonth) || start.isAfter(startOfMonth)) && start.isBefore(endOfMonth) && (s['seconds'] as int) > 0;
+      }).length;
+
+      if (mounted) {
+        setState(() {
+          _sessionCount = count;
+          _isLoadingCount = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingCount = false);
+      }
+    }
+  }
+
+  String _getDisplayPath(String? fullPath) {
+    if (fullPath == null) return '';
+    final path = fullPath.replaceAll('\\', '/');
+    final fileName = path.split('/').last;
+
+    // Detect Downloads folder (common on Android/macOS)
+    if (path.toLowerCase().contains('/download/') || path.toLowerCase().contains('/downloads/')) {
+      return 'Downloads/$fileName';
+    }
+
+    // Detect Documents folder (common on iOS)
+    if (path.toLowerCase().contains('/documents/')) {
+      return 'Documents/$fileName';
+    }
+
+    // Default fallback
+    if (path.length > 40) {
+      return fileName;
+    }
+
+    return path;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     
-    final oneMonth = l10n.oneMonth; 
-    final threeMonths = l10n.threeMonths; 
-    final sixMonths = l10n.sixMonths; 
-
     return Material(
       color: scheme.surface,
       shape: const RoundedRectangleBorder(
@@ -165,7 +262,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                 },
                 child: _isSuccess 
                 ? _buildInstructions(l10n, theme, scheme)
-                : _buildSelectors(l10n, theme, scheme, oneMonth, threeMonths, sixMonths),
+                : _buildSelectors(l10n, theme, scheme),
               ),
 
               const SizedBox(height: 32),
@@ -174,21 +271,35 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: _isExporting ? null : (_isSuccess ? () => Navigator.pop(context) : _export),
+                  onPressed: _isSuccess 
+                    ? () => Navigator.pop(context) 
+                    : (_isExporting 
+                        ? (_countdown > 0 ? _cancelCountdown : null) 
+                        : _startCountdown),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   icon: _isExporting 
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)) 
+                    ? (_countdown > 0 
+                        ? const Icon(Icons.close, color: Colors.white)
+                        : const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))) 
                     : Icon(_isSuccess ? Icons.check_circle_outline : Icons.download_rounded),
                   label: Text(
                     _isExporting
-                        ? l10n.exporting
+                        ? (_countdown > 0 ? l10n.cancel : l10n.exporting)
                         : (_isSuccess ? l10n.done : l10n.export),
                   ),
                 ),
               ),
+              if (_isExporting && _countdown > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    l10n.exportWillStartIn(_countdown),
+                    style: theme.textTheme.bodySmall?.copyWith(color: scheme.primary),
+                  ),
+                ),
             ],
           ),
         ),
@@ -196,7 +307,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
     );
   }
 
-  Widget _buildSelectors(AppLocalizations l10n, ThemeData theme, ColorScheme scheme, String oneMonth, String threeMonths, String sixMonths) {
+  Widget _buildSelectors(AppLocalizations l10n, ThemeData theme, ColorScheme scheme) {
     return Column(
       key: const ValueKey(false),
       mainAxisSize: MainAxisSize.min,
@@ -211,7 +322,10 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
           child: PageView.builder(
             controller: _pageCtrl,
             scrollDirection: Axis.vertical,
-            onPageChanged: (i) => setState(() => _index = i),
+            onPageChanged: (i) {
+              setState(() => _index = i);
+              _loadSessionCount();
+            },
             itemCount: _carouselItems.length,
             itemBuilder: (context, i) {
               final item = _carouselItems[i];
@@ -269,39 +383,81 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
           ),
         ),
         
-        const SizedBox(height: 24),
-
-        Text(
-          l10n.timePeriod,
-          style: theme.textTheme.titleSmall,
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: SegmentedButton<int>(
-            showSelectedIcon: false,
-            segments: [
-              ButtonSegment(value: 1, label: Text(oneMonth)),
-              ButtonSegment(value: 3, label: Text(threeMonths)),
-              ButtonSegment(value: 6, label: Text(sixMonths)),
-            ],
-            selected: {_selectedMonths},
-            onSelectionChanged: (newSelection) {
-              setState(() {
-                _selectedMonths = newSelection.first;
-              });
-            },
-            style: ButtonStyle(
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              side: WidgetStateProperty.resolveWith<BorderSide>((states) {
-                 if (states.contains(WidgetState.selected)) {
-                   return BorderSide(color: scheme.primary);
-                 }
-                 return BorderSide(color: scheme.outlineVariant);
-              }),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Divider(
+            color: scheme.outlineVariant.withAlpha(100),
+            thickness: 1,
           ),
+        ),
+
+        _buildMonthPicker(theme, scheme, l10n),
+      ],
+    );
+  }
+
+  Widget _buildMonthPicker(ThemeData theme, ColorScheme scheme, AppLocalizations l10n) {
+    final now = DateTime.now();
+    final earliest = DateTime(2025, 1);
+    final latest = DateTime(now.year, now.month + 1);
+
+    final monthYearStr = DateFormat('MMMM yyyy').format(_selectedMonth);
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: _selectedMonth.year <= earliest.year && _selectedMonth.month <= earliest.month
+                  ? null
+                  : () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
+                        Storage.setLastExportMonth(_selectedMonth);
+                        _loadSessionCount();
+                      });
+                    },
+              icon: const Icon(Icons.chevron_left),
+            ),
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 160,
+              child: Text(
+                monthYearStr,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: _selectedMonth.year >= latest.year && _selectedMonth.month >= latest.month
+                  ? null
+                  : () {
+                      setState(() {
+                        _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+                        Storage.setLastExportMonth(_selectedMonth);
+                        _loadSessionCount();
+                      });
+                    },
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: _isLoadingCount
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : Text(
+                _sessionCount == 1 
+                  ? "1 session found"
+                  : "$_sessionCount sessions found",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: _sessionCount > 0 ? scheme.primary : scheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         ),
       ],
     );
@@ -325,8 +481,6 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
             children: [
               Row(
                 children: [
-                  Icon(Icons.file_download_done, color: scheme.primary),
-                  const SizedBox(width: 8),
                   Text(
                     l10n.fileSavedSuccessfully,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -343,10 +497,11 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
               ),
               const SizedBox(height: 4),
               SelectableText(
-                _filePath ?? l10n.unknownPath,
+                _getDisplayPath(_filePath),
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontFamily: 'monospace',
                   color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],

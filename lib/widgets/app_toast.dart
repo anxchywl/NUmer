@@ -17,11 +17,13 @@ void showAppMessage(
     SnackBar(
       content: Row(
         children: [
-          Icon(
-            isError ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
-            color: isError ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer,
-          ),
-          const SizedBox(width: 12),
+          if (isError) ...[
+            Icon(
+              Icons.error_outline_rounded,
+              color: colorScheme.onErrorContainer,
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Text(
               message,

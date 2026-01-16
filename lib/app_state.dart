@@ -17,7 +17,7 @@ import 'l10n/app_localizations.dart';
 
 enum WeekStart { monday, sunday }
 
-enum HomeSummaryRange { today, week, month, year, allTime }
+enum HomeSummaryRange { off, today, week, month, year, allTime }
 
 enum ProgressView { day, week }
 
@@ -414,7 +414,7 @@ class AppState extends ChangeNotifier {
 
     
     await Storage.migrateDailyStateToSessionsIfNeeded();
-    await enforceActiveSessionBounds();
+    await enforceActiveSessionBounds(duringLoad: true);
     await _catchUpPomodoros();
     if (pomodoroRunning.values.any((v) => v == true)) {
       _ensurePomodoroTicker();
@@ -970,11 +970,10 @@ class AppState extends ChangeNotifier {
     unawaited(_scheduleTimerNotification(id));
     _saveActiveSession();
     notifyListeners();
-    _updateUserStatus(true);
     return true;
   }
 
-  Future<int> stopTimer(String id, {DateTime? forcedEnd}) async {
+  Future<int> stopTimer(String id, {DateTime? forcedEnd, bool suppressReflection = false}) async {
     if (timerRunning[id] != true || timerStart[id] == null) return 0;
 
     final start = timerStart[id]!;
@@ -1047,14 +1046,13 @@ class AppState extends ChangeNotifier {
     if (forcedEnd == null && totalSecs > 0 && !_isAppInForeground) {
     }
     
-    if (sessionId != null) {
+    if (sessionId != null && !suppressReflection) {
       _queueReflection(sessionId, totalSecs);
     }
 
     await _saveActiveSession();
     _triggerSync();
     notifyListeners();
-    _updateUserStatus(false);
     
     // Sync Time Habits matches Stopwatch logic
     if (_habitService != null) {
@@ -1098,11 +1096,10 @@ class AppState extends ChangeNotifier {
     unawaited(_scheduleStopwatchNotification(id));
     _saveActiveSession();
     notifyListeners();
-    _updateUserStatus(true);
     return true;
   }
 
-  Future<int> stopStopwatch(String id, {DateTime? forcedEnd}) async {
+  Future<int> stopStopwatch(String id, {DateTime? forcedEnd, bool suppressReflection = false}) async {
     if (stopwatchRunning[id] != true || stopwatchStart[id] == null) return 0;
     final start = stopwatchStart[id]!;
     var now = forcedEnd ?? DateTime.now();
@@ -1174,14 +1171,13 @@ class AppState extends ChangeNotifier {
     if (forcedEnd == null && totalSecs > 0 && !_isAppInForeground) {
     }
     
-    if (sessionId != null) {
+    if (sessionId != null && !suppressReflection) {
       _queueReflection(sessionId, totalSecs);
     }
 
     await _saveActiveSession();
     _triggerSync();
     notifyListeners();
-    _updateUserStatus(false);
     
     // Sync Time Habits
     if (_habitService != null) {
@@ -1207,7 +1203,7 @@ class AppState extends ChangeNotifier {
     return totalSecs;
   }
 
-  Future<void> enforceActiveSessionBounds() async {
+  Future<void> enforceActiveSessionBounds({bool duringLoad = false}) async {
     final runningTimerIds = timerRunning.entries
         .where((e) => e.value == true)
         .map((e) => e.key)
@@ -1237,7 +1233,7 @@ class AppState extends ChangeNotifier {
       if (plannedSecs != null && plannedSecs > 0) {
         final plannedEnd = start.add(Duration(seconds: plannedSecs));
         if (!now.isBefore(plannedEnd)) {
-          await stopTimer(id, forcedEnd: plannedEnd);
+          await stopTimer(id, forcedEnd: plannedEnd, suppressReflection: duringLoad);
           await prefs?.remove('timer_planned_$id');
           continue;
         }
@@ -1245,7 +1241,7 @@ class AppState extends ChangeNotifier {
 
       final hardCapEnd = start.add(const Duration(seconds: kMaxSecs));
       if (!now.isBefore(hardCapEnd)) {
-        await stopTimer(id, forcedEnd: hardCapEnd);
+        await stopTimer(id, forcedEnd: hardCapEnd, suppressReflection: duringLoad);
       }
     }
 
@@ -1254,7 +1250,7 @@ class AppState extends ChangeNotifier {
       if (start == null) continue;
       final hardCapEnd = start.add(const Duration(seconds: kMaxSecs));
       if (!now.isBefore(hardCapEnd)) {
-        await stopStopwatch(id, forcedEnd: hardCapEnd);
+        await stopStopwatch(id, forcedEnd: hardCapEnd, suppressReflection: duringLoad);
       }
     }
 
@@ -1331,7 +1327,6 @@ class AppState extends ChangeNotifier {
     _ensurePomodoroTicker();
     _saveActiveSession();
     notifyListeners();
-    _updateUserStatus(true);
     return true;
   }
 
@@ -1342,7 +1337,6 @@ class AppState extends ChangeNotifier {
     pomodoroPaused[id] = true;
     await _saveActiveSession();
     notifyListeners();
-    _updateUserStatus(false);
   }
 
   Future<void> resumePomodoro(String id) async {
@@ -1352,7 +1346,6 @@ class AppState extends ChangeNotifier {
     _ensurePomodoroTicker();
     await _saveActiveSession();
     notifyListeners();
-    _updateUserStatus(true);
   }
 
   Future<void> skipPomodoroBreak(String id) async {
@@ -1380,7 +1373,6 @@ class AppState extends ChangeNotifier {
     if (hadActivity) {
       notifyListeners();
     }
-    _updateUserStatus(false);
   }
 
   Future<bool> saveWorkAndQuitPomodoro(String id) async {
@@ -1402,7 +1394,6 @@ class AppState extends ChangeNotifier {
       _triggerSync();
     }
     notifyListeners();
-    _updateUserStatus(false);
     return saved;
   }
 
@@ -1426,7 +1417,6 @@ class AppState extends ChangeNotifier {
       _triggerSync();
     }
     notifyListeners();
-    _updateUserStatus(false);
   }
 
   Duration _pomodoroPhaseDuration(String id) {
@@ -1789,17 +1779,51 @@ class AppState extends ChangeNotifier {
     final timers = <String, Map<String, dynamic>>{};
     final stops = <String, Map<String, dynamic>>{};
     final pomos = <String, Map<String, dynamic>>{};
+    
+    String? activeCourseId;
+    String? activeKind;
+    DateTime? activeStart;
+    DateTime? activeExpectedEnd;
+
     for (final c in courses) {
       timers[c.id] = {
         'running': timerRunning[c.id] ?? false,
         'start': timerStart[c.id]?.toIso8601String(),
         'elapsed': timerElapsed[c.id]?.inSeconds ?? 0,
       };
+      if (timerRunning[c.id] == true) {
+        activeCourseId = c.id;
+        activeKind = 'timer';
+        activeStart = timerStart[c.id];
+        // Timer has no fixed end unless we fetch planned duration from somewhere (not here).
+        // User requirements say: "expectedEndTime (timer/pomodoro)".
+        // Timers in this app act like stopwatches counting UP usually? Or countdowns?
+        // timerRunning stores boolean.
+        // Assuming timers are countdowns? If so, we need the initial duration.
+        // But the user prompt says "expectedEndTime (timer/pomodoro) or sessionStartTime + 3h".
+        // If it's a timer (countdown), we need the target.
+        // If it's a stopwatch, we use 3h.
+        // Let's assume stopwatch = up, timer = down? 
+        // Checking currentElapsedStopwatch in AppState suggests stopwatch is counting up.
+        // _scheduleTimerNotification suggests Timers have planned duration.
+        // Let's check _scheduleTimerNotification to see where it gets duration.
+        // It uses Preference 'timer_planned_$courseId'.
+      }
+
       stops[c.id] = {
         'running': stopwatchRunning[c.id] ?? false,
         'start': stopwatchStart[c.id]?.toIso8601String(),
         'elapsed': stopwatchElapsed[c.id]?.inSeconds ?? 0,
       };
+      if (stopwatchRunning[c.id] == true) {
+        activeCourseId = c.id;
+        activeKind = 'stopwatch';
+        activeStart = stopwatchStart[c.id];
+        if (activeStart != null) {
+          activeExpectedEnd = activeStart.add(const Duration(hours: 3));
+        }
+      }
+
       pomos[c.id] = {
         'running': pomodoroRunning[c.id] ?? false,
         'paused': pomodoroPaused[c.id] ?? false,
@@ -1808,12 +1832,51 @@ class AppState extends ChangeNotifier {
         'phaseElapsed': pomodoroPhaseElapsed[c.id]?.inSeconds ?? 0,
         'completedWork': pomodoroCompletedWork[c.id] ?? 0,
       };
+      if (pomodoroRunning[c.id] == true && !(pomodoroPaused[c.id] ?? false)) {
+        activeCourseId = c.id;
+        activeKind = 'pomodoro';
+        activeStart = pomodoroPhaseStart[c.id];
+        // Pomodoro has fixed duration based on phase.
+        final duration = _pomodoroPhaseDuration(c.id);
+        if (activeStart != null) {
+          activeExpectedEnd = activeStart.add(duration);
+        }
+      }
     }
+    
+    // If we have a running timer, try to fetch planned duration
+    if (activeKind == 'timer' && activeStart != null && activeCourseId != null) {
+        // We need to read async preferences potentially?
+        // Or store it in memory.
+        // Since we cannot await SharedPreferences easily here without refactor, 
+        // we might check if we can calculate it.
+        // For now, let's default to start + 3h if undefined, but I'll try to find it.
+        final prefs = await SharedPreferences.getInstance();
+        final plannedSeconds = prefs.getInt('timer_planned_$activeCourseId') ?? 0;
+        if (plannedSeconds > 0) {
+           activeExpectedEnd = activeStart.add(Duration(seconds: plannedSeconds));
+        } else {
+           activeExpectedEnd = activeStart.add(const Duration(hours: 3));
+        }
+    }
+
     await Storage.saveActiveSession({
       'timers': timers,
       'stopwatches': stops,
       'pomodoros': pomos,
     });
+    
+    // Broadcast to remote
+    final sync = _syncService;
+    if (sync != null) {
+       await sync.updateActiveSession(
+         isStudying: activeCourseId != null,
+         courseId: activeCourseId,
+         kind: activeKind,
+         start: activeStart,
+         expectedEnd: activeExpectedEnd,
+       );
+    }
   }
 
   
@@ -2057,18 +2120,6 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<void> _updateUserStatus(bool isStudying) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'isStudying': isStudying,
-        'lastActive': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-    } catch (e) {
-      debugPrint('Error updating user status: $e');
-    }
-  }
 
   
   Future<void> updateCourse(Course updated) async {
@@ -2149,6 +2200,9 @@ class AppState extends ChangeNotifier {
       case 'allTime':
         _homeSummaryRange = HomeSummaryRange.allTime;
         break;
+      case 'off':
+        _homeSummaryRange = HomeSummaryRange.off;
+        break;
       default:
         _homeSummaryRange = HomeSummaryRange.today;
     }
@@ -2159,6 +2213,7 @@ class AppState extends ChangeNotifier {
     _homeSummaryRange = r;
     notifyListeners(); 
     final s = switch (r) {
+      HomeSummaryRange.off => 'off',
       HomeSummaryRange.today => 'today',
       HomeSummaryRange.week => 'week',
       HomeSummaryRange.month => 'month',
@@ -2172,6 +2227,8 @@ class AppState extends ChangeNotifier {
   (DateTime start, DateTime end) homeSummaryBoundsNow() {
     final now = DateTime.now();
     switch (_homeSummaryRange) {
+      case HomeSummaryRange.off:
+        return (now, now);
       case HomeSummaryRange.today:
         final s = DateTime(now.year, now.month, now.day);
         return (s, now);
@@ -2198,6 +2255,7 @@ class AppState extends ChangeNotifier {
 
   
   String homeSummaryLabel(BuildContext context) => switch (_homeSummaryRange) {
+        HomeSummaryRange.off => AppLocalizations.of(context)!.off,
         HomeSummaryRange.today => AppLocalizations.of(context)!.studiedToday,
         HomeSummaryRange.week => AppLocalizations.of(context)!.studiedThisWeek,
         HomeSummaryRange.month => AppLocalizations.of(context)!.studiedThisMonth,
@@ -2330,7 +2388,10 @@ class AppState extends ChangeNotifier {
     }
 
     _updateStreak();
-    _triggerSync();
+    // Push destruction immediately (delta sync only)
+    if (_syncService != null) {
+      unawaited(_syncService!.pushDirty());
+    }
     notifyListeners();
   }
 

@@ -5,15 +5,31 @@ import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'storage.dart';
 
-
-
 class ExportService {
   ExportService._();
+
+  static DateTime? _lastExportTime;
+  static const Duration cooldownDuration = Duration(seconds: 30);
+
+  /// Returns the remaining cooldown time in seconds.
+  /// Returns 0 if no cooldown is active.
+  static int get remainingCooldownSeconds {
+    if (_lastExportTime == null) return 0;
+    final diff = DateTime.now().difference(_lastExportTime!);
+    final remaining = cooldownDuration.inSeconds - diff.inSeconds;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// Marks the current time as the last export time to start the cooldown.
+  static void markExportStarted() {
+    _lastExportTime = DateTime.now();
+  }
 
   static Future<String> exportSessionsToCalendar({
     required String? courseId,
     required String exportTitle,
     required DateTime sinceDate,
+    required DateTime untilDate,
     required Map<String, String> courseNames,
     required String studiedLabel,
   }) async {
@@ -24,7 +40,7 @@ class ExportService {
     final sessions = allSessions.where((s) {
       if (courseId != null && s['courseId'] != courseId) return false;
       final start = s['startUtc'] as DateTime;
-      return start.isAfter(sinceDate) && (s['seconds'] as int) > 0;
+      return (start.isAtSameMomentAs(sinceDate) || start.isAfter(sinceDate)) && start.isBefore(untilDate) && (s['seconds'] as int) > 0;
     }).toList();
 
     if (sessions.isEmpty) {
@@ -76,12 +92,14 @@ class ExportService {
     Directory directory;
     
     if (Platform.isAndroid) {
-      // On Android, use Downloads directory
-      final downloadDir = Directory('/storage/emulated/0/Download');
-      if (await downloadDir.exists()) {
-        directory = downloadDir;
+      // Prioritize public Downloads folder so users can actually see the file
+      final publicDownloadDir = Directory('/storage/emulated/0/Download');
+      if (await publicDownloadDir.exists()) {
+        directory = publicDownloadDir;
       } else {
-        directory = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+        directory = await getDownloadsDirectory() ?? 
+                    await getExternalStorageDirectory() ?? 
+                    await getApplicationDocumentsDirectory();
       }
     } else if (Platform.isIOS) {
       // On iOS, use app documents directory (accessible via Files app)
@@ -121,9 +139,13 @@ class ExportService {
     // Reuse directory logic from exportSessionsToCalendar roughly
     Directory targetDir;
     if (Platform.isAndroid) {
-      targetDir = Directory('/storage/emulated/0/Download');
-      if (!await targetDir.exists()) {
-        targetDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+      final publicDownloadDir = Directory('/storage/emulated/0/Download');
+      if (await publicDownloadDir.exists()) {
+        targetDir = publicDownloadDir;
+      } else {
+        targetDir = await getDownloadsDirectory() ?? 
+                    await getExternalStorageDirectory() ?? 
+                    await getApplicationDocumentsDirectory();
       }
     } else {
       targetDir = await getApplicationDocumentsDirectory();
@@ -185,9 +207,13 @@ class ExportService {
     // Get target directory
     Directory targetDir;
     if (Platform.isAndroid) {
-      targetDir = Directory('/storage/emulated/0/Download');
-      if (!await targetDir.exists()) {
-        targetDir = await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+      final publicDownloadDir = Directory('/storage/emulated/0/Download');
+      if (await publicDownloadDir.exists()) {
+        targetDir = publicDownloadDir;
+      } else {
+        targetDir = await getDownloadsDirectory() ?? 
+                    await getExternalStorageDirectory() ?? 
+                    await getApplicationDocumentsDirectory();
       }
     } else {
       targetDir = await getApplicationDocumentsDirectory();

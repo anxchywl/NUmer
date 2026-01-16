@@ -20,6 +20,9 @@ class LocalDatabase {
   Box<LocalConflict>? _conflictsBox;
   Box<dynamic>? _metaBox;
 
+  Box<LocalSession>? _peerSessionsBox;
+  Box<LocalCourse>? _peerCoursesBox;
+
   Future<void> initCore() async {
     if (_initialized) return;
     await Hive.initFlutter();
@@ -39,6 +42,8 @@ class LocalDatabase {
     _syncBox = await Hive.openBox<SyncStateEntry>('${uid}_sync');
     _conflictsBox = await Hive.openBox<LocalConflict>('${uid}_conflicts');
     _metaBox = await Hive.openBox('${uid}_meta');
+    _peerSessionsBox = await Hive.openBox<LocalSession>('${uid}_peer_sessions');
+    _peerCoursesBox = await Hive.openBox<LocalCourse>('${uid}_peer_courses');
   }
 
   Future<void> close() async {
@@ -50,6 +55,8 @@ class LocalDatabase {
       _syncBox?.close() ?? Future.value(),
       _conflictsBox?.close() ?? Future.value(),
       _metaBox?.close() ?? Future.value(),
+      _peerSessionsBox?.close() ?? Future.value(),
+      _peerCoursesBox?.close() ?? Future.value(),
     ]);
     _userBox = null;
     _coursesBox = null;
@@ -58,6 +65,8 @@ class LocalDatabase {
     _syncBox = null;
     _conflictsBox = null;
     _metaBox = null;
+    _peerSessionsBox = null;
+    _peerCoursesBox = null;
     _currentUid = null;
   }
 
@@ -86,10 +95,20 @@ class LocalDatabase {
     return values.where((c) => !c.deleted);
   }
 
+  Iterable<LocalCourse> peerCourses(String targetUid) {
+     final values = _peerCoursesBox?.values ?? const Iterable.empty();
+     return values.where((c) => c.uid == targetUid && !c.deleted);
+  }
+
   Iterable<LocalSession> sessions({bool includeDeleted = false}) {
     final values = _sessionsBox?.values ?? const Iterable.empty();
     if (includeDeleted) return values;
     return values.where((s) => !s.deleted);
+  }
+  
+  Iterable<LocalSession> peerSessions(String targetUid) {
+     final values = _peerSessionsBox?.values ?? const Iterable.empty();
+     return values.where((s) => s.uid == targetUid && !s.deleted);
   }
 
   Iterable<LocalGoal> goals({bool includeDeleted = false}) {
@@ -155,8 +174,22 @@ class LocalDatabase {
 
   LocalGoal? getGoalById(String id) => _goalsBox?.get(id);
 
+  Future<void> putPeerCourse(LocalCourse course, String compositeKey) async {
+     await _peerCoursesBox?.put(compositeKey, course);
+  }
+
   Future<void> putSession(LocalSession session) async {
     await _sessionsBox?.put(session.id, session);
+  }
+  
+  Future<void> putPeerSession(LocalSession session, String compositeKey) async {
+     // Store using composite key like ${userId}_${sessionId} to avoid collision if IDs clash (unlikely but safe)
+     // or just sessionId if we trust UUIDs. 
+     // Requirement says: groupId + memberId, wait.
+     // Storage Schema for Peer Data: "keyed by groupId + memberId" - wait, that's just cache access.
+     // Hive box is peer_sessions. We should store by sessionId, but we need to query by userId.
+     // Hive iteration is fast enough for small sets.
+     await _peerSessionsBox?.put(compositeKey, session);
   }
 
   Future<void> putGoal(LocalGoal goal) async {
@@ -187,6 +220,12 @@ class LocalDatabase {
 
   Box<LocalConflict> get conflictsBox =>
       _conflictsBox ?? (throw StateError('Conflicts box not opened'));
+      
+  Box<LocalSession> get peerSessionsBox =>
+      _peerSessionsBox ?? (throw StateError('Peer sessions box not opened'));
+
+  Box<LocalCourse> get peerCoursesBox =>
+      _peerCoursesBox ?? (throw StateError('Peer courses box not opened'));
 
   Future<void> putSyncState(SyncStateEntry entry) async {
     await _syncBox?.put(entry.collection, entry);
@@ -201,6 +240,8 @@ class LocalDatabase {
       _syncBox?.clear() ?? Future.value(),
       _conflictsBox?.clear() ?? Future.value(),
       _metaBox?.clear() ?? Future.value(),
+      _peerSessionsBox?.clear() ?? Future.value(),
+      _peerCoursesBox?.clear() ?? Future.value(),
     ]);
   }
 
@@ -212,6 +253,8 @@ class LocalDatabase {
     await Hive.deleteBoxFromDisk('${uid}_sync');
     await Hive.deleteBoxFromDisk('${uid}_conflicts');
     await Hive.deleteBoxFromDisk('${uid}_meta');
+    await Hive.deleteBoxFromDisk('${uid}_peer_sessions');
+    await Hive.deleteBoxFromDisk('${uid}_peer_courses');
   }
 
   dynamic getMeta(String key) => _metaBox?.get(key);

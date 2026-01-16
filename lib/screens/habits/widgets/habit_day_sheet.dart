@@ -230,12 +230,20 @@ class _HabitRow extends StatelessWidget {
     if (habit.type == HabitType.yesNo) {
       HapticFeedback.lightImpact();
       final isCompleted = progress >= habit.targetValue;
-      await context.read<HabitService>().toggleCompletion(
-            userId: userId,
-            habit: habit,
-            date: date,
-            completed: !isCompleted,
-          );
+      try {
+        await context.read<HabitService>().toggleCompletion(
+              userId: userId,
+              habit: habit,
+              date: date,
+              completed: !isCompleted,
+            );
+      } catch (e) {
+        if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("Error: $e"), backgroundColor: Theme.of(context).colorScheme.error),
+           );
+        }
+      }
       if (context.mounted) context.read<AppState>().triggerSync();
     } else {
       showModalBottomSheet(
