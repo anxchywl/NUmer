@@ -78,6 +78,7 @@ class ProfileSetupScreen extends StatelessWidget {
                           'profileGoal': data.goal,
                           'profileContact': data.contact,
                           'profileComplete': true,
+                          'onboardingCompleted': true,
                           'isNewUser': false,
                           'updatedAt': FieldValue.serverTimestamp(),
                         };

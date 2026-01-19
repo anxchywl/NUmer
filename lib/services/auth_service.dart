@@ -13,6 +13,7 @@ import 'notifications.dart';
 import 'storage.dart';
 import 'sync_service.dart';
 import 'user_storage.dart';
+import '../data/local/local_database.dart';
 
 class AuthFailure implements Exception {
   final String message;
@@ -49,6 +50,7 @@ class AuthController extends ChangeNotifier {
   bool _forcedLoggedOut = false;
   bool _requiresEmailVerification = false;
   bool _pendingAccountDeletedMessage = false;
+  bool _isBootstrapping = false;
 
   User? get currentUser => _currentUser;
   Map<String, dynamic>? get profile => _profileData;
@@ -59,6 +61,7 @@ class AuthController extends ChangeNotifier {
   bool get isSyncReady => _currentUser == null || _syncReady;
   bool get wasForcedLoggedOut => _forcedLoggedOut;
   bool get requiresEmailVerification => _requiresEmailVerification;
+  bool get isBootstrapping => _isBootstrapping;
 
   bool consumeAccountDeletedMessage() {
     if (!_pendingAccountDeletedMessage) return false;
@@ -108,6 +111,7 @@ class AuthController extends ChangeNotifier {
       _initializingUser = null;
       _profileData = null;
       _profileReady = false;
+      _isBootstrapping = false;
       _fcmTokenSub?.cancel();
       _fcmMessageSub?.cancel();
       UserStorage.setCurrentUser(null);
@@ -124,6 +128,7 @@ class AuthController extends ChangeNotifier {
       _initializingUser = null;
       _profileData = null;
       _profileReady = false;
+      _isBootstrapping = false;
       UserStorage.setCurrentUser(null);
       notifyListeners();
       return;
@@ -181,12 +186,28 @@ class AuthController extends ChangeNotifier {
   Future<void> _prepareUser(User user) async {
     final deviceId = await _ensureDeviceId();
     await Storage.configureForUser(user.uid);
-    await _syncService?.start(
-      uid: user.uid,
-      deviceId: deviceId,
-      onForcedLogout: _handleForcedLogout,
-      bootstrap: true,
-    );
+    final hasLocalCache = LocalDatabase.instance.hasBootstrapCache();
+    final needsBootstrap = !hasLocalCache;
+    final existingBootstrapVersion = await Storage.getBootstrapVersionFlag();
+    _isBootstrapping = needsBootstrap;
+    notifyListeners();
+
+    try {
+      await _syncService?.start(
+        uid: user.uid,
+        deviceId: deviceId,
+        onForcedLogout: _handleForcedLogout,
+        bootstrap: needsBootstrap,
+      );
+      if (needsBootstrap || existingBootstrapVersion == null) {
+        await Storage.setBootstrapVersionFlag(Storage.bootstrapVersion);
+      }
+    } finally {
+      if (_isBootstrapping) {
+        _isBootstrapping = false;
+        notifyListeners();
+      }
+    }
   }
 
   Future<void> _registerPushToken(User user) async {
@@ -457,6 +478,7 @@ class AuthController extends ChangeNotifier {
     _syncReady = false;
     _initializingUser = null;
     _requiresEmailVerification = false;
+    _isBootstrapping = false;
     await _syncService?.stop();
     UserStorage.setCurrentUser(null);
     await _auth.signOut();

@@ -9,6 +9,7 @@ import 'package:hive/hive.dart';
 
 import '../data/local/entities.dart';
 import '../data/local/local_database.dart';
+import 'startup_metrics.dart';
 
 enum SyncStatus { offline, syncing, upToDate }
 
@@ -92,26 +93,12 @@ class SyncService extends ChangeNotifier {
     _listenActiveSession();
 
     if (_online) {
-      // Optimization: If we are asked to bootstrap (full sync) but we already have
-      // a valid sync state (e.g. we have pulled courses before), then we don't
-      // need to do a full pull. We can just do a delta pull.
-      // This supports "logout -> login" flows where local data is preserved.
-      var shouldBootstrap = bootstrap;
-      if (shouldBootstrap) {
-        final state = _db.syncStateForKey(_coursesStateKey);
-        if (state.lastPullMs > 0) {
-          shouldBootstrap = false;
-        }
-      }
-      
-      if (shouldBootstrap) {
-        // New device / first login: AWAIT to ensure data is loaded before proceeding.
-        // Without this, the user would see empty screens or incorrect profile prompts.
-        await syncNow(full: true);
+      if (bootstrap) {
+        // New device / first login: block until minimal data is fetched.
+        await syncNow(full: true, startup: true);
       } else {
-        // Returning user with local data: Fire-and-forget for instant startup.
-        // The app shows local data immediately; sync results merge in background.
-        unawaited(syncNow(full: false));
+        // Returning user with cache: run delta sync in background.
+        unawaited(syncNow(full: false, startup: true));
       }
     } else {
       _setStatus(SyncStatus.offline);
@@ -137,7 +124,7 @@ class SyncService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> syncNow({bool full = false}) async {
+  Future<void> syncNow({bool full = false, bool startup = false}) async {
     if (!_isRunning || _isSyncing || !_online || _uid == null) {
       return;
     }
@@ -145,10 +132,19 @@ class SyncService extends ChangeNotifier {
     _setStatus(SyncStatus.syncing);
     lastError = null;
     try {
+      if (startup) {
+        StartupMetrics.markSyncStart(bootstrap: full);
+      }
       await pushDirty();
-      await pullSince(full: full);
+      final readCount = await pullSince(full: full);
+      if (startup) {
+        StartupMetrics.markSyncComplete(readCount: readCount);
+      }
       _setStatus(SyncStatus.upToDate);
     } catch (err, stack) {
+      if (startup) {
+        StartupMetrics.markSyncComplete(readCount: 0);
+      }
       if (kDebugMode) {
         
         print('Sync failed: $err\n$stack');
@@ -294,40 +290,42 @@ class SyncService extends ChangeNotifier {
     }
   }
 
-  Future<void> pullSince({bool full = false}) async {
-    if (_uid == null) return;
-    await _pullUser(full: full);
-    await _pullCollection(
+  Future<int> pullSince({bool full = false}) async {
+    if (_uid == null) return 0;
+    var readCount = 0;
+    readCount += await _pullUser(full: full);
+    readCount += await _pullCollection(
       collection: 'courses',
       stateKey: _coursesStateKey,
       mapper: _applyRemoteCourse,
       full: full,
       limit: 250,
     );
-    await _pullCollection(
+    readCount += await _pullCollection(
       collection: 'sessions',
       stateKey: _sessionsStateKey,
       mapper: _applyRemoteSession,
       full: full,
       limit: 200,
     );
-    await _pullCollection(
+    readCount += await _pullCollection(
       collection: 'goals',
       stateKey: _goalsStateKey,
       mapper: _applyRemoteGoal,
       full: full,
       limit: 200,
     );
-    await _pullCollection(
+    readCount += await _pullCollection(
       collection: 'habits',
       stateKey: _habitsStateKey,
       mapper: _applyRemoteHabit,
       full: full,
       limit: 200,
     );
-    await _pullHabitHistory(full: full);
+    readCount += await _pullHabitHistory(full: full);
     lastPull = DateTime.now();
     await _notifyAfterPullListeners();
+    return readCount;
   }
 
   
@@ -440,23 +438,25 @@ class SyncService extends ChangeNotifier {
     await _db.putSyncState(state);
   }
 
-  Future<void> _pullUser({bool full = false}) async {
-    if (_uid == null) return;
+  Future<int> _pullUser({bool full = false}) async {
+    if (_uid == null) return 0;
+    var reads = 0;
     final ref = _firestore.collection('users').doc(_uid);
     final snapshot = await ref.get(GetOptions(source: Source.server));
+    if (snapshot.exists) reads++;
     final data = snapshot.data();
-    if (data == null) return;
+    if (data == null) return reads;
     final updatedAt = _timestampToMs(data['updatedAt']);
     final local = _db.ensureUserDoc();
     final state = _db.syncStateForKey(_userStateKey);
     if (!full && updatedAt <= local.updatedAtMs && !local.dirty) {
       state.lastPullMs = max(state.lastPullMs, updatedAt);
       await _db.putSyncState(state);
-      return;
+      return reads;
     }
     if (local.dirty && updatedAt <= local.updatedAtMs) {
       
-      return;
+      return reads;
     }
     if (local.dirty && updatedAt > local.updatedAtMs) {
       await _db.logConflict(
@@ -488,14 +488,20 @@ class SyncService extends ChangeNotifier {
           (data['pendingCoursePrompt'] as bool?) ?? local.pendingCoursePrompt
       ..avatarColorValue = (data['avatarColorValue'] as num?)?.toInt() ?? (data['profileAvatarColorValue'] as num?)?.toInt()
       ..profileComplete = (data['profileComplete'] as bool?) ?? local.profileComplete
+      ..onboardingCompleted = data['onboardingCompleted'] == true || data['profileComplete'] == true || local.onboardingCompleted
       ..dirty = false
       ..updatedAtMs = updatedAt;
+    final remoteBootstrapVersion = (data['bootstrapVersion'] as num?)?.toInt();
+    if (remoteBootstrapVersion != null) {
+      local.bootstrapVersion = remoteBootstrapVersion;
+    }
     await local.save();
     state.lastPullMs = max(state.lastPullMs, updatedAt);
     await _db.putSyncState(state);
+    return reads;
   }
 
-  Future<void> _pullCollection({
+  Future<int> _pullCollection({
     required String collection,
     required String stateKey,
     required Future<void> Function(
@@ -505,7 +511,7 @@ class SyncService extends ChangeNotifier {
     required bool full,
     int limit = 200,
   }) async {
-    if (_uid == null) return;
+    if (_uid == null) return 0;
     final state = _db.syncStateForKey(stateKey);
     var cursor = full ? 0 : state.lastPullMs;
 
@@ -524,6 +530,7 @@ class SyncService extends ChangeNotifier {
 
     Query<Map<String, dynamic>> pageQuery = baseQuery;
     var maxSeen = cursor;
+    var readCount = 0;
 
     while (true) {
       final snapshot = await pageQuery
@@ -532,6 +539,7 @@ class SyncService extends ChangeNotifier {
       if (snapshot.docs.isEmpty) {
         break;
       }
+      readCount += snapshot.docs.length;
       for (final doc in snapshot.docs) {
         await mapper(doc);
         maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
@@ -545,6 +553,7 @@ class SyncService extends ChangeNotifier {
 
     state.lastPullMs = max(state.lastPullMs, maxSeen);
     await _db.putSyncState(state);
+    return readCount;
   }
 
   Future<void> _applyRemoteCourse(
@@ -850,16 +859,17 @@ class SyncService extends ChangeNotifier {
 
   static const _habitHistoryStateKey = 'habit_history';
 
-  Future<void> _pullHabitHistory({bool full = false}) async {
-    if (_uid == null) return;
+  Future<int> _pullHabitHistory({bool full = false}) async {
+    if (_uid == null) return 0;
     final state = _db.syncStateForKey(_habitHistoryStateKey);
     final cursor = full ? 0 : state.lastPullMs;
     var maxSeen = cursor;
+    var readCount = 0;
 
     // We pull history for all non-deleted habits. 
     // Optimization: Only pull for habits that were recently synchronized or are active.
     final habits = _db.habits(includeDeleted: false).toList();
-    if (habits.isEmpty) return;
+    if (habits.isEmpty) return 0;
 
     for (final habit in habits) {
       Query<Map<String, dynamic>> query = _firestore
@@ -877,6 +887,7 @@ class SyncService extends ChangeNotifier {
       }
 
       final snapshot = await query.get(GetOptions(source: Source.server));
+      readCount += snapshot.docs.length;
       for (final doc in snapshot.docs) {
         await _applyRemoteHabitHistory(habit.id, doc);
         maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
@@ -885,6 +896,7 @@ class SyncService extends ChangeNotifier {
 
     state.lastPullMs = max(state.lastPullMs, maxSeen);
     await _db.putSyncState(state);
+    return readCount;
   }
 
   Future<void> _applyRemoteHabitHistory(
@@ -955,6 +967,8 @@ class SyncService extends ChangeNotifier {
       'avatarColorValue': doc.avatarColorValue,
       'profileAvatarColorValue': doc.avatarColorValue,
       'profileComplete': doc.profileComplete,
+      'onboardingCompleted': doc.onboardingCompleted,
+      'bootstrapVersion': doc.bootstrapVersion,
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }

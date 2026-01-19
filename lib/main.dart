@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
 
@@ -35,6 +36,8 @@ import 'widgets/profile_form.dart';
 import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
 import 'services/notifications.dart';
+import 'services/startup_metrics.dart';
+
 
 Future<void> _activateAppCheck({required bool useEmulator}) async {
   if (useEmulator) return; 
@@ -70,65 +73,142 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  StartupMetrics.markAppStart();
+
+  // Preload stored theme to avoid initial flicker to system theme.
+  // This MUST happen before runApp() so the first frame uses the correct theme.
+  final prefs = await SharedPreferences.getInstance();
+  final storedTheme = prefs.getString(AppState.kThemePrefsKey);
+  final initialTheme = _parseThemeMode(storedTheme);
+  AppState.setInitialThemeMode(initialTheme);
 
   const useEmulator =
       bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
-  await Firebase.initializeApp();
-  
-  if (!kIsWeb) {
-    FirebaseFirestore.instance.settings = const Settings(persistenceEnabled: true);
+  final initFuture = _initializeApp(useEmulator: useEmulator);
+
+  runApp(NumerBootstrapApp(
+    initFuture: initFuture,
+    initialTheme: initialTheme,
+  ));
+}
+
+ThemeMode _parseThemeMode(String? value) {
+  switch (value) {
+    case 'light':
+      return ThemeMode.light;
+    case 'dark':
+      return ThemeMode.dark;
+    default:
+      return ThemeMode.system;
   }
-  
+}
+
+Future<void> _initializeApp({required bool useEmulator}) async {
+  await Firebase.initializeApp();
+
+  if (!kIsWeb) {
+    FirebaseFirestore.instance.settings =
+        const Settings(persistenceEnabled: true);
+  }
+
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
-    
     FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-    
     FirebaseFunctions.instance.useFunctionsEmulator('localhost', 5001);
   }
+
   await LocalDatabase.instance.initCore();
   await Notifs.init();
-
-  
-  
-
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<SyncService>(
-          create: (_) => SyncService(),
-        ),
-        Provider<GroupService>(
-          create: (_) => GroupService(),
-        ),
-        Provider<HabitService>(
-          create: (_) => HabitService(),
-        ),
-        /*
-        ChangeNotifierProvider<ConnectionsService>(
-          create: (_) => ConnectionsService(),
-        ),
-        */
-        ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
-          create: (_) => AppState(),
-          update: (_, syncService, habitService, appState) {
-            final state = appState ?? AppState();
-            state.bindSyncService(syncService);
-            state.bindHabitService(habitService);
-            return state;
-          },
-        ),
-        ChangeNotifierProxyProvider<SyncService, AuthController>(
-          create: (_) => AuthController(),
-          update: (_, syncService, authController) =>
-              authController!..attachSyncService(syncService),
-        ),
-      ],
-      child: const AppRoot(),
-    ),
-  );
 }
+
+class NumerBootstrapApp extends StatelessWidget {
+  final Future<void> initFuture;
+  final ThemeMode initialTheme;
+  const NumerBootstrapApp({
+    super.key,
+    required this.initFuture,
+    required this.initialTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: initFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider<SyncService>(
+                create: (_) => SyncService(),
+              ),
+              Provider<GroupService>(
+                create: (_) => GroupService(),
+              ),
+              Provider<HabitService>(
+                create: (_) => HabitService(),
+              ),
+              ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
+                create: (_) => AppState(),
+                update: (_, syncService, habitService, appState) {
+                  final state = appState ?? AppState();
+                  state.bindSyncService(syncService);
+                  state.bindHabitService(habitService);
+                  return state;
+                },
+              ),
+              ChangeNotifierProxyProvider<SyncService, AuthController>(
+                create: (_) => AuthController(),
+                update: (_, syncService, authController) =>
+                    authController!..attachSyncService(syncService),
+              ),
+            ],
+            child: const AppRoot(),
+          );
+        }
+
+        // Use the preloaded theme for the loading screen to avoid flicker
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: _lightTheme,
+          darkTheme: _darkTheme,
+          themeMode: initialTheme,
+          home: Scaffold(
+            body: SafeArea(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: CircularProgressIndicator(strokeWidth: 4),
+                    ),
+                    SizedBox(height: 16),
+                    Text('Preparing Numer...'),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+final ThemeData _lightTheme = ThemeData(
+  useMaterial3: true,
+  colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+);
+
+final ThemeData _darkTheme = ThemeData(
+  useMaterial3: true,
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: Colors.indigo,
+    brightness: Brightness.dark,
+  ),
+);
 
 class AppRoot extends StatefulWidget {
   const AppRoot({super.key});
@@ -143,6 +223,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      StartupMetrics.markFirstFrame();
       _syncActiveSessions();
       context.read<AppState>().loadThemeMode(); 
     });
@@ -164,11 +245,13 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   void _syncActiveSessions() {
     if (!mounted) return;
     final auth = context.read<AuthController>();
-    if (auth.currentUser == null) return;
+    if (auth.currentUser == null || !auth.isSyncReady || auth.isBootstrapping) {
+      return;
+    }
     final appState = context.read<AppState>();
     unawaited(appState.enforceActiveSessionBounds());
     final syncService = context.read<SyncService>();
-    unawaited(syncService.syncNow(full: true));
+    unawaited(syncService.syncNow(full: false));
   }
 
   Future<void> setTheme(ThemeMode mode) async {
@@ -179,7 +262,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Selector<AppState, (ThemeMode, Locale?)>(
-      selector: (_, state) => (state.themeMode, state.locale),
+      selector: (_, state) => (state.effectiveThemeMode, state.locale),
       builder: (context, data, _) {
         final themeMode = data.$1;
         final locale = data.$2;
@@ -230,128 +313,190 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
+  Widget _buildLoader(BuildContext context, {String? message}) {
+    // Explicitly resolve theme to avoid flicker from MaterialApp theme animation
+    final appState = context.read<AppState>();
+    final mode = appState.effectiveThemeMode;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = mode == ThemeMode.dark || 
+        (mode == ThemeMode.system && systemBrightness == Brightness.dark);
+
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: Colors.indigo,
+      brightness: isDark ? Brightness.dark : Brightness.light,
+    );
+
+    return Theme(
+      data: ThemeData(
+        useMaterial3: true,
+        colorScheme: colorScheme,
+      ),
+      child: Scaffold(
+        backgroundColor: colorScheme.surface,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: CircularProgressIndicator(strokeWidth: 4),
+                ),
+                if (message != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    message,
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 14, // Approximate bodyMedium
+                      fontWeight: FontWeight.w400,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Consumer<AuthController>(
       builder: (context, auth, _) {
-        if (!auth.isInitialized) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        
-        if (auth.wasForcedLoggedOut) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            showAppMessage(
-              context,
-              'You were signed out because your account became active on another device.',
-              isError: true,
-            );
-            auth.clearForcedLogoutFlag();
-          });
-        }
-
-        if (auth.currentUser == null) {
-          if (auth.consumeAccountDeletedMessage()) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              showAppMessage(
-                context,
-                AppLocalizations.of(context)!.accountDeleted,
-              );
-            });
-          }
-          final appState = context.read<AppState>();
-          if (appState.isLoaded) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              context.read<AppState>().unload();
-            });
-          }
-          return const AuthScreen();
-        }
-
-        if (auth.requiresEmailVerification) {
-          final appState = context.read<AppState>();
-          if (appState.isLoaded) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (!mounted) return;
-              context.read<AppState>().unload();
-            });
-          }
-          return const EmailVerificationStatus();
-        }
-
-        if (!auth.isSyncReady || !auth.isProfileReady) {
-          return Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const CircularProgressIndicator(),
-                    const SizedBox(height: 16),
-                    Text(AppLocalizations.of(context)!.loadingProfile),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        if (auth.lastPreparationError != null) {
-          return Scaffold(
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(AppLocalizations.of(context)!.failedToPrepareData),
-                  const SizedBox(height: 12),
-                  Text(
-                    auth.lastPreparationError!,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () {
-                      auth.reloadUser();
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
-
-        if (auth.profile?['profileComplete'] != true) {
-          return const ProfileSetupScreen();
-        }
-
-        
-        return Consumer<AppState>(
-          builder: (context, state, _) {
-            if (auth.currentUser != null && !state.isLoaded) {
-              unawaited(state.load());
-            }
-
-            // Only show loader if we haven't loaded anything yet.
-            // If we are already loaded, we stay in the shell even during background refreshes/reloads.
-            if (!state.isLoaded || !state.isHydrated) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            final profile = auth.profile;
-            if (profile != null) {
-              unawaited(state.applyRemoteProfile(profile));
-            }
-            return _Shell(onThemeChange: widget.onThemeChange);
-          },
+        final child = _buildForAuthState(context, auth);
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 180),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          child: child,
         );
+      },
+    );
+  }
+
+  Widget _buildForAuthState(BuildContext context, AuthController auth) {
+    if (!auth.isInitialized) {
+      return _buildLoader(context, message: 'Loading your profile…');
+    }
+
+        
+    if (auth.wasForcedLoggedOut) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showAppMessage(
+          context,
+          'You were signed out because your account became active on another device.',
+          isError: true,
+        );
+        auth.clearForcedLogoutFlag();
+      });
+    }
+
+    if (auth.currentUser == null) {
+      if (auth.consumeAccountDeletedMessage()) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          showAppMessage(
+            context,
+            AppLocalizations.of(context)!.accountDeleted,
+          );
+        });
+      }
+      final appState = context.read<AppState>();
+      if (appState.isLoaded) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.read<AppState>().unload();
+        });
+      }
+      return const AuthScreen();
+    }
+
+    if (auth.requiresEmailVerification) {
+      final appState = context.read<AppState>();
+      if (appState.isLoaded) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.read<AppState>().unload();
+        });
+      }
+      return const EmailVerificationStatus();
+    }
+
+    if (!auth.isSyncReady || !auth.isProfileReady) {
+      return _buildLoader(
+        context,
+        message: auth.isBootstrapping
+            ? 'Syncing your profile...'
+            : AppLocalizations.of(context)!.loadingProfile,
+      );
+    }
+
+    if (auth.lastPreparationError != null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(AppLocalizations.of(context)!.failedToPrepareData),
+              const SizedBox(height: 12),
+              Text(
+                auth.lastPreparationError!,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  auth.reloadUser();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final profileData = auth.profile;
+    final onboardingDone =
+        profileData?['onboardingCompleted'] == true ||
+            profileData?['profileComplete'] == true;
+    final remoteName = (profileData?['profileName'] as String?)?.trim() ??
+        (profileData?['displayName'] as String?)?.trim() ??
+        '';
+    if (onboardingDone && remoteName.isEmpty) {
+      return _buildLoader(
+        context,
+        message: AppLocalizations.of(context)!.loadingProfile,
+      );
+    }
+
+    if (!onboardingDone) {
+      return const ProfileSetupScreen();
+    }
+
+    return Consumer<AppState>(
+      builder: (context, state, _) {
+        if (auth.currentUser != null && !state.isLoaded) {
+          unawaited(state.load());
+        }
+
+        if (!state.isLoaded || !state.isHydrated) {
+          return _buildLoader(
+            context,
+            message: AppLocalizations.of(context)!.loadingProfile,
+          );
+        }
+
+        final profile = auth.profile;
+        if (profile != null) {
+          unawaited(state.applyRemoteProfile(profile));
+        }
+        return _Shell(onThemeChange: widget.onThemeChange);
       },
     );
   }

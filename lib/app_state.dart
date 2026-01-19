@@ -8,6 +8,7 @@ import 'services/storage.dart';
 import 'services/notifications.dart';
 import 'services/sync_service.dart';
 import 'services/habit_service.dart';
+import 'services/startup_metrics.dart';
 import 'data/local/local_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,9 +32,15 @@ class SessionOverlapException implements Exception {
 }
 
 class AppState extends ChangeNotifier {
+  static ThemeMode? _initialThemeMode;
+  static void setInitialThemeMode(ThemeMode mode) {
+    _initialThemeMode = mode;
+  }
+
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
   Future<void>? _loadFuture;
+  Future<void>? _backgroundHydration;
   SyncService? _syncService;
   HabitService? _habitService; // Injected
   bool _hydrated = false;
@@ -59,6 +66,9 @@ class AppState extends ChangeNotifier {
   int? profileAvatarIndex;
   int? profileAvatarColorValue;
   bool profileComplete = false;
+  bool onboardingCompleted = false;
+  int? bootstrapVersion;
+  bool get hasCompletedOnboarding => onboardingCompleted || profileComplete;
   Uint8List? profileAvatarImage;
   List<Course> courses = [];
   List<AlarmItem> alarms = [];
@@ -69,6 +79,7 @@ class AppState extends ChangeNotifier {
   bool get hasStudyToday => _hasStudyToday;
 
   bool get requiresProfileSetup {
+    if (hasCompletedOnboarding) return false;
     return profileName == null || profileName!.trim().isEmpty;
   }
 
@@ -296,56 +307,53 @@ class AppState extends ChangeNotifier {
       _resetFields();
     }
 
-  
-  // Parallelize independent storage reads
-  final results = await Future.wait([
-    Storage.getMajor(),                // 0
-    Storage.getProfileName(),          // 1
-    Storage.getProfileGoal(),          // 2
-    Storage.getProfileContact(),       // 3
-    Storage.getProfileAvatarIndex(),   // 4
-    Storage.getProfileAvatarColor(),   // 5
-    Storage.getProfileAvatarImageBytes(), // 6
-    Storage.getProfilePromptShown(),   // 7
-    Storage.getCourses(),              // 8
-    Storage.getAlarms(),               // 9
-    Storage.getCourseMinutes(),        // 10
-    Storage.getCourseGoalHours(),      // 11
-    loadLocale(),           // 12 (Self-reference workaround, or better: separate locale load)
-    loadWeekStart(),        // 13
-    loadHomeSummaryRange(), // 14
-    loadProgressView(),     // 15
-    loadQuickNotesEnabled(),// 16
-    loadAllowNudges(),      // 17
-    loadEisenhowerMatrixEnabled(), // 18
-    Storage.getPomodoroLongBreakMinutes(), // 19
-  ]);
+    // Parallelize independent storage reads for shell hydration only.
+    final results = await Future.wait([
+      Storage.getMajor(), // 0
+      Storage.getProfileName(), // 1
+      Storage.getProfileGoal(), // 2
+      Storage.getProfileContact(), // 3
+      Storage.getProfileAvatarIndex(), // 4
+      Storage.getProfileAvatarColor(), // 5
+      Storage.getProfileAvatarImageBytes(), // 6
+      Storage.getProfilePromptShown(), // 7
+      Storage.getCourses(), // 8
+      Storage.getAlarms(), // 9
+      Storage.getCourseMinutes(), // 10
+      Storage.getCourseGoalHours(), // 11
+      loadLocale(), // 12
+      loadWeekStart(), // 13
+      loadHomeSummaryRange(), // 14
+      loadProgressView(), // 15
+      loadQuickNotesEnabled(), // 16
+      loadAllowNudges(), // 17
+      loadEisenhowerMatrixEnabled(), // 18
+      Storage.getPomodoroLongBreakMinutes(), // 19
+      Storage.getOnboardingCompleted(), // 20
+      Storage.getBootstrapVersionFlag(), // 21
+    ]);
 
-  major = results[0] as String?;
-  profileName = results[1] as String?;
-  profileGoal = results[2] as String?;
-  profileContact = results[3] as String?;
-  profileAvatarIndex = results[4] as int?;
-  profileAvatarColorValue = results[5] as int?;
-  profileAvatarImage = results[6] as Uint8List?;
-  _profilePromptCompleted = results[7] as bool;
-  courses = results[8] as List<Course>;
-  alarms = results[9] as List<AlarmItem>;
-  courseMinutes = results[10] as Map<String, int>;
-  _courseGoalHours = results[11] as Map<String, double>;
-  
-  // profileComplete is synchronous in Storage, so we can just call it
-  profileComplete = Storage.getProfileComplete();
+    major = results[0] as String?;
+    profileName = results[1] as String?;
+    profileGoal = results[2] as String?;
+    profileContact = results[3] as String?;
+    profileAvatarIndex = results[4] as int?;
+    profileAvatarColorValue = results[5] as int?;
+    profileAvatarImage = results[6] as Uint8List?;
+    _profilePromptCompleted = results[7] as bool;
+    courses = results[8] as List<Course>;
+    alarms = results[9] as List<AlarmItem>;
+    courseMinutes = results[10] as Map<String, int>;
+    _courseGoalHours = results[11] as Map<String, double>;
+    onboardingCompleted = (results[20] as bool?) ?? false;
+    bootstrapVersion = results[21] as int?;
 
-  // Clean up goal hours for deleted courses
-  _courseGoalHours
-      .removeWhere((id, _) => courses.every((Course c) => c.id != id));
+    profileComplete = Storage.getProfileComplete();
 
-  // The 'loadX' methods on AppState (indexes 12-18) return void but set internal state.
-  // We needed to call them. Since they are async void, Future.wait just waits for them.
-  // We don't need to assign their results.
-  
-  final storedLongBreaks = results[19] as Map<String, int>;
+    _courseGoalHours
+        .removeWhere((id, _) => courses.every((Course c) => c.id != id));
+
+    final storedLongBreaks = results[19] as Map<String, int>;
 
     for (final c in courses) {
       courseMinutes.putIfAbsent(c.id, () => 0);
@@ -359,18 +367,19 @@ class AppState extends ChangeNotifier {
       pomodoroPhaseStart.putIfAbsent(c.id, () => null);
       pomodoroPhaseElapsed.putIfAbsent(c.id, () => Duration.zero);
       pomodoroCompletedWork.putIfAbsent(c.id, () => 0);
-      _pomodoroLongBreakMinutes[c.id] =
-          _clampLongBreakMinutes(storedLongBreaks[c.id] ??
-              _pomodoroLongBreakMinutes[c.id] ??
-              _defaultPomodoroLongBreakMinutes);
+      _pomodoroLongBreakMinutes[c.id] = _clampLongBreakMinutes(
+        storedLongBreaks[c.id] ??
+            _pomodoroLongBreakMinutes[c.id] ??
+            _defaultPomodoroLongBreakMinutes,
+      );
     }
 
     await Storage.saveCourseMinutes(courseMinutes);
-    await _loadDailyState();
+    await _hydrateDailyStateFromCache();
     _ensureTodayKeyUpToDate();
     _scheduleMidnightReset();
+    _hydrateStreakFromCache();
 
-    
     final session = await Storage.getActiveSession();
     if (session != null) {
       try {
@@ -402,7 +411,6 @@ class AppState extends ChangeNotifier {
           if (m['start'] != null) {
             stopwatchStart[id] = DateTime.tryParse(m['start'] as String);
             if (stopwatchRunning[id] == true && stopwatchStart[id] != null) {
-              
               if (stopwatchElapsed[id]!.inSeconds > kMaxSecs) {
                 stopwatchElapsed[id] = const Duration(seconds: kMaxSecs);
               }
@@ -429,31 +437,80 @@ class AppState extends ChangeNotifier {
           pomodoroCompletedWork[id] = (m['completedWork'] ?? 0) as int;
         }
 
-        
         _sanitizeSingleActiveSession();
-        
         await _saveActiveSession();
       } catch (_) {
         
       }
     }
 
-    
-    await Storage.migrateDailyStateToSessionsIfNeeded();
-    await enforceActiveSessionBounds(duringLoad: true);
-    await _catchUpPomodoros();
-    if (pomodoroRunning.values.any((v) => v == true)) {
-      _ensurePomodoroTicker();
-    }
-    if (_syncService == null ||
-        _syncService?.status == SyncStatus.offline ||
-        _syncService?.lastPull != null) {
-      _hydrated = true;
-    }
+    _hydrated = true;
     _isLoaded = true;
-    _updateStreak();
-    
+    StartupMetrics.markLocalHydrateDone('app_state');
     notifyListeners();
+
+    _backgroundHydration ??= _finishBackgroundHydration();
+    try {
+      await _backgroundHydration;
+    } finally {
+      _backgroundHydration = null;
+    }
+  }
+
+  Future<void> _hydrateDailyStateFromCache() async {
+    final cached = await Storage.getDailyState();
+    final todayKey = _dateKey(DateTime.now());
+    _todayKey = todayKey;
+    if (cached != null && cached['dateKey'] == todayKey) {
+      final map = cached['map'] as Map<String, int>?;
+      if (map != null) {
+        _todayByCourseSeconds = Map<String, int>.from(map);
+      }
+    }
+    for (final c in courses) {
+      _todayByCourseSeconds.putIfAbsent(c.id, () => 0);
+    }
+  }
+
+  void _hydrateStreakFromCache() {
+    final snapshot = Storage.getStreakSnapshot();
+    if (snapshot == null) return;
+    _streakCount = (snapshot['count'] as int?) ?? 0;
+    _hasStudyToday = snapshot['hasToday'] == true;
+  }
+
+  Future<void> _finishBackgroundHydration() async {
+    try {
+      await Storage.migrateDailyStateToSessionsIfNeeded();
+    } catch (_) {
+      
+    }
+    try {
+      await _recomputeTodayFromSessions();
+      await enforceActiveSessionBounds(duringLoad: true);
+      await _catchUpPomodoros();
+      if (pomodoroRunning.values.any((v) => v == true)) {
+        _ensurePomodoroTicker();
+      }
+      _updateStreak();
+    } catch (_) {
+      
+    }
+    notifyListeners();
+  }
+
+  Future<void> _recomputeTodayFromSessions() async {
+    try {
+      _todayKey = _dateKey(DateTime.now());
+      final calculated = await secondsByCourseForDay(DateTime.now());
+      _todayByCourseSeconds = Map<String, int>.from(calculated);
+      for (final c in courses) {
+        _todayByCourseSeconds.putIfAbsent(c.id, () => 0);
+      }
+      await _saveDailyState();
+    } catch (_) {
+      
+    }
   }
 
   Future<void> loadProgressView() async {
@@ -563,21 +620,6 @@ class AppState extends ChangeNotifier {
   static String _dateKey(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
-  Future<void> _loadDailyState() async {
-    // We rebuild today's state from the actual sessions to ensure consistency
-    // with Statistics and Sync, coping with cases where metadata is stale.
-    final now = DateTime.now();
-    _todayKey = _dateKey(now);
-
-    final calculated = await secondsByCourseForDay(now);
-    _todayByCourseSeconds = calculated;
-
-    for (final c in courses) {
-      _todayByCourseSeconds.putIfAbsent(c.id, () => 0);
-    }
-    await _saveDailyState();
-  }
-
   void _ensureTodayKeyUpToDate() {
     final nowKey = _dateKey(DateTime.now());
     if (_todayKey != nowKey) {
@@ -685,6 +727,7 @@ class AppState extends ChangeNotifier {
 
     profileAvatarColorValue = avatarColorValue;
     profileComplete = true;
+    onboardingCompleted = true;
 
     await Future.wait([
       Storage.setProfileName(profileName),
@@ -695,6 +738,7 @@ class AppState extends ChangeNotifier {
       Storage.setProfileAvatarImageBytes(profileAvatarImage),
       Storage.setMajor(major),
       Storage.setProfileComplete(profileComplete),
+      Storage.setOnboardingCompleted(onboardingCompleted),
     ]);
     await Storage.setProfilePromptShown(true);
     _profilePromptCompleted = true;
@@ -710,6 +754,7 @@ class AppState extends ChangeNotifier {
         'profileComplete': true,
         'avatarColorValue': avatarColorValue,
         'profileAvatarColorValue': avatarColorValue,
+        'onboardingCompleted': true,
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
@@ -905,6 +950,7 @@ class AppState extends ChangeNotifier {
     if (sessions.isEmpty) {
       _streakCount = 0;
       _hasStudyToday = false;
+      unawaited(Storage.saveStreakSnapshot(_streakCount, _hasStudyToday));
       return;
     }
 
@@ -935,6 +981,7 @@ class AppState extends ChangeNotifier {
     }
     
     _streakCount = count;
+    unawaited(Storage.saveStreakSnapshot(_streakCount, _hasStudyToday));
   }
 
   
@@ -1933,6 +1980,8 @@ class AppState extends ChangeNotifier {
   Future<void> applyRemoteProfile(Map<String, dynamic>? data) async {
     if (data == null) return;
     bool changed = false;
+    final remoteOnboardingCompleted =
+        data['onboardingCompleted'] == true || data['profileComplete'] == true;
 
     Future<void> setString(
       String? value,
@@ -2051,7 +2100,13 @@ class AppState extends ChangeNotifier {
       changed = true;
     }
 
-    final profileCompleteFlag = data['profileComplete'] == true;
+    if (onboardingCompleted != remoteOnboardingCompleted) {
+      onboardingCompleted = remoteOnboardingCompleted;
+      await Storage.setOnboardingCompleted(onboardingCompleted);
+      changed = true;
+    }
+
+    final profileCompleteFlag = remoteOnboardingCompleted;
     if (profileCompleteFlag && !_profilePromptCompleted) {
       _profilePromptCompleted = true;
       await Storage.setProfilePromptShown(true);
@@ -2118,6 +2173,8 @@ class AppState extends ChangeNotifier {
     profileAvatarImage = null;
     profileAvatarColorValue = null;
     profileComplete = false;
+    onboardingCompleted = false;
+    bootstrapVersion = null;
     _profilePromptCompleted = false;
     _courseGoalHours = {};
     courses = [];
@@ -2125,6 +2182,8 @@ class AppState extends ChangeNotifier {
     courseMinutes = {};
     _todayByCourseSeconds = {};
     _todayKey = _dateKey(DateTime.now());
+    _streakCount = 0;
+    _hasStudyToday = false;
     timerRunning.clear();
     stopwatchRunning.clear();
     timerStart.clear();
@@ -2160,21 +2219,36 @@ class AppState extends ChangeNotifier {
 
   
   static const _kThemeKey = 'themeMode'; 
-  ThemeMode _themeMode = ThemeMode.system;
+  ThemeMode _themeMode = _initialThemeMode ?? ThemeMode.system;
+  bool _themeLoaded = false;
   ThemeMode get themeMode => _themeMode;
+  ThemeMode get effectiveThemeMode =>
+      _themeLoaded ? _themeMode : (_initialThemeMode ?? ThemeMode.system);
+  static String get kThemePrefsKey => _kThemeKey;
 
   Future<void> loadThemeMode() async {
     var stored = await Storage.getThemeMode();
     var synced = false;
+    
     if (stored == null) {
+      // Fallback/Migration: Prefs -> Hive
       final prefs = await SharedPreferences.getInstance();
       stored = prefs.getString(_kThemeKey);
       if (stored != null) {
         await Storage.setThemeMode(stored);
         synced = true;
       }
+    } else {
+      // Self-healing: Hive -> Prefs
+      // Ensure the lightweight Prefs (used for boot) matches the robust Hive storage
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(_kThemeKey) != stored) {
+        await prefs.setString(_kThemeKey, stored);
+      }
     }
-    _themeMode = _parseMode(stored ?? 'system');
+
+    _themeMode = _parseMode(stored ?? _initialThemeMode?.name ?? 'system');
+    _themeLoaded = true;
     notifyListeners();
     if (synced) {
       _triggerSync();
@@ -2183,6 +2257,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
+    _themeLoaded = true;
     notifyListeners(); 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kThemeKey, mode.name);

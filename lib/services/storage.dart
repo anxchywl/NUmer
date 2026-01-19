@@ -28,6 +28,9 @@ class Storage {
   static const _metaHabitCategories = 'habit_categories_v1';
   static const _metaProgressHabitOrder = 'progress_habit_order_v1';
   static const _metaLastExportMonth = 'last_export_month_v1';
+  static const _metaBootstrapVersion = LocalDatabase.bootstrapMetaKey;
+  static const _metaStreakSnapshot = LocalDatabase.streakMetaKey;
+  static const int bootstrapVersion = 1;
 
   static Future<void> configureForUser(String uid) async {
     await _db.openForUser(uid);
@@ -152,6 +155,33 @@ class Storage {
   static Future<void> setProfileComplete(bool value) async {
     final doc = LocalDatabase.instance.ensureUserDoc();
     doc.profileComplete = value;
+    doc.dirty = true;
+    await doc.save();
+  }
+
+  static Future<bool> getOnboardingCompleted() async {
+    return _userDoc().onboardingCompleted;
+  }
+
+  static Future<void> setOnboardingCompleted(bool value) async {
+    final doc = _userDoc();
+    doc.onboardingCompleted = value;
+    await _saveUser(doc);
+  }
+
+  static Future<int?> getBootstrapVersionFlag() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaBootstrapVersion);
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return _userDoc().bootstrapVersion;
+  }
+
+  static Future<void> setBootstrapVersionFlag(int version) async {
+    _ensureUser();
+    await _db.putMeta(_metaBootstrapVersion, version);
+    final doc = _userDoc();
+    doc.bootstrapVersion = version;
     doc.dirty = true;
     await doc.save();
   }
@@ -589,6 +619,26 @@ class Storage {
     await _db.putMeta(_metaDailyState, {
       'dateKey': dateKey,
       'map': map,
+    });
+  }
+
+  static Map<String, dynamic>? getStreakSnapshot() {
+    _ensureUser();
+    final raw = _db.getMeta(_metaStreakSnapshot);
+    if (raw is Map) {
+      final count = (raw['count'] as num?)?.toInt();
+      if (count == null) return null;
+      final hasToday = raw['hasToday'] == true;
+      return {'count': count, 'hasToday': hasToday};
+    }
+    return null;
+  }
+
+  static Future<void> saveStreakSnapshot(int count, bool hasStudyToday) async {
+    _ensureUser();
+    await _db.putMeta(_metaStreakSnapshot, {
+      'count': count,
+      'hasToday': hasStudyToday,
     });
   }
 

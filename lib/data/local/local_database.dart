@@ -8,6 +8,8 @@ class LocalDatabase {
   LocalDatabase._();
 
   static final LocalDatabase instance = LocalDatabase._();
+  static const bootstrapMetaKey = 'bootstrap_version_v1';
+  static const streakMetaKey = 'streak_snapshot_v1';
 
   bool _initialized = false;
   String? _currentUid;
@@ -377,4 +379,15 @@ class LocalDatabase {
 
   Box<LocalHabitHistory> get habitHistoryBox =>
       _habitHistoryBox ?? (throw StateError('Habit History box not opened'));
+
+  bool hasBootstrapCache() {
+    final hasCoreBoxes = (_userBox?.isNotEmpty ?? false) ||
+        (_coursesBox?.isNotEmpty ?? false) ||
+        (_sessionsBox?.isNotEmpty ?? false) ||
+        (_habitsBox?.isNotEmpty ?? false);
+    final hasMeta = _metaBox?.isNotEmpty ?? false;
+    final hasSyncState =
+        _syncBox?.values.any((entry) => entry.lastPullMs > 0) ?? false;
+    return hasCoreBoxes || hasMeta || hasSyncState;
+  }
 }
