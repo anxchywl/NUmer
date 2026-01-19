@@ -44,8 +44,18 @@ class _AccountScreenState extends State<AccountScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.deleteAccountSubtitle),
-              const SizedBox(height: 6),
+              Text(
+                'This action is permanent and can not be undone.',
+                style: TextStyle(fontWeight: FontWeight.bold, color: scheme.error),
+              ),
+              const SizedBox(height: 8),
+              const Text('Deleting your account will:'),
+              const SizedBox(height: 4),
+              const Text('• Remove all your study sessions'),
+              const Text('• Delete your courses and habits progress'),
+              const Text('• Remove you from your group and delete group you created if any'),
+              const Text('• Erase your profile and settings'),
+              const SizedBox(height: 12),
               Text(l10n.deleteAccountHoldConfirmDetail),
             ],
           ),
@@ -62,7 +72,17 @@ class _AccountScreenState extends State<AccountScreen> {
                 backgroundColor: scheme.errorContainer,
                 fillColor: scheme.error,
                 textColor: scheme.error,
-                onConfirmed: () => Navigator.pop(context, true),
+                onConfirmed: () async {
+                  // After hold, show second confirmation with text input
+                  final textConfirmed = await showDialog<bool>(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (ctx) => _DeleteAccountTextConfirmDialog(),
+                  );
+                  if (textConfirmed == true && context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                },
               ),
             ),
           ],
@@ -753,6 +773,105 @@ class _HoldToConfirmButtonState extends State<_HoldToConfirmButton>
           ),
         );
       },
+    );
+  }
+}
+
+/// Second confirmation dialog that requires typing exact phrase
+class _DeleteAccountTextConfirmDialog extends StatefulWidget {
+  @override
+  State<_DeleteAccountTextConfirmDialog> createState() => _DeleteAccountTextConfirmDialogState();
+}
+
+class _DeleteAccountTextConfirmDialogState extends State<_DeleteAccountTextConfirmDialog> {
+  final _controller = TextEditingController();
+  static const _requiredPhrase = 'I really want to delete my account';
+  bool _isValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final valid = _controller.text.trim() == _requiredPhrase;
+      if (valid != _isValid) {
+        setState(() => _isValid = valid);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return AlertDialog(
+      icon: Icon(
+        Icons.warning_amber_rounded,
+        color: scheme.error,
+        size: 40,
+      ),
+      title: const Text('Final Confirmation'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'To confirm deletion, please type:',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: scheme.errorContainer.withAlpha(100),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: scheme.error.withAlpha(100)),
+            ),
+            child: SelectableText(
+              _requiredPhrase,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.error,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: 'Type the phrase above',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              errorText: _controller.text.isNotEmpty && !_isValid
+                  ? 'Phrase does not match'
+                  : null,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _isValid ? () => Navigator.pop(context, true) : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: scheme.error,
+            foregroundColor: scheme.onError,
+          ),
+          child: const Text('Delete Forever'),
+        ),
+      ],
     );
   }
 }

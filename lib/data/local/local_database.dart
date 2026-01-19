@@ -22,6 +22,8 @@ class LocalDatabase {
 
   Box<LocalSession>? _peerSessionsBox;
   Box<LocalCourse>? _peerCoursesBox;
+  Box<LocalHabit>? _habitsBox;
+  Box<LocalHabitHistory>? _habitHistoryBox;
 
   Future<void> initCore() async {
     if (_initialized) return;
@@ -35,15 +37,33 @@ class LocalDatabase {
     if (_currentUid == uid) return;
     await close();
     _currentUid = uid;
-    _userBox = await Hive.openBox<LocalUserDoc>('${uid}_user');
-    _coursesBox = await Hive.openBox<LocalCourse>('${uid}_courses');
-    _sessionsBox = await Hive.openBox<LocalSession>('${uid}_sessions');
-    _goalsBox = await Hive.openBox<LocalGoal>('${uid}_goals');
-    _syncBox = await Hive.openBox<SyncStateEntry>('${uid}_sync');
-    _conflictsBox = await Hive.openBox<LocalConflict>('${uid}_conflicts');
-    _metaBox = await Hive.openBox('${uid}_meta');
-    _peerSessionsBox = await Hive.openBox<LocalSession>('${uid}_peer_sessions');
-    _peerCoursesBox = await Hive.openBox<LocalCourse>('${uid}_peer_courses');
+    
+    // Open all boxes in parallel for faster startup
+    final results = await Future.wait([
+      Hive.openBox<LocalUserDoc>('${uid}_user'),
+      Hive.openBox<LocalCourse>('${uid}_courses'),
+      Hive.openBox<LocalSession>('${uid}_sessions'),
+      Hive.openBox<LocalGoal>('${uid}_goals'),
+      Hive.openBox<SyncStateEntry>('${uid}_sync'),
+      Hive.openBox<LocalConflict>('${uid}_conflicts'),
+      Hive.openBox('${uid}_meta'),
+      Hive.openBox<LocalSession>('${uid}_peer_sessions'),
+      Hive.openBox<LocalCourse>('${uid}_peer_courses'),
+      Hive.openBox<LocalHabit>('${uid}_habits'),
+      Hive.openBox<LocalHabitHistory>('${uid}_habit_history'),
+    ]);
+    
+    _userBox = results[0] as Box<LocalUserDoc>;
+    _coursesBox = results[1] as Box<LocalCourse>;
+    _sessionsBox = results[2] as Box<LocalSession>;
+    _goalsBox = results[3] as Box<LocalGoal>;
+    _syncBox = results[4] as Box<SyncStateEntry>;
+    _conflictsBox = results[5] as Box<LocalConflict>;
+    _metaBox = results[6];
+    _peerSessionsBox = results[7] as Box<LocalSession>;
+    _peerCoursesBox = results[8] as Box<LocalCourse>;
+    _habitsBox = results[9] as Box<LocalHabit>;
+    _habitHistoryBox = results[10] as Box<LocalHabitHistory>;
   }
 
   Future<void> close() async {
@@ -57,6 +77,8 @@ class LocalDatabase {
       _metaBox?.close() ?? Future.value(),
       _peerSessionsBox?.close() ?? Future.value(),
       _peerCoursesBox?.close() ?? Future.value(),
+      _habitsBox?.close() ?? Future.value(),
+      _habitHistoryBox?.close() ?? Future.value(),
     ]);
     _userBox = null;
     _coursesBox = null;
@@ -67,6 +89,8 @@ class LocalDatabase {
     _metaBox = null;
     _peerSessionsBox = null;
     _peerCoursesBox = null;
+    _habitsBox = null;
+    _habitHistoryBox = null;
     _currentUid = null;
   }
 
@@ -302,7 +326,55 @@ class LocalDatabase {
         ..registerAdapter(LocalSessionAdapter())
         ..registerAdapter(LocalGoalAdapter())
         ..registerAdapter(SyncStateEntryAdapter())
-        ..registerAdapter(LocalConflictAdapter());
+        ..registerAdapter(LocalConflictAdapter())
+        ..registerAdapter(LocalHabitAdapter())
+        ..registerAdapter(LocalHabitHistoryAdapter());
     }
   }
+
+  // Habit CRUD
+  Iterable<LocalHabit> habits({bool includeDeleted = false}) {
+    final values = _habitsBox?.values ?? const Iterable.empty();
+    if (includeDeleted) return values;
+    return values.where((h) => !h.deleted);
+  }
+
+  List<LocalHabit> dirtyHabits() =>
+      (_habitsBox?.values ?? const Iterable<LocalHabit>.empty())
+          .where((h) => h.dirty)
+          .toList(growable: false);
+
+  LocalHabit? getHabitById(String id) => _habitsBox?.get(id);
+
+  Future<void> putHabit(LocalHabit habit) async {
+    await _habitsBox?.put(habit.id, habit);
+  }
+
+  Box<LocalHabit> get habitsBox =>
+      _habitsBox ?? (throw StateError('Habits box not opened'));
+
+  // Habit History CRUD
+  Iterable<LocalHabitHistory> habitHistory({bool includeDeleted = false}) {
+    final values = _habitHistoryBox?.values ?? const Iterable.empty();
+    if (includeDeleted) return values;
+    return values.where((h) => !h.deleted);
+  }
+
+  Iterable<LocalHabitHistory> habitHistoryForHabit(String habitId, {bool includeDeleted = false}) {
+    return habitHistory(includeDeleted: includeDeleted).where((h) => h.habitId == habitId);
+  }
+
+  List<LocalHabitHistory> dirtyHabitHistory() =>
+      (_habitHistoryBox?.values ?? const Iterable<LocalHabitHistory>.empty())
+          .where((h) => h.dirty)
+          .toList(growable: false);
+
+  LocalHabitHistory? getHabitHistoryById(String id) => _habitHistoryBox?.get(id);
+
+  Future<void> putHabitHistory(LocalHabitHistory entry) async {
+    await _habitHistoryBox?.put(entry.id, entry);
+  }
+
+  Box<LocalHabitHistory> get habitHistoryBox =>
+      _habitHistoryBox ?? (throw StateError('Habit History box not opened'));
 }

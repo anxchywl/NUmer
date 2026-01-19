@@ -19,6 +19,7 @@ class GroupService {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final Map<String, Stream<GroupStatistics>> _statsCache = {};
 
   String? get _uid => _auth.currentUser?.uid;
 
@@ -114,8 +115,12 @@ class GroupService {
     String groupId,
     StatisticsPeriod period,
   ) {
-    final controller = StreamController<GroupStatistics>.broadcast();
+    final cacheKey = '${groupId}_${period.index}';
+    final existing = _statsCache[cacheKey];
+    if (existing != null) return existing;
 
+    late StreamController<GroupStatistics> controller;
+    
     StreamSubscription? membersSub;
     StreamSubscription? aggregatesSub;
     StreamSubscription? userSessionsSub;
@@ -131,6 +136,7 @@ class GroupService {
     final Map<String, StreamSubscription> memberStatusSubs = {};
 
     Future<void> cleanup({bool shouldCloseController = false}) async {
+      _statsCache.remove(cacheKey);
       await membersSub?.cancel();
       await aggregatesSub?.cancel();
       await userSessionsSub?.cancel();
@@ -145,6 +151,11 @@ class GroupService {
         await controller.close();
       }
     }
+
+    controller = StreamController<GroupStatistics>.broadcast(
+      onCancel: () => cleanup(shouldCloseController: true),
+    );
+    _statsCache[cacheKey] = controller.stream;
 
     void handleStreamError(Object error, StackTrace stackTrace) {
       if (hasTerminated) return;
@@ -198,24 +209,64 @@ class GroupService {
       });
     }
 
-    Future<void> updateMemberStats(String userId) async {
-      if (lastStats == null || isComputing) {
+    Future<void> updateMemberStats(String userId, {DocumentSnapshot? snapshot}) async {
+      if (lastStats == null || (snapshot == null && isComputing)) {
          if (lastStats == null) triggerRecompute();
          return;
       }
       
       try {
-        final aggregationService = GroupAggregationService();
-        final newMemberData = await aggregationService.computeMemberStats(
-           userId: userId, 
-           period: period, 
-           periodStart: period.getDateRange().$1, 
-           periodEnd: period.getDateRange().$2, 
-           firestore: _firestore,
-        );
-        
         final currentMembers = lastStats!.members;
         final index = currentMembers.indexWhere((m) => m.userId == userId);
+        if (index < 0 && snapshot != null) return; // Only process if we already know this member
+
+        final MemberStudyData newMemberData;
+        if (snapshot != null && snapshot.exists) {
+          final data = snapshot.data() as Map<String, dynamic>;
+          final oldMember = index >= 0 ? currentMembers[index] : null;
+          
+          if (oldMember != null) {
+            newMemberData = oldMember.copyWith(
+              name: data['profileName'] as String? ?? oldMember.name,
+              avatarIndex: (data['profileAvatarIndex'] ?? data['avatarIndex']) as int?,
+              avatarBase64: data['profileAvatarImageBase64'] as String?,
+              avatarColorValue: (data['avatarColorValue'] ?? data['profileAvatarColorValue']) as int? ?? oldMember.avatarColorValue,
+              isStudying: data['isStudying'] as bool? ?? false,
+              activeSession: data['activeSession'] as Map<String, dynamic>?,
+              allowsNudges: data['allowNudges'] != false,
+              canReceiveNudges: data['fcmEnabled'] == true,
+            );
+            
+            // Optimization: If nothing meaningful changed, don't emit.
+            if (newMemberData.isStudying == oldMember.isStudying &&
+                newMemberData.activeSession == oldMember.activeSession &&
+                newMemberData.name == oldMember.name &&
+                newMemberData.avatarIndex == oldMember.avatarIndex &&
+                newMemberData.avatarColorValue == oldMember.avatarColorValue) {
+              return;
+            }
+          } else {
+             // Shouldn't happen if listeners are set up correctly, but fallback:
+             final aggregationService = GroupAggregationService();
+             newMemberData = await aggregationService.computeMemberStats(
+                userId: userId, 
+                period: period, 
+                periodStart: period.getDateRange().$1, 
+                periodEnd: period.getDateRange().$2, 
+                firestore: _firestore,
+             );
+          }
+        } else {
+          final aggregationService = GroupAggregationService();
+          newMemberData = await aggregationService.computeMemberStats(
+             userId: userId, 
+             period: period, 
+             periodStart: period.getDateRange().$1, 
+             periodEnd: period.getDateRange().$2, 
+             firestore: _firestore,
+          );
+        }
+        
         final List<MemberStudyData> newMembers;
         if (index >= 0) {
            newMembers = List.of(currentMembers);
@@ -224,6 +275,9 @@ class GroupService {
            newMembers = [...currentMembers, newMemberData.copyWith(isCurrentUser: userId == uid)];
         }
         
+        // Only re-sort (expensive-ish) if it's the current user or study time might have changed
+        // but since we only update real-time fields above, studyTimeSeconds shouldn't have changed.
+        // However, for simplicity and ensuring correctness if we fall back, we sort.
         newMembers.sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
         
         final leaderId = newMembers.isNotEmpty ? newMembers.first.userId : null;
@@ -285,8 +339,8 @@ class GroupService {
         // Add new listeners
         for (final id in currentMemberIds) {
           if (!memberStatusSubs.containsKey(id)) {
-            memberStatusSubs[id] = _firestore.collection('users').doc(id).snapshots().listen((_) {
-               updateMemberStats(id);
+            memberStatusSubs[id] = _firestore.collection('users').doc(id).snapshots().listen((snap) {
+               updateMemberStats(id, snapshot: snap);
             }, onError: (e) {
                debugPrint('Error watching member status for $id: $e');
             });
@@ -358,9 +412,20 @@ class GroupService {
   final Map<String, ({MemberSubjectStats stats, DateTime timestamp})> _subjectStatsCache = {};
   bool _cacheLoaded = false;
   final Set<String> _staleSubjectStatsKeys = {};
+  
+  // TTL for cache freshness (1 hour)
+  static const _memberStatsTtl = Duration(hours: 1);
+  
+  // Member profile cache (name, major, goal, contact, avatar)
+  final Map<String, ({Map<String, dynamic> data, DateTime timestamp})> _memberProfileCache = {};
+  bool _profileCacheLoaded = false;
 
   String _cacheKey(String groupId, String userId, StatisticsPeriod period) =>
       '${groupId}_${userId}_${period.name}';
+  
+  String _profileCacheKey(String groupId, String userId) =>
+      '${groupId}_$userId';
+
 
   Future<void> _ensureCacheLoaded() async {
     if (_cacheLoaded) return;
@@ -401,6 +466,95 @@ class GroupService {
     }
   }
 
+  // Profile cache persistence
+  Future<void> _ensureProfileCacheLoaded() async {
+    if (_profileCacheLoaded) return;
+    try {
+      final data = await Storage.getMemberProfileCache();
+      if (data != null) {
+        for (final entry in data.entries) {
+          final val = entry.value as Map;
+          final profileData = Map<String, dynamic>.from(val['data'] as Map);
+          final ts = val['timestamp'] as int;
+          _memberProfileCache[entry.key] = (
+            data: profileData,
+            timestamp: DateTime.fromMillisecondsSinceEpoch(ts),
+          );
+        }
+      }
+      _profileCacheLoaded = true;
+    } catch (e) {
+      debugPrint('Error loading profile cache: $e');
+    }
+  }
+
+  Future<void> _persistProfileCache() async {
+    try {
+      final serialized = <String, dynamic>{};
+      _memberProfileCache.forEach((key, value) {
+        serialized[key] = {
+          'data': value.data,
+          'timestamp': value.timestamp.millisecondsSinceEpoch,
+        };
+      });
+      await Storage.saveMemberProfileCache(serialized);
+    } catch (e) {
+      debugPrint('Error saving profile cache: $e');
+    }
+  }
+
+  /// Returns cached member profile, or null if not cached.
+  Future<Map<String, dynamic>?> getCachedMemberProfile({
+    required String groupId,
+    required String userId,
+  }) async {
+    await _ensureProfileCacheLoaded();
+    final key = _profileCacheKey(groupId, userId);
+    final cached = _memberProfileCache[key];
+    return cached?.data;
+  }
+
+  /// Fetches member profile from Firestore and caches it.
+  Future<Map<String, dynamic>?> fetchAndCacheMemberProfile({
+    required String groupId,
+    required String userId,
+  }) async {
+    try {
+      final doc = await _firestore.collection('users').doc(userId).get();
+      if (!doc.exists) return null;
+      final data = doc.data() ?? {};
+      final profileData = <String, dynamic>{
+        'profileName': data['profileName'],
+        'major': data['major'],
+        'profileGoal': data['profileGoal'],
+        'profileContact': data['profileContact'],
+        'profileAvatarIndex': data['profileAvatarIndex'],
+        'avatarIndex': data['avatarIndex'],
+        'profileAvatarImageBase64': data['profileAvatarImageBase64'],
+        'avatarColorValue': data['avatarColorValue'],
+        'profileAvatarColorValue': data['profileAvatarColorValue'],
+      };
+      final key = _profileCacheKey(groupId, userId);
+      _memberProfileCache[key] = (data: profileData, timestamp: DateTime.now());
+      unawaited(_persistProfileCache());
+      return profileData;
+    } catch (e) {
+      debugPrint('Error fetching member profile: $e');
+      return null;
+    }
+  }
+
+  /// Check if profile cache is stale (older than TTL)
+  bool isMemberProfileStale({
+    required String groupId,
+    required String userId,
+  }) {
+    final key = _profileCacheKey(groupId, userId);
+    final cached = _memberProfileCache[key];
+    if (cached == null) return true;
+    return DateTime.now().difference(cached.timestamp) > _memberStatsTtl;
+  }
+
 
   Future<({MemberSubjectStats stats, DateTime timestamp})?> getCachedMemberSubjectStats({
     required String groupId,
@@ -409,7 +563,12 @@ class GroupService {
   }) async {
     await _ensureCacheLoaded();
     final key = _cacheKey(groupId, userId, period);
-    return _subjectStatsCache[key];
+    final cached = _subjectStatsCache[key];
+    // Mark as stale if TTL exceeded
+    if (cached != null && DateTime.now().difference(cached.timestamp) > _memberStatsTtl) {
+      _staleSubjectStatsKeys.add(key);
+    }
+    return cached;
   }
 
   bool isMemberStatsStale({
@@ -945,6 +1104,8 @@ class GroupService {
   Future<void> leaveGroup(String groupId) async {
     final uid = _requireUserId();
     await _removeMember(groupId: groupId, memberId: uid, allowAdmin: true);
+    // Clear cached member data for this group
+    unawaited(Storage.clearMemberCacheForGroup(groupId));
   }
 
   Future<void> updateGroup({

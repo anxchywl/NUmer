@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -35,6 +34,7 @@ class UserSubjectsBottomSheet extends StatefulWidget {
 class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
   late Stream<MemberSubjectStats> _statsStream;
   late bool _isUpdating;
+  Map<String, dynamic>? _profileData;
 
   @override
   void initState() {
@@ -61,6 +61,39 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
         });
       },
     );
+    
+    // Load profile from cache then fetch fresh if stale
+    _loadProfile(groupService);
+  }
+  
+  Future<void> _loadProfile(GroupService groupService) async {
+    // 1. Show cached profile instantly
+    final cached = await groupService.getCachedMemberProfile(
+      groupId: widget.groupId,
+      userId: widget.userId,
+    );
+    if (cached != null && mounted) {
+      setState(() {
+        _profileData = cached;
+      });
+    }
+    
+    // 2. Check if stale and fetch fresh
+    final isStale = groupService.isMemberProfileStale(
+      groupId: widget.groupId,
+      userId: widget.userId,
+    );
+    if (isStale || cached == null) {
+      final fresh = await groupService.fetchAndCacheMemberProfile(
+        groupId: widget.groupId,
+        userId: widget.userId,
+      );
+      if (fresh != null && mounted) {
+        setState(() {
+          _profileData = fresh;
+        });
+      }
+    }
   }
 
   @override
@@ -105,13 +138,9 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(widget.userId)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      final data = snapshot.data?.data();
+                  child: Builder(
+                    builder: (context) {
+                      final data = _profileData;
                       final major = data?['major'] as String?;
                       final goal = data?['profileGoal'] as String?;
                       final contact = data?['profileContact'] as String?;

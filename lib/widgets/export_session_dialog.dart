@@ -401,7 +401,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
     final earliest = DateTime(2025, 1);
     final latest = DateTime(now.year, now.month + 1);
 
-    final monthYearStr = DateFormat('MMMM yyyy').format(_selectedMonth);
+    final monthYearStr = DateFormat.yMMMM(l10n.localeName).format(_selectedMonth);
 
     return Column(
       children: [
@@ -450,9 +450,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
           child: _isLoadingCount
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
             : Text(
-                _sessionCount == 1 
-                  ? "1 session found"
-                  : "$_sessionCount sessions found",
+                l10n.sessionsFound(_sessionCount),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: _sessionCount > 0 ? scheme.primary : scheme.error,
                   fontWeight: FontWeight.bold,

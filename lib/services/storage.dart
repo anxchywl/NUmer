@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:hive/hive.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -715,8 +716,39 @@ class Storage {
     await _db.putMeta(_metaGroupMemberStatsCache, data);
   }
 
-  
-  
+  // Member profile cache (name, major, goal, contact, avatar)
+  static const _metaMemberProfileCache = 'member_profile_cache_v1';
+
+  static Future<Map<String, dynamic>?> getMemberProfileCache() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaMemberProfileCache);
+    if (raw is Map) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return null;
+  }
+
+  static Future<void> saveMemberProfileCache(Map<String, dynamic> data) async {
+    _ensureUser();
+    await _db.putMeta(_metaMemberProfileCache, data);
+  }
+
+  static Future<void> clearMemberCacheForGroup(String groupId) async {
+    _ensureUser();
+    // Clear member profiles for this group
+    final profileCache = await getMemberProfileCache();
+    if (profileCache != null) {
+      profileCache.removeWhere((key, _) => key.startsWith('${groupId}_'));
+      await saveMemberProfileCache(profileCache);
+    }
+    // Clear member stats for this group
+    final statsCache = await getGroupMemberStatsCache();
+    if (statsCache != null) {
+      statsCache.removeWhere((key, _) => key.startsWith('${groupId}_'));
+      await saveGroupMemberStatsCache(statsCache);
+    }
+  }
+
   
 
   static Map<String, dynamic> _sessionToJson(LocalSession session) {
@@ -1224,5 +1256,93 @@ class Storage {
       order.remove(habitId);
       await saveProgressHabitOrder(order);
     }
+  }
+
+  // --- Habit Cache Methods ---
+
+  static List<LocalHabit> getHabitsFromCache({bool includeDeleted = false}) {
+    _ensureUser();
+    return _db.habits(includeDeleted: includeDeleted).toList();
+  }
+
+  /// Get only active (non-archived) habits from local cache
+  static List<LocalHabit> getActiveHabitsFromCache() {
+    _ensureUser();
+    return _db.habits().where((h) => !h.archived).toList();
+  }
+
+  /// Get only archived habits from local cache
+  static List<LocalHabit> getArchivedHabitsFromCache() {
+    _ensureUser();
+    return _db.habits().where((h) => h.archived).toList();
+  }
+
+  static LocalHabit? getHabitById(String id) {
+    _ensureUser();
+    return _db.getHabitById(id);
+  }
+
+  static Future<void> putHabit(LocalHabit habit) async {
+    _ensureUser();
+    await _db.putHabit(habit);
+  }
+
+  static List<LocalHabitHistory> getHabitHistoryFromCache(String habitId) {
+    _ensureUser();
+    return _db.habitHistoryForHabit(habitId).toList();
+  }
+
+  static Future<void> putHabitHistory(LocalHabitHistory entry) async {
+    _ensureUser();
+    await _db.putHabitHistory(entry);
+  }
+
+  /// Get habit history entries for a specific habit within a date range (local cache only)
+  static List<LocalHabitHistory> getHabitHistoryForDateRange(
+    String habitId,
+    DateTime start,
+    DateTime end,
+  ) {
+    _ensureUser();
+    final allHistory = _db.habitHistoryForHabit(habitId);
+    final startKey = _dateKeyFromDateTime(start);
+    final endKey = _dateKeyFromDateTime(end);
+    
+    return allHistory.where((entry) {
+      final entryKey = entry.dateKey;
+      return entryKey.compareTo(startKey) >= 0 && entryKey.compareTo(endKey) <= 0;
+    }).toList();
+  }
+
+  /// Get ALL habit history entries for ALL habits within a date range (local cache only)
+  static Map<String, List<LocalHabitHistory>> getAllHabitHistoryForDateRange(
+    DateTime start,
+    DateTime end,
+  ) {
+    _ensureUser();
+    final allHistory = _db.habitHistory();
+    final startKey = _dateKeyFromDateTime(start);
+    final endKey = _dateKeyFromDateTime(end);
+    
+    final result = <String, List<LocalHabitHistory>>{};
+    for (final entry in allHistory) {
+      final entryKey = entry.dateKey;
+      if (entryKey.compareTo(startKey) >= 0 && entryKey.compareTo(endKey) <= 0) {
+        result.putIfAbsent(entry.habitId, () => []).add(entry);
+      }
+    }
+    return result;
+  }
+
+  static String _dateKeyFromDateTime(DateTime d) {
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    return '$y-$m-$day';
+  }
+
+  static Box<LocalHabit> getHabitsBox() {
+    _ensureUser();
+    return _db.habitsBox;
   }
 }

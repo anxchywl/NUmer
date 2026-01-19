@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../models/habit.dart';
+import '../../../l10n/app_localizations.dart';
 
 /// Single habit card shown one at a time during sorting phase
 /// Animates in when appearing, animates out when placed
@@ -167,7 +168,7 @@ class _HabitSorterCardState extends State<HabitSorterCard>
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  'Drag to categorize',
+                  AppLocalizations.of(context)!.habitDragToCategorize,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isDragging ? Colors.white.withAlpha(180) : theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,

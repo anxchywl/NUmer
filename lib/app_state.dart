@@ -281,10 +281,10 @@ class AppState extends ChangeNotifier {
     return _loadFuture!.whenComplete(() => _loadFuture = null);
   }
 
-  Future<void> triggerSync() async {
+  Future<void> triggerSync({bool full = false}) async {
     final sync = _syncService;
     if (sync == null) return;
-    await sync.syncNow();
+    await sync.syncNow(full: full);
   }
 
   void _triggerSync() {
@@ -296,30 +296,56 @@ class AppState extends ChangeNotifier {
       _resetFields();
     }
 
-    major = await Storage.getMajor();
-    profileName = await Storage.getProfileName();
-    profileGoal = await Storage.getProfileGoal();
-    profileContact = await Storage.getProfileContact();
-    profileAvatarIndex = await Storage.getProfileAvatarIndex();
-    profileAvatarColorValue = await Storage.getProfileAvatarColor();
-    profileComplete = Storage.getProfileComplete();
-    profileAvatarImage = await Storage.getProfileAvatarImageBytes();
-    _profilePromptCompleted = await Storage.getProfilePromptShown();
-    courses = await Storage.getCourses();
-    alarms = await Storage.getAlarms();
-    courseMinutes = await Storage.getCourseMinutes();
-    _courseGoalHours = await Storage.getCourseGoalHours();
-    _courseGoalHours
-        .removeWhere((id, _) => courses.every((Course c) => c.id != id));
+  
+  // Parallelize independent storage reads
+  final results = await Future.wait([
+    Storage.getMajor(),                // 0
+    Storage.getProfileName(),          // 1
+    Storage.getProfileGoal(),          // 2
+    Storage.getProfileContact(),       // 3
+    Storage.getProfileAvatarIndex(),   // 4
+    Storage.getProfileAvatarColor(),   // 5
+    Storage.getProfileAvatarImageBytes(), // 6
+    Storage.getProfilePromptShown(),   // 7
+    Storage.getCourses(),              // 8
+    Storage.getAlarms(),               // 9
+    Storage.getCourseMinutes(),        // 10
+    Storage.getCourseGoalHours(),      // 11
+    loadLocale(),           // 12 (Self-reference workaround, or better: separate locale load)
+    loadWeekStart(),        // 13
+    loadHomeSummaryRange(), // 14
+    loadProgressView(),     // 15
+    loadQuickNotesEnabled(),// 16
+    loadAllowNudges(),      // 17
+    loadEisenhowerMatrixEnabled(), // 18
+    Storage.getPomodoroLongBreakMinutes(), // 19
+  ]);
 
-    await loadLocale();
-    await loadWeekStart();
-    await loadHomeSummaryRange();
-    await loadProgressView();
-    await loadQuickNotesEnabled();
-    await loadAllowNudges();
-    await loadEisenhowerMatrixEnabled();
-    final storedLongBreaks = await Storage.getPomodoroLongBreakMinutes();
+  major = results[0] as String?;
+  profileName = results[1] as String?;
+  profileGoal = results[2] as String?;
+  profileContact = results[3] as String?;
+  profileAvatarIndex = results[4] as int?;
+  profileAvatarColorValue = results[5] as int?;
+  profileAvatarImage = results[6] as Uint8List?;
+  _profilePromptCompleted = results[7] as bool;
+  courses = results[8] as List<Course>;
+  alarms = results[9] as List<AlarmItem>;
+  courseMinutes = results[10] as Map<String, int>;
+  _courseGoalHours = results[11] as Map<String, double>;
+  
+  // profileComplete is synchronous in Storage, so we can just call it
+  profileComplete = Storage.getProfileComplete();
+
+  // Clean up goal hours for deleted courses
+  _courseGoalHours
+      .removeWhere((id, _) => courses.every((Course c) => c.id != id));
+
+  // The 'loadX' methods on AppState (indexes 12-18) return void but set internal state.
+  // We needed to call them. Since they are async void, Future.wait just waits for them.
+  // We don't need to assign their results.
+  
+  final storedLongBreaks = results[19] as Map<String, int>;
 
     for (final c in courses) {
       courseMinutes.putIfAbsent(c.id, () => 0);

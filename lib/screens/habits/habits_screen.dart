@@ -128,6 +128,9 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
       body: CustomScrollView(
           slivers: [
             SliverAppBar(
+              systemOverlayStyle: theme.brightness == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
               floating: true,
               snap: true,
               pinned: false,
@@ -202,7 +205,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                       
                       // Show if completed on this date OR period goal NOT met.
                       if (isCompletedOnDate) return true;
-                      return !h.isGoalMetForPeriod(h.last7, _selectedDate);
+                      return !h.isGoalMetForPeriod(h.last7, _selectedDate, mondayFirst: appState.weekStart == WeekStart.monday);
                     }).toList();
 
                     final unsortedHabits = filteredHabits.where((h) => !placements.containsKey(h.id)).toList();
@@ -292,7 +295,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     // This allows users to see/edit their progress today even if the goal was just met,
                     // and ensures the habit reappears if progress drops below the threshold.
                     if (isCompletedOnDate) return true;
-                    return !h.isGoalMetForPeriod(h.last7, _selectedDate);
+                    return !h.isGoalMetForPeriod(h.last7, _selectedDate, mondayFirst: appState.weekStart == WeekStart.monday);
                   }).toList();
 
                   // Apply local shared reordering for Progress tab
@@ -357,12 +360,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     child: Center(child: Text(l10n.habitsListError(snapshot.error.toString()))),
                   );
                 }
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SliverFillRemaining(
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
+                
+                // Use existing data even during loading - prevents flicker
                 final habits = snapshot.data ?? [];
 
                 if (habits.isEmpty) {
@@ -537,7 +536,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     }
     
     final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = (screenWidth - 24) / 7; // 24 is the combined horizontal padding (12 * 2)
+    final itemWidth = (screenWidth - 24) / 7; // Show 7 items
 
     return Container(
       height: 90,
@@ -809,7 +808,9 @@ class _HabitItemState extends State<_HabitItem> {
             .join(", ");
         return l10n.habitFrequencyDaysLabel(labels);
       case HabitFrequencyType.interval:
-        return l10n.habitFrequencyInterval(widget.habit.intervalDays);
+        final work = widget.habit.intervalDays;
+        final rest = widget.habit.frequencyGoal ?? 0;
+        return '$work x $rest';
       case HabitFrequencyType.repeatsInPeriod:
         final period = _periodLabel(widget.habit.frequencyPeriod ?? HabitPeriod.week, l10n).toLowerCase();
         final count = widget.habit.frequencyGoal ?? 1;
@@ -917,7 +918,7 @@ class _HabitItemState extends State<_HabitItem> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (widget.habit.currentStreak > 0) ...[
+                              if (widget.habit.liveCurrentStreak > 0) ...[
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -931,7 +932,7 @@ class _HabitItemState extends State<_HabitItem> {
                                       const Icon(Icons.local_fire_department, size: 12, color: Colors.orange),
                                       const SizedBox(width: 4),
                                       Text(
-                                        "${widget.habit.currentStreak}",
+                                        "${widget.habit.liveCurrentStreak}",
                                         style: theme.textTheme.labelSmall?.copyWith(
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
@@ -1079,7 +1080,11 @@ class _HabitItemState extends State<_HabitItem> {
                         final isPreStart = _isBeforeStartDate(date);
                         final isFuture = _isFutureDate(date);
                         final isScheduled = widget.habit.isScheduledFor(date);
-                        final isGoalMet = widget.habit.isGoalMetForPeriod(widget.habit.last7, date);
+                        final isGoalMet = widget.habit.isGoalMetForPeriod(
+                          widget.habit.last7, 
+                          date,
+                          mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
+                        );
                         final isLocked = !isCompleted && isGoalMet;
                         
                         // Active: Today or past scheduled days

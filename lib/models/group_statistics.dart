@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupStatistics {
   final String groupId;
@@ -76,6 +77,10 @@ class MemberStudyData {
   final bool isCurrentUser;
   final List<DailyStudyEntry> dailyBreakdown;
   final String? lastStudyDate;
+  final bool isStudying;
+  final Map<String, dynamic>? activeSession;
+  final bool allowsNudges;
+  final bool canReceiveNudges;
 
   const MemberStudyData({
     required this.userId,
@@ -91,6 +96,10 @@ class MemberStudyData {
     required this.isCurrentUser,
     required this.dailyBreakdown,
     this.lastStudyDate,
+    this.isStudying = false,
+    this.activeSession,
+    this.allowsNudges = true,
+    this.canReceiveNudges = false,
   });
 
   MemberStudyData copyWith({
@@ -107,6 +116,10 @@ class MemberStudyData {
     bool? isCurrentUser,
     List<DailyStudyEntry>? dailyBreakdown,
     String? lastStudyDate,
+    bool? isStudying,
+    Map<String, dynamic>? activeSession,
+    bool? allowsNudges,
+    bool? canReceiveNudges,
   }) {
     return MemberStudyData(
       userId: userId ?? this.userId,
@@ -122,6 +135,10 @@ class MemberStudyData {
       isCurrentUser: isCurrentUser ?? this.isCurrentUser,
       dailyBreakdown: dailyBreakdown ?? this.dailyBreakdown,
       lastStudyDate: lastStudyDate ?? this.lastStudyDate,
+      isStudying: isStudying ?? this.isStudying,
+      activeSession: activeSession ?? this.activeSession,
+      allowsNudges: allowsNudges ?? this.allowsNudges,
+      canReceiveNudges: canReceiveNudges ?? this.canReceiveNudges,
     );
   }
 
@@ -149,6 +166,17 @@ class MemberStudyData {
     }
     return '${minutes}m';
   }
+
+  /// Returns the DateTime when the active session is expected to end,
+  /// or null if no session is active or the end time is invalid.
+  DateTime? get sessionRunUntil {
+    if (!isStudying || activeSession == null) return null;
+    final endVal = activeSession!['expectedEndUtc'];
+    if (endVal is Timestamp) {
+      return endVal.toDate();
+    }
+    return null;
+  }
 }
 
 class DailyStudyEntry {
@@ -162,12 +190,14 @@ class DailyStudyEntry {
 
   String getFormattedTime() {
     final hours = studyTimeSeconds ~/ 3600;
-    final minutes = (studyTimeSeconds % 3600) ~/ 60;
+    final minutes = (seconds % 3600) ~/ 60;
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     }
     return '${minutes}m';
   }
+
+  int get seconds => studyTimeSeconds;
 }
 
 class SubjectStat {
@@ -250,19 +280,18 @@ extension StatisticsPeriodX on StatisticsPeriod {
     return switch (this) {
       StatisticsPeriod.today => (
         DateTime(now.year, now.month, now.day, 0, 0, 0),
-        now, // End is now (current moment)
+        now, 
       ),
       StatisticsPeriod.last7Days => _getCurrentWeekRange(now),
       StatisticsPeriod.lastMonth => (
         DateTime(now.year, now.month, 1, 0, 0, 0),
-        now, // End is now
+        now, 
       ),
     };
   }
 
   
   (DateTime start, DateTime end) _getCurrentWeekRange(DateTime now) {
-    // Mon = 1 ... Sun = 7
     final weekday = now.weekday;
     final daysFromMonday = weekday - 1; 
 
@@ -275,11 +304,6 @@ extension StatisticsPeriodX on StatisticsPeriod {
       0,
     ).subtract(Duration(days: daysFromMonday));
 
-    // We can just return 'now' as the end, effectively "This Week (so far)"
-    // Or we can return the end of the week. 
-    // The prompt says "browsing past/future ranges" is removed.
-    // "Today / This week / This month".
-    
     return (monday, now); 
   }
 }

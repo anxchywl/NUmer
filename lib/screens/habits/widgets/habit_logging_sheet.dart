@@ -193,6 +193,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       date: widget.date,
       completed: finalValue > 0,
       value: finalValue,
+      mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
     );
     if (mounted) {
        context.read<AppState>().triggerSync();

@@ -665,13 +665,19 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
      final isSelected = _type == type;
      // Disable Numeric if courses connected
      final isDisabled = type == HabitType.numeric && _connectedCourseIds.isNotEmpty;
-     
+
      return FilterChip(
        label: Text(label),
        selected: isSelected,
-       onSelected: isDisabled ? null : (b) {
-          setState(() { _type = type; _markDirty(); });
-       },
+        onSelected: isDisabled ? null : (b) {
+           setState(() {
+              _type = type;
+              if (type == HabitType.time && _target == 1.0) _target = 0.0;
+              if (type == HabitType.numeric && _target == 1.0) _target = 0.0;
+              if (type == HabitType.yesNo && _target == 0.0) _target = 1.0;
+              _markDirty();
+           });
+        },
        backgroundColor: isDisabled ? Colors.grey.withValues(alpha: 0.1) : null,
      );
   }

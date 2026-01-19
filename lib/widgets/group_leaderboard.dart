@@ -1,6 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
@@ -28,7 +26,29 @@ class GroupLeaderboard extends StatefulWidget {
 
 class _GroupLeaderboardState extends State<GroupLeaderboard> {
   StatisticsPeriod _selectedPeriod = StatisticsPeriod.today;
+  Stream<GroupStatistics>? _statsStream;
 
+  @override
+  void initState() {
+    super.initState();
+    _updateStream();
+  }
+
+  @override
+  void didUpdateWidget(GroupLeaderboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.groupId != widget.groupId) {
+      _updateStream();
+    }
+  }
+
+  void _updateStream() {
+    final groupService = context.read<GroupService>();
+    _statsStream = groupService.watchGroupStatistics(
+      widget.groupId,
+      _selectedPeriod,
+    );
+  }
 
   void _showUserSubjects(MemberStudyData member) async {
     if (!mounted) return;
@@ -65,18 +85,16 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
   String _getDateRangeLabel(StatisticsPeriod period) {
     final range = period.getDateRange();
     final start = range.$1;
-    final end = range.$2;
 
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String formatDate(DateTime d) =>
         '${twoDigits(d.day)}.${twoDigits(d.month)}.${twoDigits(d.year % 100)}';
 
-    
     if (period == StatisticsPeriod.today) {
       return formatDate(start);
     }
 
-    return '${formatDate(start)} – ${formatDate(end)}';
+    return '${formatDate(start)} – ${formatDate(range.$2)}';
   }
 
   Future<void> _sendNudge(String targetUserId) {
@@ -89,14 +107,11 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
 
   @override
   Widget build(BuildContext context) {
-    final groupService = context.read<GroupService>();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-
     return Column(
       children: [
-        
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 16.0),
           child: Column(
@@ -104,32 +119,31 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
               _PeriodSelector(
                 selectedPeriod: _selectedPeriod,
                 onPeriodChanged: (period) {
-                  setState(() {
-                    _selectedPeriod = period;
-                  });
+                  if (_selectedPeriod != period) {
+                    setState(() {
+                      _selectedPeriod = period;
+                      _updateStream();
+                    });
+                  }
                 },
               ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                    Text(
-                      _getDateRangeLabel(_selectedPeriod),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                  Text(
+                    _getDateRangeLabel(_selectedPeriod),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
+                  ),
                 ],
               ),
             ],
           ),
         ),
-        
         StreamBuilder<GroupStatistics>(
-          stream: groupService.watchGroupStatistics(
-            widget.groupId,
-            _selectedPeriod,
-          ),
+          stream: _statsStream,
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
@@ -143,26 +157,17 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
             }
 
             var stats = snapshot.data;
-
-            // Use the actual member list from statistics (no temporary placeholders).
-            List<MemberStudyData> membersWithPlaceholders = [];
-
-            if (stats != null) {
-              membersWithPlaceholders = List<MemberStudyData>.from(stats.members);
-            }
-
             if (stats == null || stats.members.isEmpty) {
               return Center(
                 child: Text(AppLocalizations.of(context)!.noDataAvailable),
               );
             }
 
-            final topThree = membersWithPlaceholders.take(3).toList();
-            final remaining = membersWithPlaceholders.skip(3).toList();
+            final topThree = stats.members.take(3).toList();
+            final remaining = stats.members.skip(3).toList();
 
             return Column(
               children: [
-                
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24.0),
                   child: _TopThreePodium(
@@ -173,7 +178,6 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
                     onSendNudge: _sendNudge,
                   ),
                 ),
-                
                 if (remaining.isNotEmpty)
                   ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -191,9 +195,9 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
                           rank: rank,
                           isCurrentUser: member.userId == widget.currentUserId,
                           onTap: () => _showUserSubjects(member),
+                          onSendNudge: _sendNudge,
                           groupId: widget.groupId,
                           currentUserId: widget.currentUserId,
-                          onSendNudge: _sendNudge,
                         ),
                       );
                     },
@@ -286,7 +290,6 @@ class _TopThreePodium extends StatelessWidget {
 
     return Column(
       children: [
-        
         SizedBox(
           height: 260,
           child: Stack(
@@ -310,7 +313,6 @@ class _TopThreePodium extends StatelessWidget {
                     ),
                   ),
                 ),
-              
               if (topThree.length >= 3)
                 Positioned(
                   right: 21,
@@ -328,7 +330,6 @@ class _TopThreePodium extends StatelessWidget {
                     ),
                   ),
                 ),
-              
               if (topThree.isNotEmpty)
                 Positioned(
                   bottom: 50,
@@ -414,13 +415,15 @@ class _PodiumMemberState extends State<_PodiumMember>
   Widget build(BuildContext context) {
     final member = widget.member;
     final rank = widget.rank;
-    final theme = widget.theme;
-    final colorScheme = widget.colorScheme;
-
+    final ringColor = _rankColor(rank);
     final isFirst = rank == 1;
     final size = isFirst ? 100.0 : 80.0;
-    final ringColor = _rankColor(rank);
     final buttonSize = isFirst ? 26.0 : 24.0;
+    
+    // Check locally if session has expired
+    final expiration = member.sessionRunUntil;
+    final isLocallyActive = member.isStudying && (expiration == null || DateTime.now().isBefore(expiration));
+    final isStudying = isLocallyActive;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -438,61 +441,55 @@ class _PodiumMemberState extends State<_PodiumMember>
           clipBehavior: Clip.none,
           alignment: Alignment.bottomCenter,
           children: [
-            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(member.userId)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                bool isStudying = false;
-                if (snapshot.hasData && snapshot.data?.data() != null) {
-                  final data = snapshot.data!.data()!;
-                  isStudying = _isSessionActive(data);
-                }
+            AnimatedBuilder(
+              animation: _pulseAnim,
+              builder: (context, child) {
+                final t = _pulseAnim.value;
+                final glowOpacity = 0.10 + 0.05 * t;
+                final blur = isFirst ? (20 + 6 * t) : (14 + 4 * t);
+                final spread = isFirst ? (2 + 1.0 * t) : (1.2 + 0.8 * t);
+                
+                final gapColor = isStudying ? const Color(0xFF4CAF50) : Colors.white;
+                final shadowColor = isStudying 
+                    ? const Color(0xFF4CAF50).withValues(alpha: 0.4 + 0.2 * t) 
+                    : ringColor.withValues(alpha: glowOpacity);
 
-                final avatar = AnimatedBuilder(
-                  animation: _pulseAnim,
-                  builder: (context, child) {
-                    final t = _pulseAnim.value;
-                    final glowOpacity = 0.10 + 0.05 * t;
-                    final blur = isFirst ? (20 + 6 * t) : (14 + 4 * t);
-                    final spread = isFirst ? (2 + 1.0 * t) : (1.2 + 0.8 * t);
-
-                    
-                    final gapColor = isStudying ? const Color(0xFF4CAF50) : Colors.white;
-                    
-                    
-                    
-                    
-                    final shadowColor = isStudying 
-                        ? const Color(0xFF4CAF50).withValues(alpha: 0.4 + 0.2 * t) 
-                        : ringColor.withValues(alpha: glowOpacity);
-
-                    return Container(
-                      padding: const EdgeInsets.all(3), 
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: ringColor, 
-                        boxShadow: [
-                          BoxShadow(
-                            color: shadowColor,
-                            blurRadius: blur,
-                            spreadRadius: spread,
-                          ),
-                        ],
+                return Container(
+                  padding: const EdgeInsets.all(3), 
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: ringColor, 
+                    boxShadow: [
+                      BoxShadow(
+                        color: shadowColor,
+                        blurRadius: blur,
+                        spreadRadius: spread,
                       ),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.all(3), 
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: gapColor, 
-                        ),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: UniversalAvatar(
+                    ],
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    padding: const EdgeInsets.all(3), 
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: gapColor, 
+                    ),
+                    child: child,
+                  ),
+                );
+              },
+              child: Builder(
+                builder: (context) {
+                  // Rebuild when session expires
+                  final expiration = member.sessionRunUntil;
+                  if (expiration != null) {
+                    final now = DateTime.now();
+                    if (expiration.isAfter(now)) {
+                       // Note: AnimatedBuilder rebuilds every frame, so we don't need a separate timer here.
+                    }
+                  }
+                  
+                  return UniversalAvatar(
                     userId: member.userId,
                     name: member.name,
                     initialAvatarIndex: member.avatarIndex,
@@ -500,11 +497,9 @@ class _PodiumMemberState extends State<_PodiumMember>
                     initialAvatarBase64: member.avatarBase64,
                     size: size,
                     fontSize: isFirst ? 40 : 32,
-                  ),
-                );
-
-                return avatar;
-              },
+                  );
+                }
+              ),
             ),
             Positioned(
               bottom: -10,
@@ -523,43 +518,27 @@ class _PodiumMemberState extends State<_PodiumMember>
                 ),
                 child: Text(
                   AppLocalizations.of(context)!.rankLabel(rank),
-                  style: theme.textTheme.labelSmall?.copyWith(
+                  style: widget.theme.textTheme.labelSmall?.copyWith(
                     color: Colors.white, 
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            Positioned(
-              bottom: (size + 12) / 2 * (1 - 0.7071) - (buttonSize / 2),
-              right: (size + 12) / 2 * (1 - 0.7071) - (buttonSize / 2),
-              child: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                stream: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(member.userId)
-                    .snapshots(),
-                builder: (ctx, snap) {
-                  bool allowsNudges = true;
-                  bool canReceiveNudges = false;
-                  if (snap.hasData && snap.data?.data() != null) {
-                    final d = snap.data!.data()!;
-                    allowsNudges = d['allowNudges'] != false;
-                    canReceiveNudges = d['fcmEnabled'] == true;
-                  }
-                  if (member.userId == widget.currentUserId) return const SizedBox.shrink();
-
-                  return _NudgeHandButton(
-                    canReceiveNudges: canReceiveNudges,
-                    allowsNudges: allowsNudges,
-                    isCurrentUser: member.userId == widget.currentUserId,
-                    size: buttonSize,
-                    groupId: widget.groupId,
-                    targetUserId: member.userId,
-                    onSend: () => widget.onSendNudge(member.userId),
-                  );
-                },
+            if (member.userId != widget.currentUserId)
+              Positioned(
+                bottom: (size + 12) / 2 * (1 - 0.7071) - (buttonSize / 2),
+                right: (size + 12) / 2 * (1 - 0.7071) - (buttonSize / 2),
+                child: _NudgeHandButton(
+                  canReceiveNudges: member.canReceiveNudges,
+                  allowsNudges: member.allowsNudges,
+                  isCurrentUser: false,
+                  size: buttonSize,
+                  groupId: widget.groupId,
+                  targetUserId: member.userId,
+                  onSend: () => widget.onSendNudge(member.userId),
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -573,7 +552,7 @@ class _PodiumMemberState extends State<_PodiumMember>
                 maxLines: 2,
                 softWrap: true,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.labelLarge?.copyWith(
+                style: widget.theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -581,8 +560,8 @@ class _PodiumMemberState extends State<_PodiumMember>
               Text(
                 _formatStudyTime(context, member.studyTimeSeconds),
                 textAlign: TextAlign.center,
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: colorScheme.primary,
+                style: widget.theme.textTheme.labelMedium?.copyWith(
+                  color: widget.colorScheme.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -599,18 +578,18 @@ class _RankListTile extends StatelessWidget {
   final int rank;
   final bool isCurrentUser;
   final VoidCallback onTap;
+  final Future<void> Function(String targetUserId) onSendNudge;
   final String groupId;
   final String currentUserId;
-  final Future<void> Function(String targetUserId) onSendNudge;
 
   const _RankListTile({
     required this.member,
     required this.rank,
     required this.isCurrentUser,
     required this.onTap,
+    required this.onSendNudge,
     required this.groupId,
     required this.currentUserId,
-    required this.onSendNudge,
   });
 
   @override
@@ -637,7 +616,6 @@ class _RankListTile extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            
             SizedBox(
               width: 32,
               child: Text(
@@ -651,56 +629,45 @@ class _RankListTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            
-            StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: FirebaseFirestore.instance.collection('users').doc(member.userId).snapshots(),
-              builder: (context, snapshot) {
-                final data = snapshot.data?.data();
-                final isStudying = _isSessionActive(data);
-                final allowsNudges = data?['allowNudges'] != false;
-                final canReceiveNudges = data?['fcmEnabled'] == true;
-
-                return Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    UniversalAvatar(
-                      userId: member.userId,
-                      name: member.name,
-                      initialAvatarIndex: member.avatarIndex,
-                      initialAvatarColorValue: member.avatarColorValue,
-                      initialAvatarBase64: member.avatarBase64,
-                      size: 48,
-                      fontSize: 20,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                UniversalAvatar(
+                  userId: member.userId,
+                  name: member.name,
+                  initialAvatarIndex: member.avatarIndex,
+                  initialAvatarColorValue: member.avatarColorValue,
+                  initialAvatarBase64: member.avatarBase64,
+                  size: 48,
+                  fontSize: 20,
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: _UserStatusDot(
+                    userId: member.userId,
+                    size: 14,
+                    isStudyingOverride: member.isStudying,
+                    sessionRunUntil: member.sessionRunUntil,
+                  ),
+                ),
+                if (!isCurrentUser)
+                  Positioned(
+                    bottom: -4,
+                    right: -6,
+                    child: _NudgeHandButton(
+                      canReceiveNudges: member.canReceiveNudges,
+                      allowsNudges: member.allowsNudges,
+                      isCurrentUser: false,
+                      size: 22,
+                      groupId: groupId,
+                      targetUserId: member.userId,
+                      onSend: () => onSendNudge(member.userId),
                     ),
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      child: _UserStatusDot(
-                        userId: member.userId,
-                        size: 14,
-                        isStudyingOverride: isStudying,
-                      ),
-                    ),
-                    if (!isCurrentUser)
-                      Positioned(
-                        bottom: -4,
-                        right: -6,
-                        child: _NudgeHandButton(
-                          canReceiveNudges: canReceiveNudges,
-                          allowsNudges: allowsNudges,
-                          isCurrentUser: isCurrentUser,
-                          size: 22,
-                          groupId: groupId,
-                          targetUserId: member.userId,
-                          onSend: () => onSendNudge(member.userId),
-                        ),
-                      ),
-                  ],
-                );
-              },
+                  ),
+              ],
             ),
             const SizedBox(width: 16),
-            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -725,7 +692,6 @@ class _RankListTile extends StatelessWidget {
                 ],
               ),
             ),
-            
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -742,6 +708,96 @@ class _RankListTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _UserStatusDot extends StatefulWidget {
+  final String userId;
+  final double size;
+  final bool? isStudyingOverride;
+  final DateTime? sessionRunUntil;
+
+  const _UserStatusDot({
+    required this.userId,
+    required this.size,
+    this.isStudyingOverride,
+    this.sessionRunUntil,
+  });
+
+  @override
+  State<_UserStatusDot> createState() => _UserStatusDotState();
+}
+
+class _UserStatusDotState extends State<_UserStatusDot> {
+  Timer? _expirationTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleExpiration();
+  }
+
+  @override
+  void didUpdateWidget(covariant _UserStatusDot oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.sessionRunUntil != widget.sessionRunUntil) {
+      _scheduleExpiration();
+    }
+  }
+
+  @override
+  void dispose() {
+    _expirationTimer?.cancel();
+    super.dispose();
+  }
+
+  void _scheduleExpiration() {
+    _expirationTimer?.cancel();
+    final expiration = widget.sessionRunUntil;
+    if (expiration != null) {
+      final now = DateTime.now();
+      if (expiration.isAfter(now)) {
+        final duration = expiration.difference(now);
+        _expirationTimer = Timer(duration, () {
+          if (mounted) setState(() {});
+        });
+      }
+    }
+  }
+
+  bool get _isLocallyActive {
+    if (widget.isStudyingOverride != true) return false;
+    final expiration = widget.sessionRunUntil;
+    if (expiration == null) return true; // No expiration set, assume active unless stopped
+    return DateTime.now().isBefore(expiration);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool isStudying = _isLocallyActive;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: widget.size,
+      height: widget.size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isStudying
+            ? const Color(0xFF4CAF50) 
+            : Colors.grey.shade400, 
+        border: Border.all(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          width: 2,
+        ),
+        boxShadow: [
+          if (isStudying)
+            BoxShadow(
+              color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
+              blurRadius: 4,
+              spreadRadius: 1,
+            ),
+        ],
       ),
     );
   }
@@ -798,55 +854,31 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
       showAppMessage(context, l10n.userProhibitedNudge, isError: true);
       return;
     }
+
     if (!widget.canReceiveNudges) {
-      showAppMessage(context, l10n.memberCannotReceiveNudges, isError: true);
-      return;
-    }
-    if (widget.isCurrentUser) {
-      showAppMessage(context, l10n.cannotNudgeSelf, isError: true);
-      return;
+       showAppMessage(context, l10n.memberCannotReceiveNudges, isError: true);
+       return;
     }
 
-    setState(() {
-      _sending = true;
-    });
-
+    setState(() => _sending = true);
     try {
       await widget.onSend();
-      if (!mounted) return;
-      HapticFeedback.lightImpact();
-      showAppMessage(context, l10n.nudgeSent);
-    } catch (e) {
-      if (!mounted) return;
-      final message = e is StateError ? e.message : e.toString();
-      showAppMessage(
-        context,
-        l10n.failedToSendNudge(message),
-        isError: true,
-      );
-    } finally {
       if (mounted) {
-        setState(() {
-          _sending = false;
-        });
+        showAppMessage(context, l10n.nudgeSent);
       }
-    }
-  }
-
-  String _formatRemainingTime(BuildContext context, Duration remaining) {
-    final l10n = AppLocalizations.of(context)!;
-    if (remaining.inMinutes >= 1) {
-      return '${remaining.inMinutes}${l10n.mUnit}';
-    } else {
-      return '${remaining.inSeconds}${l10n.sUnit}';
+    } catch (e) {
+      if (mounted) {
+        showAppMessage(context, l10n.failedToSendNudge(e.toString()), isError: true);
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final groupService = context.read<GroupService>();
+    if (widget.isCurrentUser) return const SizedBox.shrink();
+    final groupService = context.watch<GroupService>();
 
     return StreamBuilder<DateTime?>(
       stream: groupService.watchNudgeCooldown(
@@ -854,153 +886,52 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
         targetUserId: widget.targetUserId,
       ),
       builder: (context, snapshot) {
-        DateTime? lastNudgeTime = snapshot.data;
-        bool isOnCooldown = false;
-        Duration? remainingCooldown;
-
-        if (lastNudgeTime != null) {
-          final now = DateTime.now();
-          final cooldownEnd = lastNudgeTime.add(const Duration(hours: 1));
-          
-          if (now.isBefore(cooldownEnd)) {
-            isOnCooldown = true;
-            remainingCooldown = cooldownEnd.difference(now);
-            
-            // Schedule a rebuild when cooldown expires
-            _cooldownTimer?.cancel();
-            _cooldownTimer = Timer(remainingCooldown, () {
-              if (mounted) {
-                setState(() {});
-              }
-            });
-          }
+        final lastNudge = snapshot.data;
+        Duration? remaining;
+        if (lastNudge != null) {
+           final end = lastNudge.add(const Duration(hours: 1));
+           final now = DateTime.now();
+           if (end.isAfter(now)) {
+             remaining = end.difference(now);
+           }
         }
-
-        final enabled = widget.allowsNudges &&
-            widget.canReceiveNudges &&
-            !_sending &&
-            !widget.isCurrentUser &&
-            !isOnCooldown;
-
-        final bgColor = enabled
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest;
-        final iconColor = enabled
-            ? colorScheme.onPrimaryContainer
-            : colorScheme.onSurfaceVariant;
+        
+        final isOnCooldown = remaining != null && remaining.inSeconds > 0;
 
         return GestureDetector(
-          onTap: () => _handleTap(isOnCooldown, remainingCooldown),
+          onTap: () => _handleTap(isOnCooldown, remaining),
           child: Container(
             width: widget.size,
             height: widget.size,
             decoration: BoxDecoration(
-              color: bgColor,
+              color: isOnCooldown ? Colors.grey.shade300 : Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(
-                color: theme.scaffoldBackgroundColor,
-                width: 1.5,
-              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: Colors.black.withValues(alpha: 0.15),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: _sending
-                ? Padding(
-                    padding: const EdgeInsets.all(6),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                    ),
-                  )
-                : isOnCooldown && remainingCooldown != null
-                    ? Center(
-                        child: Text(
-                          _formatRemainingTime(context, remainingCooldown),
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: iconColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: widget.size * 0.28,
-                          ),
-                        ),
-                      )
-                    : Transform.rotate(
-                        angle: -0.4,
-                        child: Icon(
-                          Icons.touch_app_rounded,
-                          size: widget.size * 0.6,
-                          color: iconColor,
-                        ),
+            child: Center(
+              child: _sending
+                  ? SizedBox(
+                      width: widget.size * 0.6,
+                      height: widget.size * 0.6,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(
+                      '👋',
+                      style: TextStyle(
+                        fontSize: widget.size * 0.6,
+                        color: isOnCooldown ? Colors.grey : null,
                       ),
+                    ),
+            ),
           ),
         );
       },
-    );
-  }
-}
-
-
-class _UserStatusDot extends StatelessWidget {
-  final String userId;
-  final double size;
-  final bool? isStudyingOverride;
-
-  const _UserStatusDot({
-    required this.userId,
-    required this.size,
-    this.isStudyingOverride,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (isStudyingOverride != null) {
-      return _buildDot(context, isStudyingOverride!);
-    }
-
-    return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .snapshots(),
-      builder: (context, snapshot) {
-        bool isStudying = false;
-        if (snapshot.hasData && snapshot.data?.data() != null) {
-          final data = snapshot.data!.data() as Map<String, dynamic>;
-          isStudying = _isSessionActive(data);
-        }
-
-        return _buildDot(context, isStudying);
-      },
-    );
-  }
-
-  Widget _buildDot(BuildContext context, bool isStudying) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isStudying
-            ? const Color(0xFF4CAF50) 
-            : Colors.grey.shade400, 
-        border: Border.all(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          width: 2,
-        ),
-        boxShadow: [
-          if (isStudying)
-            BoxShadow(
-              color: const Color(0xFF4CAF50).withValues(alpha: 0.4),
-              blurRadius: 4,
-              spreadRadius: 1,
-            ),
-        ],
-      ),
     );
   }
 }
@@ -1027,34 +958,4 @@ String _formatStudyTime(BuildContext context, int totalSeconds) {
   } else {
     return '$seconds${l10n.sUnit}';
   }
-}
-
-bool _isSessionActive(Map<String, dynamic>? data) {
-  if (data == null) return false;
-  if (data['isStudying'] != true) return false;
-  
-  final activeSession = data['activeSession'];
-  if (activeSession is! Map) return false; 
-
-  final now = DateTime.now();
-  
-  final startVal = activeSession['startUtc'];
-  final endVal = activeSession['expectedEndUtc'];
-  
-  if (startVal is Timestamp) {
-     final start = startVal.toDate();
-     if (start.isAfter(now)) return false; 
-     
-     DateTime limit;
-     if (endVal is Timestamp) {
-       limit = endVal.toDate();
-     } else {
-       limit = start.add(const Duration(hours: 3));
-     }
-     
-     if (now.isAfter(limit)) return false;
-     return true;
-  }
-  
-  return false;
 }

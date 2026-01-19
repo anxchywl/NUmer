@@ -161,6 +161,15 @@ class AuthController extends ChangeNotifier {
   String? lastPreparationError;
   
   Future<void> _performSignOutCleanup(String? previousUid) async {
+    // Push any pending changes to Firebase before logout
+    try {
+      await _syncService?.pushDirty();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Failed to push dirty data on logout: $e');
+      }
+    }
+    
     await _syncService?.stop();
     if (previousUid != null) {
       await _clearLocalUserData(previousUid);
@@ -273,17 +282,19 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> _clearLocalUserData(String uid) async {
+    // Close Hive boxes but DO NOT delete them - preserve cache for re-login
     await Storage.closeForSignOut();
-    try {
-      await Storage.eraseUser(uid);
-    } catch (_) {
-      
-    }
+    
+    // Clear session-specific state only (not cached data)
     UserStorage.setCurrentUser(uid);
     final userStorage = await UserStorage.getInstance();
     await userStorage.clearUserData();
     UserStorage.setCurrentUser(null);
+    
+    // Clear session-specific preferences only
     await _clearSharedPreferences();
+    
+    // Cancel notifications for this session
     await Notifs.cancelAll();
   }
 

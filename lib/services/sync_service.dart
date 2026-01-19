@@ -50,6 +50,7 @@ class SyncService extends ChangeNotifier {
   static const _coursesStateKey = 'courses';
   static const _sessionsStateKey = 'sessions';
   static const _goalsStateKey = 'goals';
+  static const _habitsStateKey = 'habits';
 
   Future<void> start({
     required String uid,
@@ -85,7 +86,8 @@ class SyncService extends ChangeNotifier {
     });
 
     if (_online) {
-      await _claimSession();
+      // Fire-and-forget: Heartbeat can happen in background, don't block startup
+      unawaited(_claimSession());
     }
     _listenActiveSession();
 
@@ -101,7 +103,16 @@ class SyncService extends ChangeNotifier {
           shouldBootstrap = false;
         }
       }
-      await syncNow(full: shouldBootstrap);
+      
+      if (shouldBootstrap) {
+        // New device / first login: AWAIT to ensure data is loaded before proceeding.
+        // Without this, the user would see empty screens or incorrect profile prompts.
+        await syncNow(full: true);
+      } else {
+        // Returning user with local data: Fire-and-forget for instant startup.
+        // The app shows local data immediately; sync results merge in background.
+        unawaited(syncNow(full: false));
+      }
     } else {
       _setStatus(SyncStatus.offline);
     }
@@ -241,6 +252,27 @@ class SyncService extends ChangeNotifier {
         if (userDoc != null && userDoc.dirty == false) userDoc.save(),
       ]);
 
+      // Push dirty habits
+      final dirtyHabits = _db.dirtyHabits();
+      await pushChunk<LocalHabit>(dirtyHabits, (batch, habit) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('habits')
+            .doc(habit.id);
+        if (habit.deleted) {
+          batch.delete(ref);
+        } else {
+          batch.set(ref, _habitToRemote(habit), SetOptions(merge: true));
+        }
+        habit.dirty = false;
+        habit.updatedAtMs = _now();
+      });
+
+      await Future.wait([
+        for (final h in dirtyHabits) h.save(),
+      ]);
+
       final state = _db.syncStateForKey(_coursesStateKey);
       state.lastPushMs = _now();
       await _db.putSyncState(state);
@@ -286,6 +318,14 @@ class SyncService extends ChangeNotifier {
       full: full,
       limit: 200,
     );
+    await _pullCollection(
+      collection: 'habits',
+      stateKey: _habitsStateKey,
+      mapper: _applyRemoteHabit,
+      full: full,
+      limit: 200,
+    );
+    await _pullHabitHistory(full: full);
     lastPull = DateTime.now();
     await _notifyAfterPullListeners();
   }
@@ -677,6 +717,219 @@ class SyncService extends ChangeNotifier {
     }
   }
 
+  Future<void> _applyRemoteHabit(
+      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    final data = snapshot.data();
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    var habit = _db.getHabitById(snapshot.id);
+
+    // Parse stats map
+    final statsMap = (data['st'] ?? data['stats'] ?? {}) as Map<String, dynamic>;
+    final totalCompletions = ((statsMap['tc'] ?? statsMap['totalCompletions']) as num?)?.toInt() ?? 0;
+    final currentStreak = ((statsMap['cs'] ?? statsMap['currentStreak']) as num?)?.toInt() ?? 0;
+    final longestStreak = ((statsMap['ls'] ?? statsMap['longestStreak']) as num?)?.toInt() ?? 0;
+
+    // Parse last7 to JSON string
+    final last7Raw = data['l7'] ?? data['last7'] ?? {};
+    final last7Json = last7Raw is Map ? jsonEncode(last7Raw) : '{}';
+
+    // Parse dates
+    int startDateMs = DateTime.now().millisecondsSinceEpoch;
+    if (data['sd'] is Timestamp) {
+      startDateMs = (data['sd'] as Timestamp).toDate().millisecondsSinceEpoch;
+    } else if (data['startDate'] is Timestamp) {
+      startDateMs = (data['startDate'] as Timestamp).toDate().millisecondsSinceEpoch;
+    }
+
+    int? endDateMs;
+    if (data['ed'] is Timestamp) {
+      endDateMs = (data['ed'] as Timestamp).toDate().millisecondsSinceEpoch;
+    } else if (data['endDate'] is Timestamp) {
+      endDateMs = (data['endDate'] as Timestamp).toDate().millisecondsSinceEpoch;
+    }
+
+    int createdAtMs = DateTime.now().millisecondsSinceEpoch;
+    if (data['cr'] is Timestamp) {
+      createdAtMs = (data['cr'] as Timestamp).toDate().millisecondsSinceEpoch;
+    } else if (data['createdAt'] is Timestamp) {
+      createdAtMs = (data['createdAt'] as Timestamp).toDate().millisecondsSinceEpoch;
+    }
+
+    // Parse weekDays
+    final weekDaysRaw = data['wd'] ?? data['weekDays'] ?? [];
+    final weekDays = (weekDaysRaw as List).map((e) => (e as num).toInt()).toList();
+
+    // Parse connectedCourseIds
+    final ccRaw = data['cc'] ?? data['connectedCourseIds'] ?? [];
+    final connectedCourseIds = (ccRaw as List).map((e) => e.toString()).toList();
+
+    if (habit == null) {
+      habit = LocalHabit(
+        id: snapshot.id,
+        uid: _uid!,
+        updatedAtMs: updatedAt,
+        name: (data['n'] ?? data['name'] ?? 'Unnamed') as String,
+        colorValue: ((data['cl'] ?? data['color']) as num?)?.toInt() ?? 0xFF000000,
+        iconCodePoint: ((data['ic'] ?? data['iconCodePoint']) as num?)?.toInt() ?? 0xe156,
+        iconFamily: data['if'] as String? ?? data['iconFamily'] as String?,
+        iconPackage: data['ip'] as String? ?? data['iconPackage'] as String?,
+        category: (data['ca'] ?? data['category'] ?? 'Other') as String,
+        typeIndex: (data['t'] as num?)?.toInt() ?? 0,
+        targetValue: (data['tv'] as num?)?.toDouble() ?? 1.0,
+        unit: data['u'] as String? ?? data['unit'] as String?,
+        comparatorIndex: (data['co'] as num?)?.toInt() ?? 0,
+        frequencyTypeIndex: (data['fq'] as num?)?.toInt() ?? 1,
+        weekDays: weekDays,
+        intervalDays: (data['iv'] as num?)?.toInt() ?? 1,
+        frequencyPeriodIndex: (data['fp'] as num?)?.toInt(),
+        frequencyGoal: (data['fg'] as num?)?.toInt(),
+        startDateMs: startDateMs,
+        endDateMs: endDateMs,
+        totalCompletions: totalCompletions,
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
+        sortOrder: (data['so'] as num?)?.toInt() ?? 0,
+        last7Json: last7Json,
+        archived: data['ar'] == true || data['archived'] == true,
+        createdAtMs: createdAtMs,
+        connectedCourseIds: connectedCourseIds,
+        dirty: false,
+        deleted: data['deleted'] == true,
+      );
+      await _db.putHabit(habit);
+      return;
+    }
+
+    // Skip if local is dirty and newer
+    if (habit.dirty && updatedAt <= habit.updatedAtMs) {
+      return;
+    }
+
+    // Log conflict if local is dirty but remote is newer
+    if (habit.dirty && updatedAt > habit.updatedAtMs) {
+      await _db.logConflict(
+        collection: 'habits',
+        entityId: habit.id,
+        localUpdatedAtMs: habit.updatedAtMs,
+        remoteUpdatedAtMs: updatedAt,
+        resolvedWithRemote: true,
+      );
+    }
+
+    habit
+      ..name = (data['n'] ?? data['name'] ?? habit.name) as String
+      ..colorValue = ((data['cl'] ?? data['color']) as num?)?.toInt() ?? habit.colorValue
+      ..iconCodePoint = ((data['ic'] ?? data['iconCodePoint']) as num?)?.toInt() ?? habit.iconCodePoint
+      ..iconFamily = data['if'] as String? ?? data['iconFamily'] as String?
+      ..iconPackage = data['ip'] as String? ?? data['iconPackage'] as String?
+      ..category = (data['ca'] ?? data['category'] ?? habit.category) as String
+      ..typeIndex = (data['t'] as num?)?.toInt() ?? habit.typeIndex
+      ..targetValue = (data['tv'] as num?)?.toDouble() ?? habit.targetValue
+      ..unit = data['u'] as String? ?? data['unit'] as String?
+      ..comparatorIndex = (data['co'] as num?)?.toInt() ?? habit.comparatorIndex
+      ..frequencyTypeIndex = (data['fq'] as num?)?.toInt() ?? habit.frequencyTypeIndex
+      ..weekDays = weekDays
+      ..intervalDays = (data['iv'] as num?)?.toInt() ?? habit.intervalDays
+      ..frequencyPeriodIndex = (data['fp'] as num?)?.toInt()
+      ..frequencyGoal = (data['fg'] as num?)?.toInt()
+      ..startDateMs = startDateMs
+      ..endDateMs = endDateMs
+      ..totalCompletions = totalCompletions
+      ..currentStreak = currentStreak
+      ..longestStreak = longestStreak
+      ..sortOrder = (data['so'] as num?)?.toInt() ?? habit.sortOrder
+      ..last7Json = last7Json
+      ..archived = data['ar'] == true || data['archived'] == true
+      ..createdAtMs = createdAtMs
+      ..connectedCourseIds = connectedCourseIds
+      ..deleted = data['deleted'] == true
+      ..updatedAtMs = updatedAt
+      ..dirty = false;
+    await habit.save();
+  }
+
+  static const _habitHistoryStateKey = 'habit_history';
+
+  Future<void> _pullHabitHistory({bool full = false}) async {
+    if (_uid == null) return;
+    final state = _db.syncStateForKey(_habitHistoryStateKey);
+    final cursor = full ? 0 : state.lastPullMs;
+    var maxSeen = cursor;
+
+    // We pull history for all non-deleted habits. 
+    // Optimization: Only pull for habits that were recently synchronized or are active.
+    final habits = _db.habits(includeDeleted: false).toList();
+    if (habits.isEmpty) return;
+
+    for (final habit in habits) {
+      Query<Map<String, dynamic>> query = _firestore
+          .collection('users')
+          .doc(_uid)
+          .collection('habits')
+          .doc(habit.id)
+          .collection('history');
+
+      if (cursor > 0) {
+        query = query.where(
+          'updatedAt',
+          isGreaterThan: Timestamp.fromMillisecondsSinceEpoch(cursor),
+        );
+      }
+
+      final snapshot = await query.get(GetOptions(source: Source.server));
+      for (final doc in snapshot.docs) {
+        await _applyRemoteHabitHistory(habit.id, doc);
+        maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
+      }
+    }
+
+    state.lastPullMs = max(state.lastPullMs, maxSeen);
+    await _db.putSyncState(state);
+  }
+
+  Future<void> _applyRemoteHabitHistory(
+    String habitId,
+    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    final data = snapshot.data();
+    final updatedAt = _timestampToMs(data['updatedAt']);
+    final dateKey = snapshot.id; // Corrected: Firestore history IDs are dateKeys (YYYY-MM-DD)
+    final id = '${habitId}_$dateKey';
+
+    var history = _db.getHabitHistoryById(id);
+    if (history == null) {
+      history = LocalHabitHistory(
+        id: id,
+        uid: _uid!,
+        habitId: habitId,
+        dateKey: dateKey,
+        completedAtMs: _timestampToMs(data['ts'] ?? data['timestamp']),
+        updatedAtMs: updatedAt,
+        value: (data['v'] ?? data['value'] as num?)?.toDouble() ?? 1.0,
+        manualValue: (data['m'] as num?)?.toDouble(),
+        note: data['note'] as String?,
+        dirty: false,
+        deleted: data['deleted'] == true,
+      );
+      await _db.putHabitHistory(history);
+      return;
+    }
+
+    if (history.dirty && updatedAt <= history.updatedAtMs) {
+      return;
+    }
+
+    history
+      ..completedAtMs = _timestampToMs(data['ts'] ?? data['timestamp'])
+      ..value = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 1.0
+      ..manualValue = (data['m'] as num?)?.toDouble()
+      ..note = (data['note'] as String?)
+      ..deleted = data['deleted'] == true
+      ..updatedAtMs = updatedAt
+      ..dirty = false;
+    await history.save();
+  }
+
   Map<String, dynamic> _userToRemote(LocalUserDoc doc) {
     final avatarBase64 = (doc.avatarImage != null && doc.avatarImage!.isNotEmpty)
         ? base64Encode(doc.avatarImage!)
@@ -748,6 +1001,49 @@ class SyncService extends ChangeNotifier {
       'deleted': goal.deleted,
       'updatedAt': FieldValue.serverTimestamp(),
     };
+  }
+
+  Map<String, dynamic> _habitToRemote(LocalHabit habit) {
+    return {
+      'n': habit.name,
+      'cl': habit.colorValue,
+      'ic': habit.iconCodePoint,
+      'if': habit.iconFamily,
+      'ip': habit.iconPackage,
+      'ca': habit.category,
+      't': habit.typeIndex,
+      'tv': habit.targetValue,
+      'u': habit.unit,
+      'co': habit.comparatorIndex,
+      'fq': habit.frequencyTypeIndex,
+      'wd': habit.weekDays,
+      'iv': habit.intervalDays,
+      'fp': habit.frequencyPeriodIndex,
+      'fg': habit.frequencyGoal,
+      'sd': Timestamp.fromMillisecondsSinceEpoch(habit.startDateMs),
+      'ed': habit.endDateMs != null ? Timestamp.fromMillisecondsSinceEpoch(habit.endDateMs!) : null,
+      'st': {
+        'tc': habit.totalCompletions,
+        'cs': habit.currentStreak,
+        'ls': habit.longestStreak,
+      },
+      'so': habit.sortOrder,
+      'l7': habit.last7Json.isNotEmpty ? _decodeJsonMap(habit.last7Json) : {},
+      'ar': habit.archived,
+      'cr': Timestamp.fromMillisecondsSinceEpoch(habit.createdAtMs),
+      'cc': habit.connectedCourseIds,
+      'deleted': habit.deleted,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+  }
+
+  Map<String, dynamic>? _decodeJsonMap(String json) {
+    if (json.isEmpty) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(json) as Map);
+    } catch (_) {
+      return null;
+    }
   }
 
   int _timestampToMs(dynamic value) {

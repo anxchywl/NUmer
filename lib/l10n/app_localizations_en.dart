@@ -126,6 +126,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String sessionsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count sessions found',
+      one: '1 session found',
+      zero: 'No sessions found',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String habitReportDownloadCountdown(int seconds) {
     return 'Report generation will start in $seconds seconds';
   }
@@ -1910,6 +1922,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get habitDragToCategorize => 'Drag to categorize';
+
+  @override
   String get habitStatsEmptyState =>
       'No habits found. Add a habit to start tracking your progress. It is cool trust me!';
 
@@ -1934,6 +1949,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String habitReportSaved(String path) {
     return 'Saved to: $path';
+  }
+
+  @override
+  String habitReportFileName(String month, int year) {
+    return 'habits_${month}_$year';
   }
 
   @override

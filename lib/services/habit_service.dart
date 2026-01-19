@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../data/local/entities.dart';
 import '../models/habit.dart';
 import '../models/habit_category.dart';
 import 'storage.dart';
@@ -41,42 +44,165 @@ class HabitService {
 
   // -- Habits --
 
+  // -- Habits --
+
   Stream<List<Habit>> habitsStream(String userId) {
-    return _db
+    // HYBRID STREAM: Local First + Remote Sync
+    // 1. Create a controller to emit the "view" of habits (sourced from Local Storage)
+    final controller = StreamController<List<Habit>>();
+    
+    // Helper to load & emit local habits
+    void emitLocal() {
+       final locals = Storage.getHabitsFromCache(); // This is synchronous and fast
+       final activeLocals = locals.where((h) => !h.archived);
+       
+       final habits = activeLocals.map((lh) => _localHabitToHabit(lh)).toList();
+       
+       habits.sort((a, b) {
+          int cmp = a.sortOrder.compareTo(b.sortOrder);
+          if (cmp != 0) return cmp;
+          return a.createdAt.compareTo(b.createdAt);
+       });
+       
+       if (!controller.isClosed) {
+         controller.add(habits);
+       }
+    }
+
+    // 2. Initial Emit
+    emitLocal();
+    
+    // 3. Listen to LOCAL updates (triggered by toggleCompletion, etc)
+    final localSub = _historyUpdateController.stream.listen((_) {
+       emitLocal();
+    });
+
+    // 4. Listen to REMOTE updates (Sync)
+    // We listen to Firestore, update Local Cache, then Emit Local
+    final remoteSub = _db
         .collection('users')
         .doc(userId)
         .collection('habits')
+        .where('ar', isEqualTo: false)
         .snapshots()
-        .map((snapshot) {
-          final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
-          // Filter archived client-side to handle both simplified 'ar' field and legacy 'archived'
-          final active = habits.where((h) => !h.archived).toList();
-          
-          active.sort((a, b) {
-            int cmp = a.sortOrder.compareTo(b.sortOrder);
-            if (cmp != 0) return cmp;
-            return a.createdAt.compareTo(b.createdAt);
-          });
-          return active;
+        .listen((snapshot) async {
+           for (final doc in snapshot.docs) {
+              final habit = Habit.fromFirestore(doc);
+              await _saveHabitToLocal(userId, habit);
+           }
+           // Emit updated local state
+           emitLocal();
         });
+        
+    controller.onCancel = () {
+       localSub.cancel();
+       remoteSub.cancel();
+       controller.close();
+    };
+    
+    return controller.stream;
+  }
+
+  // Helper to save a Habit object to Local Storage (Hive)
+  Future<void> _saveHabitToLocal(String userId, Habit habit) async {
+    // Conflict Prevention / Debounce:
+    // If we updated this habit locally very recently (e.g. < 2 seconds ago), 
+    // we ignore incoming snapshots to prevent "Flicker" (optimistic local state being overwritten by stale server state).
+    final existing = Storage.getHabitById(habit.id);
+    if (existing != null) {
+       final diff = DateTime.now().millisecondsSinceEpoch - existing.updatedAtMs;
+       if (diff < 2000) {
+          return; // Skip overwrite, trust local for now
+       }
+    }
+
+    final localHabit = LocalHabit(
+      id: habit.id,
+      uid: userId,
+      updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+      name: habit.name,
+      colorValue: habit.color.toARGB32(),
+      iconCodePoint: habit.iconCodePoint,
+      iconFamily: habit.iconFamily,
+      iconPackage: habit.iconPackage,
+      category: habit.category,
+      typeIndex: habit.type.index,
+      targetValue: habit.targetValue,
+      unit: habit.unit,
+      comparatorIndex: habit.comparator.index,
+      frequencyTypeIndex: habit.frequencyType.index,
+      weekDays: habit.weekDays.toList(),
+      intervalDays: habit.intervalDays,
+      frequencyPeriodIndex: habit.frequencyPeriod?.index,
+      frequencyGoal: habit.frequencyGoal,
+      startDateMs: habit.startDate.millisecondsSinceEpoch,
+      endDateMs: habit.endDate?.millisecondsSinceEpoch,
+      totalCompletions: habit.totalCompletions,
+      currentStreak: habit.currentStreak,
+      longestStreak: habit.longestStreak,
+      sortOrder: habit.sortOrder,
+      last7Json: jsonEncode(habit.last7),
+      archived: habit.archived,
+      createdAtMs: habit.createdAt.millisecondsSinceEpoch,
+      connectedCourseIds: habit.connectedCourseIds,
+    );
+    // Persist to Hive
+    await Storage.putHabit(localHabit);
   }
 
   Future<List<Habit>> getHabits(String userId) async {
-    final snapshot = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .get();
-        
-    final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
-    final active = habits.where((h) => !h.archived).toList();
-    
-    active.sort((a, b) {
+    // Prefer Local Cache for one-shot reads too?
+    // For now, let's keep getHabits as Remote-Source-of-Truth or switch to Local?
+    // Let's match the stream behavior: Return local.
+    final locals = Storage.getHabitsFromCache();
+    final active = locals.where((h) => !h.archived).map((lh) => _localHabitToHabit(lh)).toList();
+     active.sort((a, b) {
       int cmp = a.sortOrder.compareTo(b.sortOrder);
       if (cmp != 0) return cmp;
       return a.createdAt.compareTo(b.createdAt);
     });
     return active;
+  }
+  
+  // Legacy remote fetch (renamed or kept for reference?)
+  // keeping original getHabits replacement above.
+  
+  // Cache for archived habits to avoid repeated fetches
+
+  // Cache for archived habits to avoid repeated fetches
+  List<Habit>? _archivedHabitsCache;
+  DateTime? _archivedHabitsCacheTime;
+
+  /// Fetches archived habits with caching (one-time read, not a live stream)
+  Future<List<Habit>> getArchivedHabits(String userId, {bool forceRefresh = false}) async {
+    // Return cache if less than 5 minutes old
+    if (!forceRefresh && 
+        _archivedHabitsCache != null && 
+        _archivedHabitsCacheTime != null &&
+        DateTime.now().difference(_archivedHabitsCacheTime!).inMinutes < 5) {
+      return _archivedHabitsCache!;
+    }
+    
+    final snapshot = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('habits')
+        .where('ar', isEqualTo: true) // Server-side filter
+        .get();
+        
+    final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+    habits.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    
+    _archivedHabitsCache = habits;
+    _archivedHabitsCacheTime = DateTime.now();
+    
+    return habits;
+  }
+
+  /// Invalidate archived cache (call after archive/unarchive actions)
+  void invalidateArchivedHabitsCache() {
+    _archivedHabitsCache = null;
+    _archivedHabitsCacheTime = null;
   }
 
   Stream<List<Habit>> archivedHabitsStream(String userId) {
@@ -84,25 +210,69 @@ class HabitService {
         .collection('users')
         .doc(userId)
         .collection('habits')
+        .where('ar', isEqualTo: true) // Server-side filter
         .snapshots()
         .map((snapshot) {
           final habits = snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
-          final archived = habits.where((h) => h.archived).toList();
-          archived.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-          return archived;
+          habits.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return habits;
         });
   }
 
   Future<void> unarchiveHabit(String userId, String habitId) async {
+    // LOCAL-FIRST: Update local cache immediately
+    final local = Storage.getHabitById(habitId);
+    if (local != null) {
+      local.archived = false;
+      local.dirty = true;
+      local.updatedAtMs = DateTime.now().millisecondsSinceEpoch;
+      await local.save();
+      
+      // Recalculate streak for UI consistency
+      final habit = _localHabitToHabit(local);
+      await recalculateStreak(userId, habit);
+    }
+
     await _db
         .collection('users')
         .doc(userId)
         .collection('habits')
         .doc(habitId)
         .update({
-          'archived': FieldValue.delete(), // Remove legacy
-          'ar': FieldValue.delete(),       // Remove new (omitted = false)
+          'archived': FieldValue.delete(), // Clear legacy
+          'ar': false,                     // Set explicitly for server-side filtering
         });
+  }
+
+  Habit _localHabitToHabit(LocalHabit lh) {
+    return Habit(
+      id: lh.id,
+      name: lh.name,
+      color: Color(lh.colorValue),
+      iconCodePoint: lh.iconCodePoint,
+      iconFamily: lh.iconFamily,
+      iconPackage: lh.iconPackage,
+      category: lh.category,
+      type: HabitType.values[lh.typeIndex],
+      targetValue: lh.targetValue,
+      unit: lh.unit,
+      comparator: HabitComparator.values[lh.comparatorIndex],
+      frequencyType: HabitFrequencyType.values[lh.frequencyTypeIndex],
+      weekDays: lh.weekDays.toSet(),
+      intervalDays: lh.intervalDays,
+      frequencyPeriod: lh.frequencyPeriodIndex != null ? HabitPeriod.values[lh.frequencyPeriodIndex!] : null,
+      frequencyGoal: lh.frequencyGoal,
+      startDate: DateTime.fromMillisecondsSinceEpoch(lh.startDateMs),
+      endDate: lh.endDateMs != null ? DateTime.fromMillisecondsSinceEpoch(lh.endDateMs!) : null,
+      totalCompletions: lh.totalCompletions,
+      currentStreak: lh.currentStreak,
+      longestStreak: lh.longestStreak,
+      sortOrder: lh.sortOrder,
+      last7: _decodeJsonMap(lh.last7Json)?.map((k, v) => MapEntry(k, (v as num).toDouble())) ?? {},
+      archived: lh.archived,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(lh.createdAtMs),
+      connectedCourseIds: lh.connectedCourseIds,
+    );
   }
 
   Future<void> createHabit(String userId, Habit habit) async {
@@ -134,12 +304,45 @@ class HabitService {
        ref = _db.collection('users').doc(userId).collection('habits').doc(habitWithOrder.id);
     }
     
-    final data = habitWithOrder.toFirestore();
+    final habitWithId = habitWithOrder.copyWith(id: finalId);
+
+    // LOCAL-FIRST: Write to Hive cache immediately
+    final localHabit = LocalHabit(
+      id: habitWithId.id,
+      uid: userId,
+      updatedAtMs: DateTime.now().millisecondsSinceEpoch,
+      name: habitWithId.name,
+      colorValue: habitWithId.color.toARGB32(),
+      iconCodePoint: habitWithId.iconCodePoint,
+      iconFamily: habitWithId.iconFamily,
+      iconPackage: habitWithId.iconPackage,
+      category: habitWithId.category,
+      typeIndex: habitWithId.type.index,
+      targetValue: habitWithId.targetValue,
+      unit: habitWithId.unit,
+      comparatorIndex: habitWithId.comparator.index,
+      frequencyTypeIndex: habitWithId.frequencyType.index,
+      weekDays: habitWithId.weekDays.toList(),
+      intervalDays: habitWithId.intervalDays,
+      frequencyPeriodIndex: habitWithId.frequencyPeriod?.index,
+      frequencyGoal: habitWithId.frequencyGoal,
+      startDateMs: habitWithId.startDate.millisecondsSinceEpoch,
+      endDateMs: habitWithId.endDate?.millisecondsSinceEpoch,
+      totalCompletions: habitWithId.totalCompletions,
+      currentStreak: habitWithId.currentStreak,
+      longestStreak: habitWithId.longestStreak,
+      sortOrder: habitWithId.sortOrder,
+      last7Json: jsonEncode(habitWithId.last7),
+      archived: habitWithId.archived,
+      createdAtMs: habitWithId.createdAt.millisecondsSinceEpoch,
+      connectedCourseIds: habitWithId.connectedCourseIds,
+      dirty: true,
+    );
+    await Storage.putHabit(localHabit);
     
+    final data = habitWithId.toFirestore();
     await ref.set(data);
     
-    // Use the correctly identified ID for streak calculation
-    final habitWithId = habitWithOrder.copyWith(id: finalId);
     await recalculateStreak(userId, habitWithId);
   }
 
@@ -149,14 +352,30 @@ class HabitService {
     required DateTime date,
     required bool completed,
     double? value,
+    bool mondayFirst = true,
   }) async {
+    // Prevent toggling for dates before start date
+    final d = DateTime(date.year, date.month, date.day);
+    final s = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
+    if (d.isBefore(s)) return;
+
+    // RULE: Enforce Period Limits (Prevent "double-tap" race condition for rapid UI updates)
+    // If habit is "Repeats in Period" (e.g. 3x/Week) AND we are trying to Complete it...
+    // Check if we have ALREADY met the goal. If so, ignore this toggle.
+    if (completed && habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+       final localHistory = Storage.getHabitHistoryFromCache(habit.id);
+       final completionMap = <String, double>{};
+       for (final entry in localHistory) {
+         if (!entry.deleted && (entry.value ?? 1.0) >= habit.targetValue) {
+           completionMap[entry.dateKey] = entry.value ?? 1.0;
+         }
+       }
+        if (habit.isGoalMetForPeriod(completionMap, date, mondayFirst: mondayFirst)) {
+          return; // Goal already met, ignore this extra tap
+       }
+    }
+
     final dateKey = _dateKey(date);
-    final habitRef = _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .doc(habit.id);
-    final historyRef = habitRef.collection('history').doc(dateKey);
 
     // If Time habit manual update (setting a value), we need to calculate 'm' (manual component).
     double? manualComponent;
@@ -179,70 +398,176 @@ class HabitService {
        manualComponent = m;
     }
 
-    await _db.runTransaction((transaction) async {
-      final habitSnap = await transaction.get(habitRef);
-      if (!habitSnap.exists) throw Exception("Habit not found");
-      final habitData = habitSnap.data() ?? {};
-
-      // 1. Update History
-      if (completed) {
-        final data = {
-          'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
-          'updatedAt': FieldValue.serverTimestamp(),
-          'v': value ?? 1.0, 
-        };
-        if (manualComponent != null) {
-           data['m'] = manualComponent;
-        }
-        transaction.set(historyRef, data, SetOptions(merge: true));
-      } else {
-        transaction.delete(historyRef);
+    // LOCAL-FIRST: Write to Hive cache immediately for instant UI updates
+    final localHistoryId = '${habit.id}_$dateKey';
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    
+    if (completed) {
+      final localEntry = LocalHabitHistory(
+        id: localHistoryId,
+        uid: userId,
+        habitId: habit.id,
+        dateKey: dateKey,
+        completedAtMs: d.millisecondsSinceEpoch,
+        updatedAtMs: nowMs,
+        value: value ?? 1.0,
+        manualValue: manualComponent,
+        dirty: true,
+        deleted: false,
+      );
+      await Storage.putHabitHistory(localEntry);
+    } else {
+      // Mark as deleted in local cache
+      final existing = Storage.getHabitHistoryFromCache(habit.id)
+          .where((e) => e.dateKey == dateKey)
+          .firstOrNull;
+      if (existing != null) {
+        existing.deleted = true;
+        existing.dirty = true;
+        existing.updatedAtMs = nowMs;
+        await Storage.putHabitHistory(existing);
       }
+    }
 
-      // 2. Update Stats
-      final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
-      int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
-      
-      final l7Map = (habitData['l7'] ?? habitData['last7'] ?? {}) as Map<String, dynamic>;
-      // Refined logic:
-      final double oldVal = (l7Map[dateKey] as num?)?.toDouble() ?? 0.0;
-      final bool wasMet = oldVal >= habit.targetValue;
-      final bool nowMet = completed && (value ?? 1.0) >= habit.targetValue;
-
-      if (nowMet && !wasMet) {
-        total++;
-      } else if (!nowMet && wasMet) {
-        total = (total > 0) ? total - 1 : 0;
-      }
-
-      // 3. Robust Update for l7
-      final hasL7Container = habitData.containsKey('l7');
-      
-      final updates = <String, dynamic>{
-        'st.tc': total, 
-      };
-      
-      // We want to show partial progress in UI, so update l7 if value > 0
-      final double effectiveValue = value ?? ((habit.type == HabitType.yesNo) ? 1.0 : 0.0);
-      final shouldShowInL7 = completed && effectiveValue > 0;
-      
-      if (shouldShowInL7) {
-         if (hasL7Container) {
-            updates['l7.$dateKey'] = (value ?? 1.0);
-         } else {
-            updates['l7'] = { dateKey: (value ?? 1.0) };
-         }
-      } else {
-         if (hasL7Container) {
-            updates['l7.$dateKey'] = FieldValue.delete();
-         }
-      }
-      
-      transaction.update(habitRef, updates);
-    });
-
-    await recalculateStreak(userId, habit);
+    // Update streak locally immediately
+    await recalculateStreak(userId, habit, mondayFirst: mondayFirst);
+    
+    // Update Total Completions locally immediately
+    final localHabit = Storage.getHabitById(habit.id);
+    if (localHabit != null) {
+       int currentTotal = localHabit.totalCompletions;
+       if (completed) {
+         currentTotal++;
+       } else {
+         currentTotal = (currentTotal > 0) ? currentTotal - 1 : 0;
+       }
+       localHabit.totalCompletions = currentTotal;
+       
+       // Update 'last7' local cache for immediate UI reflection of "Done/Not Done"
+       // We need to parse json, update, save.
+       // Actually 'toggleCompletion' doesn't explicitly update 'last7' in LocalHabit here?
+       // The UI derives 'last7' from... actually Habit object has it.
+       // The 'LocalHabit' cache stores it. If we don't update it, the stream won't show it?
+       // Wait, is 'last7' used for the dots? Yes.
+       // We should update 'last7' map in localHabit to be safe.
+       final Map<String, dynamic> last7 = localHabit.last7Json.isNotEmpty
+           ? jsonDecode(localHabit.last7Json) 
+           : {};
+       if (completed) {
+          last7[dateKey] = value ?? 1.0;
+       } else {
+          last7.remove(dateKey); // OR set to 0? usually remove if toggling off
+       }
+       localHabit.last7Json = jsonEncode(last7);
+       
+       localHabit.dirty = true;
+       localHabit.updatedAtMs = DateTime.now().millisecondsSinceEpoch;
+       await localHabit.save();
+    }
+    
+    // Notify listeners immediately so UI updates
     _historyUpdateController.add(null);
+
+    // Sync to Firebase in background (Fire-and-forget for UI)
+    unawaited(_syncCompletionToFirebase(
+      userId: userId, 
+      habit: habit, 
+      date: date, 
+      dateKey: dateKey, 
+      completed: completed, 
+      value: value, 
+      manualComponent: manualComponent
+    ));
+  }
+  
+  Future<void> _syncCompletionToFirebase({
+    required String userId,
+    required Habit habit,
+    required DateTime date,
+    required String dateKey,
+    required bool completed,
+    double? value,
+    double? manualComponent,
+  }) async {
+    try {
+      final habitRef = _db
+          .collection('users')
+          .doc(userId)
+          .collection('habits')
+          .doc(habit.id);
+      final historyRef = habitRef.collection('history').doc(dateKey);
+
+      await _db.runTransaction((transaction) async {
+        final habitSnap = await transaction.get(habitRef);
+        if (!habitSnap.exists) return; // Habit might have been deleted
+        final habitData = habitSnap.data() ?? {};
+
+        // 1. Update History
+        if (completed) {
+          final data = {
+            'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)), 
+            'updatedAt': FieldValue.serverTimestamp(),
+            'v': value ?? 1.0, 
+          };
+          if (manualComponent != null) {
+             data['m'] = manualComponent;
+          }
+          transaction.set(historyRef, data, SetOptions(merge: true));
+        } else {
+          transaction.delete(historyRef);
+        }
+
+        // 2. Update Stats
+        final statsMap = (habitData['st'] ?? habitData['stats'] ?? {}) as Map<String, dynamic>;
+        int total = statsMap['tc'] ?? statsMap['totalCompletions'] ?? 0;
+        
+        final l7Map = (habitData['l7'] ?? habitData['last7'] ?? {}) as Map<String, dynamic>;
+        // Refined logic:
+        final double oldVal = (l7Map[dateKey] as num?)?.toDouble() ?? 0.0;
+        final bool wasMet = oldVal >= habit.targetValue;
+        final bool nowMet = completed && (value ?? 1.0) >= habit.targetValue;
+
+        if (nowMet && !wasMet) {
+          total++;
+        } else if (!nowMet && wasMet) {
+          total = (total > 0) ? total - 1 : 0;
+        }
+
+        // 3. Robust Update for l7
+        final hasL7Container = habitData.containsKey('l7');
+        
+        final updates = <String, dynamic>{
+          'st.tc': total, 
+        };
+        
+        // We want to show partial progress in UI, so update l7 if value > 0
+        final double effectiveValue = value ?? ((habit.type == HabitType.yesNo) ? 1.0 : 0.0);
+        final shouldShowInL7 = completed && effectiveValue > 0;
+        
+        if (shouldShowInL7) {
+           if (hasL7Container) {
+              updates['l7.$dateKey'] = (value ?? 1.0);
+           } else {
+              updates['l7'] = { dateKey: (value ?? 1.0) };
+           }
+        } else {
+           if (hasL7Container) {
+              updates['l7.$dateKey'] = FieldValue.delete();
+           }
+        }
+        
+        transaction.update(habitRef, updates);
+      });
+      
+      // Also update remote streak values based on local calculation
+      // Since recalculateStreak writes to local cache which syncService pushes, 
+      // we might want to push explicit streak update to Firestore here to keep them in sync faster.
+      // But SyncService should pick up the dirty habit change from recalculateStreak.
+      // However, recalculateStreak updates 'st.cs' and 'st.ls' in Firestore too?
+      // Yes, _updateStreaks does that.
+    } catch (_) {
+      // Background sync failed - SyncService will pick it up later via dirty flags
+    }
   }
 
   /// Load history for a month/range
@@ -268,6 +593,15 @@ class HabitService {
 
   Future<void> deleteHabit(String userId, String habitId) async {
     await Storage.removeHabitFromOrder(habitId);
+
+    // LOCAL-FIRST: Mark as deleted in local cache
+    final local = Storage.getHabitById(habitId);
+    if (local != null) {
+      local.deleted = true;
+      local.dirty = true;
+      local.updatedAtMs = DateTime.now().millisecondsSinceEpoch;
+      await local.save();
+    }
 
     final habitRef = _db.collection('users').doc(userId).collection('habits').doc(habitId);
     
@@ -336,160 +670,171 @@ class HabitService {
      _historyUpdateController.add(null);
   }
 
-  Future<void> recalculateStreak(String userId, Habit habit) async {
-    // Fetch ALL history. Sort in memory.
-    final historySnap = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .doc(habit.id)
-        .collection('history')
-        .get();
-
-    final historyDocs = historySnap.docs;
+  Future<void> recalculateStreak(String userId, Habit habit, {bool mondayFirst = true}) async {
+    // LOCAL-ONLY calculation. No Firestore reads.
+    final localHistory = Storage.getHabitHistoryFromCache(habit.id);
     
-    // Sort descending by ID (YYYY-MM-DD)
-    historyDocs.sort((a, b) => b.id.compareTo(a.id));
-
-    final historyDates = historyDocs.where((doc) {
-       final data = doc.data();
-       final val = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 0.0;
-       return val >= habit.targetValue;
-    }).map((doc) {
-       final parts = doc.id.split('-');
-       if (parts.length == 3) {
-         return DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-       }
-       return DateTime.now();
-    }).toSet();
-
-    final fullCompletionMap = historyDocs.fold<Map<String, double>>({}, (map, doc) {
-      final data = doc.data();
-      map[doc.id] = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 0.0;
-      return map;
-    });
+    // Create a map for fast lookup
+    final fullCompletionMap = <String, double>{};
+    for (final entry in localHistory) {
+      if (!entry.deleted && (entry.value ?? 1.0) >= habit.targetValue) {
+        fullCompletionMap[entry.dateKey] = entry.value ?? 1.0;
+      }
+    }
 
     int currentStreakValue = 0;
     int longestStreakValue = 0;
 
     DateTime checkDate = DateTime.now();
     checkDate = DateTime(checkDate.year, checkDate.month, checkDate.day);
-    final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
+    
+    // Determine Effective Start Date: Earliest of (Habit Start Date, Earliest History)
+    // This fixes the issue where backfilled data/started-earlier data wasn't counting towards streaks
+    // because the loop strictly stopped at 'startDate'.
+    DateTime start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
+    if (fullCompletionMap.isNotEmpty) {
+       final sortedKeys = fullCompletionMap.keys.toList()..sort();
+       if (sortedKeys.isNotEmpty) {
+          final firstKey = sortedKeys.first;
+          final parts = firstKey.split('-');
+          if (parts.length == 3) {
+             final firstDate = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+             if (firstDate.isBefore(start)) {
+                start = firstDate;
+             }
+          }
+       }
+    }
 
     if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-       // --- Period-based Streak (count DAYS, not periods) ---
-       DateTime currentPeriodCheck = _getPeriodStart(habit, checkDate);
-
+       // --- Period-based Streak ---
+       // A streak is defined as consecutive periods where the goal count was met.
+       
        // 1. Current Streak (Backwards)
-       while (!_getPeriodEnd(habit, currentPeriodCheck).isBefore(start)) {
-          final pStart = currentPeriodCheck;
+       DateTime pStart = _getPeriodStart(habit, checkDate, mondayFirst: mondayFirst);
+       
+       // Fix: Ensure we check periods that CONTAIN the effective start date.
+       // (pStart of 'Jan 1' is Before 'Jan 5', but the period includes Jan 5, so we must process it).
+       // Loop continues as long as the Period END is NOT before the Start Date.
+       while (!_getPeriodEnd(habit, pStart).isBefore(start)) {
           final pEnd = _getPeriodEnd(habit, pStart);
-          final isCurrent = !checkDate.isBefore(pStart) && !checkDate.isAfter(pEnd);
           
-          // Count only valid completed days in this period
-          int completed = 0;
+          // Count usage in this period
+          int completions = 0;
           for (final dateKey in fullCompletionMap.keys) {
              final parts = dateKey.split('-');
              if (parts.length != 3) continue;
+             // Using effective start date logic implicitly by just checking pStart/pEnd bounds
              final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
              
-             // Must be within period AND NOT before habit start
-             if (!d.isBefore(pStart) && !d.isAfter(pEnd) && !d.isBefore(start)) {
+             if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
                 if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
-                   completed++;
+                  completions++; 
                 }
              }
           }
           
-          final bool met = completed >= (habit.frequencyGoal ?? 1);
+          final bool met = completions >= (habit.frequencyGoal ?? 1);
+          final bool isCurrentPeriod = !checkDate.isBefore(pStart) && !checkDate.isAfter(pEnd);
           
-          if (isCurrent) {
-             // Current active period: always add progress so far
-             currentStreakValue += completed;
+          if (met) {
+             currentStreakValue++;
           } else {
-             // Past period: only add if goal was met
-             if (met) {
-                currentStreakValue += completed;
+             // Not met
+             if (isCurrentPeriod) {
+                // Current period In-Progress: doesn't break streak, but doesn't add to it (unless met)
              } else {
-                break; // Streak broken
-             }
-          }
-          currentPeriodCheck = _subtractPeriod(habit, currentPeriodCheck);
-       }
-
-       // 2. Longest Streak (Forwards)
-       int tempStreak = 0;
-       DateTime forwardPeriodCheck = _getPeriodStart(habit, start);
-       while (!_getPeriodEnd(habit, forwardPeriodCheck).isBefore(start) && !forwardPeriodCheck.isAfter(checkDate)) {
-          final pStart = forwardPeriodCheck;
-          final pEnd = _getPeriodEnd(habit, pStart);
-          final isCurrent = !checkDate.isBefore(pStart) && !checkDate.isAfter(pEnd);
-          
-          int completed = 0;
-          for (final dateKey in fullCompletionMap.keys) {
-             final parts = dateKey.split('-');
-             if (parts.length != 3) continue;
-             final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-             if (!d.isBefore(pStart) && !d.isAfter(pEnd) && !d.isBefore(start)) {
-                if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
-                   completed++;
-                }
+                // Past failed period -> Break Streak
+                break;
              }
           }
           
-          final bool met = completed >= (habit.frequencyGoal ?? 1);
-          
-          if (met || isCurrent) {
-             tempStreak += completed;
-             if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
-          } else {
-             tempStreak = 0;
-          }
-          forwardPeriodCheck = _addPeriod(habit, forwardPeriodCheck);
+          pStart = _subtractPeriod(habit, pStart);
        }
-    } else {
-       // --- Day-based Streak ---
-       int tempStreak = 0;
-       DateTime currentCheck = checkDate;
        
-       while (!currentCheck.isBefore(start)) {
-          final isScheduled = habit.isScheduledFor(currentCheck);
-          if (isScheduled) {
-            final isCompleted = historyDates.contains(currentCheck);
-            if (isCompleted) {
-              currentStreakValue++;
-            } else {
-              final isToday = currentCheck.year == DateTime.now().year &&
-                  currentCheck.month == DateTime.now().month &&
-                  currentCheck.day == DateTime.now().day;
-              if (!isToday) break;
-            }
-          }
-          currentCheck = currentCheck.subtract(const Duration(days: 1));
+       // 2. Longest Streak (Forward)
+       // Iterate periods forward from start
+       int tempStreak = 0;
+       pStart = _getPeriodStart(habit, start, mondayFirst: mondayFirst); // Start from effective start's period
+       
+       // We need to iterate until checkDate (Current Period)
+       while (!pStart.isAfter(checkDate)) {
+           final pEnd = _getPeriodEnd(habit, pStart);
+           
+           int completions = 0;
+           for (final dateKey in fullCompletionMap.keys) {
+               final parts = dateKey.split('-');
+               if (parts.length != 3) continue;
+               final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+               if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
+                  if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
+                     completions++;
+                  }
+               }
+           }
+           
+           if (completions >= (habit.frequencyGoal ?? 1)) {
+              tempStreak++;
+              if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
+           } else {
+              tempStreak = 0;
+           }
+           pStart = _addPeriod(habit, pStart);
        }
 
-       DateTime longCheck = start;
-       while (!longCheck.isAfter(checkDate)) {
-          final isScheduled = habit.isScheduledFor(longCheck);
+    } else {
+       // --- Day-based Streak (Daily or Specific Days) ---
+       
+       // 1. Current Streak
+       DateTime walker = checkDate;
+       while (!walker.isBefore(start)) {
+          final isScheduled = habit.isScheduledFor(walker);
           if (isScheduled) {
-             if (historyDates.contains(longCheck)) {
-                tempStreak++;
-                if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
+             final dateKey = _dateKey(walker);
+             final isDone = fullCompletionMap.containsKey(dateKey);
+             
+             if (isDone) {
+                currentStreakValue++;
              } else {
-                tempStreak = 0;
+                // Not done
+                final isToday = walker.year == checkDate.year && walker.month == checkDate.month && walker.day == checkDate.day;
+                if (isToday) {
+                   // Today not done yet? Streak continues from yesterday. Don't break.
+                } else {
+                   // Past scheduled day missed -> Break
+                   break;
+                }
              }
           }
-          longCheck = longCheck.add(const Duration(days: 1));
+          walker = walker.subtract(const Duration(days: 1));
+       }
+       
+       // 2. Longest Streak
+       int tempStreak = 0;
+       walker = start;
+       while (!walker.isAfter(checkDate)) {
+           final isScheduled = habit.isScheduledFor(walker);
+           if (isScheduled) {
+               final dateKey = _dateKey(walker);
+               if (fullCompletionMap.containsKey(dateKey)) {
+                   tempStreak++;
+                   if (tempStreak > longestStreakValue) longestStreakValue = tempStreak;
+               } else {
+                   tempStreak = 0; 
+               }
+           }
+           walker = walker.add(const Duration(days: 1));
        }
     }
     
     await _updateStreaks(userId, habit.id, currentStreakValue, longestStreakValue);
   }
 
-  DateTime _getPeriodStart(Habit habit, DateTime date) {
+  DateTime _getPeriodStart(Habit habit, DateTime date, {bool mondayFirst = true}) {
     switch (habit.frequencyPeriod) {
       case HabitPeriod.week:
-        return DateTime(date.year, date.month, date.day - (date.weekday - 1));
+        final offset = mondayFirst ? (date.weekday - 1) : (date.weekday % 7);
+        return DateTime(date.year, date.month, date.day - offset);
       case HabitPeriod.month:
         return DateTime(date.year, date.month, 1);
       case HabitPeriod.year:
@@ -499,8 +844,8 @@ class HabitService {
     }
   }
 
-  DateTime _getPeriodEnd(Habit habit, DateTime date) {
-    final start = _getPeriodStart(habit, date);
+  DateTime _getPeriodEnd(Habit habit, DateTime date, {bool mondayFirst = true}) {
+    final start = _getPeriodStart(habit, date, mondayFirst: mondayFirst);
     switch (habit.frequencyPeriod) {
       case HabitPeriod.week:
         return start.add(const Duration(days: 6));
@@ -541,53 +886,119 @@ class HabitService {
 
 
   Future<void> _updateStreaks(String userId, String habitId, int current, int longest) async {
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .doc(habitId)
-        .update({
-          'st.cs': current,
-          'st.ls': longest,
-        });
+    // LOCAL-FIRST: Update Hive immediately for instant UI feedback
+    final local = Storage.getHabitById(habitId);
+    if (local != null) {
+       local.currentStreak = current;
+       local.longestStreak = longest;
+       local.dirty = true;
+       local.updatedAtMs = DateTime.now().millisecondsSinceEpoch;
+       await local.save();
+    }
+    
+    // Remote update in background (fire-and-forget)
+    unawaited(_syncStreaksToFirebase(userId, habitId, current, longest));
+    
+    // Notify listeners
     _historyUpdateController.add(null);
   }
 
-  Future<void> updateHistory(String userId, String habitId, DateTime date, double value) async {
-    final dateKey = _dateKey(date);
-    final historyRef = _db
-        .collection('users')
-        .doc(userId)
-        .collection('habits')
-        .doc(habitId)
-        .collection('history')
-        .doc(dateKey);
-
-    if (value > 0) {
-      await historyRef.set({
-        'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)),
-        'updatedAt': FieldValue.serverTimestamp(),
-        'v': value,
-      }, SetOptions(merge: true));
-    } else {
-      await historyRef.delete();
-    }
-    
-    // Recalculate streak after history change
+  Future<void> _syncStreaksToFirebase(String userId, String habitId, int current, int longest) async {
     try {
-      final habitSnap = await _db
+      await _db
           .collection('users')
           .doc(userId)
           .collection('habits')
           .doc(habitId)
-          .get();
-      if (habitSnap.exists) {
-        final habit = Habit.fromFirestore(habitSnap);
-        await recalculateStreak(userId, habit);
-      }
+          .update({
+            'st.cs': current,
+            'st.ls': longest,
+          });
     } catch (_) {}
+  }
+
+  Future<void> updateHistory(String userId, String habitId, DateTime date, double value) async {
+    final dateKey = _dateKey(date);
+    
+    // LOCAL-FIRST: Update local cache immediately
+    final localHistoryId = '${habitId}_$dateKey';
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final d = DateTime(date.year, date.month, date.day);
+
+    if (value > 0) {
+      final localEntry = LocalHabitHistory(
+          id: localHistoryId,
+          uid: userId,
+          habitId: habitId,
+          dateKey: dateKey,
+          completedAtMs: d.millisecondsSinceEpoch,
+          updatedAtMs: nowMs,
+          value: value,
+          dirty: true,
+          deleted: false,
+      );
+      await Storage.putHabitHistory(localEntry);
+    } else {
+        // Mark as deleted in local cache
+        final existing = Storage.getHabitHistoryFromCache(habitId)
+            .where((e) => e.dateKey == dateKey)
+            .firstOrNull;
+        if (existing != null) {
+            existing.deleted = true;
+            existing.dirty = true;
+            existing.updatedAtMs = nowMs;
+            await Storage.putHabitHistory(existing);
+        }
+    }
+
+    // Need habit object for streak recalc
+    // We can fetch from local storage for speed
+    final localHabit = Storage.getHabitById(habitId);
+    if (localHabit != null) {
+       final habit = _localHabitToHabit(localHabit);
+       await recalculateStreak(userId, habit);
+    }
 
     _historyUpdateController.add(null);
+
+    // Sync to Firebase in BACKGROUND (unawaited)
+    unawaited(_syncUpdateHistoryToFirebase(userId, habitId, date, dateKey, value));
+  }
+  
+  Future<void> _syncUpdateHistoryToFirebase(
+    String userId, 
+    String habitId, 
+    DateTime date, 
+    String dateKey, 
+    double value
+  ) async {
+      try {
+        final historyRef = _db
+            .collection('users')
+            .doc(userId)
+            .collection('habits')
+            .doc(habitId)
+            .collection('history')
+            .doc(dateKey);
+
+        if (value > 0) {
+          await historyRef.set({
+            'ts': Timestamp.fromDate(DateTime(date.year, date.month, date.day)),
+            'updatedAt': FieldValue.serverTimestamp(),
+            'v': value,
+          }, SetOptions(merge: true));
+        } else {
+          await historyRef.delete();
+        }
+        
+        // Use recalculateStreak implicitly? No, we need to trigger Firestore streak update potentially?
+        // But our local recalculateStreak writes to cache which SyncService pushes.
+        // However, we might want to ensure 'st' fields are updated on Firestore for consisteny if Sync isn't running.
+        // For robustness, let's trigger a recalc if we had the habit object. 
+        // But we don't have it here easily without fetching.
+        // Let's assume SyncService handles the dirty local habit propagation for streaks.
+        
+      } catch (_) {}
   }
 
   Future<void> updateHabitProgressFromCourse({
@@ -679,7 +1090,7 @@ class HabitService {
         });
       });
       
-      await recalculateStreak(userId, habit);
+      await recalculateStreak(userId, habit); // Default mondayFirst is fine for auto-sync for now, or we can improve this later
     }
   }
 
@@ -841,5 +1252,14 @@ class HabitService {
 
     await recalculateStreak(userId, habit);
     _historyUpdateController.add(null);
+  }
+
+  Map<String, dynamic>? _decodeJsonMap(String json) {
+    if (json.isEmpty) return null;
+    try {
+      return Map<String, dynamic>.from(jsonDecode(json) as Map);
+    } catch (_) {
+      return null;
+    }
   }
 }

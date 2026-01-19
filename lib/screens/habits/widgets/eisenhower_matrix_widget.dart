@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../models/habit.dart';
 import 'habit_completion_indicator.dart';
 import '../../../services/storage.dart';
+import '../../../app_state.dart';
 
 /// A single quadrant panel in the Eisenhower matrix
 class _QuadrantPanel extends StatelessWidget {
@@ -118,7 +120,11 @@ class _MatrixHabitChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final habitColor = habit.color;
-    final isComplete = habit.isGoalMetForPeriod(habit.last7, selectedDate);
+    final isComplete = habit.isGoalMetForPeriod(
+      habit.last7, 
+      selectedDate,
+      mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
+    );
 
     return LongPressDraggable<Habit>(
       data: habit,

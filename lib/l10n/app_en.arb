@@ -47,6 +47,12 @@
       }
     }
   },
+  "sessionsFound": "{count, plural, =0{No sessions found} one{1 session found} other{{count} sessions found}}",
+  "@sessionsFound": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "habitReportDownloadCountdown": "Report generation will start in {seconds} seconds",
   "@habitReportDownloadCountdown": {
     "placeholders": {
@@ -902,6 +908,7 @@
   "habitResetProgressAction": "Reset",
   "habitFrequencyRepeatsTitle": "Repeats",
   "habitFrequencyEveryXDays": "Every {count} days",
+  "habitDragToCategorize": "Drag to categorize",
   "@habitFrequencyEveryXDays": {
      "placeholders": {
         "count": {"type": "int"}
@@ -921,6 +928,13 @@
       "path": {
         "type": "String"
       }
+    }
+  },
+  "habitReportFileName": "habits_{month}_{year}",
+  "@habitReportFileName": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "year": { "type": "int" }
     }
   },
   "habitReportFailed": "Export failed: {error}",

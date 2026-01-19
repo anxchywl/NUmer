@@ -316,6 +316,12 @@ abstract class AppLocalizations {
   /// **'Export failed: {error}'**
   String exportFailedMessage(String error);
 
+  /// No description provided for @sessionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No sessions found} one{1 session found} other{{count} sessions found}}'**
+  String sessionsFound(int count);
+
   /// No description provided for @habitReportDownloadCountdown.
   ///
   /// In en, this message translates to:
@@ -3562,6 +3568,12 @@ abstract class AppLocalizations {
   /// **'Every {count} days'**
   String habitFrequencyEveryXDays(int count);
 
+  /// No description provided for @habitDragToCategorize.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag to categorize'**
+  String get habitDragToCategorize;
+
   /// No description provided for @habitStatsEmptyState.
   ///
   /// In en, this message translates to:
@@ -3609,6 +3621,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Saved to: {path}'**
   String habitReportSaved(String path);
+
+  /// No description provided for @habitReportFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'habits_{month}_{year}'**
+  String habitReportFileName(String month, int year);
 
   /// No description provided for @habitReportFailed.
   ///

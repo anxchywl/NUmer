@@ -344,6 +344,192 @@ class LocalConflict extends HiveObject {
   int timestampMs;
 }
 
+@HiveType(typeId: 16)
+class LocalHabit extends HiveObject with SyncEntity {
+  LocalHabit({
+    required this.id,
+    required this.uid,
+    required this.updatedAtMs,
+    required this.name,
+    required this.colorValue,
+    required this.iconCodePoint,
+    this.iconFamily,
+    this.iconPackage,
+    required this.category,
+    required this.typeIndex,
+    required this.targetValue,
+    this.unit,
+    required this.comparatorIndex,
+    required this.frequencyTypeIndex,
+    required this.weekDays,
+    required this.intervalDays,
+    this.frequencyPeriodIndex,
+    this.frequencyGoal,
+    required this.startDateMs,
+    this.endDateMs,
+    required this.totalCompletions,
+    required this.currentStreak,
+    required this.longestStreak,
+    required this.sortOrder,
+    required this.last7Json,
+    required this.archived,
+    required this.createdAtMs,
+    required this.connectedCourseIds,
+    this.dirty = true,
+    this.deleted = false,
+  });
+
+  @override
+  @HiveField(0)
+  String id;
+
+  @override
+  @HiveField(1)
+  String uid;
+
+  @override
+  @HiveField(2)
+  int updatedAtMs;
+
+  @override
+  @HiveField(3)
+  bool dirty;
+
+  @override
+  @HiveField(4)
+  bool deleted;
+
+  @HiveField(5)
+  String name;
+
+  @HiveField(6)
+  int colorValue;
+
+  @HiveField(7)
+  int iconCodePoint;
+
+  @HiveField(8)
+  String? iconFamily;
+
+  @HiveField(9)
+  String? iconPackage;
+
+  @HiveField(10)
+  String category;
+
+  @HiveField(11)
+  int typeIndex; // HabitType.index
+
+  @HiveField(12)
+  double targetValue;
+
+  @HiveField(13)
+  String? unit;
+
+  @HiveField(14)
+  int comparatorIndex; // HabitComparator.index
+
+  @HiveField(15)
+  int frequencyTypeIndex; // HabitFrequencyType.index
+
+  @HiveField(16)
+  List<int> weekDays;
+
+  @HiveField(17)
+  int intervalDays;
+
+  @HiveField(18)
+  int? frequencyPeriodIndex; // HabitPeriod.index
+
+  @HiveField(19)
+  int? frequencyGoal;
+
+  @HiveField(20)
+  int startDateMs;
+
+  @HiveField(21)
+  int? endDateMs;
+
+  @HiveField(22)
+  int totalCompletions;
+
+  @HiveField(23)
+  int currentStreak;
+
+  @HiveField(24)
+  int longestStreak;
+
+  @HiveField(25)
+  int sortOrder;
+
+  @HiveField(26)
+  String last7Json; // JSON encoded Map<String,double>
+
+  @HiveField(27)
+  bool archived;
+
+  @HiveField(28)
+  int createdAtMs;
+
+  @HiveField(29)
+  List<String> connectedCourseIds;
+}
+
+@HiveType(typeId: 17)
+class LocalHabitHistory extends HiveObject with SyncEntity {
+  LocalHabitHistory({
+    required this.id,
+    required this.uid,
+    required this.habitId,
+    required this.dateKey,
+    required this.completedAtMs,
+    required this.updatedAtMs,
+    this.note,
+    this.value,
+    this.manualValue,
+    this.dirty = true,
+    this.deleted = false,
+  });
+
+  @override
+  @HiveField(0)
+  String id; // Composite: habitId_dateKey
+
+  @override
+  @HiveField(1)
+  String uid;
+
+  @HiveField(2)
+  String habitId;
+
+  @HiveField(3)
+  String dateKey; // YYYY-MM-DD
+
+  @HiveField(4)
+  int completedAtMs;
+
+  @override
+  @HiveField(5)
+  int updatedAtMs;
+
+  @HiveField(6)
+  String? note;
+
+  @HiveField(7)
+  double? value;
+
+  @HiveField(8)
+  double? manualValue;
+
+  @override
+  @HiveField(9)
+  bool dirty;
+
+  @override
+  @HiveField(10)
+  bool deleted;
+}
+
 class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
   @override
   final int typeId = 10;
@@ -572,5 +758,119 @@ class LocalConflictAdapter extends TypeAdapter<LocalConflict> {
       ..write(obj.remoteUpdatedAtMs)
       ..write(obj.resolvedWithRemote)
       ..write(obj.timestampMs);
+  }
+}
+
+class LocalHabitAdapter extends TypeAdapter<LocalHabit> {
+  @override
+  final int typeId = 16;
+
+  @override
+  LocalHabit read(BinaryReader reader) {
+    return LocalHabit(
+      id: reader.read() as String,
+      uid: reader.read() as String,
+      updatedAtMs: reader.read() as int,
+      dirty: reader.read() as bool,
+      deleted: reader.read() as bool,
+      name: reader.read() as String,
+      colorValue: reader.read() as int,
+      iconCodePoint: reader.read() as int,
+      iconFamily: reader.read() as String?,
+      iconPackage: reader.read() as String?,
+      category: reader.read() as String,
+      typeIndex: reader.read() as int,
+      targetValue: reader.read() as double,
+      unit: reader.read() as String?,
+      comparatorIndex: reader.read() as int,
+      frequencyTypeIndex: reader.read() as int,
+      weekDays: (reader.read() as List).cast<int>(),
+      intervalDays: reader.read() as int,
+      frequencyPeriodIndex: reader.read() as int?,
+      frequencyGoal: reader.read() as int?,
+      startDateMs: reader.read() as int,
+      endDateMs: reader.read() as int?,
+      totalCompletions: reader.read() as int,
+      currentStreak: reader.read() as int,
+      longestStreak: reader.read() as int,
+      sortOrder: reader.read() as int,
+      last7Json: reader.read() as String,
+      archived: reader.read() as bool,
+      createdAtMs: reader.read() as int,
+      connectedCourseIds: (reader.read() as List).cast<String>(),
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, LocalHabit obj) {
+    writer
+      ..write(obj.id)
+      ..write(obj.uid)
+      ..write(obj.updatedAtMs)
+      ..write(obj.dirty)
+      ..write(obj.deleted)
+      ..write(obj.name)
+      ..write(obj.colorValue)
+      ..write(obj.iconCodePoint)
+      ..write(obj.iconFamily)
+      ..write(obj.iconPackage)
+      ..write(obj.category)
+      ..write(obj.typeIndex)
+      ..write(obj.targetValue)
+      ..write(obj.unit)
+      ..write(obj.comparatorIndex)
+      ..write(obj.frequencyTypeIndex)
+      ..write(obj.weekDays)
+      ..write(obj.intervalDays)
+      ..write(obj.frequencyPeriodIndex)
+      ..write(obj.frequencyGoal)
+      ..write(obj.startDateMs)
+      ..write(obj.endDateMs)
+      ..write(obj.totalCompletions)
+      ..write(obj.currentStreak)
+      ..write(obj.longestStreak)
+      ..write(obj.sortOrder)
+      ..write(obj.last7Json)
+      ..write(obj.archived)
+      ..write(obj.createdAtMs)
+      ..write(obj.connectedCourseIds);
+  }
+}
+
+class LocalHabitHistoryAdapter extends TypeAdapter<LocalHabitHistory> {
+  @override
+  final int typeId = 17;
+
+  @override
+  LocalHabitHistory read(BinaryReader reader) {
+    return LocalHabitHistory(
+      id: reader.read() as String,
+      uid: reader.read() as String,
+      habitId: reader.read() as String,
+      dateKey: reader.read() as String,
+      completedAtMs: reader.read() as int,
+      updatedAtMs: reader.read() as int,
+      note: reader.read() as String?,
+      value: reader.read() as double?,
+      manualValue: reader.read() as double?,
+      dirty: reader.read() as bool,
+      deleted: reader.read() as bool,
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, LocalHabitHistory obj) {
+    writer
+      ..write(obj.id)
+      ..write(obj.uid)
+      ..write(obj.habitId)
+      ..write(obj.dateKey)
+      ..write(obj.completedAtMs)
+      ..write(obj.updatedAtMs)
+      ..write(obj.note)
+      ..write(obj.value)
+      ..write(obj.manualValue)
+      ..write(obj.dirty)
+      ..write(obj.deleted);
   }
 }

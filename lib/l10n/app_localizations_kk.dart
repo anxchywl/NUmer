@@ -12,7 +12,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get settingsTitle => 'Есептік жазба және баптаулар';
 
   @override
-  String get account => 'Параметрлер';
+  String get account => 'Аккаунт';
 
   @override
   String get profile => 'Профиль';
@@ -122,6 +122,17 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String exportFailedMessage(String error) {
     return 'Экспорттау сәтсіз аяқталды: $error';
+  }
+
+  @override
+  String sessionsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сессия табылды',
+      zero: 'Сессия табылмады',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1664,7 +1675,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitStartDateLabel => 'Басталу күні';
 
   @override
-  String get habitEndDateLabel => 'Аяқталу күні (қалауыңызша)';
+  String get habitEndDateLabel => 'Аяқталу күні';
 
   @override
   String get habitNoEndDate => 'Аяқтау күні жоқ';
@@ -1893,6 +1904,9 @@ class AppLocalizationsKk extends AppLocalizations {
   }
 
   @override
+  String get habitDragToCategorize => 'Санатқа бөлу үшін сүйреңіз';
+
+  @override
   String get habitStatsEmptyState =>
       'Әдеттер табылмады. Прогрессті қадағалау үшін әдет қосыңыз. Бұл өте керемет, сеніңіз!';
 
@@ -1917,6 +1931,11 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String habitReportSaved(String path) {
     return 'Сақталды: $path';
+  }
+
+  @override
+  String habitReportFileName(String month, int year) {
+    return 'әдеттер_${month}_$year';
   }
 
   @override

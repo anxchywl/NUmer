@@ -66,7 +66,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get wantToReceiveNudgesDescription =>
-      'Разрешить участникам группы отправлять вам мягкие напоминания.';
+      'Разрешить участникам группы отправлять вам напоминания.';
 
   @override
   String get eisenhowerMatrixDescription =>
@@ -123,6 +123,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String exportFailedMessage(String error) {
     return 'Экспорт не удался: $error';
+  }
+
+  @override
+  String sessionsFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count сессий найдено',
+      few: '$count сессии найдено',
+      one: '$count сессия найдена',
+      zero: 'Сессий не найдено',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1585,7 +1598,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitYesNo => 'Да / Нет';
 
   @override
-  String get habitNumeric => 'Числовая';
+  String get habitNumeric => 'Числовой';
 
   @override
   String get habitTime => 'Время';
@@ -1750,7 +1763,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitArchivedLabel => 'В архиве';
 
   @override
-  String get habitResetProgressTitle => 'Сбросить прогресс привычки';
+  String get habitResetProgressTitle => 'Сбросить прогресс';
 
   @override
   String get habitResetProgressSubtitle => 'Удаляет всю историю';
@@ -1917,6 +1930,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get habitDragToCategorize => 'Перетащите для распределения';
+
+  @override
   String get habitStatsEmptyState =>
       'Привычек не найдено. Добавьте привычку, чтобы начать отслеживать прогресс. Это круто, поверьте!';
 
@@ -1941,6 +1957,11 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String habitReportSaved(String path) {
     return 'Сохранено: $path';
+  }
+
+  @override
+  String habitReportFileName(String month, int year) {
+    return 'привычки_${month}_$year';
   }
 
   @override

@@ -2,7 +2,7 @@ name: numer_app
 description: Study Group app with onboarding, courses, timer, and alarms
 publish_to: "none"
 
-version: 1.0.0+13
+version: 1.0.0+15
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

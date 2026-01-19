@@ -1884,7 +1884,7 @@ class _StatsScreenState extends State<StatsScreen> {
         // 4. Generate File
         // Localized filename: habits_MonthName_YYYY.{format}
         final fileExtension = format == 'excel' ? 'xlsx' : 'csv';
-        final fileName = "habits_${monthName}_${monthDate.year}.$fileExtension";
+        final fileName = "${l10n.habitReportFileName(monthName, monthDate.year)}.$fileExtension";
         
         final String path;
         if (format == 'excel') {

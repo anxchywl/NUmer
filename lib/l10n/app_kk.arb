@@ -1,6 +1,6 @@
 {
   "settingsTitle": "Есептік жазба және баптаулар",
-  "account": "Параметрлер",
+  "account": "Аккаунт",
   "profile": "Профиль",
   "appearance": "Сыртқы түрі",
   "system": "Жүйелік",
@@ -45,6 +45,12 @@
       "error": {
         "type": "String"
       }
+    }
+  },
+  "sessionsFound": "{count, plural, =0{Сессия табылмады} other{{count} сессия табылды}}",
+  "@sessionsFound": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "fileSavedSuccessfully": "Файл сәтті сақталды",
@@ -803,7 +809,7 @@
   "habitChooseTimeRangeTitle": "Бастау мерзімін таңдаңыз",
   "habitSchedulingTitle": "Кесте",
   "habitStartDateLabel": "Басталу күні",
-  "habitEndDateLabel": "Аяқталу күні (қалауыңызша)",
+  "habitEndDateLabel": "Аяқталу күні",
   "habitNoEndDate": "Аяқтау күні жоқ",
   "habitCreateAction": "Әдетті құру",
   "habitForever": "Шектеусіз",
@@ -844,6 +850,7 @@
   "habitResetProgressAction": "Тазарту",
   "habitFrequencyRepeatsTitle": "Қайталау",
   "habitFrequencyEveryXDays": "Әр {count} күн",
+  "habitDragToCategorize": "Санатқа бөлу үшін сүйреңіз",
   "@habitFrequencyEveryXDays": {
      "placeholders": {
         "count": {"type": "int"}
@@ -894,5 +901,12 @@
   "habitWeekLast": "Өткен апта",
   "habitWeeksAgo": "апта бұрын",
   "habitWeekCurrent": "Осы апта",
-  "copiedToClipboard": "Алмасу буферіне көшірілді"
+  "copiedToClipboard": "Алмасу буферіне көшірілді",
+  "habitReportFileName": "әдеттер_{month}_{year}",
+  "@habitReportFileName": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "year": { "type": "int" }
+    }
+  }
 }

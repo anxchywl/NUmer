@@ -333,11 +333,14 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         const SizedBox(height: 6),
         InkWell(
           onTap: () async {
+            final now = DateTime.now();
+            final maxDate = DateTime(now.year + 5, 12, 31);
+            final initDate = date ?? now;
             final picked = await showDatePicker(
               context: context,
-              initialDate: date ?? DateTime.now(),
+              initialDate: initDate.isAfter(maxDate) ? maxDate : initDate,
               firstDate: DateTime(2025, 1, 1),
-              lastDate: DateTime(2030),
+              lastDate: maxDate,
             );
             if (picked != null) onPick(picked);
           },

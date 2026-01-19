@@ -105,12 +105,26 @@ class HabitDaySheet extends StatelessWidget {
   }
 
   List<Habit> _getDailyHabits() {
-    // Show habits that were COMPLETED OR are SCHEDULED for this day
-    return allHabits.where((h) {
+    // 1. Filter habits: show if scheduled OR has progress
+    final activeHabits = allHabits.where((h) {
       final isScheduled = h.isScheduledFor(date);
       final hasProgress = progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
       return isScheduled || hasProgress;
     }).toList();
+
+    // 2. Sort habits: completed first, then incomplete
+    activeHabits.sort((a, b) {
+      final progA = progressMap[a.id] ?? 0.0;
+      final progB = progressMap[b.id] ?? 0.0;
+      final doneA = progA >= a.targetValue;
+      final doneB = progB >= b.targetValue;
+
+      if (doneA && !doneB) return -1;
+      if (!doneA && doneB) return 1;
+      return 0; // Maintain original sort order (likely by creation or manual order) if both are same state
+    });
+
+    return activeHabits;
   }
 }
 
@@ -236,6 +250,7 @@ class _HabitRow extends StatelessWidget {
               habit: habit,
               date: date,
               completed: !isCompleted,
+              mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
             );
       } catch (e) {
         if (context.mounted) {

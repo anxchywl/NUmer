@@ -17,7 +17,7 @@
   "wantToReceiveNudges": "Получать подталкивания?",
   "eisenhowerMatrix": "Матрица Эйзенхауэра",
   "quickNotesDescription": "Существующие заметки сохранятся, но новые окна заметок после сессий появляться не будут.",
-  "wantToReceiveNudgesDescription": "Разрешить участникам группы отправлять вам мягкие напоминания.",
+  "wantToReceiveNudgesDescription": "Разрешить участникам группы отправлять вам напоминания.",
   "eisenhowerMatrixDescription": "Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.",
   "eisenhowerQuadrant1": "Срочно и важно",
   "eisenhowerQuadrant2": "Не срочно, но важно",
@@ -45,6 +45,12 @@
       "error": {
         "type": "String"
       }
+    }
+  },
+  "sessionsFound": "{count, plural, =0{Сессий не найдено} one{{count} сессия найдена} few{{count} сессии найдено} other{{count} сессий найдено}}",
+  "@sessionsFound": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   },
   "fileSavedSuccessfully": "Файл успешно сохранён",
@@ -665,7 +671,7 @@
   "habitBack": "Назад",
   "habitNext": "Далее",
   "habitYesNo": "Да / Нет",
-  "habitNumeric": "Числовая",
+  "habitNumeric": "Числовой",
   "habitTime": "Время",
   "habitTrackingYesNoDescription": "Отмечайте, выполнена привычка или нет.",
   "habitTrackingNumericDescription": "Задайте конкретное число на каждый день.",
@@ -717,7 +723,7 @@
   "habitReminderDisabledSubtitle": "Скоро",
   "habitArchiveTitle": "Архивировать привычку",
   "habitArchivedLabel": "В архиве",
-  "habitResetProgressTitle": "Сбросить прогресс привычки",
+  "habitResetProgressTitle": "Сбросить прогресс",
   "habitResetProgressSubtitle": "Удаляет всю историю",
   "habitResetProgressConfirmTitle": "Сбросить прогресс привычки?",
   "habitResetProgressConfirmMessage": "Это удалит всю историю выполнения этой привычки. Действие необратимо.",
@@ -738,6 +744,7 @@
   "habitResetProgressAction": "Сбросить",
   "habitFrequencyRepeatsTitle": "Повторы",
   "habitFrequencyEveryXDays": "Каждые {count} дн.",
+  "habitDragToCategorize": "Перетащите для распределения",
   "@habitFrequencyEveryXDays": {
      "placeholders": {
         "count": {"type": "int"}
@@ -789,5 +796,12 @@
   "habitWeekLast": "Прошлая неделя",
   "habitWeeksAgo": "недель назад",
   "habitWeekCurrent": "Эта неделя",
-  "copiedToClipboard": "Скопировано в буфер обмена"
+  "copiedToClipboard": "Скопировано в буфер обмена",
+  "habitReportFileName": "привычки_{month}_{year}",
+  "@habitReportFileName": {
+    "placeholders": {
+      "month": { "type": "String" },
+      "year": { "type": "int" }
+    }
+  }
 }

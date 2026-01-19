@@ -15,25 +15,12 @@ void showAppMessage(
   
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Row(
-        children: [
-          if (isError) ...[
-            Icon(
-              Icons.error_outline_rounded,
-              color: colorScheme.onErrorContainer,
-            ),
-            const SizedBox(width: 12),
-          ],
-          Expanded(
-            child: Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: isError ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+      content: Text(
+        message,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: isError ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       action: actionLabel != null && onAction != null
           ? SnackBarAction(
@@ -53,4 +40,3 @@ void showAppMessage(
     ),
   );
 }
-

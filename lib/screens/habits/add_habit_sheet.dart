@@ -51,7 +51,7 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
   int _interval = 2; // Every 2 days
   
   // Numeric/Time targets
-  double _target = 0.0; 
+  double _target = 1.0; // Default to 1.0 for Yes/No
   String _unit = ""; 
   HabitComparator _comparator = HabitComparator.atLeast;
 
@@ -83,9 +83,29 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
     // Initial State for Editing
     if (widget.initialCategory != null) {
       _categoryName = widget.initialCategory!.name;
+    } else if (widget.habit != null) {
+      _categoryName = widget.habit!.category;
     } else {
       _categoryName = _defaultCategories[0]['name'];
     }
+
+    if (widget.habit != null) {
+      final h = widget.habit!;
+      _habitName = h.name;
+      _type = h.type;
+      _freq = h.frequencyType;
+      _weekDays.addAll(h.weekDays);
+      _interval = h.intervalDays;
+      _target = h.targetValue;
+      _unit = h.unit ?? "";
+      _comparator = h.comparator;
+      _period = h.frequencyPeriod ?? HabitPeriod.week;
+      _frequencyGoal = h.frequencyGoal ?? 3;
+      _startDate = h.startDate;
+      _endDate = h.endDate;
+      _connectedCourseIds = List.from(h.connectedCourseIds);
+    }
+
     // Initialize numeric controllers. If editing an existing habit, show values,
     // otherwise keep inputs empty as requested.
     final isEditing = widget.habit != null;
@@ -94,10 +114,6 @@ class _AddHabitSheetState extends State<AddHabitSheet> with SingleTickerProvider
     _restDaysCtrl = TextEditingController(text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
     _targetCtrl = TextEditingController(text: isEditing && _target > 0 ? "$_target" : "");
     _unitCtrl = TextEditingController(text: _unit);
-    
-    if (widget.habit != null) {
-      _connectedCourseIds = List.from(widget.habit!.connectedCourseIds);
-    }
 
   // Focus Listeners
   _habitNameFocus.addListener(_onFocusChanged);
@@ -162,19 +178,13 @@ final FocusNode _unitFocus = FocusNode();
   }
 
 
-  bool get _isNumericValid {
-    final valueText = _targetCtrl.text.trim();
-    if (valueText.isEmpty) return false;
-    final value = double.tryParse(valueText);
-    if (value == null || value <= 0) return false;
-    return _unitCtrl.text.trim().isNotEmpty;
-  }
+
 
   bool get _isTrackingNextEnabled {
     return switch (_type) {
       HabitType.yesNo => true,
-      HabitType.numeric => _isNumericValid,
-      HabitType.time => _target > 0,
+      HabitType.numeric => _target >= 0,
+      HabitType.time => _target >= 0,
     };
   }
 
@@ -606,17 +616,26 @@ final FocusNode _unitFocus = FocusNode();
                                       ChoiceChip(
                                         label: Text(l10n.habitYesNo),
                                         selected: _type == HabitType.yesNo,
-                                        onSelected: (b) => setState(() => _type = HabitType.yesNo),
+                                        onSelected: (b) => setState(() { 
+                                           _type = HabitType.yesNo;
+                                           if (_target == 0.0) _target = 1.0;
+                                        }),
                                       ),
                                       ChoiceChip(
                                         label: Text(l10n.habitNumeric),
                                         selected: _type == HabitType.numeric,
-                                        onSelected: (b) => setState(() => _type = HabitType.numeric),
+                                        onSelected: (b) => setState(() { 
+                                           _type = HabitType.numeric;
+                                           if (_target == 1.0) _target = 0.0;
+                                        }),
                                       ),
                                       ChoiceChip(
                                         label: Text(l10n.habitTime),
                                         selected: _type == HabitType.time,
-                                        onSelected: (b) => setState(() => _type = HabitType.time),
+                                        onSelected: (b) => setState(() { 
+                                           _type = HabitType.time;
+                                           if (_target == 1.0) _target = 0.0;
+                                        }),
                                       ),
                                     ],
                                   ),
@@ -1057,11 +1076,13 @@ final FocusNode _unitFocus = FocusNode();
                     subtitle: Text(DateFormat.yMMMd(localeName).format(_startDate)),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: () async {
+                      final now = DateTime.now();
+                      final maxDate = DateTime(now.year + 5, 12, 31);
                       final picked = await showDatePicker(
                         context: context,
-                        initialDate: _startDate,
+                        initialDate: _startDate.isAfter(maxDate) ? maxDate : _startDate,
                         firstDate: DateTime(2025, 1, 1),
-                        lastDate: DateTime(2100),
+                        lastDate: maxDate,
                       );
                       if (picked != null) setState(() => _startDate = picked);
                     },
@@ -1076,11 +1097,14 @@ final FocusNode _unitFocus = FocusNode();
                         setState(() => _endDate = null);
                         return;
                       }
+                      final now = DateTime.now();
+                      final maxDate = DateTime(now.year + 5, 12, 31);
+                      final initialEnd = _startDate.add(const Duration(days: 30));
                       final picked = await showDatePicker(
                         context: context,
-                        initialDate: _startDate.add(const Duration(days: 30)),
+                        initialDate: initialEnd.isAfter(maxDate) ? maxDate : initialEnd,
                         firstDate: _startDate.isAfter(DateTime(2025, 1, 1)) ? _startDate : DateTime(2025, 1, 1),
-                        lastDate: DateTime(2100),
+                        lastDate: maxDate,
                       );
                       if (picked != null) setState(() => _endDate = picked);
                     },
@@ -1329,12 +1353,17 @@ final FocusNode _unitFocus = FocusNode();
   }
 
   Widget _buildDaySelector(ThemeData theme) {
+    final weekStart = context.read<AppState>().weekStart;
     final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
-    final days = [...narrowWeekdays.skip(1), narrowWeekdays.first];
+    final days = weekStart == WeekStart.monday
+        ? [...narrowWeekdays.skip(1), narrowWeekdays.first]
+        : narrowWeekdays;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (index) {
-        final dayNum = index + 1;
+        final dayNum = weekStart == WeekStart.monday
+            ? (index + 1)
+            : (index == 0 ? 7 : index);
         final active = _weekDays.contains(dayNum);
         return GestureDetector(
           onTap: () => setState(() {

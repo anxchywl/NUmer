@@ -100,6 +100,61 @@ class Habit {
 
   bool get isDaily => frequencyType == HabitFrequencyType.daily;
   
+  /// Computes the live current streak, accounting for missed days.
+  /// For daily habits: if yesterday was scheduled but not completed, streak is 0.
+  /// For other habits: checks if the last scheduled day before today was completed.
+  int get liveCurrentStreak {
+    // If stored streak is already 0, nothing to compute
+    if (currentStreak == 0) return 0;
+    
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final habitStart = DateTime(startDate.year, startDate.month, startDate.day);
+    
+    // Check backwards from yesterday to find the last scheduled day
+    DateTime checkDate = today.subtract(const Duration(days: 1));
+    
+    // Don't check before habit start date
+    if (checkDate.isBefore(habitStart)) return currentStreak;
+    
+    // For daily habits, just check yesterday
+    if (frequencyType == HabitFrequencyType.daily) {
+      // Check if yesterday was completed using last7
+      final yesterdayKey = "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
+      final yesterdayValue = last7[yesterdayKey] ?? 0.0;
+      
+      // If yesterday wasn't completed, streak is broken
+      if (yesterdayValue < targetValue) {
+        return 0;
+      }
+      return currentStreak;
+    }
+    
+    // For specific days habits, find the last scheduled day
+    if (frequencyType == HabitFrequencyType.specificDays) {
+      // Walk back up to 7 days to find the last scheduled day
+      for (int i = 1; i <= 7; i++) {
+        checkDate = today.subtract(Duration(days: i));
+        if (checkDate.isBefore(habitStart)) break;
+        
+        if (isScheduledFor(checkDate)) {
+          final dateKey = "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
+          final value = last7[dateKey] ?? 0.0;
+          
+          // If the last scheduled day wasn't completed, streak is broken
+          if (value < targetValue) {
+            return 0;
+          }
+          // Found a completed scheduled day, streak is valid
+          return currentStreak;
+        }
+      }
+    }
+    
+    // For interval or repeatsInPeriod, use stored streak for now
+    // (more complex period logic may need different handling)
+    return currentStreak;
+  }
   factory Habit.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     return Habit.fromMap(doc.id, data);
@@ -270,7 +325,7 @@ class Habit {
     if (frequencyPeriod != null) map['fp'] = frequencyPeriod!.index;
     if (frequencyGoal != null) map['fg'] = frequencyGoal;
     if (endDate != null) map['ed'] = Timestamp.fromDate(endDate!);
-    if (archived) map['ar'] = true;
+    map['ar'] = archived;
     if (connectedCourseIds.isNotEmpty) map['cc'] = connectedCourseIds;
     
     return map;
@@ -311,7 +366,7 @@ class Habit {
   }
 
   /// Returns true if this habit should be hidden because the period goal has been met.
-  bool isGoalMetForPeriod(Map<String, double> completionMap, DateTime forDate) {
+  bool isGoalMetForPeriod(Map<String, double> completionMap, DateTime forDate, {bool mondayFirst = true}) {
     if (frequencyType != HabitFrequencyType.repeatsInPeriod) return false;
     if (frequencyGoal == null || frequencyGoal! <= 0) return false;
     
@@ -321,9 +376,9 @@ class Habit {
     
     switch (frequencyPeriod) {
       case HabitPeriod.week:
-        // Week starts Monday
         final weekday = forDate.weekday; // 1=Mon, 7=Sun
-        periodStart = DateTime(forDate.year, forDate.month, forDate.day - (weekday - 1));
+        final offset = mondayFirst ? (weekday - 1) : (weekday % 7);
+        periodStart = DateTime(forDate.year, forDate.month, forDate.day - offset);
         periodEnd = periodStart.add(const Duration(days: 6));
         break;
       case HabitPeriod.month:

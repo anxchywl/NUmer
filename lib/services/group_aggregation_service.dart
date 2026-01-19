@@ -87,7 +87,12 @@ class GroupAggregationService {
     }
 
     
-    final groupAggregate = await _readAggregate(
+    // For everyone (including current user if session compute failed or wasn't tried first for recent optimization),
+    // we try stored aggregates.
+    MemberStudyData? aggregateData;
+    
+    // 1. Try Group-specific aggregate
+    aggregateData = await _readAggregate(
       firestore
           .collection('groups')
           .doc(groupId)
@@ -97,28 +102,9 @@ class GroupAggregationService {
       currentUserId: currentUserId,
       userId: userId,
     );
-    if (groupAggregate != null) return groupAggregate;
-
     
-    // For the current user, always compute from sessions to ensure local changes 
-    // (like course visibility) are reflected immediately without waiting for server sync.
-    if (isCurrentUser) {
-      try {
-        final sessionData = await computeMemberStats(
-          userId: userId,
-          period: period,
-          periodStart: period.getDateRange().$1,
-          periodEnd: period.getDateRange().$2,
-          firestore: firestore,
-        );
-        return sessionData.copyWith(isCurrentUser: isCurrentUser);
-      } catch (e) {
-        debugPrint('Error computing current user stats from sessions: $e');
-        // Fall back to aggregates if computation fails
-      }
-    }
-
-    final userAggregate = await _readAggregate(
+    // 2. Try User-global aggregate if group one failed
+    aggregateData ??= await _readAggregate(
       firestore
           .collection('users')
           .doc(userId)
@@ -128,7 +114,36 @@ class GroupAggregationService {
       currentUserId: currentUserId,
       userId: userId,
     );
-    if (userAggregate != null) return userAggregate;
+
+    // 3. Fetch LIVE user status to overlay on top of historical aggregates
+    // This ensures that if the user is currently studying, we show it immediately
+    // even if the aggregate is hours old.
+    Map<String, dynamic>? liveUserData;
+    try {
+      final userDoc = await firestore.collection('users').doc(userId).get();
+      if (userDoc.exists) {
+        liveUserData = userDoc.data();
+      }
+    } catch (e) {
+      debugPrint('Error fetching live user data for $userId: $e');
+    }
+
+    if (aggregateData != null) {
+       // Merge live data if available
+       if (liveUserData != null) {
+         return aggregateData.copyWith(
+           name: (liveUserData['profileName'] as String?) ?? aggregateData.name,
+           avatarIndex: (liveUserData['profileAvatarIndex'] as int?) ?? liveUserData['avatarIndex'] as int? ?? aggregateData.avatarIndex,
+           avatarBase64: liveUserData['profileAvatarImageBase64'] as String? ?? aggregateData.avatarBase64,
+           avatarColorValue: (liveUserData['avatarColorValue'] as int?) ?? (liveUserData['profileAvatarColorValue'] as int?) ?? aggregateData.avatarColorValue,
+           isStudying: (liveUserData['isStudying'] as bool?) ?? false,
+           activeSession: liveUserData['activeSession'] as Map<String, dynamic>?,
+           allowsNudges: (liveUserData['allowNudges'] as bool?) != false,
+           canReceiveNudges: (liveUserData['fcmEnabled'] as bool?) == true,
+         );
+       }
+       return aggregateData;
+    }
 
     // Fallback for others or if aggregate doesn't exist
     if (!isCurrentUser) {
@@ -145,8 +160,36 @@ class GroupAggregationService {
         debugPrint('Error computing stats from sessions for $userId: $e');
       }
     }
-
-    return _emptyMemberData(
+    
+    // If we have live data but no stats, return empty member with live status
+    // Note: _emptyMemberData fetches the user profile internally, so we can just call it
+    // if we don't have an aggregate or manual session stats.
+    if (liveUserData != null) {
+       // We already fetched liveUserData, so we can construct the object manually to save a read,
+       // or just call _emptyMemberData if we want to be safe/consistent.
+       // Since we have the data, let's use it to avoid another read inside _emptyMemberData!
+       return MemberStudyData(
+          userId: userId,
+          name: (liveUserData['profileName'] as String?) ?? userId,
+          avatarUrl: null,
+          avatarBase64: liveUserData['profileAvatarImageBase64'] as String?,
+          avatarIndex: (liveUserData['profileAvatarIndex'] as int?) ?? liveUserData['avatarIndex'] as int?,
+          avatarColorValue: (liveUserData['avatarColorValue'] as int?) ?? (liveUserData['profileAvatarColorValue'] as int?) ?? 0xFF6366F1,
+          studyTimeSeconds: 0,
+          todayStudyTimeSeconds: 0,
+          monthStudyTimeSeconds: 0,
+          isLeader: false,
+          isCurrentUser: isCurrentUser,
+          dailyBreakdown: const [],
+          isStudying: (liveUserData['isStudying'] as bool?) ?? false,
+          activeSession: liveUserData['activeSession'] as Map<String, dynamic>?,
+          allowsNudges: (liveUserData['allowNudges'] as bool?) != false,
+          canReceiveNudges: (liveUserData['fcmEnabled'] as bool?) == true,
+       );
+    }
+    
+    // Final fallback: use _emptyMemberData which will try to fetch profile again
+    return await _emptyMemberData(
       userId: userId,
       firestore: firestore,
       isCurrentUser: isCurrentUser,
@@ -282,6 +325,10 @@ class GroupAggregationService {
       isLeader: false,
       isCurrentUser: false,
       dailyBreakdown: const [],
+      isStudying: (userData['isStudying'] as bool?) ?? false,
+      activeSession: userData['activeSession'] as Map<String, dynamic>?,
+      allowsNudges: (userData['allowNudges'] as bool?) != false,
+      canReceiveNudges: (userData['fcmEnabled'] as bool?) == true,
     );
   }
 
@@ -294,6 +341,10 @@ class GroupAggregationService {
     int? avatarIndex;
     String? avatarBase64;
     int avatarColorValue = 0xFF6366F1;
+    bool isStudying = false;
+    Map<String, dynamic>? activeSession;
+    bool allowsNudges = true;
+    bool canReceiveNudges = false;
 
     try {
       final userDoc = await firestore.collection('users').doc(userId).get();
@@ -303,6 +354,10 @@ class GroupAggregationService {
         avatarIndex = userData['profileAvatarIndex'] as int? ?? userData['avatarIndex'] as int?;
         avatarBase64 = userData['profileAvatarImageBase64'] as String?;
         avatarColorValue = (userData['avatarColorValue'] as int?) ?? (userData['profileAvatarColorValue'] as int?) ?? avatarColorValue;
+        isStudying = (userData['isStudying'] as bool?) ?? false;
+        activeSession = userData['activeSession'] as Map<String, dynamic>?;
+        allowsNudges = (userData['allowNudges'] as bool?) != false;
+        canReceiveNudges = (userData['fcmEnabled'] as bool?) == true;
       }
     } catch (_) {
       // Failed to fetch user profile; return defaults below.
@@ -323,6 +378,10 @@ class GroupAggregationService {
       isLeader: false,
       isCurrentUser: isCurrentUser,
       dailyBreakdown: const [],
+      isStudying: isStudying,
+      activeSession: activeSession,
+      allowsNudges: allowsNudges,
+      canReceiveNudges: canReceiveNudges,
     );
   }
 
@@ -337,8 +396,6 @@ class GroupAggregationService {
       if (!aggregateDoc.exists) return null;
       final data = aggregateDoc.data();
       if (data == null) return null;
-      
-      
       
       return _memberFromAggregateData(
         data: data,
@@ -379,8 +436,6 @@ class GroupAggregationService {
     final now = DateTime.now();
     final todayKey = _dateKey(now);
     
-    // For "Last 7 Days", we want the current calendar week (Monday to Sunday) or just last 7 days?
-    // The StatisticsPeriod.getDateRange uses calendar week (Monday start).
     final (periodStart, periodEnd) = period.getDateRange();
     
     int periodSeconds = 0;
@@ -404,18 +459,14 @@ class GroupAggregationService {
       for (final entry in dailyBreakdown) {
         final entryKey = _dateKey(entry.date);
 
-        // Is it today?
         if (entryKey == todayKey) {
           observerTodaySeconds += entry.studyTimeSeconds;
         }
 
-        // Is it in the current calendar month?
         if (entry.date.year == monthStart.year && entry.date.month == monthStart.month) {
           observerMonthSeconds += entry.studyTimeSeconds;
         }
 
-        // Is it in the requested period (today/last7/month)?
-        // Note: we use inclusive comparison for the date range
         if (entry.date.isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
             entry.date.isBefore(periodEnd.add(const Duration(seconds: 1)))) {
           periodSeconds += entry.studyTimeSeconds;
@@ -423,6 +474,8 @@ class GroupAggregationService {
       }
     }
 
+    // Note: Aggregates don't typically include real-time study status, 
+    // but we can set them to defaults or they'll be updated by downstream listeners.
     return MemberStudyData(
       userId: userId,
       name: name,
@@ -437,6 +490,7 @@ class GroupAggregationService {
       isCurrentUser: userId == currentUserId,
       dailyBreakdown: dailyBreakdown,
       lastStudyDate: lastStudyDate,
+      isStudying: false, // Will be updated by listeners
     );
   }
 
