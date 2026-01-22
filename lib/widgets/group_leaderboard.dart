@@ -904,7 +904,7 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
             width: widget.size,
             height: widget.size,
             decoration: BoxDecoration(
-              color: isOnCooldown ? Colors.grey.shade300 : Colors.white,
+              color: isOnCooldown ? Colors.grey.shade100 : Colors.blue.shade50,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
@@ -921,13 +921,38 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
                       height: widget.size * 0.6,
                       child: const CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Text(
-                      '👋',
-                      style: TextStyle(
-                        fontSize: widget.size * 0.6,
-                        color: isOnCooldown ? Colors.grey : null,
-                      ),
-                    ),
+                  : isOnCooldown
+                      ? Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: widget.size * 0.75,
+                              height: widget.size * 0.75,
+                              child: CircularProgressIndicator(
+                                value: remaining.inSeconds / 3600.0,
+                                strokeWidth: 2,
+                                backgroundColor: Colors.grey.shade200,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            Text(
+                              remaining.inMinutes > 0
+                                  ? '${remaining.inMinutes}m'
+                                  : '${remaining.inSeconds}s',
+                              style: TextStyle(
+                                fontSize: widget.size * 0.28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          '👋',
+                          style: TextStyle(
+                            fontSize: widget.size * 0.6,
+                          ),
+                        ),
             ),
           ),
         );

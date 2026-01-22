@@ -2527,7 +2527,7 @@ abstract class AppLocalizations {
   /// No description provided for @loadingProfile.
   ///
   /// In en, this message translates to:
-  /// **'Loading your profile...'**
+  /// **'Loading your profile'**
   String get loadingProfile;
 
   /// No description provided for @sessionNotes.

@@ -177,7 +177,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Future<_HabitStatsResult> _computeHabitStats(Habit habit, HabitService service, String uid) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    // Start from habit start date, or a reasonable fallback
+    // Start from habit start date
     final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
     
     // If future start date, no stats
@@ -192,39 +192,23 @@ class _StatsScreenState extends State<StatsScreen> {
       if (e.isBefore(today)) end = e;
     }
 
-    // We need history for this range
-    // Optimization: getHistory takes start/end.
-    final history = await service.getHistory(uid, habit.id, start, end);
+    // LOCAL-FIRST: Use local cache for history
+    final localHistory = Storage.getHabitHistoryFromCache(habit.id);
     final historyMap = <String, double>{};
-    for (final h in history) {
-      // HabitHistoryEntry.id is the dateKey YYYY-MM-DD
-      historyMap[h.id] = h.value ?? 0.0;
+    for (final h in localHistory) {
+      if (h.deleted) continue;
+      historyMap[h.dateKey] = h.value ?? 0.0;
     }
     
     int required = 0;
     int completed = 0;
     
-    // Iterate day by day? 
-    // For "repeatsInPeriod" (X times per period), we count periods.
-    // For others, we count days.
-    
     if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-       // Loop through periods
-       // We need to align with period boundaries (Week: Mon-Sun, Month: 1-End, Year: 1-365)
-       
-
-       // Align cursor to start of the period that contains 'start'
-       // But wait, if the habit started mid-week, do we count that week? 
-       // Usually yes, the goal applies to the period.
-       
-       // Let's iterate day by day to find period transitions, or just jump by period.
-       // Jumping by period is safer.
-       
-       // Helper to get period start for a date
+       // Period-based logic (Matches HabitService.recalculateStreak)
        DateTime getPeriodStart(DateTime d) {
          switch (habit.frequencyPeriod!) {
            case HabitPeriod.week:
-             // Mon=1...
+             // Align with Monday
              return d.subtract(Duration(days: d.weekday - 1));
            case HabitPeriod.month:
              return DateTime(d.year, d.month, 1);
@@ -246,74 +230,39 @@ class _StatsScreenState extends State<StatsScreen> {
 
        DateTime pStart = getPeriodStart(start);
        
-       while (!pStart.isAfter(end)) { // Include partial periods if they overlap with [start, end]
-          // Check if this period is relevant (overlap with habit duration)
-          // The period might start before 'start', but if it ends after 'start', it counts.
-          // The period might end after 'end', but if it starts before 'end', it counts.
-          
+       while (!pStart.isAfter(end)) {
           final pNext = getNextPeriodStart(pStart);
           final pEnd = pNext.subtract(const Duration(days: 1));
           
-          // Effective period range within habit constraints
-          // We care if the user completed the GOAL within this period.
-          // We count completions within [max(start, pStart), min(end, pEnd)]?
-          // Actually, the goal is "X times per period". 
-          // If the period overlaps the active duration, we typically count it as a "required completion opportunity".
-          // Unless the overlap is too small? Let's keep it simple: if valid days exist in period, it counts.
-          
-          // Check intersection
           final iStart = pStart.isBefore(start) ? start : pStart;
           final iEnd = pEnd.isAfter(end) ? end : pEnd;
           
           if (!iStart.isAfter(iEnd)) {
-             // Valid period
              required += (habit.frequencyGoal ?? 1); 
              
-             // Count actual completions in this period (using historyMap)
-             // We need to query history map for keys in this period.
-             
              int periodCompletions = 0;
-             // Iterate days in this period to check history
-             // Optimization: History is sparse, but iterating 7-30 days is fast.
-             DateTime d = iStart; // Only count completions within the valid intersection? 
-             // Or allow completions from whole period? 
-             // Logic: "Count stats from the habit start date." -> implies strict bound.
-             
-             // Actually, for "Days per period", if I did 3 days monday, tuesday, wednesday, and habit started wednesday...
-             // I probably shouldn't count Mon/Tue.
-             
+             DateTime d = iStart; 
              while (!d.isAfter(iEnd)) {
-               final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-               if ((historyMap[k] ?? 0) >= habit.targetValue) {
-                 periodCompletions++;
-               }
-               d = d.add(const Duration(days: 1));
+                final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+                if ((historyMap[k] ?? 0) >= habit.targetValue) {
+                  periodCompletions++;
+                }
+                d = d.add(const Duration(days: 1));
              }
              
-             // Cap completions at goal?
-             // "Completed = number of completed days in that period (max N)"
-             // "Not completed = N - completed"
              final goal = habit.frequencyGoal ?? 1;
              final capped = periodCompletions > goal ? goal : periodCompletions;
-             
              completed += capped;
           }
-          
           pStart = pNext;
        }
-
     } else {
-       // Daily / Specific Days / Interval
-       // Iterate days from start to end
-       
+       // Day-based logic
        int totalDays = end.difference(start).inDays + 1;
        for (var i = 0; i < totalDays; i++) {
           final d = start.add(Duration(days: i));
-          
-          // Check if habit is scheduled for this day
           if (habit.isScheduledFor(d)) {
              required++;
-             
              final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
              if ((historyMap[k] ?? 0) >= habit.targetValue) {
                 completed++;
@@ -322,26 +271,7 @@ class _StatsScreenState extends State<StatsScreen> {
        }
     }
     
-    // "Do not count days where the habit is not supposed to be done." (Handled by isScheduledFor / logic above)
-    // "Do not include extra 'optional' days as missed" -> Handled by only counting required.
-    // "Work/Rest -> only Work days are required" -> Interval logic in isScheduledFor handles this.
-    
-    // Calculate Not Completed
     final notCompleted = required - completed;
-    // (If completed > required due to logic drift, clamp it? Logic above shouldn't allow it for period, but for others?)
-    // For others, completed is subset of required (if we only count completions on scheduled days).
-    // What if I complete a task on a non-assigned day?
-    // "Only include required days, depending on the habit frequency"
-    // So if I do it on a rest day, it doesn't count towards stats?
-    // User says: "Completed instances" -- usually total completions matter.
-    // But "Completion % = completed / required". If I do extra, can I get > 100%?
-    // User says: "Completed = number of completed days in that period (max N)" for periods.
-    // For exact days: "Every day -> all days".
-    // I will assume strictly required days. Completions on off-days are "bonus" and maybe don't affect this specific "Efficiency" metric.
-    // Or maybe they count as completed but don't increase required? -> >100%.
-    // Given the "Completion percentage" context, usually capped at 100% or strictly based on required slots is best.
-    // I will stick to "Completed instances *on required days*".
-    
     final rate = required > 0 ? (completed / required * 100) : 0.0;
     
     return _HabitStatsResult(required, completed, notCompleted, rate);
@@ -1363,7 +1293,7 @@ class _StatsScreenState extends State<StatsScreen> {
   
   Future<void> _showDownloadBottomSheet(BuildContext context, List<Habit> habits, String uid) async {
     DateTime selectedMonth = _habitStatsMonth;
-    String selectedFormat = 'csv'; // Default to CSV
+    String selectedFormat = 'excel'; // Default to Excel
     bool isExporting = false;
     bool isSuccess = false;
     String? filePath;
@@ -1783,21 +1713,30 @@ class _StatsScreenState extends State<StatsScreen> {
       final monthName = _monthName(context, monthDate.month);
 
       try {
-        final service = context.read<HabitService>();
         final start = DateTime(monthDate.year, monthDate.month, 1);
         final daysInMonth = DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
         final end = DateTime(monthDate.year, monthDate.month, daysInMonth);
         
         // 1. Fetch History
         final activeHabits = habits.where((h) => !h.archived).toList();
-        final historyFutures = activeHabits.map((h) => service.getHistory(uid, h.id, start, end));
-        final histories = await Future.wait(historyFutures);
-        
         final habitHistoryMap = <String, Map<String, double>>{};
-        for (int i = 0; i < activeHabits.length; i++) {
-           final hId = activeHabits[i].id;
-           final historyList = histories[i];
-           habitHistoryMap[hId] = { for (var entry in historyList) entry.id : entry.value ?? 0.0 };
+        for (final habit in activeHabits) {
+          final localHabit = Storage.getHabitById(habit.id);
+          final resetAtMs = localHabit?.resetAtMs ?? 0;
+          final historyList = Storage.getHabitHistoryForDateRange(
+            habit.id,
+            start,
+            end,
+          );
+          final map = <String, double>{};
+          for (final entry in historyList) {
+            if (resetAtMs > 0 && entry.updatedAtMs < resetAtMs) {
+              continue;
+            }
+            if (entry.deleted) continue;
+            map[entry.dateKey] = entry.value ?? 0.0;
+          }
+          habitHistoryMap[habit.id] = map;
         }
         
         // 2. Prepare Rows (Pivoted)
@@ -2841,4 +2780,3 @@ class _HabitStatsResult {
 
   const _HabitStatsResult(this.required, this.completed, this.notCompleted, this.completionRate);
 }
-

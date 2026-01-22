@@ -203,7 +203,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     await context.read<HabitService>().createHabit(uid, updatedHabit);
     
     if (mounted) {
-      context.read<AppState>().triggerSync();
       setState(() => _isDirty = false);
     }
   }
@@ -224,7 +223,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
     
     await context.read<HabitService>().createCategory(uid, cat);
     if (mounted) {
-       context.read<AppState>().triggerSync();
        setState(() {
           _isCreatingCategory = false;
           _categoryName = _newCatName.trim();
@@ -252,7 +250,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
       if (uid != null) {
         await context.read<HabitService>().deleteHabit(uid, widget.habit.id);
         if (mounted) {
-           context.read<AppState>().triggerSync();
            Navigator.pop(context);
         }
       }
@@ -315,69 +312,77 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                ),
             ],
           ),
-          SliverPadding(
-            padding: const EdgeInsets.all(24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // -- GENERAL SECTION --
-                _sectionHeader(l10n.habitGeneralSection),
-                TextFormField(
-                  initialValue: _habitName,
-              decoration: InputDecoration(
-                labelText: l10n.habitNameLabel,
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-              ),
-              onChanged: (v) { _habitName = v; _markDirty(); },
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(32),
-                FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
-              ],
-            ),
-            const SizedBox(height: 24),
+            SliverPadding(
+              padding: const EdgeInsets.all(24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  // -- GENERAL SECTION --
+                  AbsorbPointer(
+                    absorbing: _archived,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _sectionHeader(l10n.habitGeneralSection),
+                        TextFormField(
+                          initialValue: _habitName,
+                          decoration: InputDecoration(
+                            labelText: l10n.habitNameLabel,
+                            filled: true,
+                            fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                          ),
+                          onChanged: (v) { _habitName = v; _markDirty(); },
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(32),
+                            FilteringTextInputFormatter.allow(RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Category Selector
+                        Text(l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
+                        const SizedBox(height: 12),
+                        _buildCategorySelector(theme),
+                        
+                        const SizedBox(height: 32),
             
-            // Category Selector
-            Text(l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
-            const SizedBox(height: 12),
-            _buildCategorySelector(theme),
+                         // -- TRACKING SECTION --
+                        _sectionHeader(l10n.habitTrackingTitle),
+                        _buildTrackingSection(theme),
+                        const SizedBox(height: 32),
             
-            const SizedBox(height: 32),
-
-             // -- TRACKING SECTION --
-            _sectionHeader(l10n.habitTrackingTitle),
-            _buildTrackingSection(theme),
-            const SizedBox(height: 32),
-
-            // -- SCHEDULE SECTION --
-            // Replaces Frequency and Schedule sections
-            HabitScheduleEditor(
-               frequencyType: _freq,
-               weekDays: _weekDays,
-               intervalDays: _interval,
-               period: _period,
-               frequencyGoal: _frequencyGoal,
-               startDate: _startDate,
-               endDate: _endDate,
-               onChanged: (data) {
-                  setState(() {
-                     _freq = data.frequencyType;
-                     _weekDays = data.weekDays;
-                     _interval = data.intervalDays;
-                     _period = data.period;
-                     _frequencyGoal = data.frequencyGoal;
-                     _startDate = data.startDate;
-                     _endDate = data.endDate;
-                     _markDirty();
-                  });
-               },
-            ),
- 
-            const SizedBox(height: 32),
-            
-            // -- ADVANCED --
-            _sectionHeader(l10n.habitAdvancedSection),
-            _buildAdvancedSection(theme),
+                        // -- SCHEDULE SECTION --
+                        // Replaces Frequency and Schedule sections
+                        HabitScheduleEditor(
+                           frequencyType: _freq,
+                           weekDays: _weekDays,
+                           intervalDays: _interval,
+                           period: _period,
+                           frequencyGoal: _frequencyGoal,
+                           startDate: _startDate,
+                           endDate: _endDate,
+                           onChanged: (data) {
+                              setState(() {
+                                 _freq = data.frequencyType;
+                                 _weekDays = data.weekDays;
+                                 _interval = data.intervalDays;
+                                 _period = data.period;
+                                 _frequencyGoal = data.frequencyGoal;
+                                 _startDate = data.startDate;
+                                 _endDate = data.endDate;
+                                 _markDirty();
+                              });
+                           },
+                        ),
+                      ],
+                    ),
+                  ),
+  
+                  const SizedBox(height: 32),
+                  
+                  // -- ADVANCED --
+                  _sectionHeader(l10n.habitAdvancedSection),
+                  _buildAdvancedSection(theme),
                 const SizedBox(height: 48),
               ]),
             ),
@@ -757,7 +762,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
             contentPadding: EdgeInsets.zero,
             leading: Icon(
               Icons.notifications_off_outlined,
-              color: theme.colorScheme.onSurfaceVariant,
+              color: theme.colorScheme.onSurfaceVariant.withAlpha(_archived ? 80 : 255),
             ),
             title: Text(AppLocalizations.of(context)!.habitReminderDisabledTitle),
             subtitle: Text(AppLocalizations.of(context)!.habitReminderDisabledSubtitle),
@@ -768,10 +773,21 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
          
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.archive),
+            leading: Icon(
+              Icons.archive,
+              color: _archived ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+            ),
             title: Text(AppLocalizations.of(context)!.habitArchiveTitle),
-            trailing: Switch(value: _archived, onChanged: (v) { setState(() { _archived = v; _markDirty(); }); }),
-         ),
+            trailing: Switch(
+              value: _archived,
+              onChanged: (v) {
+                setState(() {
+                  _archived = v;
+                  _markDirty();
+                });
+              },
+            ),
+          ),
          
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -785,7 +801,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
             subtitle: Text(AppLocalizations.of(context)!.habitResetProgressSubtitle),
             trailing: OutlinedButton(
                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-               onPressed: () async {
+               onPressed: _archived ? null : () async {
                    final habitService = context.read<HabitService>();
                    final uid = context.read<AuthController>().currentUser?.uid;
 
@@ -813,8 +829,6 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                     if (uid != null) {
                        await habitService.resetHabitProgress(uid, widget.habit.id);
                        if (mounted) {
-                         context.read<AppState>().triggerSync();
-                         // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Habit progress reset"))); // Removed per request
                         setState(() {});
                        }
                    }

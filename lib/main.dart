@@ -37,6 +37,7 @@ import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
 import 'services/notifications.dart';
 import 'services/startup_metrics.dart';
+import 'widgets/loading_screen.dart';
 
 
 Future<void> _activateAppCheck({required bool useEmulator}) async {
@@ -167,29 +168,37 @@ class NumerBootstrapApp extends StatelessWidget {
           );
         }
 
-        // Use the preloaded theme for the loading screen to avoid flicker
+        // Use the preloaded theme for the loading screen to avoid flicker.
+        // Use exact native splash colors for seamless transition.
+        final systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+        final isDark = initialTheme == ThemeMode.dark || 
+            (initialTheme == ThemeMode.system && systemBrightness == Brightness.dark);
+        // Match native splash colors exactly: #FFFFFF (light) / #121212 (dark)
+        final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
+        final fgColor = isDark ? Colors.white70 : Colors.black87;
+        
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: _lightTheme,
           darkTheme: _darkTheme,
           themeMode: initialTheme,
-          home: Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: CircularProgressIndicator(strokeWidth: 4),
-                    ),
-                    SizedBox(height: 16),
-                    Text('Preparing Numer...'),
-                  ],
-                ),
-              ),
-            ),
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              final message =
+                  AppLocalizations.of(context)?.loadingProfile ?? 'Loading your profile';
+              return LoadingScreen(
+                message: message,
+                backgroundColor: bgColor,
+                foregroundColor: fgColor,
+              );
+            },
           ),
         );
       },
@@ -314,52 +323,24 @@ class AuthGate extends StatefulWidget {
 
 class _AuthGateState extends State<AuthGate> {
   Widget _buildLoader(BuildContext context, {String? message}) {
-    // Explicitly resolve theme to avoid flicker from MaterialApp theme animation
+    // Use exact native splash colors to avoid flicker: #FFFFFF (light) / #121212 (dark)
     final appState = context.read<AppState>();
     final mode = appState.effectiveThemeMode;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
     final isDark = mode == ThemeMode.dark || 
         (mode == ThemeMode.system && systemBrightness == Brightness.dark);
 
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: Colors.indigo,
-      brightness: isDark ? Brightness.dark : Brightness.light,
-    );
+    // Match native splash colors exactly
+    final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
+    final fgColor = isDark ? Colors.white70 : Colors.black87;
 
-    return Theme(
-      data: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-      ),
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        body: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: CircularProgressIndicator(strokeWidth: 4),
-                ),
-                if (message != null) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    message,
-                    style: TextStyle(
-                      color: colorScheme.onSurfaceVariant,
-                      fontSize: 14, // Approximate bodyMedium
-                      fontWeight: FontWeight.w400,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+    final resolvedMessage = message ??
+        AppLocalizations.of(context)?.loadingProfile ??
+        'Loading your profile';
+    return LoadingScreen(
+      message: resolvedMessage,
+      backgroundColor: bgColor,
+      foregroundColor: fgColor,
     );
   }
 
@@ -380,7 +361,7 @@ class _AuthGateState extends State<AuthGate> {
 
   Widget _buildForAuthState(BuildContext context, AuthController auth) {
     if (!auth.isInitialized) {
-      return _buildLoader(context, message: 'Loading your profile…');
+      return _buildLoader(context);
     }
 
         
@@ -427,13 +408,8 @@ class _AuthGateState extends State<AuthGate> {
       return const EmailVerificationStatus();
     }
 
-    if (!auth.isSyncReady || !auth.isProfileReady) {
-      return _buildLoader(
-        context,
-        message: auth.isBootstrapping
-            ? 'Syncing your profile...'
-            : AppLocalizations.of(context)!.loadingProfile,
-      );
+    if (auth.isBootstrapping || !auth.isSyncReady || !auth.isProfileReady) {
+      return _buildLoader(context);
     }
 
     if (auth.lastPreparationError != null) {
@@ -462,17 +438,18 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     final profileData = auth.profile;
-    final onboardingDone =
-        profileData?['onboardingCompleted'] == true ||
-            profileData?['profileComplete'] == true;
-    final remoteName = (profileData?['profileName'] as String?)?.trim() ??
-        (profileData?['displayName'] as String?)?.trim() ??
+    if (profileData == null) {
+      return _buildLoader(context);
+    }
+    final remoteName = (profileData['profileName'] as String?)?.trim() ??
+        (profileData['displayName'] as String?)?.trim() ??
         '';
+    final onboardingDone =
+        profileData['onboardingCompleted'] == true ||
+            profileData['profileComplete'] == true ||
+            remoteName.isNotEmpty;
     if (onboardingDone && remoteName.isEmpty) {
-      return _buildLoader(
-        context,
-        message: AppLocalizations.of(context)!.loadingProfile,
-      );
+      return _buildLoader(context);
     }
 
     if (!onboardingDone) {
@@ -486,10 +463,7 @@ class _AuthGateState extends State<AuthGate> {
         }
 
         if (!state.isLoaded || !state.isHydrated) {
-          return _buildLoader(
-            context,
-            message: AppLocalizations.of(context)!.loadingProfile,
-          );
+          return _buildLoader(context);
         }
 
         final profile = auth.profile;

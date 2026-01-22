@@ -599,7 +599,7 @@
   "displayNameLength": "Display name must be at least 2 characters.",
   "passwordLength": "Password must be at least 8 characters.",
   "min8Chars": "Minimum 8 characters.",
-  "loadingProfile": "Loading your profile...",
+  "loadingProfile": "Loading your profile",
   "sessionNotes": "Session notes",
   "sessionNotesHint": "Add notes for this session",
   "sendNotes": "Send notes",

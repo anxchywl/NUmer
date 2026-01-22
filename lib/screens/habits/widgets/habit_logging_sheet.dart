@@ -8,6 +8,7 @@ import '../../../models/habit.dart';
 import '../../../models/course.dart';
 import '../../../services/habit_service.dart';
 import '../../../services/storage.dart';
+import '../../../data/local/entities.dart';
 import '../../../app_state.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -93,79 +94,70 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   /// Fetches fresh total from Storage (sessions) + Firestore history (manual value)
   Future<void> _fetchFreshTotal() async {
     if (!mounted) return;
-    
-    // Capture service before any async operations
-    final habitService = context.read<HabitService>();
-    
-       final contributions = <String, int>{};
-       
-       try {
-          final dateKey = '${widget.date.year}-${widget.date.month.toString().padLeft(2, '0')}-${widget.date.day.toString().padLeft(2, '0')}';
-       
-       // Fetch history entry from Firestore
-       final history = await habitService.getHistory(widget.userId, widget.habit.id, widget.date, widget.date);
-       
-       double total = 0.0;
-       
-       // Only recalculate from sessions for Time habits with connected courses
-       if (widget.habit.type == HabitType.time && widget.habit.connectedCourseIds.isNotEmpty) {
-          final start = DateTime(widget.date.year, widget.date.month, widget.date.day);
-          final end = start.add(const Duration(days: 1));
-          
-          // 1. Get session contributions from Storage
-          final allContributions = await Storage.secondsByCourseBetween(start, end);
-          
-          double sessionTotal = 0.0;
-          for (final id in widget.habit.connectedCourseIds) {
-             if (allContributions.containsKey(id)) {
-                contributions[id] = allContributions[id]!;
-                sessionTotal += allContributions[id]!;
-             }
+    final contributions = <String, int>{};
+    try {
+      final dateKey =
+          '${widget.date.year}-${widget.date.month.toString().padLeft(2, '0')}-${widget.date.day.toString().padLeft(2, '0')}';
+
+      // Prefer local cache for history to avoid stale remote overwriting fresh edits
+      final localHistory = Storage.getHabitHistoryFromCache(widget.habit.id);
+      LocalHabitHistory? localEntry;
+      for (final entry in localHistory) {
+        if (entry.dateKey == dateKey && !entry.deleted) {
+          localEntry = entry;
+          break;
+        }
+      }
+
+      double total = _clampValue(widget.initialValue ?? 0.0);
+
+      // Only recalc from sessions for time habits with connected courses
+      if (widget.habit.type == HabitType.time &&
+          widget.habit.connectedCourseIds.isNotEmpty) {
+        final start =
+            DateTime(widget.date.year, widget.date.month, widget.date.day);
+        final end = start.add(const Duration(days: 1));
+
+        // 1. Get session contributions from Storage
+        final allContributions =
+            await Storage.secondsByCourseBetween(start, end);
+
+        double sessionTotal = 0.0;
+        for (final id in widget.habit.connectedCourseIds) {
+          if (allContributions.containsKey(id)) {
+            contributions[id] = allContributions[id]!;
+            sessionTotal += allContributions[id]!;
           }
-          
-          // 2. Get manual value from history (if exists)
-          double manualValue = 0.0;
-          if (history.isNotEmpty) {
-             final entry = history.firstWhere(
-               (e) => e.id == dateKey,
-               orElse: () => history.first,
-             );
-             manualValue = entry.manualValue ?? 0.0;
+        }
+
+        // 2. Get manual value from local history (if exists)
+        final manualValue = localEntry?.manualValue ?? 0.0;
+
+        // 3. Total = sessions + manual
+        total = _clampValue(sessionTotal + manualValue);
+      } else {
+        // Numeric or non-linked time habits: use local history value if present
+        if (localEntry != null) {
+          total = _clampValue(localEntry.value ?? 0.0);
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _courseContributions = contributions;
+          _initialValue = total;
+          // Only update _currentValue if user hasn't interacted yet (still at widget.initialValue)
+          if (_currentValue == _clampValue(widget.initialValue ?? 0) &&
+              _mode == LoggingMode.set) {
+            _currentValue = total;
+            if (widget.habit.type == HabitType.numeric) {
+              _numericController.text = _currentValue.toInt().toString();
+            }
           }
-          
-          // 3. Total = sessions + manual
-          total = _clampValue(sessionTotal + manualValue);
-       } else {
-          // For Numeric habits or habits without connected courses:
-          // Just use the value from history directly
-          if (history.isNotEmpty) {
-             final entry = history.firstWhere(
-               (e) => e.id == dateKey,
-               orElse: () => history.first,
-             );
-             total = _clampValue(entry.value ?? 0.0);
-          } else {
-             // No history, keep the widget.initialValue
-             total = _clampValue(widget.initialValue ?? 0.0);
-          }
-       }
-       
-       if (mounted) {
-         setState(() {
-           _courseContributions = contributions;
-           _initialValue = total;
-           // Only update _currentValue if user hasn't interacted yet (still at widget.initialValue)
-           // This prevents overwriting user edits during background refreshes
-           if (_currentValue == _clampValue(widget.initialValue ?? 0) && _mode == LoggingMode.set) {
-              _currentValue = total;
-              if (widget.habit.type == HabitType.numeric) {
-                _numericController.text = _currentValue.toInt().toString();
-              }
-           }
-         });
-       }
+        });
+      }
     } catch (e) {
-       debugPrint("Error fetching fresh total: $e");
+      debugPrint("Error fetching fresh total: $e");
     }
   }
 
@@ -196,7 +188,6 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
     );
     if (mounted) {
-       context.read<AppState>().triggerSync();
        Navigator.pop(context);
     }
   }

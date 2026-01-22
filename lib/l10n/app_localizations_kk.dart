@@ -263,7 +263,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get oneMonth => '1 ай';
 
   @override
-  String get twoMonths => '2 months';
+  String get twoMonths => '2 ай';
 
   @override
   String get threeMonths => '3 ай';
@@ -741,7 +741,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get noLongerMember => 'Сіз бұл топтың мүшесі емессіз.';
 
   @override
-  String get groupNameHint => 'Топқа атау енгізіңіз';
+  String get groupNameHint => 'Топ атауын енгізіңіз';
 
   @override
   String get visibility => 'Көрінуі';
@@ -1315,7 +1315,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get min8Chars => 'Кемінде 8 таңба.';
 
   @override
-  String get loadingProfile => 'Профиль жүктелуде...';
+  String get loadingProfile => 'Профиль жүктелуде';
 
   @override
   String get sessionNotes => 'Сессия жазбалары';
@@ -1750,104 +1750,104 @@ class AppLocalizationsKk extends AppLocalizations {
       'Бұл әдеттің бүкіл тарихын жояды. Қайтаруға болмайды.';
 
   @override
-  String get habitUnarchived => 'Habit unarchived';
+  String get habitUnarchived => 'Әдет архивтен шығарылды';
 
   @override
-  String get connectionsTabLabel => 'People';
+  String get connectionsTabLabel => 'Адамдар';
 
   @override
-  String get addPersonTitle => 'Add Person';
+  String get addPersonTitle => 'Адам қосу';
 
   @override
-  String get editPersonTitle => 'Edit Person';
+  String get editPersonTitle => 'Өңдеу';
 
   @override
-  String get personNameLabel => 'Name';
+  String get personNameLabel => 'Аты';
 
   @override
-  String get personNameHint => 'Enter full name';
+  String get personNameHint => 'Толық атын енгізіңіз';
 
   @override
-  String get groupsLabel => 'Groups';
+  String get groupsLabel => 'Топтар';
 
   @override
-  String get tagsLabel => 'Tags';
+  String get tagsLabel => 'Тегтер';
 
   @override
-  String get phoneLabel => 'Phone';
+  String get phoneLabel => 'Телефон';
 
   @override
   String get emailLabel => 'Email';
 
   @override
-  String get notesLabel => 'Notes';
+  String get notesLabel => 'Жазбалар';
 
   @override
-  String get lastContactedLabel => 'Last contacted';
+  String get lastContactedLabel => 'Соңғы байланыс';
 
   @override
-  String get remindMeLabel => 'Remind me to reach out';
+  String get remindMeLabel => 'Хабарласуды еске салу';
 
   @override
-  String get manageGroupsTitle => 'Manage Groups';
+  String get manageGroupsTitle => 'Топтарды басқару';
 
   @override
-  String get interactionLogTitle => 'Interaction Log';
+  String get interactionLogTitle => 'Қарым-қатынас журналы';
 
   @override
-  String get markContactedToday => 'Mark contacted today';
+  String get markContactedToday => 'Бүгін хабарласты деп белгілеу';
 
   @override
-  String get noConnectionsPlaceholder => 'No people yet';
+  String get noConnectionsPlaceholder => 'Әзірге адамдар жоқ';
 
   @override
-  String get searchConnectionsHint => 'Search people...';
+  String get searchConnectionsHint => 'Адамдарды іздеу...';
 
   @override
-  String get filterAll => 'All';
+  String get filterAll => 'Барлығы';
 
   @override
-  String get sortByRecent => 'Recent';
+  String get sortByRecent => 'Соңғы';
 
   @override
-  String get sortByName => 'Name';
+  String get sortByName => 'Аты';
 
   @override
-  String get sortByPriority => 'Priority';
+  String get sortByPriority => 'Басымдық';
 
   @override
-  String get deleteContactTitle => 'Delete Contact?';
+  String get deleteContactTitle => 'Контактіні жою керек пе?';
 
   @override
   String deleteContactMessage(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return '\"$name\" жойылсын ба?';
   }
 
   @override
-  String get deleteConnectionGroupTitle => 'Delete Group?';
+  String get deleteConnectionGroupTitle => 'Топты жою керек пе?';
 
   @override
   String deleteConnectionGroupMessage(String name) {
-    return 'This will remove \"$name\" from all contacts. This action cannot be undone.';
+    return 'Бұл \"$name\" тобын барлық контактілерден өшіреді. Қайтару мүмкін емес.';
   }
 
   @override
-  String get renameGroup => 'Rename';
+  String get renameGroup => 'Атын өзгерту';
 
   @override
-  String get newGroup => 'New Group';
+  String get newGroup => 'Жаңа топ';
 
   @override
-  String get editGroup => 'Edit Group';
+  String get editGroup => 'Топты өңдеу';
 
   @override
-  String get groupNameLabel => 'Group name';
+  String get groupNameLabel => 'Топ атауы';
 
   @override
-  String get noInteractionsYet => 'No interactions recorded yet';
+  String get noInteractionsYet => 'Қарым-қатынас әлі жоқ';
 
   @override
-  String get addInteractionHint => 'What did you discuss?';
+  String get addInteractionHint => 'Не туралы сөйлестіңіздер?';
 
   @override
   String get habitUnarchiveAction => 'Архивтен шығару';
@@ -1977,21 +1977,21 @@ class AppLocalizationsKk extends AppLocalizations {
   String get close => 'Жабу';
 
   @override
-  String get interactionCalendarTitle => 'Interaction Calendar';
+  String get interactionCalendarTitle => 'Қарым-қатынас күнтізбесі';
 
   @override
-  String get signInToViewConnections => 'Please sign in to view your people.';
+  String get signInToViewConnections => 'Адамдарыңызды көру үшін кіріңіз.';
 
   @override
-  String get personNotFound => 'Person not found';
+  String get personNotFound => 'Адам табылмады';
 
   @override
   String errorSaving(String error) {
-    return 'Error saving: $error';
+    return 'Сақтау қатесі: $error';
   }
 
   @override
-  String get add => 'Add';
+  String get add => 'Қосу';
 
   @override
   String get habitWeekNext => 'Келесі апта';

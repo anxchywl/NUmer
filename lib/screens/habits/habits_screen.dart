@@ -457,7 +457,6 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             date: date,
             completed: !isCompleted,
           );
-      if (mounted) context.read<AppState>().triggerSync();
     } else {
       // Show numeric/time input bottom sheet
       final dateKey = _dateKey(date);
@@ -602,6 +601,10 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     final isDark = theme.brightness == Brightness.dark;
     final localeName = l10n.localeName;
     final numberFormat = NumberFormat.decimalPattern(localeName);
+    final appState = context.read<AppState>();
+    final useLightTitle =
+        appState.homeSummaryRange == HomeSummaryRange.off &&
+            habit.connectedCourseIds.isEmpty;
 
     String requirementText;
     if (habit.type == HabitType.numeric) {
@@ -654,7 +657,13 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(habit.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  habit.name,
+                  style: TextStyle(
+                    fontWeight: useLightTitle ? FontWeight.w500 : FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Text(
                   requirementText,
@@ -714,6 +723,8 @@ class _HabitItem extends StatefulWidget {
 
 class _HabitItemState extends State<_HabitItem> {
   int _weekOffset = 0; // 0 = current week, -1 = last week, +1 = next week
+  /// Tracks date keys currently being toggled (pending confirmation from service)
+  final Set<String> _pendingKeys = {};
 
   /// Calculate the allowed minimum week offset based on habit start date
   int get _minWeekOffset {
@@ -848,6 +859,30 @@ class _HabitItemState extends State<_HabitItem> {
     return dateMidnight.isBefore(startMidnight);
   }
 
+  String _dateKey(DateTime date) =>
+      "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+
+  Future<void> _handleToggle(DateTime date) async {
+    // Defer state changes to the service; no optimistic UI flips to avoid stale caches.
+    final key = _dateKey(date);
+    
+    // Prevent double-taps on same key while pending
+    if (_pendingKeys.contains(key)) return;
+    
+    // Mark as pending (NO optimistic state change - wait for service confirmation)
+    setState(() => _pendingKeys.add(key));
+
+    try {
+      await widget.onToggle(date);
+    } finally {
+      // Remove from pending when complete (success or failure)
+      // The actual state update will come via widget.habit.last7 from stream
+      if (mounted) {
+        setState(() => _pendingKeys.remove(key));
+      }
+    }
+  }
+
 
 
   @override
@@ -858,6 +893,10 @@ class _HabitItemState extends State<_HabitItem> {
     final localeName = l10n.localeName;
     final frequencyText = _getFrequencyText(l10n, localeName);
     final weekDates = _currentWeekDates;
+    final appState = context.read<AppState>();
+    final useLightTitle =
+        appState.homeSummaryRange == HomeSummaryRange.off &&
+            widget.habit.connectedCourseIds.isEmpty;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -911,7 +950,8 @@ class _HabitItemState extends State<_HabitItem> {
                                 child: Text(
                                   widget.habit.name,
                                   style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight:
+                                        useLightTitle ? FontWeight.w500 : FontWeight.bold,
                                     fontSize: 16,
                                   ),
                                   maxLines: 1,
@@ -1068,11 +1108,11 @@ class _HabitItemState extends State<_HabitItem> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: weekDates.map((date) {
-                        final dateKey =
-                            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+                        final dateKey = _dateKey(date);
+                        final isSaving = _pendingKeys.contains(dateKey);
                         final currentVal = widget.habit.last7[dateKey] ?? 0.0;
                         final isCompleted = currentVal >= widget.habit.targetValue;
-                        final isPending = widget.habit.type != HabitType.yesNo && currentVal > 0 && currentVal < widget.habit.targetValue;
+                        final isPartialProgress = widget.habit.type != HabitType.yesNo && currentVal > 0 && currentVal < widget.habit.targetValue;
                         
                         final isToday = date.day == DateTime.now().day && date.month == DateTime.now().month && date.year == DateTime.now().year;
 
@@ -1090,8 +1130,8 @@ class _HabitItemState extends State<_HabitItem> {
                         // Active: Today or past scheduled days
                         final isActive = !isPreStart && !isFuture && isScheduled;
                         
-                        // Interaction only allowed on active days and NOT locked
-                        final canInteract = isActive && !isLocked;
+                        // Interaction only allowed on active days and NOT locked and NOT saving
+                        final canInteract = isActive && !isLocked && !isSaving;
 
                         // Styling Logic
                         Color textColor;
@@ -1106,11 +1146,26 @@ class _HabitItemState extends State<_HabitItem> {
                            textColor = isToday ? widget.habit.color : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
                         }
 
-                        // Determine Circle Decoration
+                        // Determine Circle Decoration and Child
                         BoxDecoration circleDeco;
                         Widget? circleChild;
                         
-                        if (isPreStart || !isScheduled) {
+                        if (isSaving) {
+                           // Pending/Saving state - show loading indicator
+                           circleDeco = BoxDecoration(
+                              color: widget.habit.color.withValues(alpha: 0.15),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: widget.habit.color.withValues(alpha: 0.5), width: 2),
+                           );
+                           circleChild = SizedBox(
+                             width: 16,
+                             height: 16,
+                             child: CircularProgressIndicator(
+                               strokeWidth: 2,
+                               color: widget.habit.color,
+                             ),
+                           );
+                        } else if (isPreStart || !isScheduled) {
                            // Hidden (transparent)
                            circleDeco = const BoxDecoration(color: Colors.transparent);
                         } else if (isFuture || isLocked) {
@@ -1124,12 +1179,12 @@ class _HabitItemState extends State<_HabitItem> {
                             circleDeco = BoxDecoration(
                               color: isCompleted
                                   ? widget.habit.color
-                                  : (isPending 
+                                  : (isPartialProgress 
                                       ? widget.habit.color.withValues(alpha: 0.15)
                                       : (isScheduled ? theme.colorScheme.surfaceContainerHighest : Colors.transparent)),
                               shape: BoxShape.circle,
-                              border: (isToday || isPending) 
-                                  ? Border.all(color: widget.habit.color, width: isPending ? 2 : 2) 
+                              border: (isToday || isPartialProgress) 
+                                  ? Border.all(color: widget.habit.color, width: isPartialProgress ? 2 : 2) 
                                   : null,
                             );
                             if (isCompleted) {
@@ -1138,7 +1193,7 @@ class _HabitItemState extends State<_HabitItem> {
                         }
 
                         final dateItem = GestureDetector(
-                          onTap: canInteract ? () => widget.onToggle(date) : null,
+                          onTap: canInteract ? () => _handleToggle(date) : null,
                           child: Column(
                             children: [
                               Text(
@@ -1154,6 +1209,7 @@ class _HabitItemState extends State<_HabitItem> {
                                 width: 32,
                                 height: 32,
                                 decoration: circleDeco,
+                                alignment: Alignment.center,
                                 child: circleChild,
                               ),
                             ],

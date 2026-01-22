@@ -744,7 +744,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noLongerMember => 'Вы больше не являетесь участником этой группы.';
 
   @override
-  String get groupNameHint => 'Введите название вашей группы';
+  String get groupNameHint => 'Введите название группы';
 
   @override
   String get visibility => 'Видимость';
@@ -1318,7 +1318,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get min8Chars => 'Минимум 8 символов.';
 
   @override
-  String get loadingProfile => 'Загрузка профиля...';
+  String get loadingProfile => 'Загрузка профиля';
 
   @override
   String get sessionNotes => 'Заметки к сессии';
@@ -1776,104 +1776,104 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это удалит всю историю выполнения этой привычки. Действие необратимо.';
 
   @override
-  String get habitUnarchived => 'Habit unarchived';
+  String get habitUnarchived => 'Привычка разархивирована';
 
   @override
-  String get connectionsTabLabel => 'People';
+  String get connectionsTabLabel => 'Люди';
 
   @override
-  String get addPersonTitle => 'Add Person';
+  String get addPersonTitle => 'Добавить человека';
 
   @override
-  String get editPersonTitle => 'Edit Person';
+  String get editPersonTitle => 'Редактировать';
 
   @override
-  String get personNameLabel => 'Name';
+  String get personNameLabel => 'Имя';
 
   @override
-  String get personNameHint => 'Enter full name';
+  String get personNameHint => 'Введите полное имя';
 
   @override
-  String get groupsLabel => 'Groups';
+  String get groupsLabel => 'Группы';
 
   @override
-  String get tagsLabel => 'Tags';
+  String get tagsLabel => 'Теги';
 
   @override
-  String get phoneLabel => 'Phone';
+  String get phoneLabel => 'Телефон';
 
   @override
   String get emailLabel => 'Email';
 
   @override
-  String get notesLabel => 'Notes';
+  String get notesLabel => 'Заметки';
 
   @override
-  String get lastContactedLabel => 'Last contacted';
+  String get lastContactedLabel => 'Последний контакт';
 
   @override
-  String get remindMeLabel => 'Remind me to reach out';
+  String get remindMeLabel => 'Напомнить написать';
 
   @override
-  String get manageGroupsTitle => 'Manage Groups';
+  String get manageGroupsTitle => 'Управление группами';
 
   @override
-  String get interactionLogTitle => 'Interaction Log';
+  String get interactionLogTitle => 'Журнал взаимодействий';
 
   @override
-  String get markContactedToday => 'Mark contacted today';
+  String get markContactedToday => 'Отметить контакт сегодня';
 
   @override
-  String get noConnectionsPlaceholder => 'No people yet';
+  String get noConnectionsPlaceholder => 'Пока нет людей';
 
   @override
-  String get searchConnectionsHint => 'Search people...';
+  String get searchConnectionsHint => 'Поиск людей...';
 
   @override
-  String get filterAll => 'All';
+  String get filterAll => 'Все';
 
   @override
-  String get sortByRecent => 'Recent';
+  String get sortByRecent => 'Недавние';
 
   @override
-  String get sortByName => 'Name';
+  String get sortByName => 'Имя';
 
   @override
-  String get sortByPriority => 'Priority';
+  String get sortByPriority => 'Приоритет';
 
   @override
-  String get deleteContactTitle => 'Delete Contact?';
+  String get deleteContactTitle => 'Удалить контакт?';
 
   @override
   String deleteContactMessage(String name) {
-    return 'Are you sure you want to delete \"$name\"?';
+    return 'Вы уверены, что хотите удалить \"$name\"?';
   }
 
   @override
-  String get deleteConnectionGroupTitle => 'Delete Group?';
+  String get deleteConnectionGroupTitle => 'Удалить группу?';
 
   @override
   String deleteConnectionGroupMessage(String name) {
-    return 'This will remove \"$name\" from all contacts. This action cannot be undone.';
+    return 'Это удалит \"$name\" из всех контактов. Это действие нельзя отменить.';
   }
 
   @override
-  String get renameGroup => 'Rename';
+  String get renameGroup => 'Переименовать';
 
   @override
-  String get newGroup => 'New Group';
+  String get newGroup => 'Новая группа';
 
   @override
-  String get editGroup => 'Edit Group';
+  String get editGroup => 'Редактировать группу';
 
   @override
-  String get groupNameLabel => 'Group name';
+  String get groupNameLabel => 'Название группы';
 
   @override
-  String get noInteractionsYet => 'No interactions recorded yet';
+  String get noInteractionsYet => 'Взаимодействий пока нет';
 
   @override
-  String get addInteractionHint => 'What did you discuss?';
+  String get addInteractionHint => 'О чем вы говорили?';
 
   @override
   String get habitUnarchiveAction => 'Разархивировать';
@@ -2003,21 +2003,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get close => 'Закрыть';
 
   @override
-  String get interactionCalendarTitle => 'Interaction Calendar';
+  String get interactionCalendarTitle => 'Календарь взаимодействий';
 
   @override
-  String get signInToViewConnections => 'Please sign in to view your people.';
+  String get signInToViewConnections => 'Войдите, чтобы видеть своих людей.';
 
   @override
-  String get personNotFound => 'Person not found';
+  String get personNotFound => 'Человек не найден';
 
   @override
   String errorSaving(String error) {
-    return 'Error saving: $error';
+    return 'Ошибка сохранения: $error';
   }
 
   @override
-  String get add => 'Add';
+  String get add => 'Добавить';
 
   @override
   String get habitWeekNext => 'Следующая неделя';

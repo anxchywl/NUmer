@@ -383,6 +383,8 @@ class LocalHabit extends HiveObject with SyncEntity {
     required this.archived,
     required this.createdAtMs,
     required this.connectedCourseIds,
+    this.resetAtMs,
+    this.resetPending = false,
     this.dirty = true,
     this.deleted = false,
   });
@@ -481,6 +483,12 @@ class LocalHabit extends HiveObject with SyncEntity {
 
   @HiveField(29)
   List<String> connectedCourseIds;
+
+  @HiveField(30)
+  int? resetAtMs;
+
+  @HiveField(31)
+  bool resetPending;
 }
 
 @HiveType(typeId: 17)
@@ -497,6 +505,7 @@ class LocalHabitHistory extends HiveObject with SyncEntity {
     this.manualValue,
     this.dirty = true,
     this.deleted = false,
+    this.version = 0,
   });
 
   @override
@@ -536,6 +545,9 @@ class LocalHabitHistory extends HiveObject with SyncEntity {
   @override
   @HiveField(10)
   bool deleted;
+
+  @HiveField(11)
+  int version; // Incremented on each local edit for optimistic locking
 }
 
 class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
@@ -810,6 +822,8 @@ class LocalHabitAdapter extends TypeAdapter<LocalHabit> {
       archived: reader.read() as bool,
       createdAtMs: reader.read() as int,
       connectedCourseIds: (reader.read() as List).cast<String>(),
+      resetAtMs: reader.availableBytes > 0 ? reader.read() as int? : null,
+      resetPending: reader.availableBytes > 0 ? reader.read() as bool : false,
     );
   }
 
@@ -845,7 +859,9 @@ class LocalHabitAdapter extends TypeAdapter<LocalHabit> {
       ..write(obj.last7Json)
       ..write(obj.archived)
       ..write(obj.createdAtMs)
-      ..write(obj.connectedCourseIds);
+      ..write(obj.connectedCourseIds)
+      ..write(obj.resetAtMs)
+      ..write(obj.resetPending);
   }
 }
 
@@ -867,6 +883,7 @@ class LocalHabitHistoryAdapter extends TypeAdapter<LocalHabitHistory> {
       manualValue: reader.read() as double?,
       dirty: reader.read() as bool,
       deleted: reader.read() as bool,
+      version: (reader.availableBytes > 0 ? reader.read() : 0) as int,
     );
   }
 
@@ -883,6 +900,7 @@ class LocalHabitHistoryAdapter extends TypeAdapter<LocalHabitHistory> {
       ..write(obj.value)
       ..write(obj.manualValue)
       ..write(obj.dirty)
-      ..write(obj.deleted);
+      ..write(obj.deleted)
+      ..write(obj.version);
   }
 }

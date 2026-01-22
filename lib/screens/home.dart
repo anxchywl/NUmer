@@ -196,146 +196,173 @@ class HomeScreen extends StatelessWidget {
                           return ok == true;
                         },
                         onDelete: () => state.removeCourse(c.id),
-                        child: ListTile(
-                          leading: CircleAvatar(backgroundColor: c.color),
-                          title: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
+                        child: Builder(
+                          builder: (context) {
+                            final showSummary = state.homeSummaryRange != HomeSummaryRange.off;
+                            final showProgress = state.progressView != ProgressView.off;
+                            final customGoalHours =
+                                state.goalHoursForCourse(c.id) ?? 0;
+                            final hasCredits = (c.credits ?? 0) > 0;
+                            final willShowProgressBar =
+                                showProgress && (hasCredits || customGoalHours > 0);
+                            final isMinimal = !showSummary && !willShowProgressBar;
+
+                            if (isMinimal) {
+                              final courseTheme = Theme.of(context);
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                leading: CircleAvatar(backgroundColor: c.color),
+                                title: Text(
                                   c.name,
+                                  style: courseTheme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              if ((c.credits ?? 0) > 0)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: _CreditsBadge(
-                                    credits: c.credits!,
-                                    onTap: () => _openCreditsPopup(context, c),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          subtitle: Builder(
-                            builder: (context) {
-                              final customGoalHours =
-                                  state.goalHoursForCourse(c.id) ?? 0;
-                              final hasCredits = (c.credits ?? 0) > 0;
-                              final showProgress =
-                                  hasCredits || customGoalHours > 0;
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (state.homeSummaryRange !=
-                                      HomeSummaryRange.off)
-                                    FutureBuilder<Map<String, int>>(
-                                      future:
-                                          _loadCourseSeconds(context, c.id),
-                                      builder: (context, snap) {
-                                        final secs = snap.data?[c.id] ?? 0;
-                                        final label =
-                                            state.homeSummaryLabel(context);
-                                        return Text('$label: ${_fmtHMS(secs)}');
-                                      },
-                                    ),
-                                  if (showProgress)
-                                    FutureBuilder<int>(
-                                      future:
-                                          state.progressView == ProgressView.day
-                                              ? Future<int>.value(
-                                                  state.todaySecondsFor(c.id),
-                                                )
-                                              : _weeklyElapsedForCourse(
-                                                  context, c.id),
-                                      builder: (context, snap) {
-                                        final elapsed =
-                                            (snap.data ?? 0); 
-                                        final level = c.expLevel ?? 3;
-                                        final weeklyHoursGoal =
-                                            customGoalHours > 0
-                                                ? customGoalHours
-                                                : hasCredits
-                                                    ? c.credits! *
-                                                        _hoursPerCreditForLevel(
-                                                            level)
-                                                    : 0;
-                                        if (weeklyHoursGoal <= 0) {
-                                          return const SizedBox.shrink();
-                                        }
-                                        final weeklyGoalSecs =
-                                            (weeklyHoursGoal * 3600)
-                                                .clamp(1, 1 << 31)
-                                                .toInt();
-                                        final targetSecs = state.progressView ==
-                                                ProgressView.day
-                                            ? (weeklyGoalSecs / 7)
-                                                .round()
-                                                .clamp(1, 1 << 31)
-                                            : weeklyGoalSecs;
-                                        final progress = targetSecs <= 0
-                                            ? 0.0
-                                            : (elapsed / targetSecs)
-                                                .clamp(0.0, 1.0);
-                                        final labelPrefix =
-                                            state.progressView ==
-                                                    ProgressView.day
-                                                ? AppLocalizations.of(context)!.dailyGoal
-                                                : AppLocalizations.of(context)!.weeklyGoal;
-                                        final targetHoursLabel =
-                                            state.progressView ==
-                                                    ProgressView.day
-                                                ? (weeklyHoursGoal / 7)
-                                                    .toStringAsFixed(1)
-                                                : weeklyHoursGoal
-                                                    .toStringAsFixed(1);
+                                trailing: Icon(Icons.more_horiz, color: courseTheme.colorScheme.onSurfaceVariant),
+                                onTap: () => _openCourseTimeMenu(context, c),
+                              );
+                            }
 
-                                        return Padding(
-                                          padding:
-                                              const EdgeInsets.only(top: 6),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              TweenAnimationBuilder<double>(
-                                                duration: const Duration(
-                                                    milliseconds: 350),
-                                                curve: Curves.easeOutCubic,
-                                                tween: Tween(
-                                                    begin: 0, end: progress),
-                                                builder: (context, v, _) {
-                                                  return ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            6),
-                                                    child:
-                                                        LinearProgressIndicator(
-                                                      value: v,
-                                                      minHeight: 8,
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '$labelPrefix: ${_fmtHMS(elapsed)} / $targetHoursLabel${AppLocalizations.of(context)!.hUnit}',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                        color: Colors.grey),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
+                            return ListTile(
+                              leading: CircleAvatar(backgroundColor: c.color),
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      c.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if ((c.credits ?? 0) > 0 && showProgress)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: _CreditsBadge(
+                                        credits: c.credits!,
+                                        onTap: () => _openCreditsPopup(context, c),
+                                      ),
                                     ),
                                 ],
-                              );
-                            },
-                          ),
-                          trailing: const Icon(Icons.more_horiz),
-                          onTap: () => _openCourseTimeMenu(context, c),
+                              ),
+                              subtitle: Builder(
+                                builder: (context) {
+                                  final showProgressBar =
+                                      hasCredits || customGoalHours > 0;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (showSummary)
+                                        FutureBuilder<Map<String, int>>(
+                                          future:
+                                              _loadCourseSeconds(context, c.id),
+                                          builder: (context, snap) {
+                                            final secs = snap.data?[c.id] ?? 0;
+                                            final label =
+                                                state.homeSummaryLabel(context);
+                                            return Text('$label: ${_fmtHMS(secs)}');
+                                          },
+                                        ),
+                                      if (showProgressBar && showProgress)
+                                        FutureBuilder<int>(
+                                          future:
+                                              state.progressView == ProgressView.day
+                                                  ? Future<int>.value(
+                                                      state.todaySecondsFor(c.id),
+                                                    )
+                                                  : _weeklyElapsedForCourse(
+                                                      context, c.id),
+                                          builder: (context, snap) {
+                                            final elapsed =
+                                                (snap.data ?? 0); 
+                                            final level = c.expLevel ?? 3;
+                                            final weeklyHoursGoal =
+                                                customGoalHours > 0
+                                                    ? customGoalHours
+                                                    : hasCredits
+                                                        ? c.credits! *
+                                                            _hoursPerCreditForLevel(
+                                                                level)
+                                                        : 0;
+                                            if (weeklyHoursGoal <= 0) {
+                                              return const SizedBox.shrink();
+                                            }
+                                            final weeklyGoalSecs =
+                                                (weeklyHoursGoal * 3600)
+                                                    .clamp(1, 1 << 31)
+                                                    .toInt();
+                                            final targetSecs = state.progressView ==
+                                                    ProgressView.day
+                                                ? (weeklyGoalSecs / 7)
+                                                    .round()
+                                                    .clamp(1, 1 << 31)
+                                                : weeklyGoalSecs;
+                                            final progress = targetSecs <= 0
+                                                ? 0.0
+                                                : (elapsed / targetSecs)
+                                                    .clamp(0.0, 1.0);
+                                            final labelPrefix =
+                                                state.progressView ==
+                                                        ProgressView.day
+                                                    ? AppLocalizations.of(context)!.dailyGoal
+                                                    : AppLocalizations.of(context)!.weeklyGoal;
+                                            final targetHoursLabel =
+                                                state.progressView ==
+                                                        ProgressView.day
+                                                    ? (weeklyHoursGoal / 7)
+                                                        .toStringAsFixed(1)
+                                                    : weeklyHoursGoal
+                                                        .toStringAsFixed(1);
+    
+                                            return Padding(
+                                              padding:
+                                                  const EdgeInsets.only(top: 6),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  TweenAnimationBuilder<double>(
+                                                    duration: const Duration(
+                                                        milliseconds: 350),
+                                                    curve: Curves.easeOutCubic,
+                                                    tween: Tween(
+                                                        begin: 0, end: progress),
+                                                    builder: (context, v, _) {
+                                                      return ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                6),
+                                                        child:
+                                                            LinearProgressIndicator(
+                                                          value: v,
+                                                          minHeight: 8,
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    '$labelPrefix: ${_fmtHMS(elapsed)} / $targetHoursLabel${AppLocalizations.of(context)!.hUnit}',
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                            color: Colors.grey),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                    ],
+                                  );
+                                },
+                              ),
+                              trailing: const Icon(Icons.more_horiz),
+                              onTap: () => _openCourseTimeMenu(context, c),
+                            );
+                          },
                         ),
                       ),
                     ),

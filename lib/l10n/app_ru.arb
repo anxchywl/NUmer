@@ -478,7 +478,7 @@
   "displayNameLength": "Имя должно быть не менее 2 символов.",
   "passwordLength": "Пароль должен быть не менее 8 символов.",
   "min8Chars": "Минимум 8 символов.",
-  "loadingProfile": "Загрузка профиля...",
+  "loadingProfile": "Загрузка профиля",
   "sessionNotes": "Заметки к сессии",
   "sessionNotesHint": "Добавьте заметки к этой сессии",
   "sendNotes": "Отправить заметки",
@@ -803,5 +803,58 @@
       "month": { "type": "String" },
       "year": { "type": "int" }
     }
-  }
+  },
+  "habitUnarchived": "Привычка разархивирована",
+  "connectionsTabLabel": "Люди",
+  "addPersonTitle": "Добавить человека",
+  "editPersonTitle": "Редактировать",
+  "personNameLabel": "Имя",
+  "personNameHint": "Введите полное имя",
+  "groupsLabel": "Группы",
+  "tagsLabel": "Теги",
+  "phoneLabel": "Телефон",
+  "emailLabel": "Email",
+  "notesLabel": "Заметки",
+  "lastContactedLabel": "Последний контакт",
+  "remindMeLabel": "Напомнить написать",
+  "manageGroupsTitle": "Управление группами",
+  "interactionLogTitle": "Журнал взаимодействий",
+  "markContactedToday": "Отметить контакт сегодня",
+  "noConnectionsPlaceholder": "Пока нет людей",
+  "searchConnectionsHint": "Поиск людей...",
+  "filterAll": "Все",
+  "sortByRecent": "Недавние",
+  "sortByName": "Имя",
+  "sortByPriority": "Приоритет",
+  "deleteContactTitle": "Удалить контакт?",
+  "deleteContactMessage": "Вы уверены, что хотите удалить \"{name}\"?",
+  "@deleteContactMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteConnectionGroupTitle": "Удалить группу?",
+  "deleteConnectionGroupMessage": "Это удалит \"{name}\" из всех контактов. Это действие нельзя отменить.",
+  "@deleteConnectionGroupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "renameGroup": "Переименовать",
+  "newGroup": "Новая группа",
+  "editGroup": "Редактировать группу",
+  "groupNameLabel": "Название группы",
+  "groupNameHint": "Введите название группы",
+  "noInteractionsYet": "Взаимодействий пока нет",
+  "addInteractionHint": "О чем вы говорили?",
+  "interactionCalendarTitle": "Календарь взаимодействий",
+  "signInToViewConnections": "Войдите, чтобы видеть своих людей.",
+  "personNotFound": "Человек не найден",
+  "errorSaving": "Ошибка сохранения: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "add": "Добавить"
 }

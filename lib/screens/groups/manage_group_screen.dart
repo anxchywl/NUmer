@@ -488,6 +488,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                           child: UserProfileTile(
                                             userId: member.userId,
                                             role: member.role.label,
+                                            showOnlyMajor: true,
                                             trailing: _buildMemberTrailing(
                                               member: member,
                                               currentUserId: currentUserId,

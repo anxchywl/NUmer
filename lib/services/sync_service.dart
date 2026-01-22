@@ -33,6 +33,8 @@ class SyncService extends ChangeNotifier {
   String? _uid;
   String? _deviceId;
   bool _online = false;
+  bool _bootstrapping = false;
+  bool _hasPulledUser = false;
   bool _isRunning = false;
   bool _isSyncing = false;
 
@@ -69,18 +71,27 @@ class SyncService extends ChangeNotifier {
     _uid = uid;
     _deviceId = deviceId;
     _onForcedLogout = onForcedLogout;
+    _bootstrapping = bootstrap;
+    _hasPulledUser = false;
 
     await _db.openForUser(uid);
 
     _isRunning = true;
 
     await _checkConnectivity();
+    // Reflect initial connectivity state immediately for UI; will be updated again during sync
+    if (_online) {
+      _setStatus(_isSyncing ? SyncStatus.syncing : SyncStatus.upToDate);
+    } else {
+      _setStatus(SyncStatus.offline);
+    }
 
     _connectivitySub =
         _connectivity.onConnectivityChanged.listen((List<ConnectivityResult> results) {
       _online = _computeOnlineStatus(results);
       if (_online) {
-        unawaited(syncNow());
+        // Disabled auto-sync on connectivity to prevent overwriting local state.
+        // Sync is now Manual or Bundled.
       } else {
         _setStatus(SyncStatus.offline);
       }
@@ -97,8 +108,9 @@ class SyncService extends ChangeNotifier {
         // New device / first login: block until minimal data is fetched.
         await syncNow(full: true, startup: true);
       } else {
-        // Returning user with cache: run delta sync in background.
-        unawaited(syncNow(full: false, startup: true));
+        // Returning user with cache: Do NOT auto-sync on launch.
+        // We rely on "Manual Sync" or "Major Event" triggers.
+        // unawaited(syncNow(full: false, startup: true));
       }
     } else {
       _setStatus(SyncStatus.offline);
@@ -110,6 +122,8 @@ class SyncService extends ChangeNotifier {
       await onBeforeStop!();
     }
     _status = SyncStatus.offline;
+    _bootstrapping = false;
+    _hasPulledUser = false;
     _isRunning = false;
     _isSyncing = false;
     await _connectivitySub?.cancel();
@@ -173,7 +187,11 @@ class SyncService extends ChangeNotifier {
       final userDoc = _db.userDocOrNull;
 
       if (userDoc != null && userDoc.dirty) {
-        await _pushUser(userDoc);
+        // On a fresh device with no cached profile, avoid overwriting remote
+        // fields with local defaults until we've pulled the remote user once.
+        if (!(_bootstrapping && !_hasPulledUser)) {
+          await _pushUser(userDoc);
+        }
       }
 
       Future<void> pushChunk<T extends HiveObject>(
@@ -259,6 +277,10 @@ class SyncService extends ChangeNotifier {
         if (habit.deleted) {
           batch.delete(ref);
         } else {
+          if (habit.resetPending) {
+            await _deleteRemoteHabitHistory(habit.id);
+            habit.resetPending = false;
+          }
           batch.set(ref, _habitToRemote(habit), SetOptions(merge: true));
         }
         habit.dirty = false;
@@ -266,8 +288,42 @@ class SyncService extends ChangeNotifier {
       });
 
       await Future.wait([
-        for (final h in dirtyHabits) h.save(),
+        for (final h in dirtyHabits) _db.putHabit(h),
       ]);
+
+      // Push dirty habit history entries
+      final dirtyHistory = _db.dirtyHabitHistory();
+      await pushChunk<LocalHabitHistory>(dirtyHistory,
+          (batch, history) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('habits')
+            .doc(history.habitId)
+            .collection('history')
+            .doc(history.dateKey);
+
+        final payload = {
+          'ts': Timestamp.fromMillisecondsSinceEpoch(history.completedAtMs),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'v': history.value,
+          'm': history.manualValue,
+          'ver': history.version, // Version for optimistic locking
+          'deleted': history.deleted,
+        };
+
+        batch.set(ref, payload, SetOptions(merge: true));
+        history.dirty = false;
+        history.updatedAtMs = _now();
+      });
+
+      await Future.wait([
+        for (final h in dirtyHistory) _db.putHabitHistory(h),
+      ]);
+
+      final historyState = _db.syncStateForKey(_habitHistoryStateKey);
+      historyState.lastPushMs = _now();
+      await _db.putSyncState(historyState);
 
       final state = _db.syncStateForKey(_coursesStateKey);
       state.lastPushMs = _now();
@@ -443,6 +499,7 @@ class SyncService extends ChangeNotifier {
     var reads = 0;
     final ref = _firestore.collection('users').doc(_uid);
     final snapshot = await ref.get(GetOptions(source: Source.server));
+    _hasPulledUser = true;
     if (snapshot.exists) reads++;
     final data = snapshot.data();
     if (data == null) return reads;
@@ -731,6 +788,8 @@ class SyncService extends ChangeNotifier {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
     var habit = _db.getHabitById(snapshot.id);
+    final resetAtMs = _timestampToMs(data['rs'] ?? data['latestResetAt']);
+    final localResetAtMs = habit?.resetAtMs ?? 0;
 
     // Parse stats map
     final statsMap = (data['st'] ?? data['stats'] ?? {}) as Map<String, dynamic>;
@@ -802,6 +861,7 @@ class SyncService extends ChangeNotifier {
         archived: data['ar'] == true || data['archived'] == true,
         createdAtMs: createdAtMs,
         connectedCourseIds: connectedCourseIds,
+        resetAtMs: resetAtMs > 0 ? resetAtMs : null,
         dirty: false,
         deleted: data['deleted'] == true,
       );
@@ -809,20 +869,13 @@ class SyncService extends ChangeNotifier {
       return;
     }
 
-    // Skip if local is dirty and newer
-    if (habit.dirty && updatedAt <= habit.updatedAtMs) {
-      return;
+    if (resetAtMs > 0 && resetAtMs > localResetAtMs) {
+      await _clearLocalHabitProgressForReset(habit, resetAtMs);
     }
 
-    // Log conflict if local is dirty but remote is newer
-    if (habit.dirty && updatedAt > habit.updatedAtMs) {
-      await _db.logConflict(
-        collection: 'habits',
-        entityId: habit.id,
-        localUpdatedAtMs: habit.updatedAtMs,
-        remoteUpdatedAtMs: updatedAt,
-        resolvedWithRemote: true,
-      );
+    // Skip if local is dirty OR if local timestamp is newer than incoming remote
+    if (habit.dirty || habit.updatedAtMs > updatedAt) {
+      return;
     }
 
     habit
@@ -852,9 +905,11 @@ class SyncService extends ChangeNotifier {
       ..createdAtMs = createdAtMs
       ..connectedCourseIds = connectedCourseIds
       ..deleted = data['deleted'] == true
+      ..resetAtMs = resetAtMs > 0 ? resetAtMs : habit.resetAtMs
       ..updatedAtMs = updatedAt
       ..dirty = false;
     await habit.save();
+
   }
 
   static const _habitHistoryStateKey = 'habit_history';
@@ -905,6 +960,11 @@ class SyncService extends ChangeNotifier {
   ) async {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
+    final habit = _db.getHabitById(habitId);
+    final resetAtMs = habit?.resetAtMs ?? 0;
+    if (resetAtMs > 0 && updatedAt < resetAtMs) {
+      return;
+    }
     final dateKey = snapshot.id; // Corrected: Firestore history IDs are dateKeys (YYYY-MM-DD)
     final id = '${habitId}_$dateKey';
 
@@ -927,9 +987,8 @@ class SyncService extends ChangeNotifier {
       return;
     }
 
-    if (history.dirty && updatedAt <= history.updatedAtMs) {
-      return;
-    }
+    // Skip if local is dirty or newer/equal
+    if (history.dirty || history.updatedAtMs >= updatedAt) return;
 
     history
       ..completedAtMs = _timestampToMs(data['ts'] ?? data['timestamp'])
@@ -942,13 +1001,55 @@ class SyncService extends ChangeNotifier {
     await history.save();
   }
 
+  Future<void> _clearLocalHabitProgressForReset(
+    LocalHabit habit,
+    int resetAtMs,
+  ) async {
+    final entries = _db.habitHistoryForHabit(habit.id, includeDeleted: true).toList();
+    for (final entry in entries) {
+      await _db.habitHistoryBox.delete(entry.id);
+    }
+    habit
+      ..totalCompletions = 0
+      ..currentStreak = 0
+      ..longestStreak = 0
+      ..last7Json = '{}'
+      ..resetAtMs = resetAtMs
+      ..resetPending = false
+      ..updatedAtMs = max(habit.updatedAtMs, resetAtMs)
+      ..dirty = false;
+    await habit.save();
+  }
+
+  Future<void> _deleteRemoteHabitHistory(String habitId) async {
+    if (_uid == null) return;
+    final historyRef = _firestore
+        .collection('users')
+        .doc(_uid)
+        .collection('habits')
+        .doc(habitId)
+        .collection('history');
+
+    const batchSize = 400;
+    while (true) {
+      final snapshot = await historyRef.limit(batchSize).get();
+      if (snapshot.docs.isEmpty) break;
+      final batch = _firestore.batch();
+      for (final doc in snapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      if (snapshot.docs.length < batchSize) break;
+    }
+  }
+
   Map<String, dynamic> _userToRemote(LocalUserDoc doc) {
     final avatarBase64 = (doc.avatarImage != null && doc.avatarImage!.isNotEmpty)
         ? base64Encode(doc.avatarImage!)
         : null;
     final hasCustomAvatar = avatarBase64 != null;
     final avatarIndex = hasCustomAvatar ? null : doc.avatarIndex;
-    return {
+    final payload = <String, dynamic>{
       'uid': doc.uid,
       'displayName': doc.profileName,
       'profileName': doc.profileName,
@@ -971,6 +1072,10 @@ class SyncService extends ChangeNotifier {
       'bootstrapVersion': doc.bootstrapVersion,
       'updatedAt': FieldValue.serverTimestamp(),
     };
+
+    // Avoid overwriting remote fields with nulls when local cache is empty.
+    payload.removeWhere((_, value) => value == null);
+    return payload;
   }
 
   Map<String, dynamic> _courseToRemote(LocalCourse course) {
@@ -1018,7 +1123,8 @@ class SyncService extends ChangeNotifier {
   }
 
   Map<String, dynamic> _habitToRemote(LocalHabit habit) {
-    return {
+    final resetAtMs = habit.resetAtMs;
+    final payload = {
       'n': habit.name,
       'cl': habit.colorValue,
       'ic': habit.iconCodePoint,
@@ -1046,9 +1152,12 @@ class SyncService extends ChangeNotifier {
       'ar': habit.archived,
       'cr': Timestamp.fromMillisecondsSinceEpoch(habit.createdAtMs),
       'cc': habit.connectedCourseIds,
+      'rs': resetAtMs != null ? Timestamp.fromMillisecondsSinceEpoch(resetAtMs) : null,
       'deleted': habit.deleted,
       'updatedAt': FieldValue.serverTimestamp(),
     };
+    payload.removeWhere((_, value) => value == null);
+    return payload;
   }
 
   Map<String, dynamic>? _decodeJsonMap(String json) {

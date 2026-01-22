@@ -42,39 +42,56 @@ class HabitDaySheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(80),
-                  borderRadius: BorderRadius.circular(2),
+              // Header Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(theme.brightness == Brightness.dark ? 120 : 60),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               Text(
                 DateFormat.yMMMMEEEEd(l10n.localeName).format(date),
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 l10n.habitDailyOverview,
-                style: theme.textTheme.bodyMedium?.copyWith(
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               
               if (sortedHabits.isEmpty)
                 Padding(
-                  padding: const EdgeInsets.all(32.0),
+                  padding: const EdgeInsets.fromLTRB(48, 24, 48, 48),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.event_busy, size: 48, color: theme.colorScheme.outline),
-                      const SizedBox(height: 12),
-                      Text(l10n.habitNoHabitsThisDay, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.outline)),
+                      Icon(
+                        Icons.event_busy_rounded, 
+                        size: 64, 
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.habitNoHabitsThisDay, 
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 )
@@ -259,7 +276,6 @@ class _HabitRow extends StatelessWidget {
            );
         }
       }
-      if (context.mounted) context.read<AppState>().triggerSync();
     } else {
       showModalBottomSheet(
         context: context,

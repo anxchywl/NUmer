@@ -37,7 +37,7 @@ class MainActivity : FlutterActivity() {
       }
     }
 
-    val backgroundColor = if (useDark) Color.parseColor("#0F172A") else Color.WHITE
+    val backgroundColor = if (useDark) Color.parseColor("#121212") else Color.WHITE
 
     window.setBackgroundDrawable(ColorDrawable(backgroundColor))
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {

@@ -10,12 +10,14 @@ class UserProfileTile extends StatelessWidget {
     this.role,
     this.subtitle,
     this.trailing,
+    this.showOnlyMajor = false,
   });
 
   final String userId;
   final String? role;
   final Widget? subtitle;
   final Widget? trailing;
+  final bool showOnlyMajor;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +95,13 @@ class UserProfileTile extends StatelessWidget {
     final hasCustomSubtitle = subtitle != null;
 
     if (!hasGoal && !hasMajor && !hasCustomSubtitle) {
+      return null;
+    }
+
+    if (showOnlyMajor) {
+      if (hasMajor) {
+        return Text(major, softWrap: true);
+      }
       return null;
     }
 

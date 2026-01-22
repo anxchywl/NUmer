@@ -20,7 +20,7 @@ enum WeekStart { monday, sunday }
 
 enum HomeSummaryRange { off, today, week, month, year, allTime }
 
-enum ProgressView { day, week }
+enum ProgressView { day, week, off }
 
 enum PomodoroPhase { work, shortBreak, longBreak }
 
@@ -515,7 +515,9 @@ class AppState extends ChangeNotifier {
 
   Future<void> loadProgressView() async {
     final s = await Storage.getProgressView();
-    _progressView = (s == 'week') ? ProgressView.week : ProgressView.day;
+    _progressView = (s == 'week')
+        ? ProgressView.week
+        : (s == 'off' ? ProgressView.off : ProgressView.day);
     notifyListeners();
   }
 
@@ -523,7 +525,7 @@ class AppState extends ChangeNotifier {
     _progressView = v;
     notifyListeners();
     await Storage.setProgressView(
-        v == ProgressView.week ? 'week' : 'day');
+        v == ProgressView.week ? 'week' : (v == ProgressView.off ? 'off' : 'day'));
     _triggerSync();
   }
 
@@ -2247,9 +2249,13 @@ class AppState extends ChangeNotifier {
       }
     }
 
-    _themeMode = _parseMode(stored ?? _initialThemeMode?.name ?? 'system');
+    final parsed = _parseMode(stored ?? _initialThemeMode?.name ?? 'system');
+    final shouldNotify = !_themeLoaded || _themeMode != parsed;
+    _themeMode = parsed;
     _themeLoaded = true;
-    notifyListeners();
+    if (shouldNotify) {
+      notifyListeners();
+    }
     if (synced) {
       _triggerSync();
     }

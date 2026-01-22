@@ -100,6 +100,7 @@
   "selectCourse": "Курсты таңдаңыз",
   "timePeriod": "Уақыт кезеңі",
   "oneMonth": "1 ай",
+  "twoMonths": "2 ай",
   "threeMonths": "3 ай",
   "sixMonths": "6 ай",
   "limitOneAnalysisPerPeriod": "Шектеу: таңдалған кезеңге 1 талдау.",
@@ -584,7 +585,7 @@
   "displayNameLength": "Көрсетілетін ат кемінде 2 таңба болуы керек.",
   "passwordLength": "Құпиясөз кемінде 8 таңба болуы керек.",
   "min8Chars": "Кемінде 8 таңба.",
-  "loadingProfile": "Профиль жүктелуде...",
+  "loadingProfile": "Профиль жүктелуде",
   "sessionNotes": "Сессия жазбалары",
   "sessionNotesHint": "Осы сессияға жазба қосыңыз",
   "sendNotes": "Жазбаларды жіберу",
@@ -908,5 +909,58 @@
       "month": { "type": "String" },
       "year": { "type": "int" }
     }
-  }
+  },
+  "habitUnarchived": "Әдет архивтен шығарылды",
+  "connectionsTabLabel": "Адамдар",
+  "addPersonTitle": "Адам қосу",
+  "editPersonTitle": "Өңдеу",
+  "personNameLabel": "Аты",
+  "personNameHint": "Толық атын енгізіңіз",
+  "groupsLabel": "Топтар",
+  "tagsLabel": "Тегтер",
+  "phoneLabel": "Телефон",
+  "emailLabel": "Email",
+  "notesLabel": "Жазбалар",
+  "lastContactedLabel": "Соңғы байланыс",
+  "remindMeLabel": "Хабарласуды еске салу",
+  "manageGroupsTitle": "Топтарды басқару",
+  "interactionLogTitle": "Қарым-қатынас журналы",
+  "markContactedToday": "Бүгін хабарласты деп белгілеу",
+  "noConnectionsPlaceholder": "Әзірге адамдар жоқ",
+  "searchConnectionsHint": "Адамдарды іздеу...",
+  "filterAll": "Барлығы",
+  "sortByRecent": "Соңғы",
+  "sortByName": "Аты",
+  "sortByPriority": "Басымдық",
+  "deleteContactTitle": "Контактіні жою керек пе?",
+  "deleteContactMessage": "\"{name}\" жойылсын ба?",
+  "@deleteContactMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "deleteConnectionGroupTitle": "Топты жою керек пе?",
+  "deleteConnectionGroupMessage": "Бұл \"{name}\" тобын барлық контактілерден өшіреді. Қайтару мүмкін емес.",
+  "@deleteConnectionGroupMessage": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "renameGroup": "Атын өзгерту",
+  "newGroup": "Жаңа топ",
+  "editGroup": "Топты өңдеу",
+  "groupNameLabel": "Топ атауы",
+  "groupNameHint": "Топ атауын енгізіңіз",
+  "noInteractionsYet": "Қарым-қатынас әлі жоқ",
+  "addInteractionHint": "Не туралы сөйлестіңіздер?",
+  "interactionCalendarTitle": "Қарым-қатынас күнтізбесі",
+  "signInToViewConnections": "Адамдарыңызды көру үшін кіріңіз.",
+  "personNotFound": "Адам табылмады",
+  "errorSaving": "Сақтау қатесі: {error}",
+  "@errorSaving": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "add": "Қосу"
 }

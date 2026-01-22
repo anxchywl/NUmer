@@ -1447,8 +1447,6 @@ final FocusNode _unitFocus = FocusNode();
 
       await context.read<HabitService>().createHabit(uid, habit);
       if (mounted) {
-         // Trigger explicit sync
-         context.read<AppState>().triggerSync();
          Navigator.pop(context);
       }
       

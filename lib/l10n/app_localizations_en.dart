@@ -1316,7 +1316,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get min8Chars => 'Minimum 8 characters.';
 
   @override
-  String get loadingProfile => 'Loading your profile...';
+  String get loadingProfile => 'Loading your profile';
 
   @override
   String get sessionNotes => 'Session notes';

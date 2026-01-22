@@ -189,6 +189,21 @@ class AuthController extends ChangeNotifier {
     final hasLocalCache = LocalDatabase.instance.hasBootstrapCache();
     final needsBootstrap = !hasLocalCache;
     final existingBootstrapVersion = await Storage.getBootstrapVersionFlag();
+
+    // Seed profile + sync readiness from local cache for fast return-user startup
+    final localProfile = LocalDatabase.instance.userDocOrNull;
+    if (localProfile != null) {
+      _profileData ??= {
+        'profileName': localProfile.profileName,
+        'displayName': localProfile.profileName,
+        'profileComplete': localProfile.profileComplete,
+        'onboardingCompleted': localProfile.onboardingCompleted,
+      };
+      _profileReady = true;
+    }
+    if (hasLocalCache) {
+      _syncReady = true;
+    }
     _isBootstrapping = needsBootstrap;
     notifyListeners();
 

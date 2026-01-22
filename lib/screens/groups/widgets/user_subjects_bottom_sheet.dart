@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import '../../../models/group_statistics.dart';
 import '../../../services/group_service.dart';
 import '../../../l10n/app_localizations.dart';
@@ -36,6 +38,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
   late bool _isUpdating;
   Map<String, dynamic>? _profileData;
 
+  StreamSubscription? _profileSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -62,271 +66,276 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
       },
     );
     
-    // Load profile from cache then fetch fresh if stale
-    _loadProfile(groupService);
+    // Watch profile changes in real-time
+    _watchProfile();
   }
   
-  Future<void> _loadProfile(GroupService groupService) async {
-    // 1. Show cached profile instantly
-    final cached = await groupService.getCachedMemberProfile(
-      groupId: widget.groupId,
-      userId: widget.userId,
-    );
-    if (cached != null && mounted) {
-      setState(() {
-        _profileData = cached;
-      });
-    }
-    
-    // 2. Check if stale and fetch fresh
-    final isStale = groupService.isMemberProfileStale(
-      groupId: widget.groupId,
-      userId: widget.userId,
-    );
-    if (isStale || cached == null) {
-      final fresh = await groupService.fetchAndCacheMemberProfile(
-        groupId: widget.groupId,
-        userId: widget.userId,
-      );
-      if (fresh != null && mounted) {
+  void _watchProfile() {
+    _profileSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.userId)
+        .snapshots()
+        .listen((snapshot) {
+      if (!snapshot.exists || !mounted) return;
+      
+      final data = snapshot.data();
+      if (data != null) {
         setState(() {
-          _profileData = fresh;
+          _profileData = {
+           'major': data['major'],
+           'profileGoal': data['profileGoal'],
+           'profileContact': data['profileContact'],
+          };
         });
       }
-    }
+    });
+  }
+  
+  @override
+  void dispose() {
+    _profileSubscription?.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final maxHeight = MediaQuery.of(context).size.height * 0.6;
+    
+    // Determine max height dynamically
+    return StreamBuilder<MemberSubjectStats>(
+      stream: _statsStream,
+      initialData: widget.preloadedStats,
+      builder: (context, snapshot) {
+        final hasData = snapshot.hasData && 
+                        snapshot.data != null && 
+                        snapshot.data!.subjectStats.isNotEmpty;
+                        
+        final maxHeight = MediaQuery.of(context).size.height * (hasData ? 0.8 : 0.5);
 
-    return Container(
-      constraints: BoxConstraints(maxHeight: maxHeight),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          
-          Center(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: colorScheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+        return Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                UniversalAvatar(
-                  userId: widget.userId,
-                  name: widget.name,
-                  initialAvatarColorValue: widget.avatarColorValue,
-                  size: 56,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colorScheme.onSurfaceVariant.withAlpha(theme.brightness == Brightness.dark ? 120 : 60),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Builder(
-                    builder: (context) {
-                      final data = _profileData;
-                      final major = data?['major'] as String?;
-                      final goal = data?['profileGoal'] as String?;
-                      final contact = data?['profileContact'] as String?;
-                      final hasMajor = major != null && major.isNotEmpty;
-                      final hasGoal = goal != null && goal.isNotEmpty;
-                      final hasContact = contact != null && contact.isNotEmpty;
-
-                      return Column(
+              ),
+              
+                Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+                child: Row(
+                  children: [
+                    UniversalAvatar(
+                      userId: widget.userId,
+                      name: widget.name,
+                      initialAvatarColorValue: widget.avatarColorValue,
+                      size: 64,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             widget.name,
-                            style: theme.textTheme.titleLarge?.copyWith(
+                            style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
-                            softWrap: true,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          if (hasMajor)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                major,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w500,
+                          // Info Section (No Icons)
+                          Builder(
+                            builder: (context) {
+                              final data = _profileData;
+                              final major = data?['major'] as String?;
+                              final goal = data?['profileGoal'] as String?;
+                              final contact = data?['profileContact'] as String?;
+                              
+                              if (data == null && _isUpdating) return const SizedBox.shrink();
+                              
+                              final hasMajor = major != null && major.isNotEmpty;
+                              final hasGoal = goal != null && goal.isNotEmpty;
+                              final hasContact = contact != null && contact.isNotEmpty;
+
+                              if (!hasMajor && !hasGoal && !hasContact) return const SizedBox.shrink();
+
+                              return Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                     if (hasMajor)
+                                       Text(
+                                         major,
+                                         style: theme.textTheme.bodyMedium?.copyWith(
+                                           color: colorScheme.onSurfaceVariant,
+                                           fontWeight: FontWeight.w500,
+                                         ),
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                       ),
+                                     if (hasGoal)
+                                       Text(
+                                         goal,
+                                         style: theme.textTheme.bodySmall?.copyWith(
+                                           color: colorScheme.onSurfaceVariant,
+                                           fontStyle: FontStyle.italic,
+                                         ),
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                       ),
+                                     if (hasContact)
+                                       InkWell(
+                                         onTap: () {
+                                            Clipboard.setData(ClipboardData(text: contact));
+                                            showAppMessage(context, AppLocalizations.of(context)!.copiedToClipboard);
+                                         },
+                                         child: Text(
+                                           contact,
+                                           style: theme.textTheme.bodySmall?.copyWith(
+                                             color: colorScheme.primary,
+                                             fontWeight: FontWeight.w600,
+                                           ),
+                                           maxLines: 1,
+                                           overflow: TextOverflow.ellipsis,
+                                         ),
+                                       ),
+                                  ],
                                 ),
-                                softWrap: true,
-                              ),
-                            ),
-                          if (hasGoal)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: Text(
-                                goal,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                  fontStyle: FontStyle.italic,
-                                ),
-                                softWrap: true,
-                              ),
-                            ),
-                          if (hasContact)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(4),
-                                onTap: () {
-                                  Clipboard.setData(ClipboardData(text: contact));
-                                  showAppMessage(context, AppLocalizations.of(context)!.copiedToClipboard);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
-                                  child: Text(
-                                    contact,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    softWrap: true,
-                                  ),
-                                ),
-                              ),
-                            ),
+                              );
+                            },
+                          ),
                         ],
-                      );
-                    },
-                  ),
-                ),
-                StreamBuilder<MemberSubjectStats>(
-                  stream: _statsStream,
-                  initialData: widget.preloadedStats,
-                  builder: (context, snapshot) {
-                     final stats = snapshot.data;
-                     if (stats == null) return const SizedBox.shrink();
-
-                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
-                        _formatSeconds(stats.totalSeconds),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    );
-                  }
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          if (_isUpdating)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Updating...',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
               ),
-            ),
-          const Divider(height: 1),
-          
-          Flexible(
-            child: StreamBuilder<MemberSubjectStats>(
-              stream: _statsStream,
-              initialData: widget.preloadedStats,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.failedToLoadUserData(snapshot.error.toString()),
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.error,
+              
+              if (_isUpdating)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
                         ),
                       ),
-                    ),
-                  );
-                }
-
-                if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(48.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final stats = snapshot.data;
-                if (stats == null || stats.subjectStats.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.noDataAvailable,
-                        style: theme.textTheme.bodyLarge?.copyWith(
+                      const SizedBox(width: 8),
+                      Text(
+                        'Updating...',
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    ),
-                  );
-                }
-
-                final subjects = stats.subjectStats.values
-                    .where((s) => s.seconds > 0)
-                    .toList()
-                  ..sort((a, b) => b.seconds.compareTo(a.seconds));
-
-                if (subjects.isEmpty) {
-                   return Padding(
-                    padding: const EdgeInsets.all(32),
-                    child: Center(
-                      child: Text(
-                        AppLocalizations.of(context)!.noDataAvailable,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                    ],
+                  ),
+                ),
+              const Divider(height: 1),
+              
+              Flexible(
+                child: Builder( // Used to be StreamBuilder, now handled by outer loop but we kept logic structure
+                  builder: (context) {
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.failedToLoadUserData(snapshot.error.toString()),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.error,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                }
+                      );
+                    }
 
-                return ListView.separated(
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.all(24),
-                  itemCount: subjects.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    final subject = subjects[index];
+                    if (!snapshot.hasData && snapshot.connectionState == ConnectionState.waiting) {
+                      return const Padding(
+                        padding: EdgeInsets.all(48.0),
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final stats = snapshot.data;
+                    if (stats == null || stats.subjectStats.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.noDataAvailable,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final subjects = stats.subjectStats.values
+                        .where((s) => s.seconds > 0)
+                        .toList()
+                      ..sort((a, b) => b.seconds.compareTo(a.seconds));
+
+                    if (subjects.isEmpty) {
+                       return Padding(
+                        padding: const EdgeInsets.all(32),
+                        child: Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.noDataAvailable,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return ListView.separated(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.all(24),
+                      itemCount: subjects.length + 1,
+                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          // Total Time Header - CENTERED
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text(
+                                 '${AppLocalizations.of(context)!.total}: ${_formatSeconds(stats.totalSeconds)}',
+                                 style: theme.textTheme.titleSmall?.copyWith(
+                                   color: colorScheme.onSurfaceVariant,
+                                   fontWeight: FontWeight.bold,
+                                   fontFeatures: [const FontFeature.tabularFigures()],
+                                 ),
+                              ),
+                            ),
+                          );
+                        }
+                        
+                        final subject = subjects[index - 1];
+
                     final seconds = subject.seconds;
                     final percentage = stats.totalSeconds > 0
                         ? (seconds / stats.totalSeconds)
@@ -385,6 +394,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
         ],
       ),
     );
+  },
+);
   }
 
   String _formatSeconds(int totalSeconds) {

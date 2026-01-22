@@ -306,14 +306,15 @@ class _AccountScreenState extends State<AccountScreen> {
                                 AppLocalizations.of(context)!.save,
                             onSubmit: (data) async {
                               final appState = context.read<AppState>();
-                              await appState.saveProfile(
-                                name: data.name,
-                                goal: data.goal,
-                                majorText: data.major,
-                                contact: data.contact,
-                                avatarIndex: data.avatarIndex,
-                                avatarColorValue: data.avatarColorValue,
-                              );
+                                await appState.saveProfile(
+                                  name: data.name,
+                                  goal: data.goal,
+                                  majorText: data.major,
+                                  contact: data.contact,
+                                  avatarIndex: data.avatarIndex,
+                                  avatarColorValue: data.avatarColorValue,
+                                  uid: auth.currentUser?.uid,
+                                );
                             },
                           ),
                         ),
@@ -987,7 +988,11 @@ class _ProgressViewSelector extends StatefulWidget {
 
 class _ProgressViewSelectorState extends State<_ProgressViewSelector>
     with SingleTickerProviderStateMixin {
-  final List<ProgressView> _views = [ProgressView.day, ProgressView.week];
+  final List<ProgressView> _views = [
+    ProgressView.off,
+    ProgressView.day,
+    ProgressView.week,
+  ];
   late int _index;
   late AnimationController _anim;
   late Animation<double> _slide;
@@ -1018,9 +1023,11 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
 
   @override
   Widget build(BuildContext context) {
-    final label = _views[_index] == ProgressView.day 
-      ? AppLocalizations.of(context)!.dayGoalLabel 
-      : AppLocalizations.of(context)!.weekGoalLabel;
+    final label = switch (_views[_index]) {
+      ProgressView.day => AppLocalizations.of(context)!.dayGoalLabel,
+      ProgressView.week => AppLocalizations.of(context)!.weekGoalLabel,
+      ProgressView.off => AppLocalizations.of(context)!.off,
+    };
     return Column(
       children: [
         GestureDetector(
