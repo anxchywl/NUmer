@@ -36,7 +36,13 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.archivedHabitsTitle),
+        title: Text(
+          l10n.archivedHabitsTitle,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

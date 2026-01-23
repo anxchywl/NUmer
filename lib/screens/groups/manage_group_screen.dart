@@ -169,7 +169,13 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                   SliverAppBar(
                     pinned: false,
                     floating: true,
-                    title: Text(AppLocalizations.of(context)!.manageGroup),
+                    title: Text(
+                      AppLocalizations.of(context)!.manageGroup,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                     actions: [
                       if (group.createdBy == currentUserId)
                         IconButton(
@@ -214,8 +220,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                           children: [
                             Text(
                               AppLocalizations.of(context)!.groupName,
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             TextField(
@@ -246,8 +254,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                             const SizedBox(height: 24),
                             Text(
                               AppLocalizations.of(context)!.description,
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             TextField(
@@ -279,8 +289,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                             const SizedBox(height: 16),
                             Text(
                               AppLocalizations.of(context)!.visibility,
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             SegmentedButton<GroupVisibility>(
@@ -411,8 +423,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                               children: [
                                 Text(
                                   AppLocalizations.of(context)!.membersTitle,
-                                  style: theme.textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 Text(

@@ -42,6 +42,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kazakh => 'Kazakh';
 
   @override
+  String get accentColor => 'Accent color';
+
+  @override
+  String get accentColorDescription => 'Customize your primary color';
+
+  @override
+  String get preview => 'Preview';
+
+  @override
+  String get textExample => 'Text example';
+
+  @override
+  String get customColor => 'Custom color';
+
+  @override
+  String get hue => 'Hue';
+
+  @override
+  String get saturation => 'Saturation';
+
+  @override
+  String get lightness => 'Lightness';
+
+  @override
+  String get presets => 'Presets';
+
+  @override
+  String get defaultPreset => 'Default';
+
+  @override
+  String get rosePreset => 'Rose';
+
+  @override
+  String get emeraldPreset => 'Emerald';
+
+  @override
+  String get indigoPreset => 'Indigo';
+
+  @override
+  String get coralPreset => 'Coral';
+
+  @override
+  String get createPreset => 'Create preset';
+
+  @override
+  String get presetName => 'Preset name';
+
+  @override
+  String get lettersOnly => 'Letters only';
+
+  @override
+  String get max16Symbols => 'Max 16 symbols';
+
+  @override
+  String get deletePreset => 'Delete preset';
+
+  @override
+  String get presetLimitReached => 'Preset limit reached (22)';
+
+  @override
   String get weekStartsOn => 'Week starts on';
 
   @override
@@ -1313,10 +1373,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordLength => 'Password must be at least 8 characters.';
 
   @override
+  String get passwordInvalidChars =>
+      'Only A–Z, a–z, 0–9 and allowed symbols are supported.';
+
+  @override
+  String get displayNameInvalidChars =>
+      'Display name can contain only letters and numbers.';
+
+  @override
   String get min8Chars => 'Minimum 8 characters.';
 
   @override
   String get loadingProfile => 'Loading your profile';
+
+  @override
+  String get loggingOut => 'Logging out of account...';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get resetPasswordTitle => 'Reset password';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Enter your account email. We’ll send a reset link.';
+
+  @override
+  String get sendResetLink => 'Send reset link';
+
+  @override
+  String get resetLinkSent =>
+      'If an account exists for this email, we sent a reset link.';
+
+  @override
+  String get backToSignIn => 'Back to sign in';
+
+  @override
+  String get verifyEmailFirst =>
+      'Please verify your email first. We sent you a verification email.';
+
+  @override
+  String get resendVerificationEmail => 'Resend verification email';
+
+  @override
+  String get invalidEmailFormat => 'Enter a valid email address.';
+
+  @override
+  String get resetRateLimited => 'Please wait a moment before trying again.';
+
+  @override
+  String get networkRequestFailed =>
+      'Network error. Check your connection and try again.';
+
+  @override
+  String get signInToResend => 'Sign in to resend the verification email.';
+
+  @override
+  String tryAgainInSeconds(int seconds) {
+    return 'Try again in ${seconds}s';
+  }
 
   @override
   String get sessionNotes => 'Session notes';

@@ -311,16 +311,26 @@ class _ProfileFormState extends State<ProfileForm> {
                   labelText: AppLocalizations.of(context)!.nameLabel,
                   isDense: true,
                 ),
-                textCapitalization: TextCapitalization.words,
+                textCapitalization: TextCapitalization.none,
                 inputFormatters: [
-                  LengthLimitingTextInputFormatter(32),
+                  LengthLimitingTextInputFormatter(30),
                   FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N} ]', unicode: true),
+                    RegExp(r'[A-Za-z0-9]'),
                   ),
                 ],
-                validator: (value) => (value == null || value.trim().isEmpty)
-                    ? AppLocalizations.of(context)!.nameRequired
-                    : null,
+                validator: (value) {
+                  final trimmed = value?.trim() ?? '';
+                  if (trimmed.isEmpty) {
+                    return AppLocalizations.of(context)!.nameRequired;
+                  }
+                  if (trimmed.length < 2) {
+                    return AppLocalizations.of(context)!.displayNameLength;
+                  }
+                  if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(trimmed)) {
+                    return AppLocalizations.of(context)!.displayNameInvalidChars;
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 10),
               TextFormField(

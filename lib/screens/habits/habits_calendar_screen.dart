@@ -217,7 +217,10 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
             : SystemUiOverlayStyle.dark,
         title: Text(
           l10n.habitsCalendarTitle,
-          style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
         ),
         centerTitle: true,
         elevation: 0,

@@ -878,6 +878,7 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
   @override
   Widget build(BuildContext context) {
     if (widget.isCurrentUser) return const SizedBox.shrink();
+    final theme = Theme.of(context);
     final groupService = context.watch<GroupService>();
 
     return StreamBuilder<DateTime?>(
@@ -904,7 +905,7 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
             width: widget.size,
             height: widget.size,
             decoration: BoxDecoration(
-              color: isOnCooldown ? Colors.grey.shade100 : Colors.blue.shade50,
+              color: isOnCooldown ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.primaryContainer,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(

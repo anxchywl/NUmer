@@ -223,7 +223,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.history),
+        title: Text(
+          AppLocalizations.of(context)!.history,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+        ),
         actions: [
           IconButton(
             tooltip: AppLocalizations.of(context)!.addTime,

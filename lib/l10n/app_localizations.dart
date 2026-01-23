@@ -166,6 +166,126 @@ abstract class AppLocalizations {
   /// **'Kazakh'**
   String get kazakh;
 
+  /// No description provided for @accentColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Accent color'**
+  String get accentColor;
+
+  /// No description provided for @accentColorDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Customize your primary color'**
+  String get accentColorDescription;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
+  /// No description provided for @textExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Text example'**
+  String get textExample;
+
+  /// No description provided for @customColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom color'**
+  String get customColor;
+
+  /// No description provided for @hue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get hue;
+
+  /// No description provided for @saturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get saturation;
+
+  /// No description provided for @lightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightness'**
+  String get lightness;
+
+  /// No description provided for @presets.
+  ///
+  /// In en, this message translates to:
+  /// **'Presets'**
+  String get presets;
+
+  /// No description provided for @defaultPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get defaultPreset;
+
+  /// No description provided for @rosePreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get rosePreset;
+
+  /// No description provided for @emeraldPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Emerald'**
+  String get emeraldPreset;
+
+  /// No description provided for @indigoPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Indigo'**
+  String get indigoPreset;
+
+  /// No description provided for @coralPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Coral'**
+  String get coralPreset;
+
+  /// No description provided for @createPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Create preset'**
+  String get createPreset;
+
+  /// No description provided for @presetName.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset name'**
+  String get presetName;
+
+  /// No description provided for @lettersOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters only'**
+  String get lettersOnly;
+
+  /// No description provided for @max16Symbols.
+  ///
+  /// In en, this message translates to:
+  /// **'Max 16 symbols'**
+  String get max16Symbols;
+
+  /// No description provided for @deletePreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete preset'**
+  String get deletePreset;
+
+  /// No description provided for @presetLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'Preset limit reached (22)'**
+  String get presetLimitReached;
+
   /// No description provided for @weekStartsOn.
   ///
   /// In en, this message translates to:
@@ -2518,6 +2638,18 @@ abstract class AppLocalizations {
   /// **'Password must be at least 8 characters.'**
   String get passwordLength;
 
+  /// No description provided for @passwordInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Only A–Z, a–z, 0–9 and allowed symbols are supported.'**
+  String get passwordInvalidChars;
+
+  /// No description provided for @displayNameInvalidChars.
+  ///
+  /// In en, this message translates to:
+  /// **'Display name can contain only letters and numbers.'**
+  String get displayNameInvalidChars;
+
   /// No description provided for @min8Chars.
   ///
   /// In en, this message translates to:
@@ -2529,6 +2661,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading your profile'**
   String get loadingProfile;
+
+  /// No description provided for @loggingOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging out of account...'**
+  String get loggingOut;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPassword;
+
+  /// No description provided for @resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get resetPasswordTitle;
+
+  /// No description provided for @resetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account email. We’ll send a reset link.'**
+  String get resetPasswordSubtitle;
+
+  /// No description provided for @sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get sendResetLink;
+
+  /// No description provided for @resetLinkSent.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, we sent a reset link.'**
+  String get resetLinkSent;
+
+  /// No description provided for @backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get backToSignIn;
+
+  /// No description provided for @verifyEmailFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please verify your email first. We sent you a verification email.'**
+  String get verifyEmailFirst;
+
+  /// No description provided for @resendVerificationEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend verification email'**
+  String get resendVerificationEmail;
+
+  /// No description provided for @invalidEmailFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get invalidEmailFormat;
+
+  /// No description provided for @resetRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait a moment before trying again.'**
+  String get resetRateLimited;
+
+  /// No description provided for @networkRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Network error. Check your connection and try again.'**
+  String get networkRequestFailed;
+
+  /// No description provided for @signInToResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to resend the verification email.'**
+  String get signInToResend;
+
+  /// No description provided for @tryAgainInSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again in {seconds}s'**
+  String tryAgainInSeconds(int seconds);
 
   /// No description provided for @sessionNotes.
   ///

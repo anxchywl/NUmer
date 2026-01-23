@@ -9,7 +9,8 @@
     "build": "tsc",
     "deploy": "firebase deploy --only functions",
     "start": "firebase emulators:start --only functions,firestore",
-    "backfill": "node scripts/backfill.js"
+    "backfill": "node scripts/backfill.js",
+    "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

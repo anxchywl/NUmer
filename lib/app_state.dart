@@ -150,6 +150,58 @@ class AppState extends ChangeNotifier {
   WeekStart get weekStart => _weekStart;
   ProgressView _progressView = ProgressView.week;
   ProgressView get progressView => _progressView;
+  
+  Color _accentColor = Colors.indigo;
+  Color get accentColor => _accentColor;
+
+  List<({String name, int colorValue})> _userColorPresets = [];
+  List<({String name, int colorValue})> get userColorPresets => List.unmodifiable(_userColorPresets);
+
+  Future<void> loadUserColorPresets() async {
+    final list = Storage.getUserColorPresets();
+    _userColorPresets = list.map((m) => (
+      name: m['name'] as String,
+      colorValue: m['colorValue'] as int,
+    )).toList();
+    notifyListeners();
+  }
+
+  Future<void> addUserColorPreset(String name, Color color) async {
+    if (_userColorPresets.length >= 22) return;
+    _userColorPresets.add((name: name, colorValue: color.toARGB32()));
+    notifyListeners();
+    await _saveUserColorPresets();
+  }
+
+  Future<void> removeUserColorPreset(int index) async {
+    if (index < 0 || index >= _userColorPresets.length) return;
+    _userColorPresets.removeAt(index);
+    notifyListeners();
+    await _saveUserColorPresets();
+  }
+
+  Future<void> _saveUserColorPresets() async {
+    final list = _userColorPresets.map((p) => {
+      'name': p.name,
+      'colorValue': p.colorValue,
+    }).toList();
+    await Storage.saveUserColorPresets(list);
+  }
+
+  Future<void> loadAccentColor() async {
+    final val = await Storage.getAccentColor();
+    if (val != null) {
+      _accentColor = Color(val);
+      notifyListeners();
+    }
+  }
+
+  Future<void> setAccentColor(Color color) async {
+    _accentColor = color;
+    notifyListeners();
+    await Storage.setAccentColor(color.toARGB32());
+  }
+
   bool _quickNotesEnabled = true;
   bool get quickNotesEnabled => _quickNotesEnabled;
   bool _allowNudges = true;
@@ -214,23 +266,6 @@ class AppState extends ChangeNotifier {
     _locale = l;
     notifyListeners();
     await Storage.setLocale(l?.languageCode);
-    // Persist locale to Firestore so other devices and Cloud Functions can read it immediately.
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .set({
-          'language': l?.languageCode,
-        }, SetOptions(merge: true));
-      }
-    } catch (_) {
-      // Ignore Firestore write errors here; sync will pick up local state later.
-    }
-
-    // Trigger a sync so the updated locale is propagated via existing sync mechanisms.
-    _triggerSync();
   }
 
 
@@ -244,7 +279,6 @@ class AppState extends ChangeNotifier {
     _weekStart = ws;
     notifyListeners(); 
     await Storage.setWeekStart(ws == WeekStart.sunday ? 'sunday' : 'monday');
-    _triggerSync();
   }
 
   
@@ -331,6 +365,9 @@ class AppState extends ChangeNotifier {
       Storage.getPomodoroLongBreakMinutes(), // 19
       Storage.getOnboardingCompleted(), // 20
       Storage.getBootstrapVersionFlag(), // 21
+      Storage.getAccentColor(), // 22
+      loadUserColorPresets(), // 23
+      loadThemeMode(), // 24
     ]);
 
     major = results[0] as String?;
@@ -346,7 +383,13 @@ class AppState extends ChangeNotifier {
     courseMinutes = results[10] as Map<String, int>;
     _courseGoalHours = results[11] as Map<String, double>;
     onboardingCompleted = (results[20] as bool?) ?? false;
+    onboardingCompleted = (results[20] as bool?) ?? false;
     bootstrapVersion = results[21] as int?;
+    
+    final accentVal = results[22] as int?;
+    if (accentVal != null) {
+      _accentColor = Color(accentVal);
+    }
 
     profileComplete = Storage.getProfileComplete();
 
@@ -526,7 +569,6 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     await Storage.setProgressView(
         v == ProgressView.week ? 'week' : (v == ProgressView.off ? 'off' : 'day'));
-    _triggerSync();
   }
 
   Future<void> loadQuickNotesEnabled() async {
@@ -2268,7 +2310,6 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kThemeKey, mode.name);
     await Storage.setThemeMode(mode.name);
-    _triggerSync();
   }
 
   ThemeMode _parseMode(String s) {
@@ -2328,7 +2369,6 @@ class AppState extends ChangeNotifier {
       HomeSummaryRange.allTime => 'allTime',
     };
     await Storage.setHomeSummaryRange(s);
-    _triggerSync();
   }
 
   (DateTime start, DateTime end) homeSummaryBoundsNow() {

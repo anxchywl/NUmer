@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +10,37 @@ import '../../l10n/app_localizations.dart';
 import '../../services/auth_service.dart';
 import 'email_verification_dialog.dart';
 import '../../widgets/app_toast.dart';
+
+// Validation patterns
+const int _emailMaxLength = 254;
+const int _passwordMaxLength = 64;
+// Allowed password chars: A-Z, a-z, 0-9, and specified symbols
+final _allowedPasswordCharsRegex = RegExp(r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]*$');
+final _passwordInputFormatters = <TextInputFormatter>[
+  LengthLimitingTextInputFormatter(_passwordMaxLength),
+  FilteringTextInputFormatter.allow(
+    RegExp(r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]'),
+  ),
+];
+final _emailInputFormatters = <TextInputFormatter>[
+  LengthLimitingTextInputFormatter(_emailMaxLength),
+  FilteringTextInputFormatter.allow(
+    RegExp(r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~@.]'),
+  ),
+];
+final _displayNameInputFormatter = FilteringTextInputFormatter.allow(
+  RegExp(r'[A-Za-z0-9]'),
+);
+final _emailRegex = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
+
+bool _hasInvalidPasswordChars(String value) {
+  return !_allowedPasswordCharsRegex.hasMatch(value);
+}
+
+bool _isValidDisplayName(String value) {
+  if (value.length < 2 || value.length > 30) return false;
+  return RegExp(r'^[A-Za-z0-9]+$').hasMatch(value);
+}
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -65,13 +97,32 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        Text(
-                          _showLogin 
-                            ? AppLocalizations.of(context)!.loginSubtitle 
-                            : AppLocalizations.of(context)!.registerSubtitle,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colors.onSurfaceVariant,
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 260),
+                          switchInCurve: Curves.easeOutCubic,
+                          switchOutCurve: Curves.easeInCubic,
+                          transitionBuilder: (child, animation) {
+                            final tween = Tween<Offset>(
+                              begin: const Offset(0, 0.12),
+                              end: Offset.zero,
+                            ).chain(CurveTween(curve: Curves.easeOutCubic));
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SlideTransition(
+                                position: animation.drive(tween),
+                                child: child,
+                              ),
+                            );
+                          },
+                          child: Text(
+                            _showLogin
+                                ? AppLocalizations.of(context)!.loginSubtitle
+                                : AppLocalizations.of(context)!.registerSubtitle,
+                            key: ValueKey<bool>(_showLogin),
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -202,18 +253,31 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           ),
                         ),
                         const SizedBox(height: 28),
-                        if (!_showLogin) Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            const SizedBox(height: 8),
-                            Text(
-                              AppLocalizations.of(context)!.afterCreatingAccount,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: _showLogin
+                              ? const SizedBox.shrink()
+                              : Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    AnimatedSwitcher(
+                                      duration: const Duration(milliseconds: 200),
+                                      transitionBuilder: (child, animation) =>
+                                          FadeTransition(opacity: animation, child: child),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.afterCreatingAccount,
+                                        key: const ValueKey('afterCreatingAccount'),
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: colors.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                         ),
                       ],
                     ),
@@ -287,16 +351,18 @@ class _LoginFormState extends State<_LoginForm> {
               autofillHints: const [
                 AutofillHints.email,
               ],
+              inputFormatters: _emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.emailAddress,
                 icon: Icons.alternate_email_outlined,
               ),
               validator: (value) {
-                if (value == null || value.trim().isEmpty) {
+                final trimmed = value?.trim() ?? '';
+                if (trimmed.isEmpty) {
                   return AppLocalizations.of(context)!.enterEmail;
                 }
-                if (!value.contains('@')) {
+                if (!_emailRegex.hasMatch(trimmed.toLowerCase())) {
                   return AppLocalizations.of(context)!.invalidEmail;
                 }
                 return null;
@@ -308,6 +374,7 @@ class _LoginFormState extends State<_LoginForm> {
               autofillHints: const [AutofillHints.password],
               obscureText: _obscurePassword,
               textAlignVertical: TextAlignVertical.center,
+              inputFormatters: _passwordInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.password,
@@ -327,10 +394,21 @@ class _LoginFormState extends State<_LoginForm> {
                 if (value == null || value.isEmpty) {
                   return AppLocalizations.of(context)!.enterPassword;
                 }
+                if (_hasInvalidPasswordChars(value)) {
+                  return AppLocalizations.of(context)!.passwordInvalidChars;
+                }
                 return null;
               },
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: widget.isBusy ? null : _openResetPasswordSheet,
+                child: Text(AppLocalizations.of(context)!.forgotPassword),
+              ),
+            ),
+            const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: widget.isBusy ? null : _submit,
               label: FittedBox(
@@ -353,7 +431,7 @@ class _LoginFormState extends State<_LoginForm> {
 
     final auth = context.read<AuthController>();
     final error = await auth.signIn(
-      email: _loginController.text,
+      email: _loginController.text.trim().toLowerCase(),
       password: _passwordController.text,
     );
 
@@ -384,6 +462,17 @@ class _LoginFormState extends State<_LoginForm> {
     }
 
     showAppMessage(context, error, isError: true);
+  }
+
+  void _openResetPasswordSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => ResetPasswordSheet(
+        initialEmail: _loginController.text.trim(),
+      ),
+    );
   }
 }
 
@@ -431,14 +520,22 @@ class _RegisterFormState extends State<_RegisterForm> {
               textInputAction: TextInputAction.next,
               textAlignVertical: TextAlignVertical.center,
               autofillHints: const [AutofillHints.name],
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(30),
+                _displayNameInputFormatter,
+              ],
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.displayName,
                 icon: Icons.person_outline,
               ),
               validator: (value) {
-                if (value == null || value.trim().length < 2) {
+                final trimmed = value?.trim() ?? '';
+                if (trimmed.length < 2) {
                   return AppLocalizations.of(context)!.displayNameLength;
+                }
+                if (!_isValidDisplayName(trimmed)) {
+                  return AppLocalizations.of(context)!.displayNameInvalidChars;
                 }
                 return null;
               },
@@ -452,6 +549,7 @@ class _RegisterFormState extends State<_RegisterForm> {
               autofillHints: const [
                 AutofillHints.email,
               ],
+              inputFormatters: _emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.emailAddress,
@@ -462,7 +560,7 @@ class _RegisterFormState extends State<_RegisterForm> {
                 if (trimmed.isEmpty) {
                   return AppLocalizations.of(context)!.enterEmail;
                 }
-                if (!trimmed.contains('@')) {
+                if (!_emailRegex.hasMatch(trimmed.toLowerCase())) {
                   return AppLocalizations.of(context)!.invalidEmail;
                 }
                 return null;
@@ -474,6 +572,7 @@ class _RegisterFormState extends State<_RegisterForm> {
               autofillHints: const [AutofillHints.newPassword],
               obscureText: _obscurePassword,
               textAlignVertical: TextAlignVertical.center,
+              inputFormatters: _passwordInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.password,
@@ -493,6 +592,9 @@ class _RegisterFormState extends State<_RegisterForm> {
               validator: (value) {
                 if (value == null || value.length < 8) {
                   return AppLocalizations.of(context)!.passwordLength;
+                }
+                if (_hasInvalidPasswordChars(value)) {
+                  return AppLocalizations.of(context)!.passwordInvalidChars;
                 }
                 return null;
               },
@@ -520,8 +622,8 @@ class _RegisterFormState extends State<_RegisterForm> {
 
     final auth = context.read<AuthController>();
     final error = await auth.register(
-      email: _loginController.text,
-      displayName: _displayNameController.text,
+      email: _loginController.text.trim().toLowerCase(),
+      displayName: _displayNameController.text.trim(),
       password: _passwordController.text,
     );
 
@@ -614,6 +716,254 @@ InputDecoration _filledFieldDecoration(
       borderSide: BorderSide(color: colors.primary, width: 2),
     ),
   );
+}
+
+class ResetPasswordSheet extends StatefulWidget {
+  const ResetPasswordSheet({super.key, this.initialEmail});
+
+  final String? initialEmail;
+
+  @override
+  State<ResetPasswordSheet> createState() => _ResetPasswordSheetState();
+}
+
+class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
+  late final TextEditingController _emailController;
+  bool _loading = false;
+  bool _sent = false;
+  String? _errorText;
+  bool _verificationRequired = false;
+  bool _verificationSent = false;
+  int _cooldownSeconds = 0;
+  Timer? _cooldownTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail ?? '');
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _cooldownTimer?.cancel();
+    super.dispose();
+  }
+
+  bool get _isValidEmail {
+    final text = _emailController.text.trim();
+    return text.contains('@') && text.length > 4;
+  }
+
+  Future<void> _send() async {
+    FocusScope.of(context).unfocus();
+    if (!_isValidEmail) {
+      setState(() => _errorText = AppLocalizations.of(context)!.invalidEmailFormat);
+      return;
+    }
+    setState(() {
+      _loading = true;
+      _errorText = null;
+      _verificationRequired = false;
+      _verificationSent = false;
+    });
+    final auth = context.read<AuthController>();
+    final result = await auth.sendPasswordResetSecure(_emailController.text);
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+      _sent = result.success;
+      _verificationRequired = result.verificationRequired;
+      _verificationSent = result.verificationEmailSent;
+      if (!result.success && !result.verificationRequired) {
+        _errorText = _mapMessage(result);
+      } else {
+        _errorText = null;
+      }
+      _startCooldown();
+    });
+    if (_verificationRequired) {
+      final msg = _verificationSent
+          ? AppLocalizations.of(context)!.verifyEmailFirst
+          : AppLocalizations.of(context)!.verifyEmailFirst;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(msg)),
+      );
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    final auth = context.read<AuthController>();
+    final currentEmail = auth.currentUser?.email?.toLowerCase();
+    final targetEmail = _emailController.text.trim().toLowerCase();
+
+    if (currentEmail == null || currentEmail != targetEmail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.signInToResend)),
+      );
+      return;
+    }
+
+    setState(() => _loading = true);
+    final result = await auth.sendEmailVerification();
+    if (!mounted) return;
+    setState(() => _loading = false);
+
+    if (result == null) {
+      setState(() => _verificationSent = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.verificationEmailSent)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result)),
+      );
+    }
+  }
+
+  String _mapMessage(PasswordResetResult result) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (result.code) {
+      case 'invalid-email':
+        return l10n.invalidEmailFormat;
+      case 'rate-limited':
+      case 'too-many-requests':
+        return l10n.resetRateLimited;
+      case 'network':
+        return l10n.networkRequestFailed;
+      case 'verification-required':
+        return l10n.verifyEmailFirst;
+      default:
+        return result.message;
+    }
+  }
+
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() => _cooldownSeconds = 60);
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_cooldownSeconds <= 1) {
+        setState(() => _cooldownSeconds = 0);
+        timer.cancel();
+      } else {
+        setState(() => _cooldownSeconds -= 1);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final viewInsets = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, viewInsets + 16),
+      child: Material(
+        borderRadius: BorderRadius.circular(24),
+        color: colors.surface,
+        elevation: 12,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.resetPasswordTitle,
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                l10n.resetPasswordSubtitle,
+                style: theme.textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                inputFormatters: _emailInputFormatters,
+                decoration: _filledFieldDecoration(
+                  context,
+                  label: l10n.emailAddress,
+                  icon: Icons.alternate_email_outlined,
+                ).copyWith(errorText: _errorText),
+                onChanged: (_) {
+                  if (_errorText != null && _isValidEmail) {
+                    setState(() => _errorText = null);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              if (_sent)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: colors.primaryContainer.withAlpha(42),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colors.primaryContainer),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.resetLinkSent,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colors.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (_sent) const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: _loading || _cooldownSeconds > 0 ? null : _send,
+                icon: _loading
+                    ? SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colors.onPrimary,
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                label: Text(l10n.sendResetLink),
+              ),
+              const SizedBox(height: 12),
+              if (_cooldownSeconds > 0)
+                Text(
+                  l10n.tryAgainInSeconds(_cooldownSeconds),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              if (_cooldownSeconds > 0) const SizedBox(height: 12),
+              if (_verificationRequired) ...[
+                Text(
+                  l10n.verifyEmailFirst,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: colors.error),
+                ),
+                const SizedBox(height: 8),
+                FilledButton.tonal(
+                  onPressed: _loading ? null : _resendVerificationEmail,
+                  child: Text(l10n.resendVerificationEmail),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _LanguageToggle extends StatelessWidget {

@@ -129,8 +129,8 @@ class _TipIconState extends State<TipIcon> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isActive = _overlayEntry != null;
-    final activeColor = Colors.lightBlue;
-    final normalColor = theme.colorScheme.onSurfaceVariant;
+    final activeColor = theme.colorScheme.primary;
+    final normalColor = theme.colorScheme.onSurfaceVariant.withAlpha(128);
 
     return CompositedTransformTarget(
       link: _layerLink,
@@ -145,7 +145,7 @@ class _TipIconState extends State<TipIcon> {
             ),
             builder: (context, color, child) {
               return Icon(
-                Icons.lightbulb_outline,
+                isActive ? Icons.lightbulb : Icons.lightbulb_outline,
                 color: color,
               );
             },

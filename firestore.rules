@@ -171,6 +171,13 @@ service cloud.firestore {
       allow write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Email index for password reset lookup
+    match /email_index/{emailId} {
+      allow read: if true;
+      allow write: if request.auth != null &&
+        request.resource.data.uid == request.auth.uid;
+    }
+
     match /users/{userId}/fcmTokens/{tokenId} {
       allow read, write, delete: if request.auth != null && request.auth.uid == userId;
     }

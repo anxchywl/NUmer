@@ -30,6 +30,8 @@ class Storage {
   static const _metaLastExportMonth = 'last_export_month_v1';
   static const _metaBootstrapVersion = LocalDatabase.bootstrapMetaKey;
   static const _metaStreakSnapshot = LocalDatabase.streakMetaKey;
+  static const _metaAccentColor = 'accent_color_v1';
+  static const _metaUserColorPresets = 'user_color_presets_v1';
   static const int bootstrapVersion = 1;
 
   static Future<void> configureForUser(String uid) async {
@@ -199,7 +201,35 @@ class Storage {
     } else {
       doc.themeMode = mode.trim();
     }
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
+  }
+
+
+
+  static Future<int?> getAccentColor() async {
+    if (_db.currentUid == null) return null;
+    final val = _db.getMeta(_metaAccentColor);
+    if (val is int) return val;
+    return null;
+  }
+
+  static Future<void> setAccentColor(int colorValue) async {
+    if (_db.currentUid == null) return;
+    await _db.putMeta(_metaAccentColor, colorValue);
+  }
+
+  static List<Map<String, dynamic>> getUserColorPresets() {
+    _ensureUser();
+    final raw = _db.getMeta(_metaUserColorPresets);
+    if (raw is List) {
+      return raw.map((item) => Map<String, dynamic>.from(item as Map)).toList();
+    }
+    return [];
+  }
+
+  static Future<void> saveUserColorPresets(List<Map<String, dynamic>> presets) async {
+    _ensureUser();
+    await _db.putMeta(_metaUserColorPresets, presets);
   }
 
   static Future<bool> getProfilePromptShown() async {
@@ -226,7 +256,7 @@ class Storage {
   static Future<void> setWeekStart(String value) async {
     final doc = _userDoc();
     doc.weekStart = (value == 'sunday') ? 'sunday' : 'monday';
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   static Future<String> getHomeSummaryRange() async =>
@@ -235,7 +265,7 @@ class Storage {
   static Future<void> setHomeSummaryRange(String value) async {
     final doc = _userDoc();
     doc.homeSummaryRange = value;
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   static Future<String> getProgressView() async => _userDoc().progressView;
@@ -243,7 +273,7 @@ class Storage {
   static Future<void> setProgressView(String value) async {
     final doc = _userDoc();
     doc.progressView = value;
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   static Future<bool> getQuickNotesEnabled() async => _userDoc().quickNotesEnabled;
@@ -251,7 +281,7 @@ class Storage {
   static Future<void> setQuickNotesEnabled(bool value) async {
     final doc = _userDoc();
     doc.quickNotesEnabled = value;
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   static Future<bool> getAllowNudges() async => _userDoc().allowNudges;
@@ -259,7 +289,7 @@ class Storage {
   static Future<void> setAllowNudges(bool value) async {
     final doc = _userDoc();
     doc.allowNudges = value;
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   static Future<bool> getEisenhowerMatrixEnabled() async => _userDoc().eisenhowerMatrixEnabled;
@@ -267,7 +297,7 @@ class Storage {
   static Future<void> setEisenhowerMatrixEnabled(bool value) async {
     final doc = _userDoc();
     doc.eisenhowerMatrixEnabled = value;
-    await _saveUser(doc);
+    await _saveUser(doc, dirty: false);
   }
 
   // Eisenhower Matrix quadrant placements (local-only, not synced)

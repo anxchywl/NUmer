@@ -111,301 +111,203 @@ class GroupService {
 
   
   
-  Stream<GroupStatistics> watchGroupStatistics(
-    String groupId,
-    StatisticsPeriod period,
-  ) {
-    final cacheKey = '${groupId}_${period.index}';
-    final existing = _statsCache[cacheKey];
-    if (existing != null) return existing;
+Stream<GroupStatistics> watchGroupStatistics(
+  String groupId,
+  StatisticsPeriod period,
+) {
+  final cacheKey = '${groupId}_${period.index}';
+  final existing = _statsCache[cacheKey];
+  if (existing != null) return existing;
 
-    late StreamController<GroupStatistics> controller;
-    
-    StreamSubscription? membersSub;
-    StreamSubscription? aggregatesSub;
-    StreamSubscription? userSessionsSub;
-    StreamSubscription? userCoursesSub;
-    bool hasTerminated = false;
-    Set<String> memberIds = {};
-    final uid = _uid;
-    Timer? dailyRefreshTimer;
-    Timer? debounceTimer;
-    bool refreshScheduled = false;
-    bool isComputing = false;
-    // Manage listeners for ALL members' status to update "active" indicators in real-time
-    final Map<String, StreamSubscription> memberStatusSubs = {};
+  final controller = StreamController<GroupStatistics>.broadcast();
+  _statsCache[cacheKey] = controller.stream;
 
-    Future<void> cleanup({bool shouldCloseController = false}) async {
-      _statsCache.remove(cacheKey);
-      await membersSub?.cancel();
-      await aggregatesSub?.cancel();
-      await userSessionsSub?.cancel();
-      await userCoursesSub?.cancel();
-      for (final sub in memberStatusSubs.values) {
-        await sub.cancel();
-      }
-      memberStatusSubs.clear();
-      dailyRefreshTimer?.cancel();
-      debounceTimer?.cancel();
-      if (shouldCloseController && !controller.isClosed) {
-        await controller.close();
-      }
-    }
-
-    controller = StreamController<GroupStatistics>.broadcast(
-      onCancel: () => cleanup(shouldCloseController: true),
+  final uid = _uid;
+  if (uid == null) {
+    controller.addError(
+      StateError('You must be signed in to view group statistics.'),
+      StackTrace.current,
     );
-    _statsCache[cacheKey] = controller.stream;
-
-    void handleStreamError(Object error, StackTrace stackTrace) {
-      if (hasTerminated) return;
-      hasTerminated = true;
-      Object normalizedError = error;
-      if (error is FirebaseException && error.code == 'permission-denied') {
-        normalizedError = StateError('You do not have permission to view this group.');
-      }
-      if (!controller.isClosed) {
-        controller.addError(normalizedError, stackTrace);
-      }
-      unawaited(cleanup(shouldCloseController: true));
-    }
-
-    GroupStatistics? lastStats;
-
-    Future<void> computeAndEmit(Set<String> memberIds) async {
-      if (isComputing) return; 
-      isComputing = true;
-      try {
-        final aggregationService = GroupAggregationService();
-        final stats = await aggregationService.computeGroupStatistics(
-          groupId,
-          memberIds.toList(),
-          period,
-          _firestore,
-          uid,
-        );
-        lastStats = stats; // Cache for partial updates
-        await _markMemberStatsStaleFromTotals(
-          groupId: groupId,
-          period: period,
-          stats: stats,
-        );
-        if (!controller.isClosed) {
-          controller.add(stats);
-        }
-      } catch (e, stack) {
-        handleStreamError(e, stack);
-      } finally {
-        isComputing = false;
-      }
-    }
-
-    void triggerRecompute() {
-      if (memberIds.isEmpty) return;
-      
-      debounceTimer?.cancel();
-      debounceTimer = Timer(const Duration(milliseconds: 300), () {
-        unawaited(computeAndEmit(memberIds));
-      });
-    }
-
-    Future<void> updateMemberStats(String userId, {DocumentSnapshot? snapshot}) async {
-      if (lastStats == null || (snapshot == null && isComputing)) {
-         if (lastStats == null) triggerRecompute();
-         return;
-      }
-      
-      try {
-        final currentMembers = lastStats!.members;
-        final index = currentMembers.indexWhere((m) => m.userId == userId);
-        if (index < 0 && snapshot != null) return; // Only process if we already know this member
-
-        final MemberStudyData newMemberData;
-        if (snapshot != null && snapshot.exists) {
-          final data = snapshot.data() as Map<String, dynamic>;
-          final oldMember = index >= 0 ? currentMembers[index] : null;
-          
-          if (oldMember != null) {
-            newMemberData = oldMember.copyWith(
-              name: data['profileName'] as String? ?? oldMember.name,
-              avatarIndex: (data['profileAvatarIndex'] ?? data['avatarIndex']) as int?,
-              avatarBase64: data['profileAvatarImageBase64'] as String?,
-              avatarColorValue: (data['avatarColorValue'] ?? data['profileAvatarColorValue']) as int? ?? oldMember.avatarColorValue,
-              isStudying: data['isStudying'] as bool? ?? false,
-              activeSession: data['activeSession'] as Map<String, dynamic>?,
-              allowsNudges: data['allowNudges'] != false,
-              canReceiveNudges: data['fcmEnabled'] == true,
-            );
-            
-            // Optimization: If nothing meaningful changed, don't emit.
-            if (newMemberData.isStudying == oldMember.isStudying &&
-                newMemberData.activeSession == oldMember.activeSession &&
-                newMemberData.name == oldMember.name &&
-                newMemberData.avatarIndex == oldMember.avatarIndex &&
-                newMemberData.avatarColorValue == oldMember.avatarColorValue) {
-              return;
-            }
-          } else {
-             // Shouldn't happen if listeners are set up correctly, but fallback:
-             final aggregationService = GroupAggregationService();
-             newMemberData = await aggregationService.computeMemberStats(
-                userId: userId, 
-                period: period, 
-                periodStart: period.getDateRange().$1, 
-                periodEnd: period.getDateRange().$2, 
-                firestore: _firestore,
-             );
-          }
-        } else {
-          final aggregationService = GroupAggregationService();
-          newMemberData = await aggregationService.computeMemberStats(
-             userId: userId, 
-             period: period, 
-             periodStart: period.getDateRange().$1, 
-             periodEnd: period.getDateRange().$2, 
-             firestore: _firestore,
-          );
-        }
-        
-        final List<MemberStudyData> newMembers;
-        if (index >= 0) {
-           newMembers = List.of(currentMembers);
-           newMembers[index] = newMemberData.copyWith(isCurrentUser: userId == uid);
-        } else {
-           newMembers = [...currentMembers, newMemberData.copyWith(isCurrentUser: userId == uid)];
-        }
-        
-        // Only re-sort (expensive-ish) if it's the current user or study time might have changed
-        // but since we only update real-time fields above, studyTimeSeconds shouldn't have changed.
-        // However, for simplicity and ensuring correctness if we fall back, we sort.
-        newMembers.sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
-        
-        final leaderId = newMembers.isNotEmpty ? newMembers.first.userId : null;
-        final normalized = newMembers.map((m) => m.copyWith(isLeader: leaderId != null && m.userId == leaderId)).toList();
-        
-        final newGroupStats = lastStats!.copyWith(members: normalized);
-        lastStats = newGroupStats;
-        
-        if (!controller.isClosed) {
-           controller.add(newGroupStats);
-        }
-      } catch (e) {
-         debugPrint('Error updating single member $userId: $e');
-      }
-    }
-
-    void scheduleDailyRefresh() {
-      // if (referenceDate != null) return; // Removed logic
-      dailyRefreshTimer?.cancel();
-      final now = DateTime.now();
-      final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-      final delay = nextMidnight.difference(now) + const Duration(seconds: 1);
-      dailyRefreshTimer = Timer(delay, () {
-        if (hasTerminated) return;
-        triggerRecompute();
-        scheduleDailyRefresh();
-      });
-    }
-
-    
-    if (uid == null) {
-      handleStreamError(
-        StateError('You must be signed in to view group statistics.'),
-        StackTrace.current,
-      );
-      return controller.stream;
-    }
-
-    
-    _userMembershipRef(uid, groupId).snapshots().listen((membershipSnap) {
-      if (!membershipSnap.exists) {
-        handleStreamError(
-          StateError('You do not have permission to view this group.'),
-          StackTrace.current,
-        );
-        return;
-      }
-
-      
-
-      void updateMemberListeners(Set<String> currentMemberIds) {
-        // Remove stale listeners
-        final toRemove = memberStatusSubs.keys.where((id) => !currentMemberIds.contains(id)).toList();
-        for (final id in toRemove) {
-          memberStatusSubs[id]?.cancel();
-          memberStatusSubs.remove(id);
-        }
-
-        // Add new listeners
-        for (final id in currentMemberIds) {
-          if (!memberStatusSubs.containsKey(id)) {
-            memberStatusSubs[id] = _firestore.collection('users').doc(id).snapshots().listen((snap) {
-               updateMemberStats(id, snapshot: snap);
-            }, onError: (e) {
-               debugPrint('Error watching member status for $id: $e');
-            });
-          }
-        }
-      }
-
-      membersSub ??= _groupsRef
-          .doc(groupId)
-          .collection('members')
-          .snapshots()
-          .listen((membersSnap) {
-        memberIds = membersSnap.docs.map((d) => d.id).toSet();
-        updateMemberListeners(memberIds);
-        triggerRecompute();
-      }, onError: handleStreamError);
-
-      aggregatesSub ??= _groupsRef
-          .doc(groupId)
-          .collection('aggregates')
-          .snapshots()
-          .listen((_) {
-        triggerRecompute();
-      }, onError: handleStreamError);
-
-      // Listen to the CURRENT USER'S sessions to update their own stats immediately
-      // on local delete/edit/add.
-      final dateRange = period.getDateRange();
-      final startUtc = dateRange.$1.toUtc();
-      final endUtc = dateRange.$2.toUtc();
-      
-      userSessionsSub ??= _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('sessions')
-          .where('startUtc', isGreaterThanOrEqualTo: Timestamp.fromDate(startUtc))
-          .where('startUtc', isLessThanOrEqualTo: Timestamp.fromDate(endUtc))
-          .snapshots()
-          .listen((_) {
-        triggerRecompute();
-      }, onError: (e) {
-          debugPrint('Error watching my sessions: $e');
-      });
-
-      userCoursesSub ??= _firestore
-          .collection('users')
-          .doc(uid)
-          .collection('courses')
-          .snapshots()
-          .listen((_) {
-            triggerRecompute();
-          }, onError: (e) {
-             debugPrint('Error watching my courses: $e');
-          });
-
-      if (!refreshScheduled) {
-        refreshScheduled = true;
-        scheduleDailyRefresh();
-      }
-    }, onError: handleStreamError);
-
-    controller.onCancel = () => cleanup(shouldCloseController: true);
-
+    controller.close();
     return controller.stream;
   }
+
+  final periodRange = period.getDateRange();
+  final aggregationService = GroupAggregationService();
+  final orderField = switch (period) {
+    StatisticsPeriod.today => 'totals.today',
+    StatisticsPeriod.last7Days => 'totals.last7Days',
+    StatisticsPeriod.lastMonth => 'totals.lastMonth',
+  };
+
+  StreamSubscription? aggregatesSub;
+  StreamSubscription? membershipSub;
+  final memberStatusSubs = <String, StreamSubscription>{};
+  Set<String> memberIds = {};
+  GroupStatistics? lastStats;
+  bool closed = false;
+
+  Future<void> cleanup() async {
+    closed = true;
+    _statsCache.remove(cacheKey);
+    await aggregatesSub?.cancel();
+    await membershipSub?.cancel();
+    for (final sub in memberStatusSubs.values) {
+      await sub.cancel();
+    }
+    memberStatusSubs.clear();
+    if (!controller.isClosed) {
+      await controller.close();
+    }
+  }
+
+  void handleStreamError(Object error, StackTrace stackTrace) {
+    if (closed) return;
+    Object normalizedError = error;
+    if (error is FirebaseException && error.code == 'permission-denied') {
+      normalizedError = StateError('You do not have permission to view this group.');
+    }
+    if (!controller.isClosed) {
+      controller.addError(normalizedError, stackTrace);
+    }
+    unawaited(cleanup());
+  }
+
+  void updatePresence(String userId, DocumentSnapshot<Map<String, dynamic>> snap) {
+    if (lastStats == null || !snap.exists) return;
+    final data = snap.data();
+    if (data == null) return;
+    final current = lastStats!.members;
+    final index = current.indexWhere((m) => m.userId == userId);
+    if (index < 0) return;
+
+    final oldMember = current[index];
+    final updatedMember = oldMember.copyWith(
+      name: data['profileName'] as String? ?? oldMember.name,
+      avatarIndex: (data['profileAvatarIndex'] ?? data['avatarIndex']) as int? ?? oldMember.avatarIndex,
+      avatarBase64: data['profileAvatarImageBase64'] as String? ?? oldMember.avatarBase64,
+      avatarColorValue: (data['avatarColorValue'] ?? data['profileAvatarColorValue']) as int? ?? oldMember.avatarColorValue,
+      isStudying: data['isStudying'] as bool? ?? false,
+      activeSession: data['activeSession'] as Map<String, dynamic>?,
+      allowsNudges: data['allowNudges'] != false,
+      canReceiveNudges: data['fcmEnabled'] == true,
+    );
+
+    if (updatedMember.isStudying == oldMember.isStudying &&
+        updatedMember.activeSession == oldMember.activeSession &&
+        updatedMember.name == oldMember.name &&
+        updatedMember.avatarIndex == oldMember.avatarIndex &&
+        updatedMember.avatarColorValue == oldMember.avatarColorValue &&
+        updatedMember.allowsNudges == oldMember.allowsNudges &&
+        updatedMember.canReceiveNudges == oldMember.canReceiveNudges) {
+      return;
+    }
+
+    final updatedMembers = List<MemberStudyData>.from(current);
+    updatedMembers[index] = updatedMember;
+
+    // Sort by seconds to ensure exact ranking
+    updatedMembers.sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
+
+    final leaderId = updatedMembers.isNotEmpty ? updatedMembers.first.userId : null;
+    final normalized = updatedMembers
+        .map((m) => m.copyWith(
+              isLeader: leaderId != null && m.userId == leaderId,
+              isCurrentUser: m.userId == uid,
+            ))
+        .toList();
+    final newStats = lastStats!.copyWith(members: normalized);
+    lastStats = newStats;
+    if (!controller.isClosed) {
+      controller.add(newStats);
+    }
+  }
+
+  void updateMemberListeners(Set<String> currentMemberIds) {
+    final toRemove = memberStatusSubs.keys.where((id) => !currentMemberIds.contains(id)).toList();
+    for (final id in toRemove) {
+      memberStatusSubs[id]?.cancel();
+      memberStatusSubs.remove(id);
+    }
+
+    for (final id in currentMemberIds) {
+      if (!memberStatusSubs.containsKey(id)) {
+        memberStatusSubs[id] = _firestore
+            .collection('users')
+            .doc(id)
+            .snapshots()
+            .listen((snap) => updatePresence(id, snap), onError: (e, st) {
+          debugPrint('Error watching member presence for $id: $e');
+        });
+      }
+    }
+  }
+
+  final aggregatesQuery = _groupsRef
+      .doc(groupId)
+      .collection('aggregates')
+      .orderBy(orderField, descending: true)
+      .limit(100);
+
+  aggregatesSub = aggregatesQuery.snapshots().listen((snapshot) async {
+    try {
+      memberIds = snapshot.docs.map((d) => d.id).toSet();
+      updateMemberListeners(memberIds);
+
+      final members = snapshot.docs.map((doc) {
+        final data = doc.data();
+        return aggregationService.memberFromAggregateData(
+          data: data,
+          period: period,
+          userId: doc.id,
+          currentUserId: uid,
+        );
+      }).toList();
+
+      // Sort by seconds to ensure exact ranking
+      members.sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
+
+      final leaderId = members.isNotEmpty ? members.first.userId : null;
+      final normalized = members
+          .map((m) => m.copyWith(
+                isLeader: leaderId != null && m.userId == leaderId,
+                isCurrentUser: m.userId == uid,
+              ))
+          .toList();
+
+      final stats = GroupStatistics(
+        groupId: groupId,
+        members: normalized,
+        periodStart: periodRange.$1,
+        periodEnd: periodRange.$2,
+      );
+      lastStats = stats;
+      await _markMemberStatsStaleFromTotals(
+        groupId: groupId,
+        period: period,
+        stats: stats,
+      );
+      if (!controller.isClosed) {
+        controller.add(stats);
+      }
+    } catch (e, st) {
+      handleStreamError(e, st);
+    }
+  }, onError: handleStreamError);
+
+  membershipSub = _userMembershipRef(uid, groupId).snapshots().listen((snap) {
+    if (!snap.exists) {
+      handleStreamError(
+        StateError('You do not have permission to view this group.'),
+        StackTrace.current,
+      );
+    }
+  }, onError: handleStreamError);
+
+  controller.onCancel = cleanup;
+
+  return controller.stream;
+}
 
   
   

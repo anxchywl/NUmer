@@ -84,9 +84,15 @@ class _GroupsScreenState extends State<GroupsScreen> {
           return CustomScrollView(
             slivers: [
               SliverAppBar(
-                title: Text(hasMemberships 
-                  ? AppLocalizations.of(context)!.yourGroup 
-                  : AppLocalizations.of(context)!.groups),
+                title: Text(
+                  hasMemberships
+                      ? AppLocalizations.of(context)!.yourGroup
+                      : AppLocalizations.of(context)!.groups,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                ),
                 actions: [
                   if (hasMemberships)
                     TipIcon(

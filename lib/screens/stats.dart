@@ -280,6 +280,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final state = context.watch<AppState>();
     final courses = state.courses;
     final weekStart = state.weekStart;
@@ -294,7 +295,15 @@ class _StatsScreenState extends State<StatsScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(title: Text(AppLocalizations.of(context)!.statistics)),
+          SliverAppBar(
+            title: Text(
+              AppLocalizations.of(context)!.statistics,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
@@ -794,8 +803,9 @@ class _StatsScreenState extends State<StatsScreen> {
               Text(
                 title,
                 style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               if (trailingHeader != null) trailingHeader,
             ],

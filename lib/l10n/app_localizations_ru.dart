@@ -42,6 +42,66 @@ class AppLocalizationsRu extends AppLocalizations {
   String get kazakh => 'Казахский';
 
   @override
+  String get accentColor => 'Акцентный цвет';
+
+  @override
+  String get accentColorDescription => 'Настройте ваш основной цвет';
+
+  @override
+  String get preview => 'Предпросмотр';
+
+  @override
+  String get textExample => 'Пример текста';
+
+  @override
+  String get customColor => 'Свой цвет';
+
+  @override
+  String get hue => 'Оттенок';
+
+  @override
+  String get saturation => 'Насыщенность';
+
+  @override
+  String get lightness => 'Яркость';
+
+  @override
+  String get presets => 'Пресеты';
+
+  @override
+  String get defaultPreset => 'По умолчанию';
+
+  @override
+  String get rosePreset => 'Розовый';
+
+  @override
+  String get emeraldPreset => 'Изумрудный';
+
+  @override
+  String get indigoPreset => 'Индиго';
+
+  @override
+  String get coralPreset => 'Коралловый';
+
+  @override
+  String get createPreset => 'Create preset';
+
+  @override
+  String get presetName => 'Preset name';
+
+  @override
+  String get lettersOnly => 'Letters only';
+
+  @override
+  String get max16Symbols => 'Max 16 symbols';
+
+  @override
+  String get deletePreset => 'Delete preset';
+
+  @override
+  String get presetLimitReached => 'Preset limit reached (22)';
+
+  @override
   String get weekStartsOn => 'Начало недели';
 
   @override
@@ -1315,10 +1375,66 @@ class AppLocalizationsRu extends AppLocalizations {
   String get passwordLength => 'Пароль должен быть не менее 8 символов.';
 
   @override
+  String get passwordInvalidChars =>
+      'Only A–Z, a–z, 0–9 and allowed symbols are supported.';
+
+  @override
+  String get displayNameInvalidChars =>
+      'Display name can contain only letters and numbers.';
+
+  @override
   String get min8Chars => 'Минимум 8 символов.';
 
   @override
   String get loadingProfile => 'Загрузка профиля';
+
+  @override
+  String get loggingOut => 'Выход из аккаунта...';
+
+  @override
+  String get forgotPassword => 'Забыли пароль?';
+
+  @override
+  String get resetPasswordTitle => 'Сброс пароля';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Укажите почту аккаунта. Мы отправим ссылку для сброса.';
+
+  @override
+  String get sendResetLink => 'Отправить ссылку';
+
+  @override
+  String get resetLinkSent =>
+      'Если аккаунт существует, мы отправили ссылку для сброса.';
+
+  @override
+  String get backToSignIn => 'Назад к входу';
+
+  @override
+  String get verifyEmailFirst =>
+      'Сначала подтвердите почту. Мы отправили письмо для подтверждения.';
+
+  @override
+  String get resendVerificationEmail => 'Отправить письмо повторно';
+
+  @override
+  String get invalidEmailFormat => 'Введите корректный email.';
+
+  @override
+  String get resetRateLimited => 'Подождите немного перед следующей попыткой.';
+
+  @override
+  String get networkRequestFailed =>
+      'Ошибка сети. Проверьте соединение и повторите.';
+
+  @override
+  String get signInToResend => 'Войдите, чтобы отправить письмо повторно.';
+
+  @override
+  String tryAgainInSeconds(int seconds) {
+    return 'Повторите через $seconds с';
+  }
 
   @override
   String get sessionNotes => 'Заметки к сессии';

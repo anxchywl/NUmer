@@ -536,11 +536,6 @@ class SyncService extends ChangeNotifier {
       ..profileContact = data['profileContact'] as String?
       ..avatarIndex = remoteAvatarIndex
       ..avatarImage = _decodeAvatar(remoteAvatarBase64)
-      ..themeMode = data['themeMode'] as String?
-      ..weekStart = (data['weekStart'] as String?) ?? local.weekStart
-      ..progressView = (data['progressView'] as String?) ?? local.progressView
-      ..homeSummaryRange =
-          (data['homeSummaryRange'] as String?) ?? local.homeSummaryRange
       ..pendingCoursePrompt =
           (data['pendingCoursePrompt'] as bool?) ?? local.pendingCoursePrompt
       ..avatarColorValue = (data['avatarColorValue'] as num?)?.toInt() ?? (data['profileAvatarColorValue'] as num?)?.toInt()
@@ -1060,10 +1055,6 @@ class SyncService extends ChangeNotifier {
       'profileAvatarIndex': avatarIndex,
       'avatarImageBase64': hasCustomAvatar ? avatarBase64 : null,
       'profileAvatarImageBase64': hasCustomAvatar ? avatarBase64 : null,
-      'themeMode': doc.themeMode,
-      'weekStart': doc.weekStart,
-      'progressView': doc.progressView,
-      'homeSummaryRange': doc.homeSummaryRange,
       'pendingCoursePrompt': doc.pendingCoursePrompt,
       'avatarColorValue': doc.avatarColorValue,
       'profileAvatarColorValue': doc.avatarColorValue,

@@ -270,28 +270,57 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Selector<AppState, (ThemeMode, Locale?)>(
-      selector: (_, state) => (state.effectiveThemeMode, state.locale),
+    return Selector<AppState, (ThemeMode, Locale?, Color)>(
+      selector: (_, state) => (
+        state.effectiveThemeMode,
+        state.locale,
+        state.accentColor,
+      ),
       builder: (context, data, _) {
         final themeMode = data.$1;
         final locale = data.$2;
+        final accentColor = data.$3;
+
+        final lightTheme = ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: accentColor),
+            switchTheme: SwitchThemeData(
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return accentColor;
+                return null;
+              }),
+              trackColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return accentColor.withValues(alpha: 0.5);
+                return null;
+              }),
+            ),
+          );
+  
+        final darkTheme = ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: accentColor,
+              brightness: Brightness.dark,
+            ),
+            switchTheme: SwitchThemeData(
+              thumbColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return accentColor;
+                return null;
+              }),
+              trackColor: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) return accentColor.withValues(alpha: 0.5);
+                return null;
+              }),
+            ),
+          );
 
         return MaterialApp(
           title: 'Numer',
           debugShowCheckedModeBanner: false,
           themeAnimationDuration: const Duration(milliseconds: 300),
           themeAnimationCurve: Curves.easeInOut,
-          theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-          ),
-          darkTheme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.indigo,
-              brightness: Brightness.dark,
-            ),
-          ),
+          theme: lightTheme,
+          darkTheme: darkTheme,
           themeMode: themeMode,
           locale: locale,
           localizationsDelegates: const [
@@ -409,6 +438,13 @@ class _AuthGateState extends State<AuthGate> {
     }
 
     if (auth.isBootstrapping || !auth.isSyncReady || !auth.isProfileReady) {
+      if (auth.isSigningOut) {
+        return _buildLoader(
+          context,
+          message: AppLocalizations.of(context)?.loggingOut ??
+              'Logging out of account...',
+        );
+      }
       return _buildLoader(context);
     }
 

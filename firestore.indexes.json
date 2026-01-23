@@ -73,6 +73,34 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "aggregates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "totals.last7Days",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "aggregates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "totals.lastMonth",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

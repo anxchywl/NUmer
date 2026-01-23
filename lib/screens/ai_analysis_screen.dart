@@ -180,7 +180,13 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.courseAnalysis),
+        title: Text(
+          AppLocalizations.of(context)!.courseAnalysis,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+        ),
         centerTitle: true,
       ),
       body: courses.isEmpty

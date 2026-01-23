@@ -42,6 +42,66 @@ class AppLocalizationsKk extends AppLocalizations {
   String get kazakh => 'Қазақ';
 
   @override
+  String get accentColor => 'Акцент түсі';
+
+  @override
+  String get accentColorDescription => 'Негізгі түсіңізді реттеңіз';
+
+  @override
+  String get preview => 'Алдын ала қарау';
+
+  @override
+  String get textExample => 'Мәтін үлгісі';
+
+  @override
+  String get customColor => 'Өз түсіңіз';
+
+  @override
+  String get hue => 'Түс реңі';
+
+  @override
+  String get saturation => 'Қанықтылық';
+
+  @override
+  String get lightness => 'Жарықтық';
+
+  @override
+  String get presets => 'Пресеттер';
+
+  @override
+  String get defaultPreset => 'Әдепкі';
+
+  @override
+  String get rosePreset => 'Алқызыл';
+
+  @override
+  String get emeraldPreset => 'Изумруд';
+
+  @override
+  String get indigoPreset => 'Индиго';
+
+  @override
+  String get coralPreset => 'Коралл';
+
+  @override
+  String get createPreset => 'Create preset';
+
+  @override
+  String get presetName => 'Preset name';
+
+  @override
+  String get lettersOnly => 'Letters only';
+
+  @override
+  String get max16Symbols => 'Max 16 symbols';
+
+  @override
+  String get deletePreset => 'Delete preset';
+
+  @override
+  String get presetLimitReached => 'Preset limit reached (22)';
+
+  @override
   String get weekStartsOn => 'Апта басталуы';
 
   @override
@@ -1312,10 +1372,65 @@ class AppLocalizationsKk extends AppLocalizations {
   String get passwordLength => 'Құпиясөз кемінде 8 таңба болуы керек.';
 
   @override
+  String get passwordInvalidChars =>
+      'Only A–Z, a–z, 0–9 and allowed symbols are supported.';
+
+  @override
+  String get displayNameInvalidChars =>
+      'Display name can contain only letters and numbers.';
+
+  @override
   String get min8Chars => 'Кемінде 8 таңба.';
 
   @override
   String get loadingProfile => 'Профиль жүктелуде';
+
+  @override
+  String get loggingOut => 'Аккаунттан шығу...';
+
+  @override
+  String get forgotPassword => 'Құпиясөзді ұмыттыңыз ба?';
+
+  @override
+  String get resetPasswordTitle => 'Құпиясөзді қалпына келтіру';
+
+  @override
+  String get resetPasswordSubtitle =>
+      'Аккаунт поштасын енгізіңіз. Біз сілтемені жібереміз.';
+
+  @override
+  String get sendResetLink => 'Сілтемені жіберу';
+
+  @override
+  String get resetLinkSent => 'Бұл поштаға аккаунт болса, сілтеме жіберілді.';
+
+  @override
+  String get backToSignIn => 'Кіру бетіне оралу';
+
+  @override
+  String get verifyEmailFirst =>
+      'Алдымен поштаны растаңыз. Растау хатын жібердік.';
+
+  @override
+  String get resendVerificationEmail => 'Растау хатын қайта жіберу';
+
+  @override
+  String get invalidEmailFormat => 'Дұрыс email енгізіңіз.';
+
+  @override
+  String get resetRateLimited => 'Келесі әрекетке дейін сәл күтіңіз.';
+
+  @override
+  String get networkRequestFailed =>
+      'Желі қатесі. Байланысты тексеріп, қайталап көріңіз.';
+
+  @override
+  String get signInToResend => 'Қайта жіберу үшін жүйеге кіріңіз.';
+
+  @override
+  String tryAgainInSeconds(int seconds) {
+    return '$seconds с кейін қайталап көріңіз';
+  }
 
   @override
   String get sessionNotes => 'Сессия жазбалары';

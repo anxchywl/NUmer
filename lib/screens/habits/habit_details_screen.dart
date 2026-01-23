@@ -299,7 +299,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
         controller: _scrollController,
         slivers: [
           SliverAppBar(
-            title: Text(l10n.habitEditTitle),
+            title: Text(
+              l10n.habitEditTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
             actions: [
                if (_isDirty)
                 TextButton(

@@ -397,7 +397,7 @@ class GroupAggregationService {
       final data = aggregateDoc.data();
       if (data == null) return null;
       
-      return _memberFromAggregateData(
+      return memberFromAggregateData(
         data: data,
         period: period,
         userId: userId,
@@ -408,7 +408,10 @@ class GroupAggregationService {
     }
   }
 
-  MemberStudyData _memberFromAggregateData({
+  /// Build a [MemberStudyData] from a stored aggregate document.
+  /// Exposed so the leaderboard can render directly from aggregates without
+  /// pulling full session history.
+  MemberStudyData memberFromAggregateData({
     required Map<String, dynamic> data,
     required StatisticsPeriod period,
     required String userId,

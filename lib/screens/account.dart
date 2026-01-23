@@ -8,6 +8,7 @@ import '../services/sync_service.dart';
 import '../l10n/app_localizations.dart';
 import '../widgets/export_session_dialog.dart';
 import '../widgets/universal_avatar.dart';
+import '../widgets/accent_color_picker.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
@@ -149,7 +150,13 @@ class _AccountScreenState extends State<AccountScreen> {
         body: CustomScrollView(
           slivers: [
             SliverAppBar(
-              title: Text(AppLocalizations.of(context)!.settingsTitle),
+              title: Text(
+                AppLocalizations.of(context)!.settingsTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
             ),
             SliverFillRemaining(
               hasScrollBody: false,
@@ -174,7 +181,15 @@ class _AccountScreenState extends State<AccountScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(title: Text(AppLocalizations.of(context)!.settingsTitle)),
+          SliverAppBar(
+            title: Text(
+              AppLocalizations.of(context)!.settingsTitle,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ),
           SliverPadding(
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
@@ -280,8 +295,13 @@ class _AccountScreenState extends State<AccountScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text(AppLocalizations.of(context)!.profile,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  AppLocalizations.of(context)!.profile,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 auth.isProfileReady && state.isLoaded
                     ? Card(
@@ -329,7 +349,13 @@ class _AccountScreenState extends State<AccountScreen> {
                       ),
                 const SizedBox(height: 32),
           
-          Text(AppLocalizations.of(context)!.appearance, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context)!.appearance,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -365,15 +391,97 @@ class _AccountScreenState extends State<AccountScreen> {
               onSelectionChanged: (s) async {
                 final mode = s.first;
                 final appState = context.read<AppState>();
-                await widget.onThemeChange?.call(mode);
-                if (!mounted) return;
                 appState.setThemeMode(mode);
+              },
+              ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: state.accentColor,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outline,
+                    width: 1,
+                  ),
+                ),
+              ),
+              title: Text(AppLocalizations.of(context)!.accentColor),
+              subtitle: Text(AppLocalizations.of(context)!.accentColorDescription),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  useSafeArea: true,
+                  backgroundColor: Theme.of(context).colorScheme.surface,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (context) => Padding(
+                    padding: EdgeInsets.only(
+                      left: 24,
+                      right: 24,
+                      top: 16,
+                      bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Drag Handle
+                          Container(
+                            width: 32,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppLocalizations.of(context)!.accentColor,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 24),
+                          AccentColorPicker(
+                            currentColor: state.accentColor,
+                            onColorChanged: (color) {
+                              state.setAccentColor(color);
+                            },
+                            onSave: () {
+                              Navigator.pop(context);
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               },
             ),
           ),
+
           const SizedBox(height: 32),
           
-          Text(AppLocalizations.of(context)!.language, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context)!.language,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -431,8 +539,13 @@ class _AccountScreenState extends State<AccountScreen> {
 
 
           
-          Text(AppLocalizations.of(context)!.weekStartsOn,
-              style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            AppLocalizations.of(context)!.weekStartsOn,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
@@ -468,14 +581,20 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.displayTotalStudyTime,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
           ),
           const SizedBox(height: 12),
           _HomeSummarySwipeSelector(),
           const SizedBox(height: 24),
           Text(
             AppLocalizations.of(context)!.displayProgressBar,
-            style: Theme.of(context).textTheme.titleMedium,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
           ),
           const SizedBox(height: 12),
           const _ProgressViewSelector(),
