@@ -2,7 +2,7 @@ name: numer_app
 description: Study Group app with onboarding, courses, timer, and alarms
 publish_to: "none"
 
-version: 1.0.0+22
+version: 1.0.1+29
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -50,6 +50,7 @@ dependencies:
   font_awesome_flutter: ^10.12.0
   material_design_icons_flutter: ^7.0.7296
   phosphor_flutter: ^2.1.0
+  share_plus: ^12.0.1
   # characters and material_color_utilities are provided by the Flutter SDK
   # and are often SDK-pinned. Remove explicit pins to avoid conflicts.
 

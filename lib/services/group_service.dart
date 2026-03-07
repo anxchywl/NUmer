@@ -193,11 +193,31 @@ Stream<GroupStatistics> watchGroupStatistics(
       canReceiveNudges: data['fcmEnabled'] == true,
     );
 
-    if (updatedMember.isStudying == oldMember.isStudying &&
+    // Check for profile changes to persist to cache
+    final profileChanged = updatedMember.name != oldMember.name ||
+        updatedMember.avatarIndex != oldMember.avatarIndex ||
+        updatedMember.avatarBase64 != oldMember.avatarBase64 ||
+        updatedMember.avatarColorValue != oldMember.avatarColorValue;
+
+    if (profileChanged) {
+      // Update cache immediately so other views (like switching tabs) see the new name
+      final profileData = <String, dynamic>{
+        'profileName': updatedMember.name,
+        'profileAvatarIndex': updatedMember.avatarIndex,
+        'profileAvatarImageBase64': updatedMember.avatarBase64,
+        'profileAvatarColorValue': updatedMember.avatarColorValue,
+        // Keep other fields if they exist in cache, or just minimal update
+      };
+      // We need groupId for the cache key. context.read passed it to watchGroupStatistics, 
+      // but updatePresence is a closure. The closure captures 'groupId' from watchGroupStatistics scope!
+      final key = _profileCacheKey(groupId, userId);
+      _memberProfileCache[key] = (data: profileData, timestamp: DateTime.now());
+      unawaited(_persistProfileCache());
+    }
+
+    if (!profileChanged &&
+        updatedMember.isStudying == oldMember.isStudying &&
         updatedMember.activeSession == oldMember.activeSession &&
-        updatedMember.name == oldMember.name &&
-        updatedMember.avatarIndex == oldMember.avatarIndex &&
-        updatedMember.avatarColorValue == oldMember.avatarColorValue &&
         updatedMember.allowsNudges == oldMember.allowsNudges &&
         updatedMember.canReceiveNudges == oldMember.canReceiveNudges) {
       return;
@@ -254,15 +274,41 @@ Stream<GroupStatistics> watchGroupStatistics(
       memberIds = snapshot.docs.map((d) => d.id).toSet();
       updateMemberListeners(memberIds);
 
-      final members = snapshot.docs.map((doc) {
+      final members = await Future.wait(snapshot.docs.map((doc) async {
         final data = doc.data();
-        return aggregationService.memberFromAggregateData(
+        var member = aggregationService.memberFromAggregateData(
           data: data,
           period: period,
           userId: doc.id,
           currentUserId: uid,
         );
-      }).toList();
+
+        // Name Flicker Fix:
+        // Try to load cached profile data to ensure we have the latest name/avatar.
+        // This prevents the UI from showing stale aggregate names then jumping.
+        // We use getCachedMemberProfile which checks memory first, then invalidates via TTL if needed.
+        // Note: We avoid fetchAndCache here to prevent read-spam, relying on what's available or the aggregate fallback.
+        // Typically, the cache is populated by other views or presence updates.
+        Map<String, dynamic>? profileData = await getCachedMemberProfile(
+          groupId: groupId, 
+          userId: doc.id
+        );
+        
+        // If not in cache but we suspect it's stale (e.g. valid TTL logic), we could fetch, 
+        // but for list performance, we accept cache or aggregate. 
+        // Presence updates (updateMemberListeners) will fix it shortly anyway. 
+        
+        if (profileData != null) {
+          member = member.copyWith(
+            name: (profileData['profileName'] as String?) ?? member.name,
+            avatarIndex: (profileData['profileAvatarIndex'] as int?) ?? (profileData['avatarIndex'] as int?) ?? member.avatarIndex,
+            avatarBase64: (profileData['profileAvatarImageBase64'] as String?) ?? member.avatarBase64,
+            avatarColorValue: (profileData['avatarColorValue'] as int?) ?? (profileData['profileAvatarColorValue'] as int?) ?? member.avatarColorValue,
+          );
+        }
+        
+        return member;
+      }));
 
       // Sort by seconds to ensure exact ranking
       members.sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));

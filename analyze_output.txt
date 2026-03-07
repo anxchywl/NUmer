@@ -1,118 +1,49 @@
 Analyzing numer_app...                                          
 
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:20:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:21:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:22:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:23:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:24:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:25:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:26:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:28:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:29:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:32:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:33:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:34:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:35:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:36:43 • undefined_getter
-  error • The getter 'bat' isn't defined for the type 'FontAwesomeIcons' • lib/models/profile_avatar.dart:37:46 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:38:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:39:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:40:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:41:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:44:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:45:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:46:43 • undefined_getter
-  error • The getter 'turkey' isn't defined for the type 'FontAwesomeIcons' • lib/models/profile_avatar.dart:47:46 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:48:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:52:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:53:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:56:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:57:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:58:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:59:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:60:43 • undefined_getter
-  error • The getter 'dragon' isn't defined for the type 'MdiIcons' • lib/models/profile_avatar.dart:61:38 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:62:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:64:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:65:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:68:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:69:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:70:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:71:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:72:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:73:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:74:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:75:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:76:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:77:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:80:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:81:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:82:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:83:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:84:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:85:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:86:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:87:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:89:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:92:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:93:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:94:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:95:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:96:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:97:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:98:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:99:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:100:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:101:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:104:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:105:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:106:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:107:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:108:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:109:43 • undefined_getter
-  error • The getter 'ufo' isn't defined for the type 'FontAwesomeIcons' • lib/models/profile_avatar.dart:110:46 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:111:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:112:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:113:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:116:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:117:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:118:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:119:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:120:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:121:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:122:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:123:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:124:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:125:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:128:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:129:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:130:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:131:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:132:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:133:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:134:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:135:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:136:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:137:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:140:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:141:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:142:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:143:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:144:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:145:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:146:43 • undefined_getter
-  error • The getter 'corn' isn't defined for the type 'FontAwesomeIcons' • lib/models/profile_avatar.dart:147:46 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:152:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:153:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:154:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:155:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:156:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:157:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:158:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:159:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:160:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:161:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:162:43 • undefined_getter
-  error • The getter 'regular' isn't defined for the type 'PhosphorIcons' • lib/models/profile_avatar.dart:163:43 • undefined_getter
+  error • Undefined class 'HabitComparator' • lib/models/habit_rule.dart:5:9 • undefined_class
+  error • Undefined name 'HabitComparator' • lib/models/habit_rule.dart:23:19 • undefined_identifier
+warning • Unused import: 'widgets/habit_time_picker.dart' • lib/screens/habits/add_habit_sheet.dart:11:8 • unused_import
+warning • The value of the field '_isSaving' isn't used • lib/screens/habits/add_habit_sheet.dart:70:8 • unused_field
+warning • The value of the field '_isFreqGoalFocused' isn't used • lib/screens/habits/add_habit_sheet.dart:168:8 • unused_field
+warning • The value of the field '_isWorkRestFocused' isn't used • lib/screens/habits/add_habit_sheet.dart:169:8 • unused_field
+warning • The declaration '_isTrackingNextEnabled' isn't referenced • lib/screens/habits/add_habit_sheet.dart:184:12 • unused_element
+warning • The declaration '_isFrequencyNextEnabled' isn't referenced • lib/screens/habits/add_habit_sheet.dart:192:12 • unused_element
+warning • The value of the local variable 'localeName' isn't used • lib/screens/habits/add_habit_sheet.dart:292:11 • unused_local_variable
+  error • The named parameter 'children' isn't defined • lib/screens/habits/add_habit_sheet.dart:613:37 • undefined_named_parameter
+  error • Expected to find ']' • lib/screens/habits/add_habit_sheet.dart:640:33 • expected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:641:33 • missing_identifier
+  error • Expected to find ')' • lib/screens/habits/add_habit_sheet.dart:641:33 • expected_token
+  error • Expected to find ',' • lib/screens/habits/add_habit_sheet.dart:641:33 • expected_token
+  error • The getter 'habitTypeLockedHint' isn't defined for the type 'AppLocalizations' • lib/screens/habits/add_habit_sheet.dart:648:51 • undefined_getter
+  error • Expected to find ']' • lib/screens/habits/add_habit_sheet.dart:663:29 • expected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:668:19 • missing_identifier
+  error • Expected to find ')' • lib/screens/habits/add_habit_sheet.dart:668:19 • expected_token
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1138:11 • expected_token
+warning • Dead code • lib/screens/habits/add_habit_sheet.dart:1138:12 • dead_code
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1138:12 • missing_identifier
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1138:12 • expected_token
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1138:12 • unexpected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1139:9 • missing_identifier
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1139:9 • expected_token
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1139:9 • unexpected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1139:10 • missing_identifier
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1139:10 • expected_token
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1139:10 • unexpected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1140:7 • missing_identifier
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1140:7 • expected_token
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1140:7 • unexpected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1140:8 • missing_identifier
+  error • Expected to find ';' • lib/screens/habits/add_habit_sheet.dart:1140:8 • expected_token
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1140:8 • unexpected_token
+  error • Expected an identifier • lib/screens/habits/add_habit_sheet.dart:1141:5 • missing_identifier
+  error • Unexpected text ';' • lib/screens/habits/add_habit_sheet.dart:1141:5 • unexpected_token
+   info • Unnecessary empty statement • lib/screens/habits/add_habit_sheet.dart:1141:6 • empty_statements
+warning • The declaration '_buildFreqOption' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1144:10 • unused_element
+warning • The declaration '_buildPeriodTab' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1198:10 • unused_element
+warning • The declaration '_buildPeriodToggle' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1231:10 • unused_element
+warning • The declaration '_buildMonthDaySelector' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1253:10 • unused_element
+warning • The declaration '_buildYearSelector' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1300:10 • unused_element
+warning • The declaration '_buildDaySelector' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1369:10 • unused_element
+warning • The declaration '_submit' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1401:16 • unused_element
+warning • The declaration '_buildCourseSelector' isn't referenced • lib/screens/habits/add_habit_sheet.dart:1557:10 • unused_element
 
-114 issues found. (ran in 2.1s)

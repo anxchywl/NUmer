@@ -13,6 +13,7 @@ class HabitScheduleEditor extends StatefulWidget {
   final DateTime startDate;
   final DateTime? endDate;
   final ValueChanged<ScheduleData> onChanged;
+  final bool lockTypeChange;
 
   const HabitScheduleEditor({
     super.key,
@@ -24,6 +25,7 @@ class HabitScheduleEditor extends StatefulWidget {
     required this.startDate,
     this.endDate,
     required this.onChanged,
+    this.lockTypeChange = false,
   });
 
   @override
@@ -375,17 +377,21 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
 
   Widget _buildFreqOption(ThemeData theme, {required HabitFrequencyType type, required String title, required Widget child}) {
      final selected = _freq == type;
+     final disabled = widget.lockTypeChange && !selected;
+     
      return Column(
        crossAxisAlignment: CrossAxisAlignment.start,
        children: [
          GestureDetector(
-           onTap: () => setState(() { _freq = type; _notify(); }),
+           onTap: disabled ? null : () => setState(() { _freq = type; _notify(); }),
            child: AnimatedContainer(
              duration: const Duration(milliseconds: 200),
              curve: Curves.easeInOut,
              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
              decoration: BoxDecoration(
-                color: selected ? theme.colorScheme.secondaryContainer : theme.colorScheme.surfaceContainerHighest.withAlpha(50),
+                color: selected 
+                  ? theme.colorScheme.secondaryContainer 
+                  : (disabled ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                    color: selected ? theme.colorScheme.primary : Colors.transparent,
@@ -396,12 +402,16 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                children: [
                  Icon(
                    selected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                   color: selected ? theme.colorScheme.primary : theme.colorScheme.outline,
+                   color: selected 
+                      ? theme.colorScheme.primary 
+                      : (disabled ? theme.colorScheme.outline.withValues(alpha: 0.3) : theme.colorScheme.outline),
                  ),
                  const SizedBox(width: 12),
                  Text(title, style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: selected ? theme.colorScheme.onSecondaryContainer : theme.colorScheme.onSurface,
+                    color: selected 
+                      ? theme.colorScheme.onSecondaryContainer 
+                      : (disabled ? theme.colorScheme.onSurface.withValues(alpha: 0.38) : theme.colorScheme.onSurface),
                  )),
                ],
              ),

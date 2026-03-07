@@ -9,6 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get habitTypeLockedHint =>
+      'Habit type cannot be changed after creation';
+
+  @override
   String get settingsTitle => 'Account & settings';
 
   @override
@@ -43,6 +47,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get accentColor => 'Accent color';
+
+  @override
+  String get buttonPreview => 'Button';
 
   @override
   String get accentColorDescription => 'Customize your primary color';
@@ -90,7 +97,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get presetName => 'Preset name';
 
   @override
-  String get lettersOnly => 'Letters only';
+  String get lettersOnly => 'Letters and spaces only';
 
   @override
   String get max16Symbols => 'Max 16 symbols';
@@ -203,7 +210,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get fileSavedSuccessfully => 'File saved successfully';
+  String get fileSavedSuccessfully => 'File generated successfully';
 
   @override
   String get fileSavedAt => 'The file is saved at:';
@@ -2061,6 +2068,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get habitReportDownloadAction => 'Download';
+
+  @override
+  String get shareFile => 'Share file';
 
   @override
   String habitReportSaved(String path) {

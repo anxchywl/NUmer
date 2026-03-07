@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../../models/habit.dart';
+import '../../../models/habit_rule.dart';
 import '../../../models/habit_category.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/habit_service.dart';
@@ -609,30 +610,63 @@ final FocusNode _unitFocus = FocusNode();
                               children: [
                                 Align(
                                   alignment: Alignment.centerLeft,
-                                      child: Wrap(
+                                  child: Wrap(
                                     spacing: 8,
                                     runSpacing: 8,
                                     children: [
                                       ChoiceChip(
-                                        label: Text(l10n.habitYesNo),
+                                        label: Text(
+                                          l10n.habitYesNo, 
+                                          style: TextStyle(
+                                            color: _type == HabitType.yesNo 
+                                              ? theme.colorScheme.onSecondaryContainer 
+                                              : (widget.habit != null && _type != HabitType.yesNo 
+                                                  ? theme.colorScheme.onSurface.withValues(alpha: 0.38) 
+                                                  : null)
+                                          )
+                                        ),
                                         selected: _type == HabitType.yesNo,
-                                        onSelected: (b) => setState(() { 
+                                        disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                        selectedColor: theme.colorScheme.secondaryContainer,
+                                        onSelected: widget.habit != null ? null : (b) => setState(() { 
                                            _type = HabitType.yesNo;
                                            if (_target == 0.0) _target = 1.0;
                                         }),
                                       ),
                                       ChoiceChip(
-                                        label: Text(l10n.habitNumeric),
+                                        label: Text(
+                                          l10n.habitNumeric,
+                                          style: TextStyle(
+                                            color: _type == HabitType.numeric 
+                                              ? theme.colorScheme.onSecondaryContainer 
+                                              : (widget.habit != null && _type != HabitType.numeric 
+                                                  ? theme.colorScheme.onSurface.withValues(alpha: 0.38) 
+                                                  : null)
+                                          )
+                                        ),
                                         selected: _type == HabitType.numeric,
-                                        onSelected: (b) => setState(() { 
+                                        disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                        selectedColor: theme.colorScheme.secondaryContainer,
+                                        onSelected: widget.habit != null ? null : (b) => setState(() { 
                                            _type = HabitType.numeric;
                                            if (_target == 1.0) _target = 0.0;
                                         }),
                                       ),
                                       ChoiceChip(
-                                        label: Text(l10n.habitTime),
+                                        label: Text(
+                                          l10n.habitTime,
+                                          style: TextStyle(
+                                            color: _type == HabitType.time 
+                                              ? theme.colorScheme.onSecondaryContainer 
+                                              : (widget.habit != null && _type != HabitType.time 
+                                                  ? theme.colorScheme.onSurface.withValues(alpha: 0.38) 
+                                                  : null)
+                                          )
+                                        ),
                                         selected: _type == HabitType.time,
-                                        onSelected: (b) => setState(() { 
+                                        disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                        selectedColor: theme.colorScheme.secondaryContainer,
+                                        onSelected: widget.habit != null ? null : (b) => setState(() { 
                                            _type = HabitType.time;
                                            if (_target == 1.0) _target = 0.0;
                                         }),
@@ -640,6 +674,17 @@ final FocusNode _unitFocus = FocusNode();
                                     ],
                                   ),
                                 ),
+                                if (widget.habit != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.lock_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
+                                        const SizedBox(width: 4),
+                                        Text(l10n.habitTypeLockedHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+                                      ],
+                                    ),
+                                  ),
                                 const SizedBox(height: 16),
                                 Text(
                                   switch(_type) {
@@ -1134,17 +1179,22 @@ final FocusNode _unitFocus = FocusNode();
 
   Widget _buildFreqOption(ThemeData theme, {required HabitFrequencyType type, required String title, required Widget child}) {
      final selected = _freq == type;
+     // If editing, disable switching to other types
+     final disabled = widget.habit != null && !selected;
+     
      return Column(
        crossAxisAlignment: CrossAxisAlignment.start,
        children: [
          GestureDetector(
-           onTap: () => setState(() => _freq = type),
+           onTap: disabled ? null : () => setState(() => _freq = type),
            child: AnimatedContainer(
              duration: const Duration(milliseconds: 200),
              curve: Curves.easeInOut,
              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
              decoration: BoxDecoration(
-                color: selected ? theme.colorScheme.secondaryContainer : theme.colorScheme.surfaceContainerHighest.withAlpha(50),
+                color: selected 
+                  ? theme.colorScheme.secondaryContainer 
+                  : (disabled ? theme.colorScheme.surfaceContainerHighest.withAlpha(20) : theme.colorScheme.surfaceContainerHighest.withAlpha(50)),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                    color: selected ? theme.colorScheme.primary : Colors.transparent,
@@ -1398,7 +1448,28 @@ final FocusNode _unitFocus = FocusNode();
 
       Habit habit;
       if (widget.habit != null) {
-        // Update existing habit, preserving ID/stats/sortOrder/history
+        // Update existing habit
+        final old = widget.habit!;
+        List<HabitRule> rules = List.from(old.previousRules);
+
+        // Detect Retroactive Change (Target or Comparator)
+        // Note: We don't track Unit changes as they are cosmetic? 
+        // Or if unit changes, the value might be different? 
+        // Assuming unit changes require value update usually.
+        // We only care if meaningful logic changes.
+        
+        final targetChanged = (old.targetValue - _target).abs() > 0.001;
+        final comparatorChanged = old.comparator != _comparator;
+        // Tracking Type change IS comparator change usually.
+        
+        if (targetChanged || comparatorChanged) {
+           rules.add(HabitRule(
+             endDate: DateTime.now(), // Rules ends NOW
+             targetValue: old.targetValue,
+             comparator: old.comparator,
+           ));
+        }
+
         habit = widget.habit!.copyWith(
            name: name,
            color: color,
@@ -1418,6 +1489,7 @@ final FocusNode _unitFocus = FocusNode();
            startDate: _startDate,
            endDate: _endDate,
            connectedCourseIds: _connectedCourseIds,
+           previousRules: rules,
         );
       } else {
         // Create new habit

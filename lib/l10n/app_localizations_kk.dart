@@ -9,6 +9,10 @@ class AppLocalizationsKk extends AppLocalizations {
   AppLocalizationsKk([String locale = 'kk']) : super(locale);
 
   @override
+  String get habitTypeLockedHint =>
+      'Әдет түрін жасалғаннан кейін өзгерту мүмкін емес';
+
+  @override
   String get settingsTitle => 'Есептік жазба және баптаулар';
 
   @override
@@ -43,6 +47,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get accentColor => 'Акцент түсі';
+
+  @override
+  String get buttonPreview => 'Түйме';
 
   @override
   String get accentColorDescription => 'Негізгі түсіңізді реттеңіз';
@@ -84,22 +91,22 @@ class AppLocalizationsKk extends AppLocalizations {
   String get coralPreset => 'Коралл';
 
   @override
-  String get createPreset => 'Create preset';
+  String get createPreset => 'Пресет құру';
 
   @override
-  String get presetName => 'Preset name';
+  String get presetName => 'Пресет атауы';
 
   @override
-  String get lettersOnly => 'Letters only';
+  String get lettersOnly => 'Әріптер мен бос орындар';
 
   @override
-  String get max16Symbols => 'Max 16 symbols';
+  String get max16Symbols => 'Макс. 16 таңба';
 
   @override
-  String get deletePreset => 'Delete preset';
+  String get deletePreset => 'Пресетті жою';
 
   @override
-  String get presetLimitReached => 'Preset limit reached (22)';
+  String get presetLimitReached => 'Пресеттер саны шегіне жетті (22)';
 
   @override
   String get weekStartsOn => 'Апта басталуы';
@@ -201,7 +208,7 @@ class AppLocalizationsKk extends AppLocalizations {
   }
 
   @override
-  String get fileSavedSuccessfully => 'Файл сәтті сақталды';
+  String get fileSavedSuccessfully => 'Файл сәтті жасалды';
 
   @override
   String get fileSavedAt => 'Файл келесі жерде сақталды:';
@@ -1373,11 +1380,11 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get passwordInvalidChars =>
-      'Only A–Z, a–z, 0–9 and allowed symbols are supported.';
+      'Тек A–Z, a–z, 0–9 және рұқсат етілген белгілерге қолдау көрсетіледі.';
 
   @override
   String get displayNameInvalidChars =>
-      'Display name can contain only letters and numbers.';
+      'Көрсетілетін ат тек әріптер мен сандардан тұруы мүмкін.';
 
   @override
   String get min8Chars => 'Кемінде 8 таңба.';
@@ -2042,6 +2049,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get habitReportDownloadAction => 'Жүктеп алу';
+
+  @override
+  String get shareFile => 'Файлды бөлісу';
 
   @override
   String habitReportSaved(String path) {

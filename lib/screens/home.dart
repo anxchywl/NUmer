@@ -126,6 +126,7 @@ class HomeScreen extends StatelessWidget {
         slivers: [
           SliverAppBar(
             title: const _StreakTitle(),
+            centerTitle: false, // Ensure title is left-aligned on iOS
             actions: [
               const Center(
                 child: Padding(
@@ -2671,7 +2672,7 @@ class _StreakTitle extends StatelessWidget {
         Text(
           l10n.streakDays(count),
           style: theme.textTheme.titleMedium?.copyWith(
-            color: hasToday ? Colors.lightBlue : theme.colorScheme.onSurfaceVariant,
+            color: hasToday ? state.accentColor : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.5,
           ),

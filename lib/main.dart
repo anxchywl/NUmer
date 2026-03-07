@@ -495,7 +495,10 @@ class _AuthGateState extends State<AuthGate> {
     return Consumer<AppState>(
       builder: (context, state, _) {
         if (auth.currentUser != null && !state.isLoaded) {
-          unawaited(state.load());
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted || state.isLoaded) return;
+            unawaited(state.load());
+          });
         }
 
         if (!state.isLoaded || !state.isHydrated) {
@@ -504,7 +507,10 @@ class _AuthGateState extends State<AuthGate> {
 
         final profile = auth.profile;
         if (profile != null) {
-          unawaited(state.applyRemoteProfile(profile));
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            unawaited(state.applyRemoteProfile(profile));
+          });
         }
         return _Shell(onThemeChange: widget.onThemeChange);
       },

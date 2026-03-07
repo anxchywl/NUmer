@@ -25,6 +25,41 @@ class ExportService {
     _lastExportTime = DateTime.now();
   }
 
+  static Future<Directory> _getTargetDirectory() async {
+    if (Platform.isAndroid) {
+      // Use External Storage Directory for better user visibility 
+      // (usually Android/data/com.package/files)
+      // This doesn't require extra permissions on modern Android.
+      return await getExternalStorageDirectory() ?? await getApplicationDocumentsDirectory();
+    } else if (Platform.isIOS) {
+      return await getApplicationDocumentsDirectory();
+    } else {
+      return await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
+    }
+  }
+
+  static Future<void> _cleanupOldFiles() async {
+    try {
+      final directory = await _getTargetDirectory();
+      if (await directory.exists()) {
+        final files = directory.listSync();
+        for (final file in files) {
+          if (file is File) {
+            final name = file.path.split(Platform.pathSeparator).last;
+            // Matches:
+            // numer_sessions_...
+            // habits_... (based on habitReportFileName)
+            if (name.startsWith('numer_sessions_') || name.startsWith('habits_')) {
+              await file.delete();
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore cleanup errors to not block export
+    }
+  }
+
   static Future<String> exportSessionsToCalendar({
     required String? courseId,
     required String exportTitle,
@@ -33,6 +68,8 @@ class ExportService {
     required Map<String, String> courseNames,
     required String studiedLabel,
   }) async {
+    await _cleanupOldFiles();
+    
     // 1. Fetch sessions
     final allSessions = await Storage.getSessions();
     
@@ -42,11 +79,11 @@ class ExportService {
       final start = s['startUtc'] as DateTime;
       return (start.isAtSameMomentAs(sinceDate) || start.isAfter(sinceDate)) && start.isBefore(untilDate) && (s['seconds'] as int) > 0;
     }).toList();
-
+ 
     if (sessions.isEmpty) {
       throw Exception('No sessions found for this period.');
     }
-
+ 
     // 3. Generate ICS content
     final buffer = StringBuffer();
     buffer.writeln('BEGIN:VCALENDAR');
@@ -54,9 +91,9 @@ class ExportService {
     buffer.writeln('PRODID:-//Numer App//NONSGML//EN');
     buffer.writeln('CALSCALE:GREGORIAN');
     buffer.writeln('METHOD:PUBLISH');
-
+ 
     final dateFormat = DateFormat("yyyyMMdd'T'HHmmss'Z'");
-
+ 
     for (final session in sessions) {
       final start = (session['startUtc'] as DateTime).toUtc();
       final end = (session['endUtc'] as DateTime).toUtc();
@@ -71,7 +108,7 @@ class ExportService {
       final h = d.inHours;
       final m = d.inMinutes % 60;
       final durationStr = h > 0 ? '$h hr $m min' : '$m min';
-
+ 
       buffer.writeln('BEGIN:VEVENT');
       buffer.writeln('UID:$id');
       buffer.writeln('DTSTAMP:${dateFormat.format(DateTime.now().toUtc())}');
@@ -85,29 +122,11 @@ class ExportService {
       buffer.writeln('STATUS:CONFIRMED');
       buffer.writeln('END:VEVENT');
     }
-
+ 
     buffer.writeln('END:VCALENDAR');
-
-    // 4. Save to Downloads directory
-    Directory directory;
-    
-    if (Platform.isAndroid) {
-      // Prioritize public Downloads folder so users can actually see the file
-      final publicDownloadDir = Directory('/storage/emulated/0/Download');
-      if (await publicDownloadDir.exists()) {
-        directory = publicDownloadDir;
-      } else {
-        directory = await getDownloadsDirectory() ?? 
-                    await getExternalStorageDirectory() ?? 
-                    await getApplicationDocumentsDirectory();
-      }
-    } else if (Platform.isIOS) {
-      // On iOS, use app documents directory (accessible via Files app)
-      directory = await getApplicationDocumentsDirectory();
-    } else {
-      // Fallback for other platforms
-      directory = await getDownloadsDirectory() ?? await getApplicationDocumentsDirectory();
-    }
+ 
+    // 4. Save to directory
+    final directory = await _getTargetDirectory();
     
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final safeName = exportTitle.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_');
@@ -115,14 +134,16 @@ class ExportService {
     final path = '${directory.path}/$fileName';
     final file = File(path);
     await file.writeAsString(buffer.toString());
-
+ 
     return path;
   }
-
+ 
   static Future<String> generateCsvFile({
     required String fileName,
     required List<List<dynamic>> rows,
   }) async {
+    await _cleanupOldFiles();
+    
     final buffer = StringBuffer();
     
     for (final row in rows) {
@@ -135,32 +156,21 @@ class ExportService {
         return cell;
       }).join(','));
     }
-
-    // Reuse directory logic from exportSessionsToCalendar roughly
-    Directory targetDir;
-    if (Platform.isAndroid) {
-      final publicDownloadDir = Directory('/storage/emulated/0/Download');
-      if (await publicDownloadDir.exists()) {
-        targetDir = publicDownloadDir;
-      } else {
-        targetDir = await getDownloadsDirectory() ?? 
-                    await getExternalStorageDirectory() ?? 
-                    await getApplicationDocumentsDirectory();
-      }
-    } else {
-      targetDir = await getApplicationDocumentsDirectory();
-    }
-
+ 
+    final targetDir = await _getTargetDirectory();
+ 
     final path = '${targetDir.path}/$fileName';
     final file = File(path);
     await file.writeAsString(buffer.toString());
     return path;
   }
-
+ 
   static Future<String> generateExcelFile({
     required String fileName,
     required List<List<dynamic>> rows,
   }) async {
+    await _cleanupOldFiles();
+
     final excel = Excel.createExcel();
     final sheet = excel['Sheet1'];
     
@@ -203,22 +213,9 @@ class ExportService {
         }
       }
     }
-
-    // Get target directory
-    Directory targetDir;
-    if (Platform.isAndroid) {
-      final publicDownloadDir = Directory('/storage/emulated/0/Download');
-      if (await publicDownloadDir.exists()) {
-        targetDir = publicDownloadDir;
-      } else {
-        targetDir = await getDownloadsDirectory() ?? 
-                    await getExternalStorageDirectory() ?? 
-                    await getApplicationDocumentsDirectory();
-      }
-    } else {
-      targetDir = await getApplicationDocumentsDirectory();
-    }
-
+ 
+    final targetDir = await _getTargetDirectory();
+ 
     final path = '${targetDir.path}/$fileName';
     final fileBytes = excel.encode();
     

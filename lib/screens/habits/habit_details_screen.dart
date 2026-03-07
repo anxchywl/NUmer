@@ -367,6 +367,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                            frequencyGoal: _frequencyGoal,
                            startDate: _startDate,
                            endDate: _endDate,
+                           lockTypeChange: true, // Lock frequency type changes in Edit Mode
                            onChanged: (data) {
                               setState(() {
                                  _freq = data.frequencyType;
@@ -673,9 +674,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
   }
 
   Widget _buildTypeChip(String label, HabitType type) {
+     final theme = Theme.of(context);
      final isSelected = _type == type;
-     // Disable Numeric if courses connected
-     final isDisabled = type == HabitType.numeric && _connectedCourseIds.isNotEmpty;
+     // Disable if not selected (Edit Mode locks type)
+     final isDisabled = !isSelected;
 
      return FilterChip(
        label: Text(label),
@@ -689,7 +691,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
               _markDirty();
            });
         },
-       backgroundColor: isDisabled ? Colors.grey.withValues(alpha: 0.1) : null,
+       backgroundColor: isDisabled ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3) : null,
+       disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+       labelStyle: TextStyle(
+         color: isDisabled ? theme.colorScheme.onSurface.withValues(alpha: 0.38) : null,
+       ),
      );
   }
 

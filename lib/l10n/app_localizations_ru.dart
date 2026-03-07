@@ -9,6 +9,10 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get habitTypeLockedHint =>
+      'Тип привычки нельзя изменить после создания';
+
+  @override
   String get settingsTitle => 'Аккаунт и настройки';
 
   @override
@@ -43,6 +47,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get accentColor => 'Акцентный цвет';
+
+  @override
+  String get buttonPreview => 'Кнопка';
 
   @override
   String get accentColorDescription => 'Настройте ваш основной цвет';
@@ -84,22 +91,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get coralPreset => 'Коралловый';
 
   @override
-  String get createPreset => 'Create preset';
+  String get createPreset => 'Создать пресет';
 
   @override
-  String get presetName => 'Preset name';
+  String get presetName => 'Название пресета';
 
   @override
-  String get lettersOnly => 'Letters only';
+  String get lettersOnly => 'Буквы и пробелы';
 
   @override
-  String get max16Symbols => 'Max 16 symbols';
+  String get max16Symbols => 'Макс. 16 символов';
 
   @override
-  String get deletePreset => 'Delete preset';
+  String get deletePreset => 'Удалить пресет';
 
   @override
-  String get presetLimitReached => 'Preset limit reached (22)';
+  String get presetLimitReached => 'Достигнут лимит пресетов (22)';
 
   @override
   String get weekStartsOn => 'Начало недели';
@@ -204,7 +211,7 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
-  String get fileSavedSuccessfully => 'Файл успешно сохранён';
+  String get fileSavedSuccessfully => 'Файл успешно создан';
 
   @override
   String get fileSavedAt => 'Файл сохранён по пути:';
@@ -1376,11 +1383,11 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get passwordInvalidChars =>
-      'Only A–Z, a–z, 0–9 and allowed symbols are supported.';
+      'Поддерживаются только A–Z, a–z, 0–9 и разрешенные символы.';
 
   @override
   String get displayNameInvalidChars =>
-      'Display name can contain only letters and numbers.';
+      'Отображаемое имя может содержать только буквы и цифры.';
 
   @override
   String get min8Chars => 'Минимум 8 символов.';
@@ -2069,6 +2076,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get habitReportDownloadAction => 'Скачать';
+
+  @override
+  String get shareFile => 'Поделиться файлом';
 
   @override
   String habitReportSaved(String path) {

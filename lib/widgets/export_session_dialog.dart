@@ -9,6 +9,7 @@ import '../services/export_service.dart';
 import '../services/storage.dart';
 import 'app_toast.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 class ExportSessionSheet extends StatefulWidget {
   const ExportSessionSheet({super.key});
@@ -175,28 +176,6 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
     }
   }
 
-  String _getDisplayPath(String? fullPath) {
-    if (fullPath == null) return '';
-    final path = fullPath.replaceAll('\\', '/');
-    final fileName = path.split('/').last;
-
-    // Detect Downloads folder (common on Android/macOS)
-    if (path.toLowerCase().contains('/download/') || path.toLowerCase().contains('/downloads/')) {
-      return 'Downloads/$fileName';
-    }
-
-    // Detect Documents folder (common on iOS)
-    if (path.toLowerCase().contains('/documents/')) {
-      return 'Documents/$fileName';
-    }
-
-    // Default fallback
-    if (path.length > 40) {
-      return fileName;
-    }
-
-    return path;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -270,7 +249,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
               // Actions
               SizedBox(
                 width: double.infinity,
-                child: FilledButton.icon(
+                child: FilledButton(
                   onPressed: _isSuccess 
                     ? () => Navigator.pop(context) 
                     : (_isExporting 
@@ -280,15 +259,25 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
-                  icon: _isExporting 
-                    ? (_countdown > 0 
-                        ? const Icon(Icons.close, color: Colors.white)
-                        : const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))) 
-                    : Icon(_isSuccess ? Icons.check_circle_outline : Icons.download_rounded),
-                  label: Text(
-                    _isExporting
-                        ? (_countdown > 0 ? l10n.cancel : l10n.exporting)
-                        : (_isSuccess ? l10n.done : l10n.export),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_isExporting) ...[
+                        if (_countdown > 0)
+                          const Icon(Icons.close, color: Colors.white)
+                        else
+                          const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white)),
+                        const SizedBox(width: 8),
+                      ] else if (!_isSuccess) ...[
+                        const Icon(Icons.download_rounded),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        _isExporting
+                            ? (_countdown > 0 ? l10n.cancel : l10n.exporting)
+                            : (_isSuccess ? l10n.done : l10n.export),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -488,18 +477,17 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.fileSavedAt,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              SelectableText(
-                _getDisplayPath(_filePath),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    if (_filePath != null) {
+                      await SharePlus.instance.share(ShareParams(files: [XFile(_filePath!)]));
+                    }
+                  },
+                  icon: const Icon(Icons.share),
+                  label: Text(l10n.shareFile),
                 ),
               ),
             ],

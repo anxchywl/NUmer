@@ -29,7 +29,7 @@ final _emailInputFormatters = <TextInputFormatter>[
   ),
 ];
 final _displayNameInputFormatter = FilteringTextInputFormatter.allow(
-  RegExp(r'[A-Za-z0-9]'),
+  RegExp(r'[A-Za-z0-9 ]'),
 );
 final _emailRegex = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
 
@@ -39,7 +39,8 @@ bool _hasInvalidPasswordChars(String value) {
 
 bool _isValidDisplayName(String value) {
   if (value.length < 2 || value.length > 30) return false;
-  return RegExp(r'^[A-Za-z0-9]+$').hasMatch(value);
+  // Allow letters, numbers, spaces, hyphens, and apostrophes
+  return RegExp(r"^[A-Za-z0-9 '\-]+$").hasMatch(value);
 }
 
 class AuthScreen extends StatefulWidget {

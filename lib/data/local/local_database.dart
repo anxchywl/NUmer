@@ -158,9 +158,12 @@ class LocalDatabase {
           .where((g) => g.dirty)
           .toList(growable: false);
 
-  LocalUserDoc? get userDocOrNull => _userBox?.get(_currentUid);
+  LocalUserDoc? get userDocOrNull => (_userBox?.isOpen ?? false) ? _userBox?.get(_currentUid) : null;
 
   SyncStateEntry syncStateForKey(String key) {
+    if (_syncBox == null || !_syncBox!.isOpen) {
+      return SyncStateEntry(collection: key);
+    }
     final box = _syncBox!;
     final existing = box.get(key);
     if (existing != null) return existing;

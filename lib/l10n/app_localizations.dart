@@ -100,6 +100,12 @@ abstract class AppLocalizations {
     Locale('ru')
   ];
 
+  /// No description provided for @habitTypeLockedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Habit type cannot be changed after creation'**
+  String get habitTypeLockedHint;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:
@@ -171,6 +177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Accent color'**
   String get accentColor;
+
+  /// No description provided for @buttonPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Button'**
+  String get buttonPreview;
 
   /// No description provided for @accentColorDescription.
   ///
@@ -265,7 +277,7 @@ abstract class AppLocalizations {
   /// No description provided for @lettersOnly.
   ///
   /// In en, this message translates to:
-  /// **'Letters only'**
+  /// **'Letters and spaces only'**
   String get lettersOnly;
 
   /// No description provided for @max16Symbols.
@@ -451,7 +463,7 @@ abstract class AppLocalizations {
   /// No description provided for @fileSavedSuccessfully.
   ///
   /// In en, this message translates to:
-  /// **'File saved successfully'**
+  /// **'File generated successfully'**
   String get fileSavedSuccessfully;
 
   /// No description provided for @fileSavedAt.
@@ -3831,6 +3843,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Download'**
   String get habitReportDownloadAction;
+
+  /// No description provided for @shareFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share file'**
+  String get shareFile;
 
   /// No description provided for @habitReportSaved.
   ///

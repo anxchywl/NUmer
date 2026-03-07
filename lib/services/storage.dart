@@ -26,12 +26,19 @@ class Storage {
   static const _metaProfilePromptShown = 'profile_prompt_shown_v1';
   static const _metaLocale = 'locale_v1';
   static const _metaHabitCategories = 'habit_categories_v1';
-  static const _metaProgressHabitOrder = 'progress_habit_order_v1';
+  // static const _metaProgressHabitOrder = 'progress_habit_order_v1'; // Deprecated
   static const _metaLastExportMonth = 'last_export_month_v1';
   static const _metaBootstrapVersion = LocalDatabase.bootstrapMetaKey;
   static const _metaStreakSnapshot = LocalDatabase.streakMetaKey;
   static const _metaAccentColor = 'accent_color_v1';
   static const _metaUserColorPresets = 'user_color_presets_v1';
+  static const _metaThemeMode = 'theme_mode_v2';
+  static const _metaWeekStart = 'week_start_v2';
+  static const _metaHomeSummaryRange = 'home_summary_range_v2';
+  static const _metaProgressView = 'progress_view_v2';
+  static const _metaQuickNotesEnabled = 'quick_notes_enabled_v2';
+  static const _metaAllowNudges = 'allow_nudges_v2';
+  static const _metaEisenhowerMatrixEnabled = 'eisenhower_matrix_enabled_v2';
   static const int bootstrapVersion = 1;
 
   static Future<void> configureForUser(String uid) async {
@@ -190,17 +197,26 @@ class Storage {
 
   static Future<String?> getThemeMode() async {
     if (_db.currentUid == null) return null;
-    return _userDoc().themeMode;
+    final raw = _db.getMeta(_metaThemeMode);
+    if (raw is String && raw.trim().isNotEmpty) {
+      return raw.trim();
+    }
+    final docMode = _userDoc().themeMode;
+    if (docMode != null && docMode.trim().isNotEmpty) {
+      final normalized = docMode.trim();
+      await _db.putMeta(_metaThemeMode, normalized);
+      return normalized;
+    }
+    return null;
   }
 
   static Future<void> setThemeMode(String? mode) async {
     if (_db.currentUid == null) return;
     final doc = _userDoc();
-    if (mode == null || mode.trim().isEmpty) {
-      doc.themeMode = null;
-    } else {
-      doc.themeMode = mode.trim();
-    }
+    final normalized =
+        (mode == null || mode.trim().isEmpty) ? null : mode.trim();
+    await _db.putMeta(_metaThemeMode, normalized);
+    doc.themeMode = normalized;
     await _saveUser(doc, dirty: false);
   }
 
@@ -251,50 +267,137 @@ class Storage {
     await _saveUser(doc, dirty: value);
   }
 
-  static Future<String> getWeekStart() async => _userDoc().weekStart;
+  static Future<String> getWeekStart() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaWeekStart);
+    if (raw is String) {
+      final normalized = raw == 'sunday' ? 'sunday' : 'monday';
+      if (normalized != raw) {
+        await _db.putMeta(_metaWeekStart, normalized);
+      }
+      return normalized;
+    }
+    final doc = _userDoc();
+    final normalized = doc.weekStart == 'sunday' ? 'sunday' : 'monday';
+    await _db.putMeta(_metaWeekStart, normalized);
+    return normalized;
+  }
 
   static Future<void> setWeekStart(String value) async {
+    _ensureUser();
+    final normalized = (value == 'sunday') ? 'sunday' : 'monday';
+    await _db.putMeta(_metaWeekStart, normalized);
     final doc = _userDoc();
-    doc.weekStart = (value == 'sunday') ? 'sunday' : 'monday';
+    doc.weekStart = normalized;
     await _saveUser(doc, dirty: false);
   }
 
-  static Future<String> getHomeSummaryRange() async =>
-      _userDoc().homeSummaryRange;
+  static Future<String> getHomeSummaryRange() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaHomeSummaryRange);
+    const allowed = {
+      'today',
+      'week',
+      'month',
+      'year',
+      'allTime',
+      'off',
+    };
+    if (raw is String && allowed.contains(raw)) {
+      return raw;
+    }
+    final docValue = _userDoc().homeSummaryRange;
+    final normalized = allowed.contains(docValue) ? docValue : 'today';
+    await _db.putMeta(_metaHomeSummaryRange, normalized);
+    return normalized;
+  }
 
   static Future<void> setHomeSummaryRange(String value) async {
+    _ensureUser();
+    const allowed = {
+      'today',
+      'week',
+      'month',
+      'year',
+      'allTime',
+      'off',
+    };
+    final normalized = allowed.contains(value) ? value : 'today';
+    await _db.putMeta(_metaHomeSummaryRange, normalized);
     final doc = _userDoc();
-    doc.homeSummaryRange = value;
+    doc.homeSummaryRange = normalized;
     await _saveUser(doc, dirty: false);
   }
 
-  static Future<String> getProgressView() async => _userDoc().progressView;
+  static Future<String> getProgressView() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaProgressView);
+    const allowed = {'week', 'day', 'off'};
+    if (raw is String && allowed.contains(raw)) {
+      return raw;
+    }
+    final docValue = _userDoc().progressView;
+    final normalized = allowed.contains(docValue) ? docValue : 'week';
+    await _db.putMeta(_metaProgressView, normalized);
+    return normalized;
+  }
 
   static Future<void> setProgressView(String value) async {
+    _ensureUser();
+    const allowed = {'week', 'day', 'off'};
+    final normalized = allowed.contains(value) ? value : 'week';
+    await _db.putMeta(_metaProgressView, normalized);
     final doc = _userDoc();
-    doc.progressView = value;
+    doc.progressView = normalized;
     await _saveUser(doc, dirty: false);
   }
 
-  static Future<bool> getQuickNotesEnabled() async => _userDoc().quickNotesEnabled;
+  static Future<bool> getQuickNotesEnabled() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaQuickNotesEnabled);
+    if (raw is bool) return raw;
+    final fallback = _userDoc().quickNotesEnabled;
+    await _db.putMeta(_metaQuickNotesEnabled, fallback);
+    return fallback;
+  }
 
   static Future<void> setQuickNotesEnabled(bool value) async {
+    _ensureUser();
+    await _db.putMeta(_metaQuickNotesEnabled, value);
     final doc = _userDoc();
     doc.quickNotesEnabled = value;
     await _saveUser(doc, dirty: false);
   }
 
-  static Future<bool> getAllowNudges() async => _userDoc().allowNudges;
-
-  static Future<void> setAllowNudges(bool value) async {
-    final doc = _userDoc();
-    doc.allowNudges = value;
-    await _saveUser(doc, dirty: false);
+  static Future<bool> getAllowNudges() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAllowNudges);
+    if (raw is bool) return raw;
+    final fallback = _userDoc().allowNudges;
+    await _db.putMeta(_metaAllowNudges, fallback);
+    return fallback;
   }
 
-  static Future<bool> getEisenhowerMatrixEnabled() async => _userDoc().eisenhowerMatrixEnabled;
+  static Future<void> setAllowNudges(bool value) async {
+    _ensureUser();
+    await _db.putMeta(_metaAllowNudges, value);
+    final doc = _userDoc();
+    doc.allowNudges = value;
+    await _saveUser(doc, dirty: true);
+  }
+
+  static Future<bool> getEisenhowerMatrixEnabled() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaEisenhowerMatrixEnabled);
+    if (raw is bool) return raw;
+    final fallback = _userDoc().eisenhowerMatrixEnabled;
+    await _db.putMeta(_metaEisenhowerMatrixEnabled, fallback);
+    return fallback;
+  }
 
   static Future<void> setEisenhowerMatrixEnabled(bool value) async {
+    _ensureUser();
+    await _db.putMeta(_metaEisenhowerMatrixEnabled, value);
     final doc = _userDoc();
     doc.eisenhowerMatrixEnabled = value;
     await _saveUser(doc, dirty: false);
@@ -338,7 +441,7 @@ class Storage {
   }
 
   static Future<void> setLocale(String? localeName) async {
-    _ensureUser();
+    if (_db.currentUid == null) return; // Skip if no user configured
     await _db.putMeta(_metaLocale, localeName);
   }
 
@@ -1316,27 +1419,8 @@ class Storage {
     await _db.putMeta(_metaHabitCategories, raw);
   }
 
-  static Future<void> saveProgressHabitOrder(List<String> habitIds) async {
-    _ensureUser();
-    await _db.putMeta(_metaProgressHabitOrder, habitIds);
-  }
-
-  static List<String>? getProgressHabitOrder() {
-    if (_db.currentUid == null) return null;
-    final raw = _db.getMeta(_metaProgressHabitOrder);
-    if (raw is List) {
-      return raw.map((e) => e.toString()).toList();
-    }
-    return null;
-  }
-
-  static Future<void> removeHabitFromOrder(String habitId) async {
-    final order = getProgressHabitOrder();
-    if (order != null && order.contains(habitId)) {
-      order.remove(habitId);
-      await saveProgressHabitOrder(order);
-    }
-  }
+  // Removed getProgressHabitOrder, saveProgressHabitOrder, and removeHabitFromOrder
+  // Replaced by global sortOrder syncing.
 
   // --- Habit Cache Methods ---
 

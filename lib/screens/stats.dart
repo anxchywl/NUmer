@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import 'package:numer_app/services/export_service.dart';
+import 'package:share_plus/share_plus.dart';
 
 
 import '../models.dart';
@@ -1448,33 +1449,42 @@ class _StatsScreenState extends State<StatsScreen> {
                 ),
                 
                 const SizedBox(height: 32),
-                
-                FilledButton.icon(
+                               FilledButton(
                   onPressed: isSuccess 
                     ? () => Navigator.pop(context)
                     : (isExporting 
                         ? (countdown > 0 ? cancelCountdown : null) 
                         : startCountdown),
-                  icon: isExporting
-                    ? (countdown > 0 
-                        ? const Icon(Icons.close, color: Colors.white)
-                        : const SizedBox(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isExporting) ...[
+                        if (countdown > 0)
+                          const Icon(Icons.close, color: Colors.white)
+                        else
+                          const SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
                               color: Colors.white,
                             ),
-                          ))
-                    : Icon(isSuccess ? Icons.check_circle_outline : Icons.download),
-                  label: Text(
-                    isExporting
-                      ? (countdown > 0 ? l10n.cancel : l10n.exporting)
-                      : (isSuccess ? l10n.done : l10n.habitReportDownloadAction),
-                  ),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        const SizedBox(width: 8),
+                      ] else if (!isSuccess) ...[
+                        const Icon(Icons.download),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        isExporting
+                          ? (countdown > 0 ? l10n.cancel : l10n.exporting)
+                          : (isSuccess ? l10n.done : l10n.habitReportDownloadAction),
+                      ),
+                    ],
                   ),
                 ),
                 if (isExporting && countdown > 0)
@@ -1590,7 +1600,7 @@ class _StatsScreenState extends State<StatsScreen> {
           l10n.exportFormat,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 12),
@@ -1605,10 +1615,10 @@ class _StatsScreenState extends State<StatsScreen> {
                     onFormatChanged('csv');
                   }
                 },
-                selectedColor: theme.colorScheme.primary,
+                selectedColor: theme.colorScheme.secondaryContainer,
                 labelStyle: TextStyle(
                   color: selectedFormat == 'csv' 
-                    ? theme.colorScheme.onPrimary 
+                    ? theme.colorScheme.onSecondaryContainer 
                     : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1624,10 +1634,10 @@ class _StatsScreenState extends State<StatsScreen> {
                     onFormatChanged('excel');
                   }
                 },
-                selectedColor: theme.colorScheme.primary,
+                selectedColor: theme.colorScheme.secondaryContainer,
                 labelStyle: TextStyle(
                   color: selectedFormat == 'excel' 
-                    ? theme.colorScheme.onPrimary 
+                    ? theme.colorScheme.onSecondaryContainer
                     : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1672,18 +1682,17 @@ class _StatsScreenState extends State<StatsScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                l10n.fileSavedAt,
-                style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 4),
-              SelectableText(
-                _getDisplayPath(filePath),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.bold,
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    if (filePath != null) {
+                      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
+                    }
+                  },
+                  icon: const Icon(Icons.share),
+                  label: Text(l10n.shareFile),
                 ),
               ),
             ],
@@ -1693,28 +1702,6 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  String _getDisplayPath(String? fullPath) {
-    if (fullPath == null) return '';
-    final path = fullPath.replaceAll('\\', '/');
-    final fileName = path.split('/').last;
-
-    // Detect Downloads folder (common on Android/macOS)
-    if (path.toLowerCase().contains('/download/') || path.toLowerCase().contains('/downloads/')) {
-      return 'Downloads/$fileName';
-    }
-
-    // Detect Documents folder (common on iOS)
-    if (path.toLowerCase().contains('/documents/')) {
-      return 'Documents/$fileName';
-    }
-
-    // Default fallback
-    if (path.length > 40) {
-      return fileName;
-    }
-
-    return path;
-  }
 
   Future<String> _generateFile(BuildContext context, List<Habit> habits, String uid, DateTime monthDate, String format) async {
       // Removed "Generating CSV..." snackbar message

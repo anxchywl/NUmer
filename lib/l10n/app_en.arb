@@ -1,4 +1,5 @@
 {
+  "habitTypeLockedHint": "Habit type cannot be changed after creation",
   "settingsTitle": "Account & settings",
   "account": "Account",
   "profile": "Profile",
@@ -11,6 +12,7 @@
   "russian": "Russian",
   "kazakh": "Kazakh",
   "accentColor": "Accent color",
+  "buttonPreview": "Button",
   "accentColorDescription": "Customize your primary color",
   "preview": "Preview",
   "textExample": "Text example",
@@ -26,7 +28,7 @@
   "coralPreset": "Coral",
   "createPreset": "Create preset",
   "presetName": "Preset name",
-  "lettersOnly": "Letters only",
+  "lettersOnly": "Letters and spaces only",
   "max16Symbols": "Max 16 symbols",
   "deletePreset": "Delete preset",
   "presetLimitReached": "Preset limit reached (22)",
@@ -79,7 +81,7 @@
       "seconds": { "type": "int" }
     }
   },
-  "fileSavedSuccessfully": "File saved successfully",
+  "fileSavedSuccessfully": "File generated successfully",
   "fileSavedAt": "The file is saved at:",
   "unknownPath": "Unknown path",
   "nextSteps": "Next steps:",
@@ -965,6 +967,7 @@
   "habitReportDownload": "Download Report",
   "habitReportTitle": "Download report",
   "habitReportDownloadAction": "Download",
+  "shareFile": "Share file",
   "habitReportSaved": "Saved to: {path}",
   "@habitReportSaved": {
     "placeholders": {

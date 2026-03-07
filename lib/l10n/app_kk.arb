@@ -1,5 +1,6 @@
 {
   "settingsTitle": "Есептік жазба және баптаулар",
+  "habitTypeLockedHint": "Әдет түрін жасалғаннан кейін өзгерту мүмкін емес",
   "account": "Аккаунт",
   "profile": "Профиль",
   "appearance": "Сыртқы түрі",
@@ -11,6 +12,7 @@
   "russian": "Орыс",
   "kazakh": "Қазақ",
   "accentColor": "Акцент түсі",
+  "buttonPreview": "Түйме",
   "accentColorDescription": "Негізгі түсіңізді реттеңіз",
   "preview": "Алдын ала қарау",
   "textExample": "Мәтін үлгісі",
@@ -25,6 +27,12 @@
   "indigoPreset": "Индиго",
   "coralPreset": "Коралл",
   "tealPreset": "Көкшіл",
+  "createPreset": "Пресет құру",
+  "presetName": "Пресет атауы",
+  "lettersOnly": "Әріптер мен бос орындар",
+  "max16Symbols": "Макс. 16 таңба",
+  "deletePreset": "Пресетті жою",
+  "presetLimitReached": "Пресеттер саны шегіне жетті (22)",
   "weekStartsOn": "Апта басталуы",
   "displayTotalStudyTime": "Курс бойынша жалпы оқу уақытын көрсету",
   "displayProgressBar": "Прогресс жолағын көрсету",
@@ -68,7 +76,7 @@
       "count": { "type": "int" }
     }
   },
-  "fileSavedSuccessfully": "Файл сәтті сақталды",
+  "fileSavedSuccessfully": "Файл сәтті жасалды",
   "fileSavedAt": "Файл келесі жерде сақталды:",
   "unknownPath": "Белгісіз жол",
   "nextSteps": "Келесі қадамдар:",
@@ -599,6 +607,8 @@
   "enterPassword": "Құпиясөзді енгізіңіз.",
   "displayNameLength": "Көрсетілетін ат кемінде 2 таңба болуы керек.",
   "passwordLength": "Құпиясөз кемінде 8 таңба болуы керек.",
+  "passwordInvalidChars": "Тек A–Z, a–z, 0–9 және рұқсат етілген белгілерге қолдау көрсетіледі.",
+  "displayNameInvalidChars": "Көрсетілетін ат тек әріптер мен сандардан тұруы мүмкін.",
   "min8Chars": "Кемінде 8 таңба.",
   "loadingProfile": "Профиль жүктелуде",
   "loggingOut": "Аккаунттан шығу...",
@@ -900,6 +910,7 @@
   "habitReportDownload": "Есепті жүктеп алу",
   "habitReportTitle": "Есепті жүктеп алу",
   "habitReportDownloadAction": "Жүктеп алу",
+  "shareFile": "Файлды бөлісу",
   "habitReportSaved": "Сақталды: {path}",
   "@habitReportSaved": {
     "placeholders": {

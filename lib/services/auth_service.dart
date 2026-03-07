@@ -124,7 +124,6 @@ class AuthController extends ChangeNotifier {
       return;
     }
 
-    
     if (!user.emailVerified) {
       _requiresEmailVerification = true;
       _syncService?.stop();
@@ -138,7 +137,6 @@ class AuthController extends ChangeNotifier {
       return;
     }
 
-    
     _requiresEmailVerification = false;
     _isSigningOut = false;
     unawaited(_ensureProfileDocument(user));
@@ -160,7 +158,6 @@ class AuthController extends ChangeNotifier {
       }
     }).catchError((error, stack) {
       if (kDebugMode) {
-        
         print('Failed to prepare user data: $error\n$stack');
       }
       lastPreparationError = error.toString();
@@ -170,7 +167,7 @@ class AuthController extends ChangeNotifier {
   }
 
   String? lastPreparationError;
-  
+
   Future<void> _performSignOutCleanup(String? previousUid) async {
     // Push any pending changes to Firebase before logout
     try {
@@ -180,7 +177,7 @@ class AuthController extends ChangeNotifier {
         print('Failed to push dirty data on logout: $e');
       }
     }
-    
+
     await _syncService?.stop();
     if (previousUid != null) {
       await _clearLocalUserData(previousUid);
@@ -220,6 +217,9 @@ class AuthController extends ChangeNotifier {
         onForcedLogout: _handleForcedLogout,
         bootstrap: needsBootstrap,
       );
+      if (needsBootstrap) {
+        await _waitForBootstrapData();
+      }
       if (needsBootstrap || existingBootstrapVersion == null) {
         await Storage.setBootstrapVersionFlag(Storage.bootstrapVersion);
       }
@@ -228,6 +228,25 @@ class AuthController extends ChangeNotifier {
         _isBootstrapping = false;
         notifyListeners();
       }
+    }
+  }
+
+  Future<void> _waitForBootstrapData() async {
+    final sync = _syncService;
+    if (sync == null) return;
+    final deadline = DateTime.now().add(const Duration(seconds: 15));
+    while (sync.lastPull == null &&
+        !sync.hasPulledUser &&
+        sync.lastError == null) {
+      if (DateTime.now().isAfter(deadline)) {
+        break;
+      }
+      await Future.delayed(const Duration(milliseconds: 150));
+    }
+    if (sync.lastPull == null && !sync.hasPulledUser) {
+      final message = sync.lastError ??
+          'Unable to download your data. Please check your connection and try again.';
+      throw AuthFailure(message);
     }
   }
 
@@ -270,9 +289,8 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> _saveFcmToken(String uid, String token) async {
-    final platform = kIsWeb
-        ? 'web'
-        : defaultTargetPlatform.toString().split('.').last;
+    final platform =
+        kIsWeb ? 'web' : defaultTargetPlatform.toString().split('.').last;
     final tokenRef = _firestore
         .collection('users')
         .doc(uid)
@@ -326,16 +344,16 @@ class AuthController extends ChangeNotifier {
   Future<void> _clearLocalUserData(String uid) async {
     // Close Hive boxes but DO NOT delete them - preserve cache for re-login
     await Storage.closeForSignOut();
-    
+
     // Clear session-specific state only (not cached data)
     UserStorage.setCurrentUser(uid);
     final userStorage = await UserStorage.getInstance();
     await userStorage.clearUserData();
     UserStorage.setCurrentUser(null);
-    
+
     // Clear session-specific preferences only
     await _clearSharedPreferences();
-    
+
     // Cancel notifications for this session
     await Notifs.cancelAll();
   }
@@ -356,14 +374,10 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  
   Future<void> reloadUser() async {
     try {
       await _currentUser?.reload();
-      
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   void _setBusy(bool value) {
@@ -371,8 +385,6 @@ class AuthController extends ChangeNotifier {
     _isBusy = value;
     notifyListeners();
   }
-  
-
 
   Future<String?> register({
     required String email,
@@ -397,7 +409,6 @@ class AuthController extends ChangeNotifier {
 
     _setBusy(true);
     try {
-
       final credential = await _auth.createUserWithEmailAndPassword(
         email: trimmedEmail,
         password: password,
@@ -413,15 +424,13 @@ class AuthController extends ChangeNotifier {
       }
 
       try {
-        
         await user.sendEmailVerification();
 
-        
         await Future.delayed(const Duration(seconds: 1));
 
         await _upsertEmailIndex(user.email, user.uid);
 
-        return null; 
+        return null;
       } catch (e) {
         return 'Failed to send verification email. Please try again.';
       }
@@ -476,17 +485,11 @@ class AuthController extends ChangeNotifier {
 
     _setBusy(true);
     try {
-
-      final credential = await _auth.signInWithEmailAndPassword(
+      await _auth.signInWithEmailAndPassword(
         email: trimmedEmail,
         password: password,
       );
-      
-      if (!credential.user!.emailVerified) {
-        await signOut();
-        return 'Please verify your email address before signing in.';
-      }
-      
+
       return null;
     } on FirebaseAuthException catch (e) {
       return _messageForAuthCode(e.code);
@@ -510,7 +513,6 @@ class AuthController extends ChangeNotifier {
     notifyListeners();
   }
 
-  
   Future<String?> deleteAccount() async {
     final user = _currentUser;
     if (user == null) return 'Not signed in';
@@ -569,7 +571,6 @@ class AuthController extends ChangeNotifier {
     await user.delete();
   }
 
-  
   Future<void> _deleteGroupsOwnedBy(String userId) async {
     final groupsSnapshot = await _firestore
         .collection('groups')
@@ -587,8 +588,7 @@ class AuthController extends ChangeNotifier {
     final groupRef = groupDoc.reference;
     final groupId = groupRef.id;
 
-    final results =
-        await Future.wait<QuerySnapshot<Map<String, dynamic>>>([
+    final results = await Future.wait<QuerySnapshot<Map<String, dynamic>>>([
       groupRef.collection('members').get(),
       groupRef.collection('invites').get(),
     ]);
@@ -618,7 +618,6 @@ class AuthController extends ChangeNotifier {
     await groupRef.delete();
   }
 
-  
   Future<void> _removeUserMemberships(String userId) async {
     final membershipSnapshot = await _firestore
         .collection('users')
@@ -633,7 +632,6 @@ class AuthController extends ChangeNotifier {
         min(i + chunkSize, membershipSnapshot.docs.length),
       );
 
-      
       final groupSnapshots = await Future.wait(
         slice.map((m) => _firestore.collection('groups').doc(m.id).get()),
       );
@@ -645,12 +643,10 @@ class AuthController extends ChangeNotifier {
         final groupId = membership.id;
         final groupRef = _firestore.collection('groups').doc(groupId);
 
-        
         batch.delete(groupRef.collection('members').doc(userId));
         batch.delete(groupRef.collection('aggregates').doc(userId));
         batch.delete(membership.reference);
 
-        
         if (groupSnap.exists) {
           batch.set(
             groupRef,
@@ -666,7 +662,6 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  
   Future<void> _deleteUserOwnedData(String userId) async {
     final userDoc = _firestore.collection('users').doc(userId);
     const subcollections = [
@@ -685,7 +680,8 @@ class AuthController extends ChangeNotifier {
     ];
 
     await Future.wait([
-      for (final name in subcollections) _deleteQueryBatch(userDoc.collection(name))
+      for (final name in subcollections)
+        _deleteQueryBatch(userDoc.collection(name))
     ]);
   }
 
@@ -694,7 +690,6 @@ class AuthController extends ChangeNotifier {
     await userDoc.delete();
   }
 
-  
   Future<void> _deleteQueryBatch(
     Query<Map<String, dynamic>> query, {
     int batchSize = 250,
@@ -709,7 +704,6 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  
   Future<void> _deleteDocumentRefs(List<DocumentReference> refs) async {
     if (refs.isEmpty) return;
     const chunkSize = 400;
@@ -722,8 +716,6 @@ class AuthController extends ChangeNotifier {
       await batch.commit();
     }
   }
-
-
 
   Future<void> _ensureProfileDocument(User user) async {
     final docRef = _firestore.collection('users').doc(user.uid);
@@ -802,7 +794,6 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
     }, onError: (error, stack) {
       if (kDebugMode) {
-        
         print('Profile listener error: $error');
       }
       _profileData = null;
@@ -810,8 +801,6 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
     });
   }
-
-
 
   String _messageForAuthCode(String code) {
     switch (code) {
@@ -876,7 +865,8 @@ class AuthController extends ChangeNotifier {
     bool verificationSent = false;
 
     try {
-      final idxSnap = await _firestore.collection('email_index').doc(trimmed).get();
+      final idxSnap =
+          await _firestore.collection('email_index').doc(trimmed).get();
       final uid = idxSnap.data()?['uid'] as String?;
       if (uid != null && uid.isNotEmpty) {
         final profileSnap = await _firestore.collection('users').doc(uid).get();
@@ -884,7 +874,8 @@ class AuthController extends ChangeNotifier {
         if (!verified) {
           requiresVerification = true;
           final current = _auth.currentUser;
-          if (current != null && _normalizeEmail(current.email ?? '') == trimmed) {
+          if (current != null &&
+              _normalizeEmail(current.email ?? '') == trimmed) {
             try {
               await current.sendEmailVerification();
               verificationSent = true;
@@ -892,16 +883,15 @@ class AuthController extends ChangeNotifier {
           }
         }
       }
-    } catch (_) {
-      
-    }
+    } catch (_) {}
 
     if (requiresVerification) {
       return PasswordResetResult(
         success: false,
         verificationRequired: true,
         verificationEmailSent: verificationSent,
-        message: 'Please verify your email first. We sent you a verification email.',
+        message:
+            'Please verify your email first. We sent you a verification email.',
         code: 'verification-required',
       );
     }
@@ -933,7 +923,8 @@ class AuthController extends ChangeNotifier {
           code = 'network';
           break;
         default:
-          message = 'If an account exists for this email, we sent a reset link.';
+          message =
+              'If an account exists for this email, we sent a reset link.';
           code = 'sent';
       }
       return PasswordResetResult(

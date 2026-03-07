@@ -130,7 +130,7 @@ class _TipIconState extends State<TipIcon> {
     final theme = Theme.of(context);
     final isActive = _overlayEntry != null;
     final activeColor = theme.colorScheme.primary;
-    final normalColor = theme.colorScheme.onSurfaceVariant.withAlpha(128);
+    final normalColor = theme.colorScheme.onSurfaceVariant;
 
     return CompositedTransformTarget(
       link: _layerLink,

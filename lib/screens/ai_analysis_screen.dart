@@ -368,6 +368,12 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                   radius: 8,
                   backgroundColor: course.color,
                 ),
+                selectedColor: Theme.of(context).colorScheme.secondaryContainer,
+                labelStyle: TextStyle(
+                  color: isSelected 
+                    ? Theme.of(context).colorScheme.onSecondaryContainer 
+                    : Theme.of(context).colorScheme.onSurface,
+                ),
                 onSelected: (selected) {
                   if (selected) {
                     setState(() {

@@ -42,7 +42,13 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   Timer? _incrementTimer;
   StreamSubscription<void>? _historySubscription;
 
-  double _maxValueForHabit() => widget.habit.type == HabitType.time ? 86399.0 : 10000.0;
+  double _maxValueForHabit() {
+    if (widget.habit.type == HabitType.time) return 86399.0;
+    if (widget.habit.comparator == HabitComparator.lessThan) {
+      return widget.habit.targetValue;
+    }
+    return 10000.0;
+  }
 
   double _clampValue(double raw) {
     if (raw.isNaN || raw.isInfinite) return 0;
@@ -54,7 +60,13 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     super.initState();
     // Use widget.initialValue as fallback, but fetch fresh data immediately
     _initialValue = _clampValue(widget.initialValue ?? 0);
-    _currentValue = _initialValue;
+    
+    // Exactly: Pre-fill with target
+    if (widget.habit.comparator == HabitComparator.exactly) {
+      _currentValue = widget.habit.targetValue;
+    } else {
+      _currentValue = _initialValue;
+    }
     
     _numericController = TextEditingController(
       text: widget.habit.type == HabitType.numeric 
@@ -173,17 +185,43 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     return numberFormat.format(double.parse(v.toStringAsFixed(1)));
   }
 
+  bool _isCompleted(double val) {
+    switch (widget.habit.comparator) {
+      case HabitComparator.lessThan:
+        return val > 0 && val <= widget.habit.targetValue;
+      case HabitComparator.exactly:
+        return (val - widget.habit.targetValue).abs() < 0.001;
+      case HabitComparator.atLeast:
+      default:
+        return val >= widget.habit.targetValue;
+    }
+  }
+
   void _onConfirm() async {
     final habitService = context.read<HabitService>();
     final current = _clampValue(_currentValue);
     final base = _mode == LoggingMode.set ? 0 : _initialValue;
     final finalValue = _clampValue(base + current);
 
+    // Final Safety Check
+    if (widget.habit.comparator == HabitComparator.lessThan) {
+      if (finalValue > widget.habit.targetValue) {
+        // Should be prevented by UI but safe guard
+        return; 
+      }
+    }
+
     await habitService.toggleCompletion(
       userId: widget.userId,
       habit: widget.habit,
       date: widget.date,
-      completed: finalValue > 0,
+      // Logic Update:
+      // For "Exactly", completed if = target
+      // For "Less Than", completed if <= target
+      // For "At Least", completed if >= target (default)
+      // BUT toggleCompletion calculates status? No, toggleCompletion takes 'completed' bool.
+      // So we must determine 'completed' here.
+      completed: _isCompleted(finalValue),
       value: finalValue,
       mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
     );
@@ -310,14 +348,26 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildStepButton(Icons.remove, -1.0, theme),
+        if (widget.habit.comparator != HabitComparator.exactly)
+           _buildStepButton(Icons.remove, -1.0, theme),
         const SizedBox(width: 24),
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 140,
-              child: TextField(
+              child: widget.habit.comparator == HabitComparator.exactly 
+              ? Center(
+                  child: Text(
+                    _numericController.text,
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface.withAlpha(128), // Dimmed to show locked
+                      height: 1.1,
+                    ),
+                  ),
+                )
+              : TextField(
                 controller: _numericController,
                 focusNode: _numericFocusNode,
                 textAlign: TextAlign.center,
@@ -329,7 +379,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                 ),
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
-                  MaxValueFormatter(10000),
+                  MaxValueFormatter(_maxValueForHabit()),
                 ],
                 decoration: const InputDecoration(
                   border: InputBorder.none,
@@ -348,7 +398,8 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
           ],
         ),
         const SizedBox(width: 24),
-        _buildStepButton(Icons.add, 1.0, theme),
+        if (widget.habit.comparator != HabitComparator.exactly)
+          _buildStepButton(Icons.add, 1.0, theme),
       ],
     );
   }

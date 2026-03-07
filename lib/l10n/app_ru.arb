@@ -1,5 +1,6 @@
 {
   "settingsTitle": "Аккаунт и настройки",
+  "habitTypeLockedHint": "Тип привычки нельзя изменить после создания",
   "account": "Аккаунт",
   "profile": "Профиль",
   "appearance": "Внешний вид",
@@ -11,6 +12,7 @@
   "russian": "Русский",
   "kazakh": "Казахский",
   "accentColor": "Акцентный цвет",
+  "buttonPreview": "Кнопка",
   "accentColorDescription": "Настройте ваш основной цвет",
   "preview": "Предпросмотр",
   "textExample": "Пример текста",
@@ -25,6 +27,12 @@
   "indigoPreset": "Индиго",
   "coralPreset": "Коралловый",
   "tealPreset": "Бирюзовый",
+  "createPreset": "Создать пресет",
+  "presetName": "Название пресета",
+  "lettersOnly": "Буквы и пробелы",
+  "max16Symbols": "Макс. 16 символов",
+  "deletePreset": "Удалить пресет",
+  "presetLimitReached": "Достигнут лимит пресетов (22)",
   "weekStartsOn": "Начало недели",
   "displayTotalStudyTime": "Показывать общее время учебы по курсу за",
   "displayProgressBar": "Показывать прогресс за",
@@ -68,7 +76,7 @@
       "count": { "type": "int" }
     }
   },
-  "fileSavedSuccessfully": "Файл успешно сохранён",
+  "fileSavedSuccessfully": "Файл успешно создан",
   "fileSavedAt": "Файл сохранён по пути:",
   "unknownPath": "Неизвестный путь",
   "nextSteps": "Следующие шаги:",
@@ -492,6 +500,8 @@
   "enterPassword": "Введите пароль.",
   "displayNameLength": "Имя должно быть не менее 2 символов.",
   "passwordLength": "Пароль должен быть не менее 8 символов.",
+  "passwordInvalidChars": "Поддерживаются только A–Z, a–z, 0–9 и разрешенные символы.",
+  "displayNameInvalidChars": "Отображаемое имя может содержать только буквы и цифры.",
   "min8Chars": "Минимум 8 символов.",
   "loadingProfile": "Загрузка профиля",
   "loggingOut": "Выход из аккаунта...",
@@ -794,6 +804,7 @@
   "habitReportDownload": "Скачать отчет",
   "habitReportTitle": "Скачать отчет",
   "habitReportDownloadAction": "Скачать",
+  "shareFile": "Поделиться файлом",
   "habitReportSaved": "Сохранено: {path}",
   "@habitReportSaved": {
     "placeholders": {

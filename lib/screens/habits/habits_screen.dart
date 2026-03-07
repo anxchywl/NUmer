@@ -35,6 +35,9 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   late ScrollController _dateScrollController;
   bool _hasScrolledToToday = false;
   final GlobalKey _calendarKey = GlobalKey();
+  
+  // Optimistic Reordering State
+  List<String>? _optimisticHabitOrder;
 
   @override
   void initState() {
@@ -298,18 +301,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     return !h.isGoalMetForPeriod(h.last7, _selectedDate, mondayFirst: appState.weekStart == WeekStart.monday);
                   }).toList();
 
-                  // Apply local shared reordering for Progress tab
-                  final localOrder = Storage.getProgressHabitOrder();
-                  if (localOrder != null) {
-                    habits.sort((a, b) {
-                      int idxA = localOrder.indexOf(a.id);
-                      int idxB = localOrder.indexOf(b.id);
-                      if (idxA == -1 && idxB == -1) return a.sortOrder.compareTo(b.sortOrder);
-                      if (idxA == -1) return 1;
-                      if (idxB == -1) return -1;
-                      return idxA.compareTo(idxB);
-                    });
-                  }
+                  // Unified Order: Use valid habits stream order directly.
+                  // This ensures consistency with "My Habits" and Statistics.
                   
                   if (habits.isEmpty) {
                     return SliverFillRemaining(
@@ -327,24 +320,14 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     );
                   }
 
-                  return SliverReorderableList(
-                    itemCount: habits.length,
-                    onReorder: (oldIndex, newIndex) {
-                      final reorderedIds = habits.map((h) => h.id).toList();
-                      if (newIndex > oldIndex) newIndex -= 1;
-                      final id = reorderedIds.removeAt(oldIndex);
-                      reorderedIds.insert(newIndex, id);
-                      Storage.saveProgressHabitOrder(reorderedIds);
-                      setState(() {});
-                    },
-                    itemBuilder: (context, index) {
-                      final habit = habits[index];
-                      return ReorderableDelayedDragStartListener(
-                        key: ValueKey(habit.id),
-                        index: index,
-                        child: _buildTodayHabitItem(habit, theme, l10n),
-                      );
-                    },
+                  return SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final habit = habits[index];
+                        return _buildTodayHabitItem(habit, theme, l10n);
+                      },
+                      childCount: habits.length,
+                    ),
                   );
                 },
               );
@@ -392,32 +375,77 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                   );
                 }
 
-                return SliverPadding(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  sliver: SliverReorderableList(
-                    itemCount: habits.length,
-                    onReorder: (oldIndex, newIndex) {
-                      habitService.reorderHabits(uid, oldIndex, newIndex);
-                    },
-                    itemBuilder: (context, index) {
-                      final habit = habits[index];
-                      return ReorderableDelayedDragStartListener(
-                        key: ValueKey(habit.id),
-                        index: index,
-                        child: _HabitItem(
-                          habit: habit,
-                          weekDates: _weekDates,
-                          onToggle: (date) => _toggleHabit(habit, date),
-                          onReturn: () {
-                            if (_selectedDate.day == DateTime.now().day) {
-                              _scrollToToday(animate: true);
-                            }
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                );
+                  // Apply optimistic reordering if active
+                  List<Habit> displayHabits = List.from(habits);
+                  if (_optimisticHabitOrder != null) {
+                    final orderMap = _optimisticHabitOrder!.asMap().map((k, v) => MapEntry(v, k));
+                    
+                    // Check if server data has caught up (same order as optimistic)
+                    bool synced = true;
+                    if (displayHabits.length == _optimisticHabitOrder!.length) {
+                       for (int i = 0; i < displayHabits.length; i++) {
+                         if (displayHabits[i].id != _optimisticHabitOrder![i]) {
+                           synced = false;
+                           break;
+                         }
+                       }
+                    } else {
+                       synced = false;
+                    }
+
+                    if (synced) {
+                      // Server caught up, clear optimistic state
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && _optimisticHabitOrder != null) {
+                           setState(() => _optimisticHabitOrder = null);
+                        }
+                      });
+                    } else {
+                      // Apply optimistic sort
+                      displayHabits.sort((a, b) {
+                        final idxA = orderMap[a.id] ?? 9999;
+                        final idxB = orderMap[b.id] ?? 9999;
+                        return idxA.compareTo(idxB);
+                      });
+                    }
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 80),
+                    sliver: SliverReorderableList(
+                      itemCount: displayHabits.length,
+                      onReorder: (oldIndex, newIndex) {
+                        if (oldIndex < newIndex) newIndex -= 1;
+                        final item = displayHabits.removeAt(oldIndex);
+                        displayHabits.insert(newIndex, item);
+                        
+                        // Optimistic update
+                        setState(() {
+                          _optimisticHabitOrder = displayHabits.map((h) => h.id).toList();
+                        });
+
+                        // Actual background sync
+                        habitService.reorderHabits(uid, oldIndex, newIndex);
+                      },
+                      itemBuilder: (context, index) {
+                        final habit = displayHabits[index];
+                        return ReorderableDelayedDragStartListener(
+                          key: ValueKey(habit.id),
+                          index: index,
+                          child: _HabitItem(
+                            habit: habit,
+                            weekDates: _weekDates,
+                            onToggle: (date) => _toggleHabit(habit, date),
+                            onReturn: () {
+                              if (_selectedDate.day == DateTime.now().day) {
+                                _scrollToToday(animate: true);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
               },
             ),
           ],
@@ -1150,22 +1178,7 @@ class _HabitItemState extends State<_HabitItem> {
                         BoxDecoration circleDeco;
                         Widget? circleChild;
                         
-                        if (isSaving) {
-                           // Pending/Saving state - show loading indicator
-                           circleDeco = BoxDecoration(
-                              color: widget.habit.color.withValues(alpha: 0.15),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: widget.habit.color.withValues(alpha: 0.5), width: 2),
-                           );
-                           circleChild = SizedBox(
-                             width: 16,
-                             height: 16,
-                             child: CircularProgressIndicator(
-                               strokeWidth: 2,
-                               color: widget.habit.color,
-                             ),
-                           );
-                        } else if (isPreStart || !isScheduled) {
+                        if (isPreStart || !isScheduled) {
                            // Hidden (transparent)
                            circleDeco = const BoxDecoration(color: Colors.transparent);
                         } else if (isFuture || isLocked) {

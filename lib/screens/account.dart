@@ -390,8 +390,8 @@ class _AccountScreenState extends State<AccountScreen> {
               selected: {mode},
               onSelectionChanged: (s) async {
                 final mode = s.first;
-                final appState = context.read<AppState>();
-                appState.setThemeMode(mode);
+                // onThemeChange already calls setThemeMode, so we just call it
+                await widget.onThemeChange?.call(mode);
               },
               ),
           ),
@@ -1012,7 +1012,7 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
     HomeSummaryRange.year,
     HomeSummaryRange.allTime,
   ];
-  late int _index;
+  int _index = 0;
   late AnimationController _anim;
   late Animation<double> _slide;
   double _slideDir = 1.0;
@@ -1020,11 +1020,19 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
   @override
   void initState() {
     super.initState();
-    final state = context.read<AppState>();
-    _index = _ranges.indexOf(state.homeSummaryRange);
     _anim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.watch<AppState>();
+    final newIndex = _ranges.indexOf(state.homeSummaryRange);
+    if (newIndex != _index && newIndex >= 0) {
+      _index = newIndex;
+    }
   }
 
   Future<void> _changeRange(BuildContext context, int dir) async {
@@ -1112,7 +1120,7 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
     ProgressView.day,
     ProgressView.week,
   ];
-  late int _index;
+  int _index = 0;
   late AnimationController _anim;
   late Animation<double> _slide;
   double _slideDir = 1.0;
@@ -1120,11 +1128,19 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
   @override
   void initState() {
     super.initState();
-    final state = context.read<AppState>();
-    _index = _views.indexOf(state.progressView);
     _anim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final state = context.watch<AppState>();
+    final newIndex = _views.indexOf(state.progressView);
+    if (newIndex != _index && newIndex >= 0) {
+      _index = newIndex;
+    }
   }
 
   Future<void> _changeView(int dir) async {

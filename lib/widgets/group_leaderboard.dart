@@ -966,7 +966,7 @@ String _periodLabel(BuildContext context, StatisticsPeriod period) {
   final l10n = AppLocalizations.of(context)!;
   return switch (period) {
     StatisticsPeriod.today => l10n.today,
-    StatisticsPeriod.last7Days => l10n.weeklyGoal,
+    StatisticsPeriod.last7Days => l10n.week,
     StatisticsPeriod.lastMonth => l10n.month,
   };
 }

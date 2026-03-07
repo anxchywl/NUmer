@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'habit_rule.dart';
 
 enum HabitType {
   yesNo,
@@ -62,28 +63,33 @@ class Habit {
   final int longestStreak;
   final int sortOrder;
   
+  // Last 7 days history (cached for UI)
   final Map<String, double> last7;
+  
   final bool archived;
   final DateTime createdAt;
-
-  // Course Integration
+  
+  // Connected Courses (for Time habits)
   final List<String> connectedCourseIds;
+
+  // Retroactive Logic
+  final List<HabitRule> previousRules;
 
   Habit({
     required this.id,
     required this.name,
     required this.color,
-    this.iconCodePoint = 0xe156,
+    required this.iconCodePoint,
     this.iconFamily,
     this.iconPackage,
-    this.category = "Other",
-    this.type = HabitType.yesNo,
-    this.targetValue = 1.0,
+    required this.category,
+    required this.type,
+    required this.targetValue,
     this.unit,
-    this.comparator = HabitComparator.atLeast,
-    this.frequencyType = HabitFrequencyType.specificDays, // Default to specificDays
+    required this.comparator,
+    required this.frequencyType,
     this.weekDays = const {},
-    this.intervalDays = 1,
+    this.intervalDays = 0,
     this.frequencyPeriod,
     this.frequencyGoal,
     required this.startDate,
@@ -96,6 +102,7 @@ class Habit {
     this.archived = false,
     required this.createdAt,
     this.connectedCourseIds = const [],
+    this.previousRules = const [],
   });
 
   bool get isDaily => frequencyType == HabitFrequencyType.daily;
@@ -111,48 +118,112 @@ class Habit {
     final today = DateTime(now.year, now.month, now.day);
     final habitStart = DateTime(startDate.year, startDate.month, startDate.day);
     
-    // Check backwards from yesterday to find the last scheduled day
-    DateTime checkDate = today.subtract(const Duration(days: 1));
-    
-    // Don't check before habit start date
-    if (checkDate.isBefore(habitStart)) return currentStreak;
-    
     // For daily habits, just check yesterday
     if (frequencyType == HabitFrequencyType.daily) {
-      // Check if yesterday was completed using last7
+      DateTime checkDate = today.subtract(const Duration(days: 1));
+      if (checkDate.isBefore(habitStart)) return currentStreak;
+      
       final yesterdayKey = "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
       final yesterdayValue = last7[yesterdayKey] ?? 0.0;
       
-      // If yesterday wasn't completed, streak is broken
-      if (yesterdayValue < targetValue) {
-        return 0;
-      }
+      if (yesterdayValue < targetValue) return 0;
       return currentStreak;
     }
     
     // For specific days habits, find the last scheduled day
     if (frequencyType == HabitFrequencyType.specificDays) {
-      // Walk back up to 7 days to find the last scheduled day
       for (int i = 1; i <= 7; i++) {
-        checkDate = today.subtract(Duration(days: i));
+        final checkDate = today.subtract(Duration(days: i));
         if (checkDate.isBefore(habitStart)) break;
         
         if (isScheduledFor(checkDate)) {
           final dateKey = "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
           final value = last7[dateKey] ?? 0.0;
           
-          // If the last scheduled day wasn't completed, streak is broken
-          if (value < targetValue) {
-            return 0;
-          }
-          // Found a completed scheduled day, streak is valid
+          if (value < targetValue) return 0;
           return currentStreak;
         }
       }
     }
+
+    // For interval habits (e.g., 2 days on, 1 day off)
+    if (frequencyType == HabitFrequencyType.interval) {
+      // Find the last scheduled "work" day before today
+      // Walk back up to the cycle length
+      final cycle = intervalDays + (frequencyGoal ?? 0);
+      if (cycle <= 0) return currentStreak;
+
+      for (int i = 1; i <= cycle; i++) {
+        final checkDate = today.subtract(Duration(days: i));
+        if (checkDate.isBefore(habitStart)) break;
+
+        if (isScheduledFor(checkDate)) {
+          final dateKey = "${checkDate.year}-${checkDate.month.toString().padLeft(2, '0')}-${checkDate.day.toString().padLeft(2, '0')}";
+          final value = last7[dateKey] ?? 0.0;
+          
+          if (value < targetValue) return 0;
+          return currentStreak;
+        }
+      }
+    }
+
+    // For periodic habits (e.g., 3 times per week)
+    if (frequencyType == HabitFrequencyType.repeatsInPeriod && frequencyGoal != null) {
+      // Identify the previous period
+      DateTime periodStart;
+      switch (frequencyPeriod) {
+        case HabitPeriod.week:
+          final offset = (today.weekday - 1); // Assuming Monday first for live calculation
+          periodStart = today.subtract(Duration(days: offset));
+          break;
+        case HabitPeriod.month:
+          periodStart = DateTime(today.year, today.month, 1);
+          break;
+        case HabitPeriod.year:
+          periodStart = DateTime(today.year, 1, 1);
+          break;
+        default:
+          return currentStreak;
+      }
+      
+      // The most recently COMPLETED period is the one before periodStart
+      DateTime prevPeriodStart;
+      switch (frequencyPeriod) {
+        case HabitPeriod.week:
+          prevPeriodStart = periodStart.subtract(const Duration(days: 7));
+          break;
+        case HabitPeriod.month:
+          prevPeriodStart = DateTime(periodStart.year, periodStart.month - 1, 1);
+          break;
+        case HabitPeriod.year:
+          prevPeriodStart = DateTime(periodStart.year - 1, 1, 1);
+          break;
+        default:
+          return currentStreak;
+      }
+
+      if (prevPeriodStart.isBefore(habitStart)) {
+        // If the previous period started before the habit did, the streak is either valid (from current)
+        // or we haven't reached a "missed" state yet.
+        return currentStreak;
+      }
+
+      // Check if current period is met (if so, streak is definitely safe)
+      if (isGoalMetForPeriod(last7, today)) {
+        return currentStreak;
+      }
+
+      // If current period is NOT met, we need to check if the PREVIOUS period was met.
+      // NOTE: last7 might not have enough data for month/year. 
+      // This is a model limitation, but for "Week" habits (most common), it works.
+      // If we don't have enough data, we default to currentStreak to avoid false resets.
+      if (frequencyPeriod == HabitPeriod.week) {
+        if (!isGoalMetForPeriod(last7, prevPeriodStart)) {
+          return 0;
+        }
+      }
+    }
     
-    // For interval or repeatsInPeriod, use stored streak for now
-    // (more complex period logic may need different handling)
     return currentStreak;
   }
   factory Habit.fromFirestore(DocumentSnapshot doc) {
@@ -327,6 +398,7 @@ class Habit {
     if (endDate != null) map['ed'] = Timestamp.fromDate(endDate!);
     map['ar'] = archived;
     if (connectedCourseIds.isNotEmpty) map['cc'] = connectedCourseIds;
+    if (previousRules.isNotEmpty) map['pr'] = previousRules.map((r) => r.toJson()).toList();
     
     return map;
   }
@@ -440,6 +512,7 @@ class Habit {
     bool? archived,
     DateTime? createdAt,
     List<String>? connectedCourseIds,
+    List<HabitRule>? previousRules,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -468,7 +541,37 @@ class Habit {
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
       connectedCourseIds: connectedCourseIds ?? this.connectedCourseIds,
+      previousRules: previousRules ?? this.previousRules,
     );
+  }
+
+  /// Returns the effective rule (target/comparator) for a specific date.
+  /// If the date is covered by a previous rule (date < rule.endDate), returns that rule.
+  /// Otherwise, returns current habit settings.
+  HabitRule getRuleForDate(DateTime date) {
+    if (previousRules.isEmpty) {
+      return HabitRule(endDate: DateTime(2100), targetValue: targetValue, comparator: comparator);
+    }
+    
+    // Sort rules by endDate ascending just in case
+    // (Assuming they are stored sorted, but safety first if performance allows, 
+    // or just iterate and find the first one where date < endDate)
+    
+    // We assume previousRules are non-overlapping history segments.
+    // e.g. Rule A (ends Jan 1), Rule B (ends Jan 10).
+    // If date is Dec 31, it matches Rule A.
+    // If date is Jan 5, it matches Rule B.
+    // If date is Jan 12, it matches Current (no rule found).
+    
+    // Check against previous rules
+    for (final rule in previousRules) {
+      if (date.isBefore(rule.endDate)) {
+        return rule;
+      }
+    }
+    
+    // Fallback to current
+    return HabitRule(endDate: DateTime(2100), targetValue: targetValue, comparator: comparator);
   }
 }
 

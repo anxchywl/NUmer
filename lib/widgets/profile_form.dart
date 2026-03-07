@@ -315,8 +315,14 @@ class _ProfileFormState extends State<ProfileForm> {
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(30),
                   FilteringTextInputFormatter.allow(
-                    RegExp(r'[A-Za-z0-9]'),
+                    RegExp(r'[\p{L}\p{N} ]', unicode: true),
                   ),
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    if (newValue.text.startsWith(' ')) {
+                      return oldValue;
+                    }
+                    return newValue;
+                  }),
                 ],
                 validator: (value) {
                   final trimmed = value?.trim() ?? '';
@@ -326,7 +332,7 @@ class _ProfileFormState extends State<ProfileForm> {
                   if (trimmed.length < 2) {
                     return AppLocalizations.of(context)!.displayNameLength;
                   }
-                  if (!RegExp(r'^[A-Za-z0-9]+$').hasMatch(trimmed)) {
+                  if (!RegExp(r'^[\p{L}\p{N} ]+$', unicode: true).hasMatch(trimmed)) {
                     return AppLocalizations.of(context)!.displayNameInvalidChars;
                   }
                   return null;
@@ -359,7 +365,7 @@ class _ProfileFormState extends State<ProfileForm> {
                 inputFormatters: [
                   LengthLimitingTextInputFormatter(32),
                   FilteringTextInputFormatter.allow(
-                    RegExp(r'[A-Za-z0-9_@]'),
+                    RegExp(r'[\p{L}\p{N}_@ ]', unicode: true),
                   ),
                 ],
               ),

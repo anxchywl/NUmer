@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../l10n/app_localizations.dart';
@@ -60,7 +61,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
 
     // Base Presets
     final presets = [
-      (const Color(0xFF6366F1), l10n.defaultPreset),
+      (const Color(0xFF448AFF), l10n.defaultPreset),
       (const Color(0xFF10B981), l10n.emeraldPreset),
       (const Color(0xFF7C3AED), l10n.indigoPreset),
       (const Color(0xFFFF7F50), l10n.coralPreset),
@@ -107,7 +108,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                                 ? Colors.white
                                 : Colors.black,
                           ),
-                          child: const Text('Button'),
+                          child: Text(l10n.buttonPreview),
                         ),
                         const SizedBox(width: 12),
                         _PreviewSwitch(activeColor: widget.currentColor),
@@ -342,9 +343,19 @@ class _InlineNamingRow extends StatelessWidget {
                 ),
                 maxLength: 16,
                 style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\p{L} ]', unicode: true)),
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    if (newValue.text.startsWith(' ')) {
+                      return oldValue;
+                    }
+                    return newValue;
+                  }),
+                ],
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return ""; // Subtle error
-                  if (!RegExp(r'^[a-zA-Z]+$').hasMatch(v)) return ""; 
+                  if (v == null || v.isEmpty) return ""; // Subtle error
+                  if (v.startsWith(' ')) return "";
+                  if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(v)) return ""; 
                   return null;
                 },
                 onFieldSubmitted: (_) => onConfirm(),

@@ -236,19 +236,9 @@ class HabitService {
       final s = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
       if (d.isBefore(s)) return;
 
-      // RULE: Enforce Period Limits
-      if (completed && habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-         final localHistory = Storage.getHabitHistoryFromCache(habit.id);
-         final completionMap = <String, double>{};
-         for (final entry in localHistory) {
-           if (!entry.deleted && (entry.value ?? 1.0) >= habit.targetValue) {
-             completionMap[entry.dateKey] = entry.value ?? 1.0;
-           }
-         }
-         if (habit.isGoalMetForPeriod(completionMap, date, mondayFirst: mondayFirst)) {
-            return;
-         }
-      }
+      // NOTE: Removed restrictive Period Goal Met check.
+      // Users should be able to log more than the goal, or toggle existing entries.
+      // The streak logic handles "at least X" correctly without this guard.
 
       final dateKey = _dateKey(date);
 
@@ -274,7 +264,11 @@ class HabitService {
       final localHistoryId = '${habit.id}_$dateKey';
       final nowMs = DateTime.now().millisecondsSinceEpoch;
       
-      if (completed) {
+      // Logic Fix: partial progress (value > 0) should be saved, not deleted.
+      // We only delete if it's strictly NOT completed AND value is effectively 0/null (toggled off).
+      final shouldSave = completed || (value != null && value > 0);
+
+      if (shouldSave) {
         final localEntry = LocalHabitHistory(
           id: localHistoryId,
           uid: userId,
@@ -331,7 +325,7 @@ class HabitService {
          final Map<String, dynamic> last7 = localHabit.last7Json.isNotEmpty
              ? jsonDecode(localHabit.last7Json) 
              : {};
-         if (completed) {
+         if (shouldSave) {
             last7[dateKey] = value ?? 1.0;
          } else {
             last7.remove(dateKey);
@@ -358,6 +352,12 @@ class HabitService {
     int newSortOrder = habit.sortOrder;
     if (!isUpdate) {
       final currentHabits = await getHabits(userId);
+      
+      // Limit Check
+      if (currentHabits.length >= 100) {
+        throw Exception("You have reached the maximum limit of 100 habits.");
+      }
+      
       int maxSortOrder = -1;
       if (currentHabits.isNotEmpty) {
         maxSortOrder = currentHabits
@@ -440,7 +440,7 @@ class HabitService {
   }
 
   Future<void> deleteHabit(String userId, String habitId) async {
-    await Storage.removeHabitFromOrder(habitId);
+    // await Storage.removeHabitFromOrder(habitId); // Removed as method is deleted
 
     // LOCAL-FIRST: Mark as deleted in local cache
     final local = Storage.getHabitById(habitId);
@@ -469,6 +469,15 @@ class HabitService {
         .where((h) => !h.archived)
         .map(_localHabitToHabit)
         .toList();
+    
+    // CRITICAL FIX: Sort the list to match the UI's order BEFORE applying the index move.
+    // Otherwise, we are applying indices from a sorted list to an unsorted list.
+    habits.sort((a, b) {
+      int cmp = a.sortOrder.compareTo(b.sortOrder);
+      if (cmp != 0) return cmp;
+      return a.createdAt.compareTo(b.createdAt);
+    });
+
     if (oldIndex < 0 || oldIndex >= habits.length) return;
     if (newIndex < 0 || newIndex > habits.length) return;
     
@@ -527,8 +536,43 @@ class HabitService {
     // Create a map for fast lookup
     final fullCompletionMap = <String, double>{};
     for (final entry in localHistory) {
-      if (!entry.deleted && (entry.value ?? 1.0) >= habit.targetValue) {
-        fullCompletionMap[entry.dateKey] = entry.value ?? 1.0;
+      if (entry.deleted) continue;
+      
+      final parts = entry.dateKey.split('-');
+      if (parts.length != 3) continue;
+      final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+      
+      // Retroactive Check: Get rule for THIS date
+      final rule = habit.getRuleForDate(d);
+      final val = entry.value ?? 1.0;
+      
+      bool isMet = false;
+      if (rule.comparator == HabitComparator.lessThan) {
+         // Logic for "Less Than X":
+         // If val <= target, it is "Done".
+         // Note: Logic for "Less Than" usually implies "Better to be low".
+         // e.g. "Smoke < 5 cigs". 4 is Done. 6 is Fail.
+         isMet = val <= rule.targetValue && val > 0; // Assuming 0 is "undone" or "neutral"?
+         // Wait, user spec: "status: value == 0 -> undone, 0 < value <= X -> done"
+         if (val > 0 && val <= rule.targetValue) isMet = true;
+      } else {
+         // At Least / Exactly (treated as >= for streak purposes usually, or strict?)
+         // User spec: "Exactly X: Status becomes done... if value = X"
+         if (rule.comparator == HabitComparator.exactly) {
+            // Allow slight epsilon tolerance for doubles? Or strict? using strict for now or >= ?
+            // Usually "Exactly" means match.
+            // But if I drank 2.1L and target is 2.0L? 
+            // User spec says: "Input is locked/disabled" for Exactly. So value should be X.
+            // Let's use strict equality with epsilon.
+            isMet = (val - rule.targetValue).abs() < 0.001; 
+         } else {
+            // At Least (Default)
+            isMet = val >= rule.targetValue;
+         }
+      }
+
+      if (isMet) {
+        fullCompletionMap[entry.dateKey] = val;
       }
     }
 
@@ -556,7 +600,7 @@ class HabitService {
        }
     }
 
-    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod && habit.frequencyGoal != null) {
        // --- Period-based Streak ---
        // A streak is defined as consecutive periods where the goal count was met.
        
@@ -578,9 +622,9 @@ class HabitService {
              final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
              
              if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
-                if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
-                  completions++; 
-                }
+                // Determine if this specific day met its rule (already filtered in fullCompletionMap construction?)
+                // YES, fullCompletionMap ONLY contains "Met/Done" entries now (logic moved up).
+                completions++;
              }
           }
           
@@ -617,9 +661,8 @@ class HabitService {
                if (parts.length != 3) continue;
                final d = DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
                if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
-                  if ((fullCompletionMap[dateKey] ?? 0.0) >= habit.targetValue) {
-                     completions++;
-                  }
+                   // Already filtered
+                   completions++;
                }
            }
            
