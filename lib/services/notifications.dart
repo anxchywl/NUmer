@@ -67,11 +67,11 @@ class Notifs {
     const initSetting = InitializationSettings(android: android, iOS: ios);
     
     final success = await _plugin.initialize(
-        initSetting,
-        onDidReceiveNotificationResponse: (response) {
-            debugPrint("Notifs: Notification tapped payload: ${response.payload}");
-        },
-    ); 
+      settings: initSetting,
+      onDidReceiveNotificationResponse: (response) {
+        debugPrint("Notifs: Notification tapped payload: ${response.payload}");
+      },
+    );
     debugPrint("Notifs: Plugin initialized: $success");
     
     // 3. Create Android notification channel explicitly
@@ -128,11 +128,11 @@ class Notifs {
         );
         
         await _plugin.zonedSchedule(
-          id,
-          title,
-          body,
-          tzTime,
-          details,
+          id: id,
+          title: title,
+          body: body,
+          scheduledDate: tzTime,
+          notificationDetails: details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: null,
         );
@@ -152,10 +152,10 @@ class Notifs {
 
     debugPrint("Notifs: Showing immediate notification $id");
     await _plugin.show(
-      id,
-      title,
-      body,
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -198,11 +198,11 @@ class Notifs {
     debugPrint("Notifs: Scheduling daily #$id starting $tzTime");
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tzTime,
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tzTime,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -229,7 +229,7 @@ class Notifs {
     // Ensure ID matches the logic in schedule (32-bit positive int)
     id = id & 0x7FFFFFFF;
     debugPrint("Notifs: Cancelling $id");
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
   }
 
   static Future<void> cancelAll() async {

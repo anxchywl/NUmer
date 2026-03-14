@@ -345,10 +345,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                         ),
                         const SizedBox(height: 24),
                         
-                        // Category Selector
+                        // Category Selector (locked for created habits)
                         Text(l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
                         const SizedBox(height: 12),
-                        _buildCategorySelector(theme),
+                        IgnorePointer(
+                          ignoring: true,
+                          child: Opacity(
+                            opacity: 0.72,
+                            child: _buildCategorySelector(theme),
+                          ),
+                        ),
                         
                         const SizedBox(height: 32),
             
@@ -358,28 +364,34 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen> with TickerProv
                         const SizedBox(height: 32),
             
                         // -- SCHEDULE SECTION --
-                        // Replaces Frequency and Schedule sections
-                        HabitScheduleEditor(
-                           frequencyType: _freq,
-                           weekDays: _weekDays,
-                           intervalDays: _interval,
-                           period: _period,
-                           frequencyGoal: _frequencyGoal,
-                           startDate: _startDate,
-                           endDate: _endDate,
-                           lockTypeChange: true, // Lock frequency type changes in Edit Mode
-                           onChanged: (data) {
-                              setState(() {
-                                 _freq = data.frequencyType;
-                                 _weekDays = data.weekDays;
-                                 _interval = data.intervalDays;
-                                 _period = data.period;
-                                 _frequencyGoal = data.frequencyGoal;
-                                 _startDate = data.startDate;
-                                 _endDate = data.endDate;
-                                 _markDirty();
-                              });
-                           },
+                        // Frequency + schedule are locked for existing habits.
+                        IgnorePointer(
+                          ignoring: true,
+                          child: Opacity(
+                            opacity: 0.72,
+                            child: HabitScheduleEditor(
+                               frequencyType: _freq,
+                               weekDays: _weekDays,
+                               intervalDays: _interval,
+                               period: _period,
+                               frequencyGoal: _frequencyGoal,
+                               startDate: _startDate,
+                               endDate: _endDate,
+                               lockTypeChange: true,
+                               onChanged: (data) {
+                                  setState(() {
+                                     _freq = data.frequencyType;
+                                     _weekDays = data.weekDays;
+                                     _interval = data.intervalDays;
+                                     _period = data.period;
+                                     _frequencyGoal = data.frequencyGoal;
+                                     _startDate = data.startDate;
+                                     _endDate = data.endDate;
+                                     _markDirty();
+                                  });
+                               },
+                            ),
+                          ),
                         ),
                       ],
                     ),

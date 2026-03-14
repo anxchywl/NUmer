@@ -140,6 +140,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.';
 
   @override
+  String get sessionNotification => 'Session notification';
+
+  @override
+  String get sessionNotificationDescription =>
+      'Show session controls in the notification bar while recording.';
+
+  @override
   String get eisenhowerQuadrant1 => 'Срочно и важно';
 
   @override

@@ -140,6 +140,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.';
 
   @override
+  String get sessionNotification => 'Session notification';
+
+  @override
+  String get sessionNotificationDescription =>
+      'Show session controls in the notification bar while recording.';
+
+  @override
   String get eisenhowerQuadrant1 => 'Urgent & Important';
 
   @override

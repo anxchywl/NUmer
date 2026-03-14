@@ -150,39 +150,17 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                 value: _hsvColor.hue,
                 min: 0,
                 max: 360,
-                onChanged: (v) => _updateColor(_hsvColor.withHue(v)),
+                onChanged: (v) {
+                  // Lock saturation and lightness for vibrant colors
+                  final newColor = HSVColor.fromAHSV(1.0, v, 0.8, 0.9);
+                  _updateColor(newColor);
+                },
                 activeColor: HSVColor.fromAHSV(1, _hsvColor.hue, 1, 1).toColor(),
               ),
             ),
           ],
         ),
-        Row(
-          children: [
-            Text(l10n.saturation),
-            Expanded(
-              child: Slider(
-                value: _hsvColor.saturation,
-                min: 0,
-                max: 1,
-                onChanged: (v) => _updateColor(_hsvColor.withSaturation(v)),
-              ),
-            ),
-          ],
-        ),
-              Row(
-                children: [
-                  Text(l10n.lightness),
-                  Expanded(
-                    child: Slider(
-                      value: _hsvColor.value,
-                      min: 0,
-                      max: 1,
-                      onChanged: (v) => _updateColor(_hsvColor.withValue(v)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+        const SizedBox(height: 16),
             ],
           ),
         ),

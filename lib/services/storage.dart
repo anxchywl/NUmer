@@ -39,6 +39,7 @@ class Storage {
   static const _metaQuickNotesEnabled = 'quick_notes_enabled_v2';
   static const _metaAllowNudges = 'allow_nudges_v2';
   static const _metaEisenhowerMatrixEnabled = 'eisenhower_matrix_enabled_v2';
+  static const _metaSessionNotificationsEnabled = 'session_notifs_enabled_v2';
   static const int bootstrapVersion = 1;
 
   static Future<void> configureForUser(String uid) async {
@@ -400,6 +401,23 @@ class Storage {
     await _db.putMeta(_metaEisenhowerMatrixEnabled, value);
     final doc = _userDoc();
     doc.eisenhowerMatrixEnabled = value;
+    await _saveUser(doc, dirty: false);
+  }
+
+  static Future<bool> getSessionNotificationsEnabled() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaSessionNotificationsEnabled);
+    if (raw is bool) return raw;
+    final fallback = _userDoc().sessionNotificationsEnabled;
+    await _db.putMeta(_metaSessionNotificationsEnabled, fallback);
+    return fallback;
+  }
+
+  static Future<void> setSessionNotificationsEnabled(bool value) async {
+    _ensureUser();
+    await _db.putMeta(_metaSessionNotificationsEnabled, value);
+    final doc = _userDoc();
+    doc.sessionNotificationsEnabled = value;
     await _saveUser(doc, dirty: false);
   }
 
@@ -856,22 +874,71 @@ class Storage {
   }
 
   static const _metaAnalysisContent = 'analysis_content_v1';
+  static const Duration _analysisLocalTtl = Duration(hours: 24);
 
   static Future<AiCourseAnalysis?> getCourseAnalysis(String courseId, AnalysisPeriod period) async {
     _ensureUser();
     final raw = _db.getMeta(_metaAnalysisContent);
-    if (raw is Map) {
-      final key = '${courseId}_${period.months}m';
-      final json = raw[key];
-      if (json is Map) {
-        return AiCourseAnalysis.fromJson(
-          Map<String, dynamic>.from(json),
-          courseId,
-          period,
-        );
+    if (raw is! Map) return null;
+
+    final map = Map<String, dynamic>.from(raw);
+    final key = '${courseId}_${period.months}m';
+    final entry = map[key];
+    if (entry is! Map) return null;
+
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    final savedAtMs = (entry['savedAtMs'] as num?)?.toInt();
+    // Enforce 24h local-only visibility. Legacy entries without savedAtMs are
+    // treated as expired to satisfy the TTL requirement.
+    final expired = savedAtMs == null || nowMs - savedAtMs >= _analysisLocalTtl.inMilliseconds;
+    if (expired) {
+      map.remove(key);
+      await _db.putMeta(_metaAnalysisContent, map);
+      return null;
+    }
+
+    final data = entry['data'];
+    if (data is Map) {
+      return AiCourseAnalysis.fromJson(
+        Map<String, dynamic>.from(data),
+        courseId,
+        period,
+      );
+    }
+
+    // Defensive cleanup for malformed entry.
+    map.remove(key);
+    await _db.putMeta(_metaAnalysisContent, map);
+    return null;
+  }
+
+  static Future<void> purgeExpiredCourseAnalyses() async {
+    _ensureUser();
+    final raw = _db.getMeta(_metaAnalysisContent);
+    if (raw is! Map) return;
+    final map = Map<String, dynamic>.from(raw);
+    if (map.isEmpty) return;
+
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    var changed = false;
+    final keys = map.keys.toList(growable: false);
+    for (final key in keys) {
+      final entry = map[key];
+      if (entry is! Map) {
+        map.remove(key);
+        changed = true;
+        continue;
+      }
+      final savedAtMs = (entry['savedAtMs'] as num?)?.toInt();
+      if (savedAtMs == null ||
+          nowMs - savedAtMs >= _analysisLocalTtl.inMilliseconds) {
+        map.remove(key);
+        changed = true;
       }
     }
-    return null;
+    if (changed) {
+      await _db.putMeta(_metaAnalysisContent, map);
+    }
   }
 
   static Future<void> saveCourseAnalysis(String courseId, AiCourseAnalysis analysis) async {
@@ -879,7 +946,10 @@ class Storage {
     final raw = _db.getMeta(_metaAnalysisContent) ?? {};
     final map = Map<String, dynamic>.from(raw as Map);
     final key = '${courseId}_${analysis.period.months}m';
-    map[key] = analysis.toJson();
+    map[key] = {
+      'savedAtMs': DateTime.now().millisecondsSinceEpoch,
+      'data': analysis.toJson(),
+    };
     await _db.putMeta(_metaAnalysisContent, map);
   }
 

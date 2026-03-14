@@ -168,6 +168,7 @@ final FocusNode _unitFocus = FocusNode();
   bool _isFreqGoalFocused = false;
   bool _isWorkRestFocused = false;
   bool _isTrackingInputFocused = false;
+  bool get _isEditingHabit => widget.habit != null;
 
   void _onFocusChanged() {
     setState(() {
@@ -366,30 +367,34 @@ final FocusNode _unitFocus = FocusNode();
                             children: [
                               Text(_isCreatingCategory ? l10n.habitCategoryNew : l10n.habitCategoryLabel, style: theme.textTheme.labelLarge),
                               const SizedBox(height: 12),
-                              AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 400),
-                                switchInCurve: Curves.easeInOutCubic,
-                                switchOutCurve: Curves.easeInOutCubic,
-                                transitionBuilder: (child, animation) {
-                                  final offsetAnimation = animation.drive(Tween<Offset>(
-                                    begin: const Offset(0.0, 0.05),
-                                    end: Offset.zero,
-                                  ).chain(CurveTween(curve: Curves.easeOutCubic)));
+                              IgnorePointer(
+                                ignoring: _isEditingHabit,
+                                child: Opacity(
+                                  opacity: _isEditingHabit ? 0.72 : 1.0,
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 400),
+                                    switchInCurve: Curves.easeInOutCubic,
+                                    switchOutCurve: Curves.easeInOutCubic,
+                                    transitionBuilder: (child, animation) {
+                                      final offsetAnimation = animation.drive(Tween<Offset>(
+                                        begin: const Offset(0.0, 0.05),
+                                        end: Offset.zero,
+                                      ).chain(CurveTween(curve: Curves.easeOutCubic)));
 
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: offsetAnimation,
-                                      child: SizeTransition(
-                                        sizeFactor: animation,
-                                        axisAlignment: -1.0,
-                                        child: child,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: _isCreatingCategory
-                                ? Column(
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: SlideTransition(
+                                          position: offsetAnimation,
+                                          child: SizeTransition(
+                                            sizeFactor: animation,
+                                            axisAlignment: -1.0,
+                                            child: child,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: _isCreatingCategory
+                                    ? Column(
                                     key: const ValueKey('creation_form'),
                                     crossAxisAlignment: CrossAxisAlignment.stretch,
                                     children: [
@@ -500,7 +505,7 @@ final FocusNode _unitFocus = FocusNode();
                                       )
                                     ],
                                   )
-                                : Column(
+                                    : Column(
                                     key: const ValueKey('selector_view'),
                                     children: [
                                       SwipeSelector<String>(
@@ -562,7 +567,9 @@ final FocusNode _unitFocus = FocusNode();
                                         ),
                                       ),
                                     ],
+                                    ),
                                   ),
+                                ),
                               ),
                             ],
                           ),
@@ -674,17 +681,6 @@ final FocusNode _unitFocus = FocusNode();
                                     ],
                                   ),
                                 ),
-                                if (widget.habit != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.lock_outline, size: 14, color: theme.colorScheme.onSurfaceVariant),
-                                        const SizedBox(width: 4),
-                                        Text(l10n.habitTypeLockedHint, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-                                      ],
-                                    ),
-                                  ),
                                 const SizedBox(height: 16),
                                 Text(
                                   switch(_type) {
@@ -823,8 +819,12 @@ final FocusNode _unitFocus = FocusNode();
                   Text(l10n.habitFrequencyPrompt, style: theme.textTheme.labelLarge),
                   const SizedBox(height: 12),
                   
-                  Column(
-                    children: [
+                  IgnorePointer(
+                    ignoring: _isEditingHabit,
+                    child: Opacity(
+                      opacity: _isEditingHabit ? 0.72 : 1.0,
+                      child: Column(
+                        children: [
                        AnimatedSize(
                          duration: const Duration(milliseconds: 300),
                          curve: Curves.easeOutCubic,
@@ -1094,7 +1094,9 @@ final FocusNode _unitFocus = FocusNode();
                              ),
                           ),
                        ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
 
                   const SizedBox(height: 32),
@@ -1120,7 +1122,7 @@ final FocusNode _unitFocus = FocusNode();
                     title: Text(l10n.habitStartDateLabel),
                     subtitle: Text(DateFormat.yMMMd(localeName).format(_startDate)),
                     trailing: const Icon(Icons.calendar_today),
-                    onTap: () async {
+                    onTap: _isEditingHabit ? null : () async {
                       final now = DateTime.now();
                       final maxDate = DateTime(now.year + 5, 12, 31);
                       final picked = await showDatePicker(
@@ -1137,7 +1139,7 @@ final FocusNode _unitFocus = FocusNode();
                     title: Text(l10n.habitEndDateLabel),
                     subtitle: Text(_endDate == null ? l10n.habitNoEndDate : DateFormat.yMMMd(localeName).format(_endDate!)),
                     trailing: _endDate == null ? const Icon(Icons.add) : const Icon(Icons.close),
-                    onTap: () async {
+                    onTap: _isEditingHabit ? null : () async {
                       if (_endDate != null) {
                         setState(() => _endDate = null);
                         return;

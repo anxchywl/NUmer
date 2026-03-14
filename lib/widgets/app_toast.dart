@@ -10,9 +10,7 @@ void showAppMessage(
 }) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
-  
-  ScaffoldMessenger.of(context).clearSnackBars();
-  
+
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text(

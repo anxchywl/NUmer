@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'dart:ui';
 import '../../models/habit.dart';
 import '../../services/auth_service.dart';
 import '../../services/habit_service.dart';
@@ -26,6 +28,8 @@ class HabitsScreen extends StatefulWidget {
 }
 
 class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderStateMixin {
+  static const String _createNewLabel = 'Create new';
+
   // We'll calculate the last 7 days (today + past 6 days) to show circles
   late List<DateTime> _weekDates;
   WeekStart? _lastWeekStart;
@@ -38,6 +42,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
   
   // Optimistic Reordering State
   List<String>? _optimisticHabitOrder;
+  bool _fabVisible = true;
 
   @override
   void initState() {
@@ -113,6 +118,46 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
     super.dispose();
   }
 
+  bool _isIos(BuildContext context) =>
+      Theme.of(context).platform == TargetPlatform.iOS;
+
+  double _iosBottomNavClearance(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final navBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
+    const navHeight = 66.0;
+    const extra = 8.0;
+    return navHeight + navBottomOffset + extra;
+  }
+
+  double _iosFabBottomLift(BuildContext context) {
+    // Keep pill close to nav while staying clear of overlap.
+    final lift = _iosBottomNavClearance(context) - 36.0;
+    return lift > 0 ? lift : 0;
+  }
+
+  double _iosTopContentClearance(BuildContext context) {
+    if (!_isIos(context)) return 0;
+    return 12;
+  }
+
+  double _progressBottomClearance(BuildContext context) {
+    return _isIos(context)
+        ? _iosBottomNavClearance(context)
+        : MediaQuery.of(context).padding.bottom + 24;
+  }
+
+  void _showAddHabitSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => const AddHabitSheet(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthController>();
@@ -128,8 +173,17 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
 
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: CustomScrollView(
-          slivers: [
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+            setState(() => _fabVisible = false);
+          } else if (notification.direction == ScrollDirection.forward &&
+              !_fabVisible) {
+            setState(() => _fabVisible = true);
+          }
+          return false;
+        },
+        child: CustomScrollView(slivers: [
             SliverAppBar(
               systemOverlayStyle: theme.brightness == Brightness.dark
                   ? SystemUiOverlayStyle.light
@@ -186,6 +240,10 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
             ),
             
             if (_selectedTabIndex == 0) ...[
+              if (_isIos(context))
+                SliverToBoxAdapter(
+                  child: SizedBox(height: _iosTopContentClearance(context)),
+                ),
               // Today View: Check if Eisenhower Matrix is enabled
               StreamBuilder<List<Habit>>(
                 stream: habitService.habitsStream(uid),
@@ -221,7 +279,7 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     
                     return SliverToBoxAdapter(
                       child: SizedBox(
-                        height: availableHeight,
+                        height: availableHeight - _progressBottomClearance(context),
                         child: Column(
                           children: [
                             // Top Area: Sorter OR Calendar Strip
@@ -308,25 +366,35 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                     return SliverFillRemaining(
                       hasScrollBody: false,
                       child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.done_all, size: 48, color: theme.colorScheme.outline),
-                            const SizedBox(height: 16),
-                            Text(l10n.habitsEmptyToday, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
-                          ],
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: _progressBottomClearance(context),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.done_all, size: 48, color: theme.colorScheme.outline),
+                              const SizedBox(height: 16),
+                              Text(l10n.habitsEmptyToday, style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.outline)),
+                            ],
+                          ),
                         ),
                       ),
                     );
                   }
 
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final habit = habits[index];
-                        return _buildTodayHabitItem(habit, theme, l10n);
-                      },
-                      childCount: habits.length,
+                  return SliverPadding(
+                    padding: EdgeInsets.only(
+                      bottom: _progressBottomClearance(context),
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final habit = habits[index];
+                          return _buildTodayHabitItem(habit, theme, l10n);
+                        },
+                        childCount: habits.length,
+                      ),
                     ),
                   );
                 },
@@ -356,18 +424,8 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                           Text(l10n.habitsEmptyListTitle, style: const TextStyle(fontSize: 18, color: Colors.grey)),
                           const SizedBox(height: 8),
                           FilledButton(
-                            onPressed: () {
-                              showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                backgroundColor: Theme.of(context).colorScheme.surface,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                                ),
-                                builder: (_) => const AddHabitSheet(),
-                              );
-                            },
-                            child: Text(l10n.habitsEmptyListCta),
+                            onPressed: _showAddHabitSheet,
+                            child: const Text(_createNewLabel),
                           ),
                         ],
                       ),
@@ -411,7 +469,11 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                   }
 
                   return SliverPadding(
-                    padding: const EdgeInsets.only(bottom: 80),
+                    padding: EdgeInsets.only(
+                      bottom: _isIos(context)
+                          ? _iosBottomNavClearance(context)
+                          : MediaQuery.of(context).padding.bottom + 80,
+                    ),
                     sliver: SliverReorderableList(
                       itemCount: displayHabits.length,
                       onReorder: (oldIndex, newIndex) {
@@ -448,24 +510,55 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
                   );
               },
             ),
-          ],
-        ),
-      floatingActionButton: _selectedTabIndex == 1
-          ? FloatingActionButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+
+        ]),
+      ),
+      floatingActionButton: Visibility(
+        visible: _selectedTabIndex == 1,
+        maintainState: true,
+        maintainAnimation: false,
+        maintainSize: false,
+        child: _isIos(context)
+            ? AnimatedSlide(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutQuart,
+                offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutQuart,
+                  opacity: _fabVisible ? 1 : 0,
+                  child: IgnorePointer(
+                    ignoring: !_fabVisible,
+                    child: Padding(
+                      padding:
+                          EdgeInsets.only(bottom: _iosFabBottomLift(context)),
+                      child: _IosLiquidActionPill(
+                        icon: Icons.add,
+                        label: _createNewLabel,
+                        onPressed: _showAddHabitSheet,
+                      ),
+                    ),
                   ),
-                  builder: (_) => const AddHabitSheet(),
-                );
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+                ),
+              )
+            : AnimatedSlide(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutQuart,
+                offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutQuart,
+                  opacity: _fabVisible ? 1 : 0,
+                  child: IgnorePointer(
+                    ignoring: !_fabVisible,
+                    child: FloatingActionButton(
+                      onPressed: _showAddHabitSheet,
+                      child: const Icon(Icons.add),
+                    ),
+                  ),
+                ),
+              ),
+      ),
     );
   }
 
@@ -729,6 +822,79 @@ class _HabitsScreenState extends State<HabitsScreen> with SingleTickerProviderSt
 
   String _dateKey(DateTime d) {
     return "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+  }
+}
+
+class _IosLiquidActionPill extends StatelessWidget {
+  const _IosLiquidActionPill({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : Colors.black.withValues(alpha: 0.88);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: isDark ? 0.11 : 0.22),
+                Colors.white.withValues(alpha: isDark ? 0.05 : 0.12),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.24),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.08 : 0.035),
+                blurRadius: 9,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(icon, size: 18, color: fg),
+                    const SizedBox(width: 8),
+                    Text(
+                      label,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: fg,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

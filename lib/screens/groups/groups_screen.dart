@@ -238,6 +238,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     },
                   ),
               ],
+              SliverPadding(
+                padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24),
+              ),
             ],
           );
         },

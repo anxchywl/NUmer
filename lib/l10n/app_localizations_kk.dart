@@ -139,6 +139,13 @@ class AppLocalizationsKk extends AppLocalizations {
       'Әдеттерді маңыздылығы мен шұғылдығына қарай реттеу үшін Эйзенхауэр матрицасын қолданыңыз.';
 
   @override
+  String get sessionNotification => 'Session notification';
+
+  @override
+  String get sessionNotificationDescription =>
+      'Show session controls in the notification bar while recording.';
+
+  @override
   String get eisenhowerQuadrant1 => 'Шұғыл және маңызды';
 
   @override

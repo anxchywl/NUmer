@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'models.dart';
 import 'services/storage.dart';
 import 'services/notifications.dart';
+import 'services/recording_notification_service.dart';
 import 'services/sync_service.dart';
 import 'services/habit_service.dart';
 import 'services/startup_metrics.dart';
@@ -206,6 +207,8 @@ class AppState extends ChangeNotifier {
   bool get allowNudges => _allowNudges;
   bool _eisenhowerMatrixEnabled = false;
   bool get eisenhowerMatrixEnabled => _eisenhowerMatrixEnabled;
+  bool _sessionNotificationsEnabled = true;
+  bool get sessionNotificationsEnabled => _sessionNotificationsEnabled;
   Map<String, double> _courseGoalHours = {};
   double? goalHoursForCourse(String id) => _courseGoalHours[id];
 
@@ -359,12 +362,13 @@ class AppState extends ChangeNotifier {
       loadQuickNotesEnabled(), // 16
       loadAllowNudges(), // 17
       loadEisenhowerMatrixEnabled(), // 18
-      Storage.getPomodoroLongBreakMinutes(), // 19
-      Storage.getOnboardingCompleted(), // 20
-      Storage.getBootstrapVersionFlag(), // 21
-      Storage.getAccentColor(), // 22
-      loadUserColorPresets(), // 23
-      loadThemeMode(), // 24
+      loadSessionNotificationsEnabled(), // 19
+      Storage.getPomodoroLongBreakMinutes(), // 20
+      Storage.getOnboardingCompleted(), // 21
+      Storage.getBootstrapVersionFlag(), // 22
+      Storage.getAccentColor(), // 23
+      loadUserColorPresets(), // 24
+      loadThemeMode(), // 25
     ]);
 
     major = results[0] as String?;
@@ -379,11 +383,10 @@ class AppState extends ChangeNotifier {
     alarms = results[9] as List<AlarmItem>;
     courseMinutes = results[10] as Map<String, int>;
     _courseGoalHours = results[11] as Map<String, double>;
-    onboardingCompleted = (results[20] as bool?) ?? false;
-    onboardingCompleted = (results[20] as bool?) ?? false;
-    bootstrapVersion = results[21] as int?;
+    onboardingCompleted = (results[21] as bool?) ?? false;
+    bootstrapVersion = results[22] as int?;
 
-    final accentVal = results[22] as int?;
+    final accentVal = results[23] as int?;
     if (accentVal != null) {
       _accentColor = Color(accentVal);
     }
@@ -393,7 +396,7 @@ class AppState extends ChangeNotifier {
     _courseGoalHours
         .removeWhere((id, _) => courses.every((Course c) => c.id != id));
 
-    final storedLongBreaks = results[19] as Map<String, int>;
+    final storedLongBreaks = results[20] as Map<String, int>;
 
     for (final c in courses) {
       courseMinutes.putIfAbsent(c.id, () => 0);
@@ -529,6 +532,7 @@ class AppState extends ChangeNotifier {
         _ensurePomodoroTicker();
       }
       _updateStreak();
+      await _syncRecordingNotificationForCurrentSession();
     } catch (_) {}
     notifyListeners();
   }
@@ -599,6 +603,126 @@ class AppState extends ChangeNotifier {
     _eisenhowerMatrixEnabled = value;
     notifyListeners();
     await Storage.setEisenhowerMatrixEnabled(value);
+  }
+
+  Future<void> loadSessionNotificationsEnabled() async {
+    _sessionNotificationsEnabled =
+        await Storage.getSessionNotificationsEnabled();
+    notifyListeners();
+  }
+
+  Future<void> setSessionNotificationsEnabled(bool enabled) async {
+    _sessionNotificationsEnabled = enabled;
+    notifyListeners();
+    await Storage.setSessionNotificationsEnabled(enabled);
+    await _syncRecordingNotificationForCurrentSession();
+  }
+
+  Future<void> _syncRecordingNotificationForCurrentSession() async {
+    if (!_sessionNotificationsEnabled) {
+      RecordingNotifService.instance.cancel();
+      return;
+    }
+
+    for (final entry in timerRunning.entries) {
+      if (entry.value == true) {
+        await _showTimerRecordingNotification(entry.key);
+        return;
+      }
+    }
+
+    for (final entry in stopwatchRunning.entries) {
+      if (entry.value == true) {
+        _showStopwatchRecordingNotification(entry.key);
+        return;
+      }
+    }
+
+    for (final entry in pomodoroRunning.entries) {
+      if (entry.value == true || pomodoroPaused[entry.key] == true) {
+        _showPomodoroRecordingNotification(entry.key);
+        return;
+      }
+    }
+
+    RecordingNotifService.instance.cancel();
+  }
+
+  Future<void> _showTimerRecordingNotification(String id) async {
+    if (!_sessionNotificationsEnabled || timerRunning[id] != true) {
+      return;
+    }
+
+    final start = timerStart[id];
+    DateTime? expectedEnd;
+    var countsDown = false;
+
+    if (start != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final plannedSecsRaw = prefs.getInt('timer_planned_$id');
+      final plannedSecs = plannedSecsRaw != null && plannedSecsRaw > 0
+          ? plannedSecsRaw.clamp(1, kMaxSecs)
+          : null;
+      final maxEnd = start.add(const Duration(seconds: kMaxSecs));
+      if (plannedSecs != null) {
+        final plannedEnd = start.add(Duration(seconds: plannedSecs));
+        expectedEnd = plannedEnd.isBefore(maxEnd) ? plannedEnd : maxEnd;
+        countsDown = true;
+      } else {
+        expectedEnd = maxEnd;
+      }
+    }
+
+    RecordingNotifService.instance.showTimer(
+      courseId: id,
+      courseName: _courseName(id),
+      elapsedReader: () => currentElapsedTimer(id),
+      startedAt: start,
+      expectedEndAt: expectedEnd,
+      countsDown: countsDown,
+    );
+  }
+
+  void _showStopwatchRecordingNotification(String id) {
+    if (!_sessionNotificationsEnabled || stopwatchRunning[id] != true) {
+      return;
+    }
+
+    final start = stopwatchStart[id];
+    RecordingNotifService.instance.showStopwatch(
+      courseId: id,
+      courseName: _courseName(id),
+      elapsedReader: () => currentElapsedStopwatch(id),
+      startedAt: start,
+      expectedEndAt: start?.add(const Duration(seconds: kMaxSecs)),
+    );
+  }
+
+  void _showPomodoroRecordingNotification(String id) {
+    final running = pomodoroRunning[id] == true || pomodoroPaused[id] == true;
+    if (!_sessionNotificationsEnabled || !running) {
+      return;
+    }
+
+    final paused = pomodoroPaused[id] == true;
+    final now = DateTime.now();
+    final phaseEndsAt = paused ? null : now.add(currentPomodoroRemaining(id));
+    RecordingNotifService.instance.showPomodoro(
+      courseId: id,
+      courseName: _courseName(id),
+      pomodoroReader: () {
+        final phase = pomodoroPhase[id] ?? PomodoroPhase.work;
+        final remaining = currentPomodoroRemaining(id);
+        final phaseLabel = switch (phase) {
+          PomodoroPhase.work => 'Focus',
+          PomodoroPhase.shortBreak => 'Short Break',
+          PomodoroPhase.longBreak => 'Long Break',
+        };
+        return (phase: phaseLabel, remaining: remaining);
+      },
+      phaseEndsAt: phaseEndsAt,
+      paused: paused,
+    );
   }
 
   Future<void> setCourseGoalHours(String id, double? hours,
@@ -1057,6 +1181,11 @@ class AppState extends ChangeNotifier {
     unawaited(_scheduleTimerNotification(id));
     _saveActiveSession();
     notifyListeners();
+
+    // Live recording notification
+    if (_sessionNotificationsEnabled) {
+      unawaited(_showTimerRecordingNotification(id));
+    }
     return true;
   }
 
@@ -1101,16 +1230,20 @@ class AppState extends ChangeNotifier {
       secsToday = totalSecs;
     }
 
+    timerRunning[id] = false;
+    timerElapsed[id] = Duration.zero;
+    timerStart[id] = null;
+
+    RecordingNotifService.instance.cancel();
+    notifyListeners();
+    _triggerSync();
+
     final sessionId = await _addSessionSplitAcrossMidnight(
       courseId: id,
       startLocal: start,
       endLocal: now,
       kind: 'timer',
     );
-
-    timerRunning[id] = false;
-    timerElapsed[id] = Duration.zero;
-    timerStart[id] = null;
 
     if (secsToday > 0) {
       await addStudySeconds(id, secsToday);
@@ -1128,8 +1261,6 @@ class AppState extends ChangeNotifier {
     }
 
     await _saveActiveSession();
-    _triggerSync();
-    notifyListeners();
 
     // Sync Time Habits matches Stopwatch logic
     if (_habitService != null) {
@@ -1170,6 +1301,11 @@ class AppState extends ChangeNotifier {
     unawaited(_scheduleStopwatchNotification(id));
     _saveActiveSession();
     notifyListeners();
+
+    // Live recording notification
+    if (_sessionNotificationsEnabled) {
+      _showStopwatchRecordingNotification(id);
+    }
     return true;
   }
 
@@ -1213,16 +1349,20 @@ class AppState extends ChangeNotifier {
       secsToday = totalSecs;
     }
 
+    stopwatchRunning[id] = false;
+    stopwatchElapsed[id] = Duration.zero;
+    stopwatchStart[id] = null;
+
+    RecordingNotifService.instance.cancel();
+    notifyListeners();
+    _triggerSync();
+
     final sessionId = await _addSessionSplitAcrossMidnight(
       courseId: id,
       startLocal: start,
       endLocal: now,
       kind: 'stopwatch',
     );
-
-    stopwatchRunning[id] = false;
-    stopwatchElapsed[id] = Duration.zero;
-    stopwatchStart[id] = null;
 
     if (secsToday > 0) {
       await addStudySeconds(id, secsToday);
@@ -1240,8 +1380,6 @@ class AppState extends ChangeNotifier {
     }
 
     await _saveActiveSession();
-    _triggerSync();
-    notifyListeners();
 
     // Sync Time Habits
     if (_habitService != null) {
@@ -1399,6 +1537,11 @@ class AppState extends ChangeNotifier {
     _ensurePomodoroTicker();
     _saveActiveSession();
     notifyListeners();
+
+    // Live recording notification
+    if (_sessionNotificationsEnabled) {
+      _showPomodoroRecordingNotification(id);
+    }
     return true;
   }
 
@@ -1407,8 +1550,10 @@ class AppState extends ChangeNotifier {
     pomodoroPhaseElapsed[id] = _currentPomodoroElapsedInternal(id);
     pomodoroPhaseStart[id] = null;
     pomodoroPaused[id] = true;
-    await _saveActiveSession();
+    RecordingNotifService.instance.pause();
     notifyListeners();
+    await _saveActiveSession();
+    _triggerSync();
   }
 
   Future<void> resumePomodoro(String id) async {
@@ -1416,8 +1561,10 @@ class AppState extends ChangeNotifier {
     pomodoroPaused[id] = false;
     pomodoroPhaseStart[id] = DateTime.now();
     _ensurePomodoroTicker();
-    await _saveActiveSession();
+    RecordingNotifService.instance.resume();
     notifyListeners();
+    await _saveActiveSession();
+    _triggerSync();
   }
 
   Future<void> skipPomodoroBreak(String id) async {
@@ -1425,6 +1572,7 @@ class AppState extends ChangeNotifier {
     if ((pomodoroPhase[id] ?? PomodoroPhase.work) == PomodoroPhase.work) return;
     _beginPomodoroPhase(id, PomodoroPhase.work);
     await _saveActiveSession();
+    _showPomodoroRecordingNotification(id);
     notifyListeners();
   }
 
@@ -1433,19 +1581,17 @@ class AppState extends ChangeNotifier {
     if ((pomodoroPhase[id] ?? PomodoroPhase.work) != PomodoroPhase.work) return;
     _beginPomodoroPhase(id, PomodoroPhase.shortBreak);
     await _saveActiveSession();
+    _showPomodoroRecordingNotification(id);
     notifyListeners();
   }
 
   Future<void> resetPomodoro(String id) async {
-    final hadActivity = pomodoroRunning[id] == true ||
-        ((pomodoroPhaseElapsed[id]?.inSeconds ?? 0) > 0) ||
-        (pomodoroCompletedWork[id] ?? 0) > 0;
     _clearPomodoroState(id);
     _stopPomodoroTickerIfIdle();
+    RecordingNotifService.instance.cancel();
+    notifyListeners();
+    _triggerSync();
     await _saveActiveSession();
-    if (hadActivity) {
-      notifyListeners();
-    }
   }
 
   Future<bool> saveWorkAndQuitPomodoro(String id) async {
@@ -1462,6 +1608,7 @@ class AppState extends ChangeNotifier {
     }
     _clearPomodoroState(id);
     _stopPomodoroTickerIfIdle();
+    RecordingNotifService.instance.cancel();
     await _saveActiveSession();
     if (saved) {
       _triggerSync();
@@ -1482,6 +1629,7 @@ class AppState extends ChangeNotifier {
     }
     _clearPomodoroState(id);
     _stopPomodoroTickerIfIdle();
+    RecordingNotifService.instance.cancel();
     await _saveActiveSession();
     if (savedWork) {
       _triggerSync();
@@ -1540,6 +1688,7 @@ class AppState extends ChangeNotifier {
     if (persisted) {
       _triggerSync();
     }
+    _showPomodoroRecordingNotification(id);
     notifyListeners();
   }
 
@@ -1703,6 +1852,13 @@ class AppState extends ChangeNotifier {
         .name;
   }
 
+  String _courseNameForMessages(String id) {
+    return _courseName(id)
+        .replaceAll(RegExp(r'\s*\([^)]*\)'), '')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+  }
+
   bool get _isAppInForeground =>
       WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
@@ -1715,11 +1871,11 @@ class AppState extends ChangeNotifier {
     if (secs <= 0) return;
     final fireAt = start.add(Duration(seconds: secs));
     if (!fireAt.isAfter(DateTime.now())) return;
-    final name = _courseName(id);
+    final name = _courseNameForMessages(id);
     await Notifs.scheduleOnce(
       id: _notificationId('timer', id),
       title: 'Timer finished',
-      body: 'Time for "$name" completed.',
+      body: 'Time for $name is saved',
       whenLocal: fireAt,
     );
   }
@@ -1733,7 +1889,7 @@ class AppState extends ChangeNotifier {
     if (start == null) return;
     final fireAt = start.add(const Duration(seconds: kMaxSecs));
     if (!fireAt.isAfter(DateTime.now())) return;
-    final name = _courseName(id);
+    final name = _courseNameForMessages(id);
     await Notifs.scheduleOnce(
       id: _notificationId('stopwatch', id),
       title: 'Stopwatch auto-stopped',

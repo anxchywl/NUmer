@@ -1,42 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import '../app_state.dart';
 import '../models.dart';
 
-class AlarmsScreen extends StatelessWidget {
+class AlarmsScreen extends StatefulWidget {
   const AlarmsScreen({super.key});
+
+  @override
+  State<AlarmsScreen> createState() => _AlarmsScreenState();
+}
+
+class _AlarmsScreenState extends State<AlarmsScreen> {
+  bool _fabVisible = true;
 
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
     return Scaffold(
       appBar: AppBar(title: const Text('Alarms & Reminders')),
-      body: ListView.builder(
-        itemCount: state.alarms.length,
-        itemBuilder: (c, i) {
-          final a = state.alarms[i];
-          final t = TimeOfDay.fromDateTime(a.time);
-          final when =
-              '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
-          return Dismissible(
-            key: ValueKey(a.id),
-            background: Container(color: Colors.redAccent),
-            onDismissed: (_) => state.removeAlarm(a.id),
-            child: ListTile(
-              title: Text(a.title),
-              subtitle:
-                  Text(a.repeatsDaily ? 'Daily at $when' : a.time.toString()),
-            ),
-          );
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+            setState(() => _fabVisible = false);
+          } else if (notification.direction == ScrollDirection.forward &&
+              !_fabVisible) {
+            setState(() => _fabVisible = true);
+          }
+          return false;
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => const _AddAlarmSheet(),
+        child: ListView.builder(
+          itemCount: state.alarms.length,
+          itemBuilder: (c, i) {
+            final a = state.alarms[i];
+            final t = TimeOfDay.fromDateTime(a.time);
+            final when =
+                '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+            return Dismissible(
+              key: ValueKey(a.id),
+              background: Container(color: Colors.redAccent),
+              onDismissed: (_) => state.removeAlarm(a.id),
+              child: ListTile(
+                title: Text(a.title),
+                subtitle:
+                    Text(a.repeatsDaily ? 'Daily at $when' : a.time.toString()),
+              ),
+            );
+          },
         ),
-        child: const Icon(Icons.add_alert),
+      ),
+      floatingActionButton: AnimatedSlide(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutQuart,
+        offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutQuart,
+          opacity: _fabVisible ? 1 : 0,
+          child: IgnorePointer(
+            ignoring: !_fabVisible,
+            child: FloatingActionButton(
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => const _AddAlarmSheet(),
+              ),
+              child: const Icon(Icons.add_alert),
+            ),
+          ),
+        ),
       ),
     );
   }

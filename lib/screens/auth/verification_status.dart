@@ -13,9 +13,10 @@ class EmailVerificationStatus extends StatefulWidget {
 }
 
 class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
+  static const int _resendCooldownSeconds = 60;
   bool _checking = false;
   Timer? _timer;
-  int _countdown = 30;
+  int _countdown = _resendCooldownSeconds;
 
   @override
   void initState() {
@@ -30,7 +31,7 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
   }
 
   void _startTimer() {
-    _countdown = 30;
+    _countdown = _resendCooldownSeconds;
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
@@ -101,6 +102,10 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
     
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: colors.surface,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: colors.onSurface,
+        elevation: 0,
         actions: [
           TextButton(
             onPressed: () async {
@@ -115,7 +120,8 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
             child: Text(
               'Sign out',
               style: theme.textTheme.labelLarge?.copyWith(
-                color: colors.onPrimary,
+                color: colors.primary,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),

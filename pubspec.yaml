@@ -2,7 +2,7 @@ name: numer_app
 description: Study Group app with onboarding, courses, timer, and alarms
 publish_to: "none"
 
-version: 1.0.1+29
+version: 1.0.2+30
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -30,8 +30,8 @@ dependencies:
   image_picker: ^1.1.2
 
   # Notifications
-  flutter_local_notifications: ^19.5.0
-  timezone: ^0.10.1
+  flutter_local_notifications: ^21.0.0
+  timezone: ^0.11.0
   # (Optional cloud sync)
   firebase_core: ^4.4.0
   firebase_app_check: ^0.4.1+4
@@ -69,6 +69,9 @@ dev_dependencies:
   # and are SDK-pinned; do not override them here. Remove explicit pins
   # to avoid version solving failures. If you need newer versions, upgrade
   # the Flutter SDK instead.
+
+dependency_overrides:
+  path_provider_foundation: 2.4.1
 
 flutter:
   uses-material-design: true

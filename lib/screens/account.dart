@@ -19,6 +19,23 @@ class AccountScreen extends StatefulWidget {
 }
 
 class _AccountScreenState extends State<AccountScreen> {
+  bool _isIos(BuildContext context) =>
+      Theme.of(context).platform == TargetPlatform.iOS;
+
+  double _iosBottomNavClearance(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final navBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
+    const navHeight = 66.0;
+    const extra = 8.0;
+    return navHeight + navBottomOffset + extra;
+  }
+
+  double _bottomScrollClearance(BuildContext context) {
+    return _isIos(context)
+        ? _iosBottomNavClearance(context)
+        : MediaQuery.of(context).padding.bottom + 24;
+  }
+
   Future<void> _confirmDeleteAccount() async {
     
     final auth = context.read<AuthController>();
@@ -704,6 +721,35 @@ class _AccountScreenState extends State<AccountScreen> {
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
             ),
+            child: SwitchListTile(
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              secondary: Icon(
+                Icons.mark_chat_unread_rounded,
+                color: state.sessionNotificationsEnabled 
+                  ? Theme.of(context).colorScheme.primary 
+                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
+              ),
+              title: Text(AppLocalizations.of(context)!.sessionNotification),
+              subtitle: Text(
+                AppLocalizations.of(context)!.sessionNotificationDescription,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
+              value: state.sessionNotificationsEnabled,
+              onChanged: (v) => state.setSessionNotificationsEnabled(v),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            ),
             child: ListTile(
               dense: true,
               visualDensity: VisualDensity.compact,
@@ -754,6 +800,9 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
               ]),
             ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.only(bottom: _bottomScrollClearance(context)),
           ),
         ],
       ),
@@ -839,60 +888,54 @@ class _HoldToConfirmButtonState extends State<_HoldToConfirmButton>
     final textColor = widget.textColor ?? scheme.onError;
     final radius = BorderRadius.circular(12);
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Semantics(
-          button: true,
-          enabled: !_confirmed,
-          label: widget.label,
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: radius,
-            child: InkWell(
-              onTapDown: _confirmed ? null : (_) => _startHold(),
-              onTapUp: _confirmed ? null : (_) => _cancelHold(),
-              onTapCancel: _confirmed ? null : _cancelHold,
-              borderRadius: radius,
-              child: SizedBox(
-                height: 44,
-                child: AnimatedBuilder(
-                  animation: _controller,
-                  builder: (context, child) {
-                    final background =
-                        Color.lerp(backgroundColor, Colors.white, _controller.value) ??
-                            backgroundColor;
-                    return DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: background,
-                        borderRadius: radius,
-                      ),
-                      child: child,
-                    );
-                  },
-                  child: Center(
-                    child: IconTheme(
-                      data: IconThemeData(color: textColor, size: 18),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.delete_forever),
-                          const SizedBox(width: 6),
-                          Text(
-                            widget.label,
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              color: textColor,
-                            ),
-                          ),
-                        ],
+    return Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      child: InkWell(
+        onTapDown: _confirmed ? null : (_) => _startHold(),
+        onTapUp: _confirmed ? null : (_) => _cancelHold(),
+        onTapCancel: _confirmed ? null : _cancelHold,
+        borderRadius: radius,
+        child: SizedBox(
+          height: 44,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final background = Color.lerp(
+                    backgroundColor,
+                    Colors.white,
+                    _controller.value,
+                  ) ??
+                  backgroundColor;
+              return DecoratedBox(
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: radius,
+                ),
+                child: child,
+              );
+            },
+            child: Center(
+              child: IconTheme(
+                data: IconThemeData(color: textColor, size: 18),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.delete_forever),
+                    const SizedBox(width: 6),
+                    Text(
+                      widget.label,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: textColor,
                       ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

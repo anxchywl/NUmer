@@ -60,23 +60,32 @@ class _StatsScreenState extends State<StatsScreen> {
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.6,
-          padding: const EdgeInsets.only(top: 16),
-          child: HeatmapCalendar(
-            focusedDay: _day,
-            selectedDay: _day,
-            onDaySelected: (selected, focused) {
-              setState(() {
-                _day = _strip(selected);
-                _sliceTooltip = null;
-              });
-              Navigator.pop(context);
-            },
+        return SafeArea(
+          bottom: true,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                HeatmapCalendar(
+                  focusedDay: _day,
+                  selectedDay: _day,
+                  onDaySelected: (selected, focused) {
+                    setState(() {
+                      _day = _strip(selected);
+                      _sliceTooltip = null;
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         );
       },
@@ -285,6 +294,14 @@ class _StatsScreenState extends State<StatsScreen> {
     final state = context.watch<AppState>();
     final courses = state.courses;
     final weekStart = state.weekStart;
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final mediaQuery = MediaQuery.of(context);
+    final navBottomOffset =
+        mediaQuery.padding.bottom > 0 ? (mediaQuery.padding.bottom * 0.38) : 4.0;
+    const navHeight = 66.0;
+    const extra = 12.0;
+    final bottomScrollClearance =
+        isIOS ? navHeight + navBottomOffset + extra : 24.0;
 
     
     final pieFuture = _loadPieForDay(_day, courses);
@@ -777,7 +794,9 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
 
-          const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+          SliverPadding(
+            padding: EdgeInsets.only(bottom: bottomScrollClearance),
+          ),
         ],
       ),
     );

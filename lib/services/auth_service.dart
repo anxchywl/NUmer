@@ -187,8 +187,8 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> _prepareUser(User user) async {
-    final deviceId = await _ensureDeviceId();
     await Storage.configureForUser(user.uid);
+    final deviceId = await _ensureDeviceId();
     final hasLocalCache = LocalDatabase.instance.hasBootstrapCache();
     final needsBootstrap = !hasLocalCache;
     final existingBootstrapVersion = await Storage.getBootstrapVersionFlag();

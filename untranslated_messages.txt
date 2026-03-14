@@ -1,1 +1,11 @@
-{}
+{
+  "kk": [
+    "sessionNotification",
+    "sessionNotificationDescription"
+  ],
+
+  "ru": [
+    "sessionNotification",
+    "sessionNotificationDescription"
+  ]
+}

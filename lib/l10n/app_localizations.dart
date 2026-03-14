@@ -352,6 +352,18 @@ abstract class AppLocalizations {
   /// **'Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.'**
   String get eisenhowerMatrixDescription;
 
+  /// No description provided for @sessionNotification.
+  ///
+  /// In en, this message translates to:
+  /// **'Session notification'**
+  String get sessionNotification;
+
+  /// No description provided for @sessionNotificationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show session controls in the notification bar while recording.'**
+  String get sessionNotificationDescription;
+
   /// No description provided for @eisenhowerQuadrant1.
   ///
   /// In en, this message translates to:

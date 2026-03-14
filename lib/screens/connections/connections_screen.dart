@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../l10n/app_localizations.dart';
@@ -26,6 +27,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
   String? _selectedGroupId;
   ConnectionsSortMode _sortMode = ConnectionsSortMode.recent;
   bool _initialized = false;
+  bool _fabVisible = true;
 
   @override
   void initState() {
@@ -65,9 +67,19 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final currentUser = auth.currentUser;
 
     if (currentUser == null) {
-      return Scaffold(
-        body: CustomScrollView(
-          slivers: [
+    return Scaffold(
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+            setState(() => _fabVisible = false);
+          } else if (notification.direction == ScrollDirection.forward &&
+              !_fabVisible) {
+            setState(() => _fabVisible = true);
+          }
+          return false;
+        },
+        child: CustomScrollView(
+        slivers: [
             SliverAppBar(
               title: Text(AppLocalizations.of(context)!.connectionsTabLabel),
             ),
@@ -79,8 +91,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
     return Scaffold(
       body: Consumer<ConnectionsService>(
@@ -292,10 +305,23 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddPerson(context),
-        icon: const Icon(Icons.person_add),
-        label: Text(AppLocalizations.of(context)!.addPersonTitle),
+      floatingActionButton: AnimatedSlide(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutQuart,
+        offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutQuart,
+          opacity: _fabVisible ? 1 : 0,
+          child: IgnorePointer(
+            ignoring: !_fabVisible,
+            child: FloatingActionButton.extended(
+              onPressed: () => _openAddPerson(context),
+              icon: const Icon(Icons.person_add),
+              label: Text(AppLocalizations.of(context)!.addPersonTitle),
+            ),
+          ),
+        ),
       ),
     );
   }

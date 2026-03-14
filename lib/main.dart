@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +13,6 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'l10n/app_localizations.dart';
-
 
 import 'app_state.dart';
 import 'data/local/local_database.dart';
@@ -36,18 +37,19 @@ import 'widgets/profile_form.dart';
 import 'widgets/app_toast.dart';
 import 'widgets/reflection_bottom_sheet.dart';
 import 'services/notifications.dart';
+import 'services/recording_notification_service.dart';
 import 'services/startup_metrics.dart';
+import 'services/storage.dart';
 import 'widgets/loading_screen.dart';
 
-
 Future<void> _activateAppCheck({required bool useEmulator}) async {
-  if (useEmulator) return; 
+  if (useEmulator) return;
   if (kIsWeb) {
     return;
   }
 
-  final enableAppCheck =
-      kReleaseMode || const bool.fromEnvironment('ENABLE_APPCHECK', defaultValue: false);
+  final enableAppCheck = kReleaseMode ||
+      const bool.fromEnvironment('ENABLE_APPCHECK', defaultValue: false);
   if (!enableAppCheck) {
     return;
   }
@@ -61,16 +63,27 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
     debugPrint('AppCheck: Using Production Provider');
   }
 
-    await FirebaseAppCheck.instance.activate(
-      providerAndroid: useDebugProvider
-          ? const AndroidDebugProvider()
-          : const AndroidPlayIntegrityProvider(),
-          providerApple: useDebugProvider
-            ? const AppleDebugProvider()
-            : const AppleAppAttestProvider(),
-    );
+  await FirebaseAppCheck.instance.activate(
+    providerAndroid: useDebugProvider
+        ? const AndroidDebugProvider()
+        : const AndroidPlayIntegrityProvider(),
+    providerApple: useDebugProvider
+        ? const AppleDebugProvider()
+        : const AppleAppAttestProvider(),
+  );
 }
 
+class _IosNavItem {
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+
+  const _IosNavItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+  });
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -112,6 +125,14 @@ Future<void> _initializeApp({required bool useEmulator}) async {
         const Settings(persistenceEnabled: true);
   }
 
+  // Ensure local storage is scoped as early as possible for restored sessions.
+  final cachedUser = FirebaseAuth.instance.currentUser;
+  if (cachedUser != null) {
+    try {
+      await Storage.configureForUser(cachedUser.uid);
+    } catch (_) {}
+  }
+
   await _activateAppCheck(useEmulator: useEmulator);
 
   if (useEmulator) {
@@ -121,6 +142,7 @@ Future<void> _initializeApp({required bool useEmulator}) async {
 
   await LocalDatabase.instance.initCore();
   await Notifs.init();
+  await RecordingNotifService.init();
 }
 
 class NumerBootstrapApp extends StatelessWidget {
@@ -170,13 +192,16 @@ class NumerBootstrapApp extends StatelessWidget {
 
         // Use the preloaded theme for the loading screen to avoid flicker.
         // Use exact native splash colors for seamless transition.
-        final systemBrightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-        final isDark = initialTheme == ThemeMode.dark || 
-            (initialTheme == ThemeMode.system && systemBrightness == Brightness.dark);
+        final systemBrightness =
+            WidgetsBinding.instance.platformDispatcher.platformBrightness;
+        final isDark = initialTheme == ThemeMode.dark ||
+            (initialTheme == ThemeMode.system &&
+                systemBrightness == Brightness.dark);
         // Match native splash colors exactly: #FFFFFF (light) / #121212 (dark)
-        final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
+        final bgColor =
+            isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
         final fgColor = isDark ? Colors.white70 : Colors.black87;
-        
+
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           theme: _lightTheme,
@@ -191,8 +216,8 @@ class NumerBootstrapApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
-              final message =
-                  AppLocalizations.of(context)?.loadingProfile ?? 'Loading your profile';
+              final message = AppLocalizations.of(context)?.loadingProfile ??
+                  'Loading your profile';
               return LoadingScreen(
                 message: message,
                 backgroundColor: bgColor,
@@ -234,7 +259,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       StartupMetrics.markFirstFrame();
       _syncActiveSessions();
-      context.read<AppState>().loadThemeMode(); 
+      context.read<AppState>().loadThemeMode();
     });
   }
 
@@ -282,37 +307,41 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         final accentColor = data.$3;
 
         final lightTheme = ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: accentColor),
-            switchTheme: SwitchThemeData(
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) return accentColor;
-                return null;
-              }),
-              trackColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) return accentColor.withValues(alpha: 0.5);
-                return null;
-              }),
-            ),
-          );
-  
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: accentColor),
+          switchTheme: SwitchThemeData(
+            thumbColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) return accentColor;
+              return null;
+            }),
+            trackColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return accentColor.withValues(alpha: 0.5);
+              }
+              return null;
+            }),
+          ),
+        );
+
         final darkTheme = ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: accentColor,
-              brightness: Brightness.dark,
-            ),
-            switchTheme: SwitchThemeData(
-              thumbColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) return accentColor;
-                return null;
-              }),
-              trackColor: WidgetStateProperty.resolveWith((states) {
-                if (states.contains(WidgetState.selected)) return accentColor.withValues(alpha: 0.5);
-                return null;
-              }),
-            ),
-          );
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: accentColor,
+            brightness: Brightness.dark,
+          ),
+          switchTheme: SwitchThemeData(
+            thumbColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) return accentColor;
+              return null;
+            }),
+            trackColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return accentColor.withValues(alpha: 0.5);
+              }
+              return null;
+            }),
+          ),
+        );
 
         return MaterialApp(
           title: 'Numer',
@@ -356,7 +385,7 @@ class _AuthGateState extends State<AuthGate> {
     final appState = context.read<AppState>();
     final mode = appState.effectiveThemeMode;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
-    final isDark = mode == ThemeMode.dark || 
+    final isDark = mode == ThemeMode.dark ||
         (mode == ThemeMode.system && systemBrightness == Brightness.dark);
 
     // Match native splash colors exactly
@@ -393,7 +422,6 @@ class _AuthGateState extends State<AuthGate> {
       return _buildLoader(context);
     }
 
-        
     if (auth.wasForcedLoggedOut) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -480,10 +508,9 @@ class _AuthGateState extends State<AuthGate> {
     final remoteName = (profileData['profileName'] as String?)?.trim() ??
         (profileData['displayName'] as String?)?.trim() ??
         '';
-    final onboardingDone =
-        profileData['onboardingCompleted'] == true ||
-            profileData['profileComplete'] == true ||
-            remoteName.isNotEmpty;
+    final onboardingDone = profileData['onboardingCompleted'] == true ||
+        profileData['profileComplete'] == true ||
+        remoteName.isNotEmpty;
     if (onboardingDone && remoteName.isEmpty) {
       return _buildLoader(context);
     }
@@ -526,8 +553,30 @@ class _Shell extends StatefulWidget {
   State<_Shell> createState() => _ShellState();
 }
 
+class _KeepAlivePage extends StatefulWidget {
+  const _KeepAlivePage({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAlivePage> createState() => _KeepAlivePageState();
+}
+
+class _KeepAlivePageState extends State<_KeepAlivePage>
+    with AutomaticKeepAliveClientMixin<_KeepAlivePage> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
 class _ShellState extends State<_Shell> {
   int _index = 0;
+  late final PageController _pageController;
   AppState? _appState;
   AuthController? _authController;
   bool _profileDialogActive = false;
@@ -536,6 +585,7 @@ class _ShellState extends State<_Shell> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _index);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final appState = context.read<AppState>();
@@ -553,9 +603,34 @@ class _ShellState extends State<_Shell> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _appState?.removeListener(_handleAppStateChanged);
     _authController?.removeListener(_handleAuthChanged);
     super.dispose();
+  }
+
+  void _onTabSelected(int index) {
+    if (index == _index) return;
+    final previousIndex = _index;
+    setState(() => _index = index);
+    final distance = (index - previousIndex).abs();
+    if (_pageController.hasClients) {
+      if (distance <= 1) {
+        _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        // For non-adjacent tabs, switch directly to avoid scrolling through all pages.
+        _pageController.jumpToPage(index);
+      }
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageController.hasClients) return;
+      _pageController.jumpToPage(index);
+    });
   }
 
   void _handleAppStateChanged() {
@@ -581,82 +656,295 @@ class _ShellState extends State<_Shell> {
       const GroupsScreen(),
       AccountScreen(onThemeChange: widget.onThemeChange),
     ];
+    final destinations = _buildDestinations(context);
+    final iosItems = _buildIosNavItems(context);
+    final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
+    final tabPages = pages
+        .map((page) => _KeepAlivePage(child: page))
+        .toList(growable: false);
 
     return Scaffold(
-      body: SafeArea(
-        top: true,
-        child: IndexedStack(index: _index, children: pages),
-      ),
-      bottomNavigationBar: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          height: 64,
-          backgroundColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
-          surfaceTintColor: Colors.transparent,
-          indicatorColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-              labelTextStyle: WidgetStateProperty.resolveWith((states) {
-                final theme = Theme.of(context);
-                if (states.contains(WidgetState.selected)) {
-                  return theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  );
+      extendBody: isIOS,
+      body: Stack(
+        children: [
+          SafeArea(
+            top: false,
+            bottom: !isIOS,
+            child: PageView(
+              controller: _pageController,
+              physics: const PageScrollPhysics(),
+              onPageChanged: (index) {
+                if (_index != index) {
+                  setState(() => _index = index);
                 }
-                return theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  fontSize: 12,
-                );
-              }),
-              iconTheme: WidgetStateProperty.resolveWith((states) {
-                final theme = Theme.of(context);
-                if (states.contains(WidgetState.selected)) {
-                  return IconThemeData(
-                    color: theme.colorScheme.primary,
-                    size: 26,
-                  );
-                }
-                return IconThemeData(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  size: 24,
-                );
-              }),
+              },
+              children: tabPages,
             ),
-            child: NavigationBar(
-              backgroundColor: Colors.transparent,
-              selectedIndex: _index,
-              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(Icons.home_outlined),
-                  selectedIcon: const Icon(Icons.home),
-                  label: AppLocalizations.of(context)!.home,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.check_circle_outline),
-                  selectedIcon: const Icon(Icons.check_circle),
-                  label: AppLocalizations.of(context)!.habitsNavLabel,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.bar_chart_outlined),
-                  selectedIcon: const Icon(Icons.bar_chart),
-                  label: AppLocalizations.of(context)!.statistics,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.group_outlined),
-                  selectedIcon: const Icon(Icons.group),
-                  label: AppLocalizations.of(context)!.groups,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.person_outline),
-                  selectedIcon: const Icon(Icons.settings),
-                  label: AppLocalizations.of(context)!.account,
-                ),
-              ],
-              onDestinationSelected: (i) {
-                setState(() => _index = i);
+          ),
+          if (isIOS)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildIosLiquidGlassNavigationBar(context, iosItems),
+            ),
+        ],
+      ),
+      bottomNavigationBar: isIOS
+          ? null
+          : _buildDefaultNavigationBar(context, destinations),
+    );
+  }
+
+  List<NavigationDestination> _buildDestinations(BuildContext context) {
+    return [
+      NavigationDestination(
+        icon: const Icon(Icons.home_outlined),
+        selectedIcon: const Icon(Icons.home),
+        label: AppLocalizations.of(context)!.home,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.check_circle_outline),
+        selectedIcon: const Icon(Icons.check_circle),
+        label: AppLocalizations.of(context)!.habitsNavLabel,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.bar_chart_outlined),
+        selectedIcon: const Icon(Icons.bar_chart),
+        label: AppLocalizations.of(context)!.statistics,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.group_outlined),
+        selectedIcon: const Icon(Icons.group),
+        label: AppLocalizations.of(context)!.groups,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline),
+        selectedIcon: const Icon(Icons.settings),
+        label: AppLocalizations.of(context)!.account,
+      ),
+    ];
+  }
+
+  List<_IosNavItem> _buildIosNavItems(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return <_IosNavItem>[
+      _IosNavItem(
+        label: l10n.home,
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home,
+      ),
+      _IosNavItem(
+        label: l10n.habitsNavLabel,
+        icon: Icons.check_circle_outline,
+        selectedIcon: Icons.check_circle,
+      ),
+      _IosNavItem(
+        label: l10n.statistics,
+        icon: Icons.bar_chart_outlined,
+        selectedIcon: Icons.bar_chart,
+      ),
+      _IosNavItem(
+        label: l10n.groups,
+        icon: Icons.group_outlined,
+        selectedIcon: Icons.group,
+      ),
+      _IosNavItem(
+        label: l10n.account,
+        icon: Icons.person_outline,
+        selectedIcon: Icons.settings,
+      ),
+    ];
+  }
+
+  Widget _buildDefaultNavigationBar(
+    BuildContext context,
+    List<NavigationDestination> destinations,
+  ) {
+    return NavigationBarTheme(
+      data: NavigationBarThemeData(
+        height: 64,
+        backgroundColor:
+            Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: Theme.of(context)
+            .colorScheme
+            .primaryContainer
+            .withValues(alpha: 0.4),
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final theme = Theme.of(context);
+          if (states.contains(WidgetState.selected)) {
+            return theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            );
+          }
+          return theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            fontSize: 12,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final theme = Theme.of(context);
+          if (states.contains(WidgetState.selected)) {
+            return IconThemeData(
+              color: theme.colorScheme.primary,
+              size: 26,
+            );
+          }
+          return IconThemeData(
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            size: 24,
+          );
+        }),
+      ),
+      child: NavigationBar(
+        backgroundColor: Colors.transparent,
+        selectedIndex: _index,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: destinations,
+        onDestinationSelected: _onTabSelected,
+      ),
+    );
+  }
+
+  Widget _buildIosLiquidGlassNavigationBar(
+    BuildContext context,
+    List<_IosNavItem> items,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final barBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
+    const barHeight = 66.0;
+    const horizontalMargin = 14.0;
+    const bottomSpacing = 2.0;
+    const innerPadding = 8.0;
+    const highlightInset = 4.0;
+    final overlayHeight = barHeight + bottomSpacing + bottomInset;
+    return SizedBox(
+      height: overlayHeight,
+      child: Stack(
+        children: [
+          Positioned(
+            left: horizontalMargin,
+            right: horizontalMargin,
+            bottom: barBottomOffset,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final slotWidth =
+                    (constraints.maxWidth - innerPadding * 2) / items.length;
+                final activeWidth = slotWidth + 12;
+                final activeLeft = innerPadding +
+                    _index * slotWidth +
+                    ((slotWidth - activeWidth) / 2);
+
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(34),
+                  child: SizedBox(
+                    height: barHeight,
+                    child: Stack(
+                      children: [
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          left: activeLeft,
+                          top: highlightInset,
+                          width: activeWidth,
+                          height: barHeight - (highlightInset * 2),
+                          child: BackdropFilter(
+                            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white.withValues(
+                                      alpha: isDark ? 0.09 : 0.24,
+                                    ),
+                                    Colors.white.withValues(
+                                      alpha: isDark ? 0.05 : 0.16,
+                                    ),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(28),
+                                border: Border.all(color: Colors.transparent),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: innerPadding,
+                          ),
+                          child: Row(
+                            children: List.generate(items.length, (i) {
+                              final selected = _index == i;
+                              final item = items[i];
+                              return Expanded(
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(24),
+                                  onTap: () => _onTabSelected(i),
+                                  child: SizedBox(
+                                    height: barHeight,
+                                    child: AnimatedScale(
+                                      scale: selected ? 1.08 : 1.0,
+                                      duration:
+                                          const Duration(milliseconds: 180),
+                                      curve: Curves.easeOutCubic,
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            selected
+                                                ? item.selectedIcon
+                                                : item.icon,
+                                            size: selected ? 24 : 20,
+                                            color: selected
+                                                ? scheme.primary
+                                                : scheme.onSurface
+                                                    .withValues(alpha: 0.72),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            item.label,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(
+                                              fontSize:
+                                                  selected ? 12.0 : 11.0,
+                                              color: selected
+                                                  ? scheme.primary
+                                                  : scheme.onSurface
+                                                      .withValues(alpha: 0.74),
+                                              fontWeight: selected
+                                                  ? FontWeight.w700
+                                                  : FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
+        ],
+      ),
     );
   }
 
@@ -695,7 +983,8 @@ class _ShellState extends State<_Shell> {
             canPop: false,
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
                 child: Material(
                   color: colorScheme.surfaceContainerHigh,
                   elevation: 8,
@@ -716,9 +1005,10 @@ class _ShellState extends State<_Shell> {
                           ),
                           const SizedBox(height: 16),
                           ProfileForm(
-                            initialName: appState.profileName?.isNotEmpty == true
-                                ? appState.profileName!
-                                : remoteName,
+                            initialName:
+                                appState.profileName?.isNotEmpty == true
+                                    ? appState.profileName!
+                                    : remoteName,
                             initialMajor: appState.major?.isNotEmpty == true
                                 ? appState.major
                                 : remoteMajor,
@@ -732,9 +1022,10 @@ class _ShellState extends State<_Shell> {
                             autofocusName: true,
                             onSubmit: (data) async {
                               final state = rootContext.read<AppState>();
-                              final authController = rootContext.read<AuthController>();
+                              final authController =
+                                  rootContext.read<AuthController>();
                               final uid = authController.currentUser?.uid;
-                              
+
                               await state.saveProfile(
                                 name: data.name,
                                 goal: data.goal,
@@ -788,12 +1079,12 @@ class _ShellState extends State<_Shell> {
   Future<void> _maybeReopenActivePomodoro() async {
     if (!mounted) return;
     final appState = context.read<AppState>();
-    
+
     if (appState.activeSessionKind != 'pomodoro') return;
     final courseId = appState.activeSessionCourseId;
     if (courseId == null) return;
     final course = appState.courses.firstWhere(
-      (Course c) => c.id == courseId, 
+      (Course c) => c.id == courseId,
       orElse: () => Course(
         id: courseId,
         name: 'Unknown',
@@ -804,10 +1095,9 @@ class _ShellState extends State<_Shell> {
       ),
     );
 
-    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       showCourseTimeSheet(context, course);
     });
   }
@@ -815,7 +1105,7 @@ class _ShellState extends State<_Shell> {
   Future<void> _maybeShowReflectionSheet(AppState state) async {
     if (_reflectionSheetActive || !mounted) return;
     if (state.pendingReflections.isEmpty) return;
-    
+
     // Gate by Quick Notes setting: if disabled, we clear and skip
     if (!state.quickNotesEnabled) {
       while (state.pendingReflections.isNotEmpty) {
@@ -823,7 +1113,7 @@ class _ShellState extends State<_Shell> {
       }
       return;
     }
-    
+
     // We only show if there is no other modal (profile dialog)
     if (_profileDialogActive) return;
 
@@ -852,16 +1142,16 @@ class _ShellState extends State<_Shell> {
       // Remove the processed item and reset flag.
       // We check if it's still the same item to be safe, but popPendingReflection blindly removes first.
       // This is consistent with how we consumed it.
-      if (state.pendingReflections.isNotEmpty && state.pendingReflections.first == item) {
-         state.popPendingReflection();
+      if (state.pendingReflections.isNotEmpty &&
+          state.pendingReflections.first == item) {
+        state.popPendingReflection();
       } else {
-         // It might have been cleared elsewhere? Unlikely if single thread.
-         // But let's just pop.
-         state.popPendingReflection();
+        // It might have been cleared elsewhere? Unlikely if single thread.
+        // But let's just pop.
+        state.popPendingReflection();
       }
-      
+
       _reflectionSheetActive = false;
     }
   }
-
 }

@@ -46,6 +46,7 @@ class LocalUserDoc extends HiveObject with SyncEntity {
     this.profileContact,
     this.allowNudges = true,
     this.eisenhowerMatrixEnabled = false,
+    this.sessionNotificationsEnabled = true,
     this.onboardingCompleted = false,
     this.bootstrapVersion,
   });
@@ -129,6 +130,9 @@ class LocalUserDoc extends HiveObject with SyncEntity {
 
   @HiveField(24)
   int? bootstrapVersion;
+
+  @HiveField(25)
+  bool sessionNotificationsEnabled;
 }
 
 @HiveType(typeId: 11)
@@ -579,9 +583,10 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       profileComplete: (reader.availableBytes > 0 ? reader.read() : false) as bool,
       profileContact: (reader.availableBytes > 0 ? reader.read() : null) as String?,
       allowNudges: (reader.availableBytes > 0 ? reader.read() : true) as bool,
-      eisenhowerMatrixEnabled: (reader.availableBytes > 0 ? reader.read() : false) as bool,
-      onboardingCompleted: (reader.availableBytes > 0 ? reader.read() : false) as bool,
+      eisenhowerMatrixEnabled: (reader.availableBytes > 0 ? (reader.read() ?? false) : false) as bool,
+      onboardingCompleted: (reader.availableBytes > 0 ? (reader.read() ?? false) : false) as bool,
       bootstrapVersion: (reader.availableBytes > 0 ? reader.read() : null) as int?,
+      sessionNotificationsEnabled: (reader.availableBytes > 0 ? (reader.read() ?? true) : true) as bool,
     );
   }
 
@@ -612,7 +617,8 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       ..write(obj.allowNudges)
       ..write(obj.eisenhowerMatrixEnabled)
       ..write(obj.onboardingCompleted)
-      ..write(obj.bootstrapVersion);
+      ..write(obj.bootstrapVersion)
+      ..write(obj.sessionNotificationsEnabled);
   }
 }
 

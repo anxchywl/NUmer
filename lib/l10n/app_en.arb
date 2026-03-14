@@ -41,6 +41,8 @@
   "quickNotesDescription": "Existing notes will stay saved, but no new note popups will appear after sessions.",
   "wantToReceiveNudgesDescription": "Allow group members to send you gentle nudges to stay on track.",
   "eisenhowerMatrixDescription": "Use the Eisenhower matrix on the Habits screen to organize habits by urgency and importance.",
+  "sessionNotification": "Session notification",
+  "sessionNotificationDescription": "Show session controls in the notification bar while recording.",
   "eisenhowerQuadrant1": "Urgent & Important",
   "eisenhowerQuadrant2": "Not urgent & Important",
   "eisenhowerQuadrant3": "Urgent & Not important",

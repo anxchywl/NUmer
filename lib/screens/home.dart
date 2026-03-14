@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,8 +30,9 @@ Future<void> showCourseTimeSheet(BuildContext context, Course course) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
     builder: (context) {
+      final isIos = Theme.of(context).platform == TargetPlatform.iOS;
       return FractionallySizedBox(
-        heightFactor: 0.8,
+        heightFactor: isIos ? 0.85 : 0.8,
         child: _CourseTimeMenu(course: course),
       );
     },
@@ -107,12 +110,40 @@ String _fmtHMS(int s) {
   return '$h:$m:$sec';
 }
 
+String _courseNameWithoutParentheses(String value) {
+  return value.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
+}
+
 
 // _savedSnack removed
 
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _fabVisible = true;
+
+  bool _isIos(BuildContext context) =>
+      Theme.of(context).platform == TargetPlatform.iOS;
+
+  double _iosBottomNavClearance(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+    final navBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
+    const navHeight = 66.0;
+    const extra = 8.0;
+    return navHeight + navBottomOffset + extra;
+  }
+
+  double _iosFabBottomLift(BuildContext context) {
+    // Keep pills just above the floating nav, accounting for FAB's own float margin.
+    final lift = _iosBottomNavClearance(context) - 36.0;
+    return lift > 0 ? lift : 0;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,8 +153,17 @@ class HomeScreen extends StatelessWidget {
 
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+            setState(() => _fabVisible = false);
+          } else if (notification.direction == ScrollDirection.forward &&
+              !_fabVisible) {
+            setState(() => _fabVisible = true);
+          }
+          return false;
+        },
+        child: CustomScrollView(slivers: [
           SliverAppBar(
             title: const _StreakTitle(),
             centerTitle: false, // Ensure title is left-aligned on iOS
@@ -149,11 +189,17 @@ class HomeScreen extends StatelessWidget {
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child: FilledButton.icon(
-                  onPressed: () => _openAddCourse(context),
-                  icon: const Icon(Icons.add),
-                  label: Text(AppLocalizations.of(context)!.addCourse),
-                ),
+                child: _isIos(context)
+                    ? _IosLiquidActionPill(
+                        icon: Icons.add,
+                        label: AppLocalizations.of(context)!.addCourse,
+                        onPressed: () => _openAddCourse(context),
+                      )
+                    : FilledButton.icon(
+                        onPressed: () => _openAddCourse(context),
+                        icon: const Icon(Icons.add),
+                        label: Text(AppLocalizations.of(context)!.addCourse),
+                      ),
               ),
             )
           else
@@ -371,34 +417,98 @@ class HomeScreen extends StatelessWidget {
                 },
               ),
             ),
-        ],
+          SliverPadding(
+            padding: EdgeInsets.only(
+              bottom: _isIos(context)
+                  ? _iosBottomNavClearance(context)
+                  : MediaQuery.of(context).padding.bottom + 80,
+            ),
+          ),
+        ]),
       ),
       floatingActionButton: courses.isEmpty
           ? null
-          : Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton(
-                  heroTag: 'ai-fab',
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  elevation: 4,
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => const AiAnalysisScreen(),
+          : _isIos(context)
+              ? AnimatedSlide(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutQuart,
+                  offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutQuart,
+                    opacity: _fabVisible ? 1 : 0,
+                    child: IgnorePointer(
+                      ignoring: !_fabVisible,
+                      child: Padding(
+                        padding:
+                            EdgeInsets.only(bottom: _iosFabBottomLift(context)),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            _IosLiquidActionPill(
+                              icon: Icons.auto_awesome_outlined,
+                              iconOnly: true,
+                              iconSize: 24,
+                              iconPadding: const EdgeInsets.all(13),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => const AiAnalysisScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            _IosLiquidActionPill(
+                              icon: Icons.add,
+                              label: AppLocalizations.of(context)!.addCourse,
+                              onPressed: () => _openAddCourse(context),
+                            ),
+                          ],
+                        ),
                       ),
-                    );
-                  },
-                  child: const Icon(Icons.auto_awesome_outlined),
+                    ),
+                  ),
+                )
+              : AnimatedSlide(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutQuart,
+                  offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 260),
+                    curve: Curves.easeOutQuart,
+                    opacity: _fabVisible ? 1 : 0,
+                    child: IgnorePointer(
+                      ignoring: !_fabVisible,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FloatingActionButton(
+                            heroTag: 'ai-fab',
+                            backgroundColor:
+                                Theme.of(context).colorScheme.surface,
+                            elevation: 4,
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const AiAnalysisScreen(),
+                                ),
+                              );
+                            },
+                            child: const Icon(Icons.auto_awesome_outlined),
+                          ),
+                          const SizedBox(height: 16),
+                          FloatingActionButton(
+                            heroTag: 'add-fab',
+                            onPressed: () => _openAddCourse(context),
+                            child: const Icon(Icons.add),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
-                FloatingActionButton(
-                  heroTag: 'add-fab',
-                  onPressed: () => _openAddCourse(context),
-                  child: const Icon(Icons.add),
-                ),
-              ],
-            ),
 
     );
   }
@@ -423,6 +533,89 @@ class HomeScreen extends StatelessWidget {
     final bounds = (start, end);
     final map = await s.secondsByCourseBetween(bounds.$1, bounds.$2);
     return {id: map[id] ?? 0};
+  }
+}
+
+class _IosLiquidActionPill extends StatelessWidget {
+  const _IosLiquidActionPill({
+    required this.icon,
+    required this.onPressed,
+    this.label,
+    this.iconOnly = false,
+    this.iconSize = 18,
+    this.iconPadding,
+  });
+
+  final IconData icon;
+  final String? label;
+  final VoidCallback onPressed;
+  final bool iconOnly;
+  final double iconSize;
+  final EdgeInsetsGeometry? iconPadding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final fg = isDark ? Colors.white : Colors.black.withValues(alpha: 0.88);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: isDark ? 0.11 : 0.22),
+                Colors.white.withValues(alpha: isDark ? 0.05 : 0.12),
+              ],
+            ),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.24),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.08 : 0.035),
+                blurRadius: 9,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onPressed,
+              child: Padding(
+                padding: iconOnly
+                    ? (iconPadding ?? const EdgeInsets.all(12))
+                    : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: iconOnly
+                    ? Icon(icon, size: iconSize, color: fg)
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(icon, size: iconSize, color: fg),
+                          const SizedBox(width: 8),
+                          Text(
+                            label ?? '',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: fg,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -1109,7 +1302,12 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           await p.remove('timer_planned_$id');
 
           if (!mounted) return; 
-          showAppMessage(context, AppLocalizations.of(context)!.timeSavedMessage(courseName));
+          showAppMessage(
+            context,
+            AppLocalizations.of(context)!.timeSavedMessage(
+              _courseNameWithoutParentheses(courseName),
+            ),
+          );
           _activeId = null;
           _plannedSecs = null;
         }
@@ -1119,7 +1317,12 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           await state.stopStopwatch(id);
 
           if (!mounted) return; 
-          showAppMessage(context, AppLocalizations.of(context)!.timeSavedMessage(courseName));
+          showAppMessage(
+            context,
+            AppLocalizations.of(context)!.timeSavedMessage(
+              _courseNameWithoutParentheses(courseName),
+            ),
+          );
           _activeId = null;
           _plannedSecs = null;
         }
@@ -1315,16 +1518,21 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
                 if (kind == 'timer') {
                   
                   
-                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(course.name);
+                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(
+                    _courseNameWithoutParentheses(course.name),
+                  );
                   seconds = await state.stopTimer(courseId);
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.remove('timer_planned_$courseId');
                 } else if (kind == 'stopwatch') {
-                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(course.name);
+                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(
+                    _courseNameWithoutParentheses(course.name),
+                  );
                   seconds = await state.stopStopwatch(courseId);
                 } else {
                   await state.resetPomodoro(courseId);
-                  snackMessage = 'Pomodoro for "${course.name}" reset.';
+                  snackMessage =
+                      'Pomodoro for "${_courseNameWithoutParentheses(course.name)}" reset.';
                 }
 
                 if (kind != 'pomodoro' && seconds > 0) { 
@@ -1482,17 +1690,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
     WidgetsBinding.instance.addObserver(this);
 
-    
-    _hCtrl.addListener(() {
-      if (_hCtrl.text.length >= 2 && _hNode.hasFocus) _mNode.requestFocus();
-    });
-    _mCtrl.addListener(() {
-      if (_mCtrl.text.length >= 2 && _mNode.hasFocus) _sNode.requestFocus();
-    });
-    _sCtrl.addListener(() {
-      if (_sCtrl.text.length >= 2 && _sNode.hasFocus) _sNode.unfocus();
-    });
-
     _hNode.addListener(_handleFocusChange);
     _mNode.addListener(_handleFocusChange);
     _sNode.addListener(_handleFocusChange);
@@ -1515,7 +1712,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           if (!mounted) return;
           showAppMessage(
             context,
-            AppLocalizations.of(context)!.timeSavedMessage(widget.course.name),
+            AppLocalizations.of(context)!.timeSavedMessage(
+              _courseNameWithoutParentheses(widget.course.name),
+            ),
           );
         }
       }
@@ -1528,7 +1727,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           if (!mounted) return;
           showAppMessage(
             context,
-            AppLocalizations.of(context)!.timeSavedMessage(widget.course.name),
+            AppLocalizations.of(context)!.timeSavedMessage(
+              _courseNameWithoutParentheses(widget.course.name),
+            ),
           );
         }
       }
@@ -1747,7 +1948,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       navigator.pop();
     }
     
-    showAppMessage(navigator.context, l10n.timeSavedMessage(widget.course.name));
+    showAppMessage(
+      navigator.context,
+      l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
+    );
   }
 
   
@@ -1808,7 +2012,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       navigator.pop();
     }
     
-    showAppMessage(navigator.context, l10n.timeSavedMessage(widget.course.name));
+    showAppMessage(
+      navigator.context,
+      l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
+    );
   }
 
   Future<void> _startPomodoro() async {
@@ -2177,63 +2384,84 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         (state.pomodoroPaused[widget.course.id] ?? false) ||
         elapsed > 0;
     final sliderEnabled = !hasStarted;
+    final phaseLabel = hasStarted 
+        ? _pomodoroPhaseLabel(phase) 
+        : AppLocalizations.of(context)!.start;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Chip(
-            label: Text(
-              '${_pomodoroPhaseLabel(phase)}${isPaused ? ' (${AppLocalizations.of(context)!.paused})' : ''}',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  children: [
+                    const Spacer(),
+                    Chip(
+                      visualDensity: VisualDensity.compact,
+                      label: Text(
+                        '$phaseLabel${isPaused ? ' (${AppLocalizations.of(context)!.paused})' : ''}',
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _fmt(remaining),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '${_fmt(elapsed)} / ${_fmt(total)} ${AppLocalizations.of(context)!.elapsed}',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      AppLocalizations.of(context)!.completedPomodoros(completed),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+                    const Spacer(),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppLocalizations.of(context)!.longBreakLength(sliderValue.round()),
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Slider(
+                      value: sliderValue,
+                      min: minLong,
+                      max: maxLong,
+                      divisions: (maxLong - minLong).round(),
+                      label: '${sliderValue.round()} ${AppLocalizations.of(context)!.minutes_plural}',
+                      onChanged: sliderEnabled
+                          ? (value) => setState(() => _pendingLongBreak = value)
+                          : null,
+                      onChangeEnd: sliderEnabled
+                          ? (value) async {
+                              final appState = context.read<AppState>();
+                              await appState.setPomodoroLongBreakMinutes(
+                                  widget.course.id, value.round());
+                              if (!mounted) return;
+                              setState(() => _pendingLongBreak = null);
+                            }
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
             ),
           ),
-          const SizedBox(height: 16),
-          Text(
-            _fmt(remaining),
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 42, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '${_fmt(elapsed)} / ${_fmt(total)} ${AppLocalizations.of(context)!.elapsed}',
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            AppLocalizations.of(context)!.completedPomodoros(completed),
-            style: Theme.of(context).textTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              AppLocalizations.of(context)!.longBreakLength(sliderValue.round()),
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-          ),
-          Slider(
-            value: sliderValue,
-            min: minLong,
-            max: maxLong,
-            divisions: (maxLong - minLong).round(),
-            label: '${sliderValue.round()} ${AppLocalizations.of(context)!.minutes_plural}',
-            onChanged: sliderEnabled
-                ? (value) => setState(() => _pendingLongBreak = value)
-                : null,
-            onChangeEnd: sliderEnabled
-                ? (value) async {
-                    final appState = context.read<AppState>();
-                    await appState.setPomodoroLongBreakMinutes(
-                        widget.course.id, value.round());
-                    if (!mounted) return;
-                    setState(() => _pendingLongBreak = null);
-                  }
-                : null,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -2320,11 +2548,37 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _numField(_hCtrl, _hNode, AppLocalizations.of(context)!.hUnit, enabled: enabled, maxLen: 2),
+        _numField(
+          _hCtrl,
+          _hNode,
+          AppLocalizations.of(context)!.hUnit,
+          enabled: enabled,
+          maxLen: 2,
+          nextNode: _mNode,
+          nextCtrl: _mCtrl,
+        ),
         const SizedBox(width: 12),
-        _numField(_mCtrl, _mNode, AppLocalizations.of(context)!.mUnit, enabled: enabled, maxLen: 2),
+        _numField(
+          _mCtrl,
+          _mNode,
+          AppLocalizations.of(context)!.mUnit,
+          enabled: enabled,
+          maxLen: 2,
+          prevNode: _hNode,
+          prevCtrl: _hCtrl,
+          nextNode: _sNode,
+          nextCtrl: _sCtrl,
+        ),
         const SizedBox(width: 12),
-        _numField(_sCtrl, _sNode, AppLocalizations.of(context)!.sUnit, enabled: enabled, maxLen: 2),
+        _numField(
+          _sCtrl,
+          _sNode,
+          AppLocalizations.of(context)!.sUnit,
+          enabled: enabled,
+          maxLen: 2,
+          prevNode: _mNode,
+          prevCtrl: _mCtrl,
+        ),
       ],
     );
   }
@@ -2339,45 +2593,88 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     return total;
   }
 
+  void _focusNumericField(FocusNode node, TextEditingController ctrl) {
+    if (!mounted) return;
+    final scope = FocusScope.of(context);
+    final current = scope.focusedChild;
+    if (current != null && current != node) {
+      current.unfocus(disposition: UnfocusDisposition.scope);
+    }
+    scope.requestFocus(node);
+    final offset = ctrl.text.length;
+    // Keep cursor in the tapped field and at the end of current value.
+    Future.microtask(() {
+      if (!mounted) return;
+      if (!node.hasFocus) {
+        FocusScope.of(context).requestFocus(node);
+      }
+      ctrl.selection = TextSelection.collapsed(offset: offset);
+    });
+  }
+
   Widget _numField(
     TextEditingController ctrl,
     FocusNode node,
     String label, {
     required bool enabled,
     required int maxLen,
+    FocusNode? prevNode,
+    TextEditingController? prevCtrl,
+    FocusNode? nextNode,
+    TextEditingController? nextCtrl,
   }) {
     return SizedBox(
       width: 84,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 48,
-            child: TextField(
-              key: ValueKey(label),
-              controller: ctrl,
-              focusNode: node,
-              enabled: enabled,
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(maxLen),
-              ],
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 10),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? () => _focusNumericField(node, ctrl) : null,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 48,
+              child: TextField(
+                key: ValueKey(label),
+                controller: ctrl,
+                focusNode: node,
+                enabled: enabled,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.next,
+                onTap: enabled ? () => _focusNumericField(node, ctrl) : null,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(maxLen),
+                ],
+                onChanged: (value) {
+                  setState(() {});
+                  if (!enabled || !node.hasFocus) return;
+                  if (value.isEmpty &&
+                      prevNode != null &&
+                      prevCtrl != null &&
+                      prevCtrl.text.isNotEmpty) {
+                    _focusNumericField(prevNode, prevCtrl);
+                    return;
+                  }
+                  if (value.length < maxLen) return;
+                  if (nextNode != null && nextCtrl != null) {
+                    _focusNumericField(nextNode, nextCtrl);
+                  }
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2473,8 +2770,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                           Navigator.pop(context);
 
                           final msg = updated.hiddenFromLeaderboard
-                              ? 'Course hidden. Your progress is now private.'
-                              : 'Course restored. Your current stats are now visible to the group.';
+                              ? 'Course is hidden from the leaderboard.'
+                              : 'Course is visible in the leaderboard.';
                           showAppMessage(context, msg);
                         },
                 ),
@@ -2571,7 +2868,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
             Expanded(
               child: IgnorePointer(
-                ignoring: _kbOpen,
+                // Keep timer inputs interactive while keyboard is open so
+                // users can switch H/M/S focus directly.
+                ignoring: _kbOpen && _tabs.index != 0,
                 child: TabBarView(
                   controller: _tabs,
                   physics: const NeverScrollableScrollPhysics(),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'dart:math' as math;
 import '../app_state.dart';
 import '../models.dart';
 import '../services/ai_analysis_service.dart';
@@ -14,17 +15,22 @@ class AiAnalysisScreen extends StatefulWidget {
 }
 
 class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
+  static final Map<String, AiCourseAnalysis> _memoryAnalysisCache = {};
+
   String? _selectedCourseId;
   AnalysisPeriod _selectedPeriod = AnalysisPeriod.lastMonth;
   bool _isLoading = false;
   // New state variables
   int _notesCount = 0;
   bool _isLimitReached = false;
-  bool _isChecking = true;
+  bool _isChecking = false;
+  int _remainingDays = 0;
   
   AiCourseAnalysis? _analysis;
   
   final ScrollController _scrollController = ScrollController();
+  bool _headerCollapsed = false;
+  bool _selectionInitScheduled = false;
 
   void _scrollToBottom({bool animated = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -45,6 +51,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_handleScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final appState = Provider.of<AppState>(context, listen: false);
       if (appState.courses.isNotEmpty) {
@@ -56,78 +63,118 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
     });
   }
 
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+    final collapse = _scrollController.offset > 12;
+    if (collapse == _headerCollapsed) return;
+    if (!mounted) return;
+    setState(() => _headerCollapsed = collapse);
+  }
+
   Future<void> _fetchStatus() async {
-    if (_selectedCourseId == null) return;
+    if (_selectedCourseId == null) {
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
+      return;
+    }
     setState(() => _isChecking = true);
 
     final courseId = _selectedCourseId!;
     final period = _selectedPeriod;
+    final cacheKey = '${courseId}_${period.months}m';
+    try {
+      // Keep analysis only in memory while app process is alive.
+      final inMemory = _memoryAnalysisCache[cacheKey];
+      final lastTs = await Storage.getLastAnalysisTimestamp(courseId, period.months);
+      final lastAnalysisDate =
+          lastTs != null ? DateTime.fromMillisecondsSinceEpoch(lastTs) : null;
+      final nextAvailableAt = _nextAvailableDate(lastAnalysisDate, period);
+      final limitReached =
+          nextAvailableAt != null && DateTime.now().isBefore(nextAvailableAt);
 
-    // 1. Check limit & Get last analysis timestamp
-    final lastTs = await Storage.getLastAnalysisTimestamp(courseId, period.months);
-    final lastAnalysisDate = lastTs != null ? DateTime.fromMillisecondsSinceEpoch(lastTs) : null;
-    final limitReached = _checkLimit(lastTs, period);
-    
-    // Load persisted analysis if we haven't already
-    if (_analysis == null) {
-      final saved = await Storage.getCourseAnalysis(courseId, period);
-      if (saved != null) {
-        if (mounted) {
-          setState(() {
-           _analysis = saved;
-          });
-        }
+      if (mounted && _selectedCourseId == courseId && _selectedPeriod == period) {
+        setState(() {
+          _analysis = inMemory;
+          _isLimitReached = limitReached;
+          _remainingDays = _calculateRemainingDays(nextAvailableAt);
+          _isChecking = false;
+        });
       }
-    }
 
-    // 2. Count notes
-    // Efficiently count session notes in period window AND since last analysis
-    final reflections = await AiAnalysisService.fetchReflections(
-      courseId, 
-      period, 
-      since: lastAnalysisDate
-    );
-    
-    // Count sessions with non-empty comments
-    // Note: fetchReflections returns maps with 'comment'.
-    final count = reflections.where((r) {
-      final comment = r['comment'] as String?;
-      return comment != null && comment.trim().isNotEmpty;
-    }).length;
+      // Fetch notes after cooldown state is already visible.
+      final reflections = await AiAnalysisService.fetchReflections(
+        courseId,
+        period,
+        since: lastAnalysisDate,
+      ).timeout(const Duration(seconds: 8));
+      final count = reflections.where((r) {
+        final comment = r['comment'] as String?;
+        return comment != null && comment.trim().isNotEmpty;
+      }).length;
 
-    if (mounted && _selectedCourseId == courseId && _selectedPeriod == period) {
-      setState(() {
-        _notesCount = count;
-        _isLimitReached = limitReached;
-        _isChecking = false;
-      });
+      if (mounted && _selectedCourseId == courseId && _selectedPeriod == period) {
+        setState(() {
+          _notesCount = count;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
     }
   }
 
-  bool _checkLimit(int? lastTimestamp, AnalysisPeriod period) {
-    if (lastTimestamp == null) return false;
-    final lastDate = DateTime.fromMillisecondsSinceEpoch(lastTimestamp);
-    final now = DateTime.now();
+  void _ensureSelectionFromCourses(List<Course> courses) {
+    if (courses.isEmpty) return;
+    final selected = _selectedCourseId;
+    final selectedExists = selected != null && courses.any((c) => c.id == selected);
+    if (selectedExists || _selectionInitScheduled) return;
+    _selectionInitScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _selectionInitScheduled = false;
+      if (!mounted) return;
+      final current = _selectedCourseId;
+      final existsNow = current != null && courses.any((c) => c.id == current);
+      if (existsNow) return;
+      setState(() {
+        _selectedCourseId = courses.first.id;
+      });
+      _fetchStatus();
+    });
+  }
 
-    // Check if last analysis was in the same "window"
-    if (period == AnalysisPeriod.lastMonth) {
-      // 1 month window: Calendar month
-      return lastDate.month == now.month && lastDate.year == now.year;
-    } else if (period == AnalysisPeriod.last2Months) {
-      // 2 month window: Jan-Feb, Mar-Apr, etc.
-      final lastBlock = (lastDate.month - 1) ~/ 2;
-      final currentBlock = (now.month - 1) ~/ 2;
-      return lastBlock == currentBlock && lastDate.year == now.year;
-    } else {
-      // 3 month window: Jan-Mar, Apr-Jun, etc.
-      final lastBlock = (lastDate.month - 1) ~/ 3;
-      final currentBlock = (now.month - 1) ~/ 3;
-      return lastBlock == currentBlock && lastDate.year == now.year;
-    }
+  DateTime? _nextAvailableDate(DateTime? last, AnalysisPeriod period) {
+    if (last == null) return null;
+    final monthsToAdd = period.months;
+    final monthIndex = last.month - 1 + monthsToAdd;
+    final year = last.year + (monthIndex ~/ 12);
+    final month = (monthIndex % 12) + 1;
+    final maxDay = DateTime(year, month + 1, 0).day;
+    final day = math.min(last.day, maxDay);
+    return DateTime(
+      year,
+      month,
+      day,
+      last.hour,
+      last.minute,
+      last.second,
+      last.millisecond,
+      last.microsecond,
+    );
+  }
+
+  int _calculateRemainingDays(DateTime? nextAvailableAt) {
+    if (nextAvailableAt == null) return 0;
+    final now = DateTime.now();
+    if (!nextAvailableAt.isAfter(now)) return 0;
+    final seconds = nextAvailableAt.difference(now).inSeconds;
+    return (seconds / Duration.secondsPerDay).ceil();
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();
     super.dispose();
   }
@@ -151,10 +198,11 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
       final result = await AiAnalysisService.analyzeCourse(
           _selectedCourseId!, course.name, _selectedPeriod, language: languageCode);
       
-      // Save timestamp AND content on success
+      // Save only cooldown timestamp. Analysis body is memory-only.
       await Storage.setLastAnalysisTimestamp(
           _selectedCourseId!, _selectedPeriod.months, DateTime.now().millisecondsSinceEpoch);
-      await Storage.saveCourseAnalysis(_selectedCourseId!, result);
+      final cacheKey = '${_selectedCourseId!}_${_selectedPeriod.months}m';
+      _memoryAnalysisCache[cacheKey] = result;
 
       if (mounted) {
         setState(() {
@@ -177,19 +225,51 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     final courses = appState.courses;
+    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+    _ensureSelectionFromCourses(courses);
     
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          AppLocalizations.of(context)!.courseAnalysis,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+      body: SafeArea(
+        child: Column(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              height: _headerCollapsed ? 0 : kToolbarHeight,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 140),
+                opacity: _headerCollapsed ? 0 : 1,
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 52,
+                      child: isIos
+                          ? IconButton(
+                              onPressed: () => Navigator.of(context).maybePop(),
+                              color: Theme.of(context).colorScheme.primary,
+                              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                              tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          AppLocalizations.of(context)!.courseAnalysis,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 52),
+                  ],
+                ),
               ),
-        ),
-        centerTitle: true,
-      ),
-      body: courses.isEmpty
+            ),
+            Expanded(
+              child: courses.isEmpty
           ? Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -221,7 +301,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         
                         if (_analysis != null)
                           _buildAnalysisResults(_analysis!)
-                        else if (!_isLoading)
+                        else if (!_isLoading && !_isLimitReached)
                           _buildEmptyPlaceholder(),
                       ],
                     ),
@@ -229,7 +309,7 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                 ),
                 
                 // Limit info fixed at bottom
-                if (!_isChecking)
+                if (!_isChecking && !_isLimitReached)
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
@@ -259,30 +339,22 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          AppLocalizations.of(context)!.analysisUpdatesEveryPeriod,
+                          'We do not store your analysis data.\nPlease save it yourself if you need.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.outline,
                             fontSize: 10,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        if (_isLimitReached)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0),
-                            child: Text(
-                              AppLocalizations.of(context)!.analysisAlreadyGenerated,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.error,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
                       ],
                     ),
                   ),
               ],
             ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -298,6 +370,8 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
           onPressed: canGenerate ? _runAnalysis : null,
           style: FilledButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
+            backgroundColor: canGenerate ? null : Colors.grey,
+            foregroundColor: canGenerate ? null : Colors.white70,
           ),
           icon: _isLoading
               ? const SizedBox(
@@ -313,32 +387,42 @@ class _AiAnalysisScreenState extends State<AiAnalysisScreen> {
         ),
         const SizedBox(height: 12),
         // Status Helpers
-        if (_isChecking)
-           const Center(child: SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2))),
-        
-        if (!_isChecking) ...[
-          // Notes Requirement Text (Now distinct from limit text)
-          if (!notesRequirementMet)
-            Text(
-               l10n.minNotesRequired(_notesCount, 20),
-               textAlign: TextAlign.center,
-               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                 color: Theme.of(context).colorScheme.error,
-               ),
-            )
-          else 
-            // Optional: Show success message or nothing if requirement met
-             Text(
-               l10n.minNotesRequired(_notesCount, 20),
-               textAlign: TextAlign.center,
-               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                 color: Theme.of(context).colorScheme.primary,
-                 fontWeight: FontWeight.bold,
-               ),
+        if (_isLimitReached)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              'Next analysis available in $_remainingDays ${_remainingDays == 1 ? 'day' : 'days'}',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.outline,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-        ]
+          ),
+        if (!notesRequirementMet)
+          Text(
+             _formatNotesRequirement(l10n.minNotesRequired(_notesCount, 20)),
+             textAlign: TextAlign.center,
+             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+               color: Theme.of(context).colorScheme.outline,
+             ),
+          )
+        else
+          Text(
+             _formatNotesRequirement(l10n.minNotesRequired(_notesCount, 20)),
+             textAlign: TextAlign.center,
+             style: Theme.of(context).textTheme.bodySmall?.copyWith(
+               color: Theme.of(context).colorScheme.primary,
+               fontWeight: FontWeight.bold,
+             ),
+          ),
       ],
     );
+  }
+
+  String _formatNotesRequirement(String text) {
+    // Keep the "More notes give better insights." clause on a second line.
+    return text.replaceFirst('. ', '.\n');
   }
 
   Widget _buildControls(List<Course> courses) {

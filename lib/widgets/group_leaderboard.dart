@@ -27,6 +27,9 @@ class GroupLeaderboard extends StatefulWidget {
 class _GroupLeaderboardState extends State<GroupLeaderboard> {
   StatisticsPeriod _selectedPeriod = StatisticsPeriod.today;
   Stream<GroupStatistics>? _statsStream;
+  final Map<StatisticsPeriod, GroupStatistics> _statsCache =
+      <StatisticsPeriod, GroupStatistics>{};
+  int _periodDirection = 1;
 
   @override
   void initState() {
@@ -38,6 +41,7 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
   void didUpdateWidget(GroupLeaderboard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.groupId != widget.groupId) {
+      _statsCache.clear();
       _updateStream();
     }
   }
@@ -120,7 +124,10 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
                 selectedPeriod: _selectedPeriod,
                 onPeriodChanged: (period) {
                   if (_selectedPeriod != period) {
+                    final nextDirection =
+                        period.index > _selectedPeriod.index ? 1 : -1;
                     setState(() {
+                      _periodDirection = nextDirection;
                       _selectedPeriod = period;
                       _updateStream();
                     });
@@ -131,10 +138,26 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    _getDateRangeLabel(_selectedPeriod),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.25),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: Text(
+                      _getDateRangeLabel(_selectedPeriod),
+                      key: ValueKey<String>('range-${_selectedPeriod.name}'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                 ],
@@ -151,59 +174,91 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
               );
             }
 
+            if (snapshot.hasData) {
+              _statsCache[_selectedPeriod] = snapshot.data!;
+            }
+            final stats = snapshot.data ?? _statsCache[_selectedPeriod];
+
             if (snapshot.connectionState == ConnectionState.waiting &&
-                !snapshot.hasData) {
+                stats == null) {
               return const Center(child: CircularProgressIndicator());
             }
 
-            var stats = snapshot.data;
-            if (stats == null || stats.members.isEmpty) {
-              return Center(
-                child: Text(AppLocalizations.of(context)!.noDataAvailable),
-              );
-            }
-
-            final topThree = stats.members.take(3).toList();
-            final remaining = stats.members.skip(3).toList();
-
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24.0),
-                  child: _TopThreePodium(
-                    topThree: topThree,
-                    groupId: widget.groupId,
-                    currentUserId: widget.currentUserId,
-                    onMemberTap: _showUserSubjects,
-                    onSendNudge: _sendNudge,
-                  ),
-                ),
-                if (remaining.isNotEmpty)
-                  ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    clipBehavior: Clip.none,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: remaining.length,
-                    itemBuilder: (context, index) {
-                      final member = remaining[index];
-                      final rank = index + 4;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: _RankListTile(
-                          member: member,
-                          rank: rank,
-                          isCurrentUser: member.userId == widget.currentUserId,
-                          onTap: () => _showUserSubjects(member),
-                          onSendNudge: _sendNudge,
+            final child = (stats == null || stats.members.isEmpty)
+                ? Center(
+                    key: ValueKey<String>('empty-${_selectedPeriod.name}'),
+                    child: Text(AppLocalizations.of(context)!.noDataAvailable),
+                  )
+                : Column(
+                    key: ValueKey<String>('data-${_selectedPeriod.name}'),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24.0),
+                        child: _TopThreePodium(
+                          topThree: stats.members.take(3).toList(),
                           groupId: widget.groupId,
                           currentUserId: widget.currentUserId,
+                          onMemberTap: _showUserSubjects,
+                          onSendNudge: _sendNudge,
                         ),
-                      );
-                    },
+                      ),
+                      if (stats.members.length > 3)
+                        ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                          clipBehavior: Clip.none,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: stats.members.length - 3,
+                          itemBuilder: (context, index) {
+                            final member = stats.members[index + 3];
+                            final rank = index + 4;
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: _RankListTile(
+                                member: member,
+                                rank: rank,
+                                isCurrentUser:
+                                    member.userId == widget.currentUserId,
+                                onTap: () => _showUserSubjects(member),
+                                onSendNudge: _sendNudge,
+                                groupId: widget.groupId,
+                                currentUserId: widget.currentUserId,
+                              ),
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 24),
+                    ],
+                  );
+
+            final directionFactor = _periodDirection >= 0 ? 1.0 : -1.0;
+            return AnimatedSwitcher(
+              duration: const Duration(milliseconds: 240),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              transitionBuilder: (child, animation) {
+                final offsetAnimation = Tween<Offset>(
+                  begin: Offset(-0.06 * directionFactor, 0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
                   ),
-                const SizedBox(height: 24),
-              ],
+                );
+              },
+              child: child,
             );
           },
         ),
@@ -240,7 +295,9 @@ class _PeriodSelector extends StatelessWidget {
               Expanded(
                 child: GestureDetector(
                   onTap: () => onPeriodChanged(period),
-                  child: Container(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
                     decoration: BoxDecoration(
                       color: selectedPeriod == period
                           ? colorScheme.primary
