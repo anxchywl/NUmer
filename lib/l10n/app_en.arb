@@ -335,6 +335,7 @@
   "deleteGroup": "Delete group",
   "groupSettings": "Group settings",
   "noGroupsYet": "You're not in any groups yet",
+  "noSearchResults": "We have nothing like this here",
   "createOrJoinPrompt": "Create a new group or join an existing one to collaborate with others",
   "signInPrompt": "Sign in to explore groups.",
   "errorLoadingMemberships": "Error loading memberships: {error}",
@@ -441,6 +442,10 @@
       "error": { "type": "String" }
     }
   },
+  "courseHiddenFromLeaderboard": "Course is hidden from the leaderboard.",
+  "courseVisibleInLeaderboard": "Course is visible in the leaderboard.",
+  "hideFromLeaderboard": "Hide from Leaderboard",
+  "unhideFromLeaderboard": "Unhide from Leaderboard",
   "noDataAvailable": "No data available for this period",
   "groupLeaderboard": "Group leaderboard",
   "rankLabel": "#{rank}",
@@ -523,9 +528,11 @@
   "nov": "Nov",
   "dec": "Dec",
 
+  "via": "via",
   "viaTimer": "via Timer",
   "viaStopwatch": "via Stopwatch",
   "viaPomodoro": "via Pomodoro",
+  "viaManualRecording": "via manual recording",
   "startTime": "Start",
   "endTime": "End",
   "duration": "Duration",

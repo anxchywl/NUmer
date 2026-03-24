@@ -1052,7 +1052,20 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
   const title = titles[lang] || titles.en;
 
   try {
-    const now = admin.firestore.Timestamp.now();
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    
+    // 1. Store the nudge persistently
+    await db.collection('nudges').add({
+      senderId,
+      receiverId: targetUserId,
+      groupId,
+      title,
+      body,
+      timestamp: now,
+      status: 'pending',
+    });
+
+    // 2. Attempt FCM Push (Instant Delivery)
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
       notification: {
@@ -1090,13 +1103,15 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
       }
     }
 
-    if (response.successCount == 0) {
-      throw new Error('No devices received the nudge.');
+    // Notice we removed the "successCount == 0" throw Error because
+    // the nudge is safely stored in Firestore for delivery on app open.
+    if (response.successCount === 0) {
+      functions.logger.info(`0 devices received push. Nudge is saved in Firestore for ${targetUserId}.`);
     }
 
     return { success: true };
   } catch (err) {
-    functions.logger.error('Failed to send nudge notification', err);
+    functions.logger.error('Failed to process nudge', err);
     if (err instanceof functions.https.HttpsError) {
       throw err;
     }

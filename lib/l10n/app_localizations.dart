@@ -1420,6 +1420,12 @@ abstract class AppLocalizations {
   /// **'You\'re not in any groups yet'**
   String get noGroupsYet;
 
+  /// No description provided for @noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'We have nothing like this here'**
+  String get noSearchResults;
+
   /// No description provided for @createOrJoinPrompt.
   ///
   /// In en, this message translates to:
@@ -1755,6 +1761,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error loading leaderboard: {error}'**
   String errorLoadingLeaderboard(String error);
+
+  /// No description provided for @courseHiddenFromLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Course is hidden from the leaderboard.'**
+  String get courseHiddenFromLeaderboard;
+
+  /// No description provided for @courseVisibleInLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Course is visible in the leaderboard.'**
+  String get courseVisibleInLeaderboard;
+
+  /// No description provided for @hideFromLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide from Leaderboard'**
+  String get hideFromLeaderboard;
+
+  /// No description provided for @unhideFromLeaderboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Unhide from Leaderboard'**
+  String get unhideFromLeaderboard;
 
   /// No description provided for @noDataAvailable.
   ///
@@ -2152,6 +2182,12 @@ abstract class AppLocalizations {
   /// **'Dec'**
   String get dec;
 
+  /// No description provided for @via.
+  ///
+  /// In en, this message translates to:
+  /// **'via'**
+  String get via;
+
   /// No description provided for @viaTimer.
   ///
   /// In en, this message translates to:
@@ -2169,6 +2205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'via Pomodoro'**
   String get viaPomodoro;
+
+  /// No description provided for @viaManualRecording.
+  ///
+  /// In en, this message translates to:
+  /// **'via manual recording'**
+  String get viaManualRecording;
 
   /// No description provided for @startTime.
   ///

@@ -727,6 +727,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noGroupsYet => 'You\'re not in any groups yet';
 
   @override
+  String get noSearchResults => 'We have nothing like this here';
+
+  @override
   String get createOrJoinPrompt =>
       'Create a new group or join an existing one to collaborate with others';
 
@@ -918,6 +921,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String errorLoadingLeaderboard(String error) {
     return 'Error loading leaderboard: $error';
   }
+
+  @override
+  String get courseHiddenFromLeaderboard =>
+      'Course is hidden from the leaderboard.';
+
+  @override
+  String get courseVisibleInLeaderboard =>
+      'Course is visible in the leaderboard.';
+
+  @override
+  String get hideFromLeaderboard => 'Hide from Leaderboard';
+
+  @override
+  String get unhideFromLeaderboard => 'Unhide from Leaderboard';
 
   @override
   String get noDataAvailable => 'No data available for this period';
@@ -1122,6 +1139,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dec => 'Dec';
 
   @override
+  String get via => 'via';
+
+  @override
   String get viaTimer => 'via Timer';
 
   @override
@@ -1129,6 +1149,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viaPomodoro => 'via Pomodoro';
+
+  @override
+  String get viaManualRecording => 'via manual recording';
 
   @override
   String get startTime => 'Start';

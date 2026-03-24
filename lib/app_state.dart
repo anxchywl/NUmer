@@ -1833,8 +1833,14 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  int _notificationId(String kind, String courseId) =>
-      Object.hash(kind, courseId) & 0x7fffffff;
+  int _notificationId(String kind, String courseId) {
+    final s = '${kind}_$courseId';
+    int hash = 0;
+    for (int i = 0; i < s.length; i++) {
+      hash = (31 * hash + s.codeUnitAt(i)) & 0x7fffffff;
+    }
+    return hash;
+  }
 
   String _courseName(String id) {
     return courses

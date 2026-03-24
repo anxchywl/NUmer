@@ -42,6 +42,8 @@
   "quickNotesDescription": "Существующие заметки сохранятся, но новые окна заметок после сессий появляться не будут.",
   "wantToReceiveNudgesDescription": "Разрешить участникам группы отправлять вам напоминания.",
   "eisenhowerMatrixDescription": "Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.",
+  "sessionNotification": "Уведомление о сессии",
+  "sessionNotificationDescription": "Показывать управление сессией в панели уведомлений во время записи.",
   "eisenhowerQuadrant1": "Срочно и важно",
   "eisenhowerQuadrant2": "Не срочно, но важно",
   "eisenhowerQuadrant3": "Срочно, но не важно",
@@ -268,6 +270,7 @@
   "deleteGroup": "Удалить группу",
   "groupSettings": "Настройки группы",
   "noGroupsYet": "Вы еще не состоите ни в одной группе",
+  "noSearchResults": "У нас здесь такого нет",
   "createOrJoinPrompt": "Создайте новую группу или присоединитесь к существующей, чтобы сотрудничать с другими",
   "signInPrompt": "Войдите, чтобы исследовать группы.",
   "errorLoadingMemberships": "Ошибка загрузки членства: {error}",
@@ -401,9 +404,11 @@
   "nov": "Ноя",
   "dec": "Дек",
 
+  "via": "через",
   "viaTimer": "через Таймер",
   "viaStopwatch": "через Секундомер",
   "viaPomodoro": "через Помодоро",
+  "viaManualRecording": "через ручную запись",
   "startTime": "Начало",
   "endTime": "Окончание",
   "duration": "Длительность",
@@ -897,11 +902,34 @@
   "interactionCalendarTitle": "Календарь взаимодействий",
   "signInToViewConnections": "Войдите, чтобы видеть своих людей.",
   "personNotFound": "Человек не найден",
+  "errorLoadingLeaderboard": "Ошибка загрузки таблицы лидеров: {error}",
+  "@errorLoadingLeaderboard": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "courseHiddenFromLeaderboard": "Курс скрыт из таблицы лидеров",
+  "courseVisibleInLeaderboard": "Курс виден в таблице лидеров",
+  "hideFromLeaderboard": "Скрыть из таблицы лидеров",
+  "unhideFromLeaderboard": "Показать в таблице лидеров",
+  "noDataAvailable": "Нет данных за этот период",
   "errorSaving": "Ошибка сохранения: {error}",
   "@errorSaving": {
     "placeholders": {
       "error": { "type": "String" }
     }
   },
-  "add": "Добавить"
+  "add": "Добавить",
+  "sessionNotificationTitle": "Напоминание о сессии",
+  "sessionNotificationBody": "Пришло время для вашей сессии {name}!",
+  "@sessionNotificationBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionNotificationAction": "Начать сессию",
+  "viaPomodoro": "Через Помидоро",
+  "viaManualRecording": "Через ручной ввод"
 }

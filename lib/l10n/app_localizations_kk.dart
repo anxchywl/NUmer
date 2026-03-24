@@ -139,11 +139,11 @@ class AppLocalizationsKk extends AppLocalizations {
       'Әдеттерді маңыздылығы мен шұғылдығына қарай реттеу үшін Эйзенхауэр матрицасын қолданыңыз.';
 
   @override
-  String get sessionNotification => 'Session notification';
+  String get sessionNotification => 'Сессия туралы хабарлама';
 
   @override
   String get sessionNotificationDescription =>
-      'Show session controls in the notification bar while recording.';
+      'Жазу кезінде хабарландыру тақтасында сессияны басқару элементтерін көрсету.';
 
   @override
   String get eisenhowerQuadrant1 => 'Шұғыл және маңызды';
@@ -724,6 +724,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get noGroupsYet => 'Сіз әлі бірде-бір топқа кірмедіңіз';
 
   @override
+  String get noSearchResults => 'Бізде мұндай жоқ';
+
+  @override
   String get createOrJoinPrompt =>
       'Жаңа топ құрыңыз немесе бар топқа қосылып, басқалармен бірлесе жұмыс істеңіз';
 
@@ -915,6 +918,20 @@ class AppLocalizationsKk extends AppLocalizations {
   String errorLoadingLeaderboard(String error) {
     return 'Көшбасшылар тақтасын жүктеу қатесі: $error';
   }
+
+  @override
+  String get courseHiddenFromLeaderboard =>
+      'Курс көшбасшылар тақтасынан жасырылды';
+
+  @override
+  String get courseVisibleInLeaderboard =>
+      'Курс көшбасшылар тақтасында көрінеді';
+
+  @override
+  String get hideFromLeaderboard => 'Көшбасшылар тақтасынан жасыру';
+
+  @override
+  String get unhideFromLeaderboard => 'Көшбасшылар тақтасында көрсету';
 
   @override
   String get noDataAvailable => 'Бұл кезеңге дерек жоқ';
@@ -1119,6 +1136,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get dec => 'Жел';
 
   @override
+  String get via => 'арқылы';
+
+  @override
   String get viaTimer => 'Таймер арқылы';
 
   @override
@@ -1126,6 +1146,9 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get viaPomodoro => 'Помодоро арқылы';
+
+  @override
+  String get viaManualRecording => 'қолмен жазу арқылы';
 
   @override
   String get startTime => 'Бастау';

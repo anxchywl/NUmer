@@ -577,8 +577,10 @@ String _kindLabel(BuildContext context, String kind) {
       return l10n.viaStopwatch;
     case 'pomodoro':
       return l10n.viaPomodoro;
+    case 'manual recording':
+      return l10n.viaManualRecording;
     default:
-      return 'via $kind';
+      return '${l10n.via} $kind';
   }
 }
 

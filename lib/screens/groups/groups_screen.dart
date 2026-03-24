@@ -165,47 +165,16 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
                       final groups = groupSnap.data ?? const <Group>[];
                       if (groups.isEmpty) {
-                        final theme = Theme.of(context);
                         return SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.all(24),
                             child: Center(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.groups_outlined, size: 64, color: theme.colorScheme.primary),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    AppLocalizations.of(context)!.noGroupsYet,
-                                    style: theme.textTheme.titleMedium,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    AppLocalizations.of(context)!.createOrJoinPrompt,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      FilledButton.icon(
-                                        onPressed: () => _openCreateGroup(context),
-                                        icon: const Icon(Icons.add),
-                                        label: Text(AppLocalizations.of(context)!.createGroup),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      OutlinedButton.icon(
-                                        onPressed: () => _showJoinPrivateDialog(),
-                                        icon: const Icon(Icons.login),
-                                        label: Text(AppLocalizations.of(context)!.joinGroup),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                              child: Text(
+                                AppLocalizations.of(context)!.noSearchResults,
+                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ),

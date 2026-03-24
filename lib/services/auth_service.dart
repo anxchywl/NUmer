@@ -39,6 +39,7 @@ class AuthController extends ChangeNotifier {
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSub;
   StreamSubscription<String>? _fcmTokenSub;
   StreamSubscription<RemoteMessage>? _fcmMessageSub;
+  StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? _nudgesSub;
 
   User? _currentUser;
   Map<String, dynamic>? _profileData;
@@ -118,6 +119,7 @@ class AuthController extends ChangeNotifier {
       _isSigningOut = false;
       _fcmTokenSub?.cancel();
       _fcmMessageSub?.cancel();
+      _nudgesSub?.cancel();
       UserStorage.setCurrentUser(null);
       _performSignOutCleanup(previousUid);
       notifyListeners();
@@ -143,6 +145,7 @@ class AuthController extends ChangeNotifier {
     unawaited(_upsertEmailIndex(user.email, user.uid));
     unawaited(_registerPushToken(user));
     _listenToProfile(user);
+    _listenForPendingNudges(user.uid);
     lastPreparationError = null;
     _forcedLoggedOut = false;
     UserStorage.setCurrentUser(user.uid);
@@ -799,6 +802,36 @@ class AuthController extends ChangeNotifier {
       _profileData = null;
       _profileReady = true;
       notifyListeners();
+    });
+    _listenForPendingNudges(user.uid); // Added this line
+  }
+
+  void _listenForPendingNudges(String uid) {
+    _nudgesSub?.cancel();
+    _nudgesSub = _firestore
+        .collection('nudges')
+        .where('receiverId', isEqualTo: uid)
+        .where('status', isEqualTo: 'pending')
+        .snapshots()
+        .listen((snapshot) {
+      for (var change in snapshot.docChanges) {
+        if (change.type == DocumentChangeType.added) {
+          final data = change.doc.data();
+          if (data == null) continue;
+          
+          final title = data['title'] as String? ?? 'Nudge';
+          final body = data['body'] as String? ?? '';
+          
+          if (body.isNotEmpty) {
+            final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+            Notifs.showImmediate(id: id, title: title, body: body);
+          }
+          
+          change.doc.reference.update({'status': 'delivered'});
+        }
+      }
+    }, onError: (e) {
+      if (kDebugMode) print('Nudges listener error: $e');
     });
   }
 

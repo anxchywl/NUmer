@@ -140,11 +140,11 @@ class AppLocalizationsRu extends AppLocalizations {
       'Используйте матрицу Эйзенхауэра на экране привычек, чтобы упорядочить их по важности и срочности.';
 
   @override
-  String get sessionNotification => 'Session notification';
+  String get sessionNotification => 'Уведомление о сессии';
 
   @override
   String get sessionNotificationDescription =>
-      'Show session controls in the notification bar while recording.';
+      'Показывать управление сессией в панели уведомлений во время записи.';
 
   @override
   String get eisenhowerQuadrant1 => 'Срочно и важно';
@@ -725,6 +725,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get noGroupsYet => 'Вы еще не состоите ни в одной группе';
 
   @override
+  String get noSearchResults => 'У нас здесь такого нет';
+
+  @override
   String get createOrJoinPrompt =>
       'Создайте новую группу или присоединитесь к существующей, чтобы сотрудничать с другими';
 
@@ -919,6 +922,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String errorLoadingLeaderboard(String error) {
     return 'Ошибка загрузки таблицы лидеров: $error';
   }
+
+  @override
+  String get courseHiddenFromLeaderboard => 'Курс скрыт из таблицы лидеров';
+
+  @override
+  String get courseVisibleInLeaderboard => 'Курс виден в таблице лидеров';
+
+  @override
+  String get hideFromLeaderboard => 'Скрыть из таблицы лидеров';
+
+  @override
+  String get unhideFromLeaderboard => 'Показать в таблице лидеров';
 
   @override
   String get noDataAvailable => 'Нет данных за этот период';
@@ -1123,13 +1138,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get dec => 'Дек';
 
   @override
+  String get via => 'через';
+
+  @override
   String get viaTimer => 'через Таймер';
 
   @override
   String get viaStopwatch => 'через Секундомер';
 
   @override
-  String get viaPomodoro => 'через Помодоро';
+  String get viaPomodoro => 'Через Помидоро';
+
+  @override
+  String get viaManualRecording => 'Через ручной ввод';
 
   @override
   String get startTime => 'Начало';

@@ -2743,8 +2743,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                 children: [
                 IconButton(
                   tooltip: live.hiddenFromLeaderboard
-                      ? 'Unhide from Leaderboard'
-                      : 'Hide from Leaderboard',
+                      ? AppLocalizations.of(context)!.unhideFromLeaderboard
+                      : AppLocalizations.of(context)!.hideFromLeaderboard,
                   icon: Icon(
                     live.hiddenFromLeaderboard
                         ? Icons.visibility_off
@@ -2770,8 +2770,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                           Navigator.pop(context);
 
                           final msg = updated.hiddenFromLeaderboard
-                              ? 'Course is hidden from the leaderboard.'
-                              : 'Course is visible in the leaderboard.';
+                              ? AppLocalizations.of(context)!.courseHiddenFromLeaderboard
+                              : AppLocalizations.of(context)!.courseVisibleInLeaderboard;
                           showAppMessage(context, msg);
                         },
                 ),
