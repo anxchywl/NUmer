@@ -8,7 +8,9 @@
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%20%E2%89%A5%203.4-02569B?logo=flutter)
 ![Backend](https://img.shields.io/badge/backend-Firebase-FFCA28?logo=firebase)
 ![Version](https://img.shields.io/badge/version-1.0.3-informational)
-![Status](https://img.shields.io/badge/status-live%20on%20App%20Store-success)
+![Status](https://img.shields.io/badge/status-live%20on%20App%20Store%20%26%20Play%20Store-success)
+
+**Download:** [App Store](https://apps.apple.com/kz/app/numer-app/id6759787785) · [Google Play](https://play.google.com/store/apps/details?id=app.anx.numer) · 200+ active users
 
 NUmer brings time tracking, habits, calendars, and study groups into one dashboard instead of
 a handful of disconnected tools. It works fully offline (Hive-backed, synced to Firebase when
