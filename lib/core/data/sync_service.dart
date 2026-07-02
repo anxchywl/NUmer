@@ -7,9 +7,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
-import 'package:numer_app/data/local/entities.dart';
-import 'package:numer_app/data/local/local_database.dart';
-import 'package:numer_app/services/startup_metrics.dart';
+import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/local_database.dart';
+import 'package:numer_app/core/startup_metrics.dart';
 
 enum SyncStatus { offline, syncing, upToDate }
 

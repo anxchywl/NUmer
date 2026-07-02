@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:numer_app/data/local/entities.dart';
-import 'package:numer_app/data/local/local_database.dart';
+import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/models/habit.dart';
 import 'package:numer_app/models/habit_category.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 
 class HabitService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;

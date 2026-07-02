@@ -15,8 +15,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/app_state.dart';
-import 'package:numer_app/data/local/local_database.dart';
-import 'package:numer_app/firebase_options.dart';
+import 'package:numer_app/core/data/local_database.dart';
+import 'package:numer_app/core/firebase_options.dart';
 import 'package:numer_app/models.dart';
 import 'package:numer_app/screens/account.dart';
 import 'package:numer_app/screens/auth/auth_screen.dart';
@@ -31,16 +31,16 @@ import 'package:numer_app/screens/groups/groups_screen.dart';
 import 'package:numer_app/services/auth_service.dart';
 import 'package:numer_app/services/group_service.dart';
 import 'package:numer_app/services/habit_service.dart';
-import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/core/data/sync_service.dart';
 // import 'services/connections_service.dart';
 import 'package:numer_app/screens/habits/habits_screen.dart';
 import 'package:numer_app/widgets/profile_form.dart';
 import 'package:numer_app/widgets/app_toast.dart';
 import 'package:numer_app/widgets/reflection_bottom_sheet.dart';
-import 'package:numer_app/services/notifications.dart';
-import 'package:numer_app/services/recording_notification_service.dart';
-import 'package:numer_app/services/startup_metrics.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/notifications/notifications.dart';
+import 'package:numer_app/core/notifications/recording_notification_service.dart';
+import 'package:numer_app/core/startup_metrics.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/widgets/loading_screen.dart';
 
 Future<void> _activateAppCheck({required bool useEmulator}) async {

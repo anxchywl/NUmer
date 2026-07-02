@@ -7,8 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:numer_app/models/habit.dart';
 import 'package:numer_app/models/course.dart';
 import 'package:numer_app/services/habit_service.dart';
-import 'package:numer_app/services/storage.dart';
-import 'package:numer_app/data/local/entities.dart';
+import 'package:numer_app/core/data/storage.dart';
+import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 

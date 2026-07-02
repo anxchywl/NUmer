@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:numer_app/app_state.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/widgets/app_toast.dart';

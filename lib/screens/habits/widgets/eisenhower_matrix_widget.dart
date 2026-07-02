@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/models/habit.dart';
 import 'package:numer_app/screens/habits/widgets/habit_completion_indicator.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/app_state.dart';
 
 /// A single quadrant panel in the Eisenhower matrix

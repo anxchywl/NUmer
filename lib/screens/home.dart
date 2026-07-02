@@ -8,8 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:numer_app/app_state.dart';
 import 'package:numer_app/models.dart';
-import 'package:numer_app/services/storage.dart';
-import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/core/data/storage.dart';
+import 'package:numer_app/core/data/sync_service.dart';
 
 import 'package:numer_app/screens/ai_analysis_screen.dart';
 import 'package:numer_app/widgets/color_picker_button.dart';

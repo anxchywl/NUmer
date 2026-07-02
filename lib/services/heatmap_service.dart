@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 
 class HeatmapService extends ChangeNotifier {
   static final HeatmapService _instance = HeatmapService._internal();

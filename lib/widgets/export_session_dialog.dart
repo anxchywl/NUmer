@@ -6,7 +6,7 @@ import 'package:numer_app/app_state.dart';
 import 'package:numer_app/models.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/services/export_service.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/widgets/app_toast.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';

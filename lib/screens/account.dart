@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app_state.dart';
 import 'package:numer_app/widgets/profile_form.dart';
 import 'package:numer_app/services/auth_service.dart';
-import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/widgets/export_session_dialog.dart';
 import 'package:numer_app/widgets/universal_avatar.dart';

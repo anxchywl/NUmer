@@ -17,7 +17,7 @@ import 'package:numer_app/screens/habits/widgets/habit_completion_indicator.dart
 import 'package:numer_app/screens/habits/habit_details_screen.dart';
 import 'package:numer_app/screens/habits/add_habit_sheet.dart';
 
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitsScreen extends StatefulWidget {

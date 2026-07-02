@@ -5,8 +5,8 @@ import 'package:hive/hive.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:numer_app/data/local/entities.dart';
-import 'package:numer_app/data/local/local_database.dart';
+import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/models.dart';
 import 'package:numer_app/models/habit_category.dart';
 import 'package:numer_app/services/ai_analysis_service.dart';

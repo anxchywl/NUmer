@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:numer_app/models/habit.dart';
 import 'package:numer_app/services/auth_service.dart';
 import 'package:numer_app/services/habit_service.dart';
-import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/screens/habits/widgets/habit_day_sheet.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/app_state.dart';

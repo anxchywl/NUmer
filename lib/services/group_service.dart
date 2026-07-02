@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:numer_app/models/group.dart';
 import 'package:numer_app/models/group_statistics.dart';
 import 'package:numer_app/services/group_aggregation_service.dart';
-import 'package:numer_app/services/storage.dart';
-import 'package:numer_app/data/local/entities.dart';
+import 'package:numer_app/core/data/storage.dart';
+import 'package:numer_app/core/data/entities.dart';
 
 class GroupService {
   GroupService({

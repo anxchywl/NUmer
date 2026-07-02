@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'package:numer_app/data/local/entities.dart';
+import 'package:numer_app/core/data/entities.dart';
 
 class LocalDatabase {
   LocalDatabase._();
