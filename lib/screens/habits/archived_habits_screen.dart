@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'dart:convert';
-import '../../models/habit.dart';
-import '../../data/local/entities.dart';
-import '../../services/auth_service.dart';
-import '../../services/habit_service.dart';
-import '../../services/storage.dart';
-import '../../services/sync_service.dart';
-import '../../app_state.dart';
-import 'habit_details_screen.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/data/local/entities.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/habit_service.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/screens/habits/habit_details_screen.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class ArchivedHabitsScreen extends StatefulWidget {
   const ArchivedHabitsScreen({super.key});

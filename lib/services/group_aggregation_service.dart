@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/group_statistics.dart';
+import 'package:numer_app/models/group_statistics.dart';
 
 
 class GroupAggregationService {

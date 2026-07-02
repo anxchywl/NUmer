@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/person.dart';
-import '../models/contact_group.dart';
+import 'package:numer_app/models/person.dart';
+import 'package:numer_app/models/contact_group.dart';
 
 /// Service for managing Connections (personal CRM) data.
 /// 

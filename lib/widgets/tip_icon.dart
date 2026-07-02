@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class TipIcon extends StatefulWidget {
   final String title;

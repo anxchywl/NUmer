@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../../../models/habit.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitScheduleEditor extends StatefulWidget {
   final HabitFrequencyType frequencyType;

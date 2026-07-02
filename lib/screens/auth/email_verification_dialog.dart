@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../services/auth_service.dart';
+import 'package:numer_app/services/auth_service.dart';
 
 class EmailVerificationDialog extends StatefulWidget {
   const EmailVerificationDialog({super.key});

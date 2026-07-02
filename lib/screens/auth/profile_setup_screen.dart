@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../app_state.dart';
-import '../../services/auth_service.dart';
-import '../../widgets/profile_form.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/widgets/profile_form.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 

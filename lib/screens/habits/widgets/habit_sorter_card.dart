@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/habit.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 /// Single habit card shown one at a time during sorting phase
 /// Animates in when appearing, animates out when placed

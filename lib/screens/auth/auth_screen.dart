@@ -5,11 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../app_state.dart';
-import '../../l10n/app_localizations.dart';
-import '../../services/auth_service.dart';
-import 'email_verification_dialog.dart';
-import '../../widgets/app_toast.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/screens/auth/email_verification_dialog.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 // Validation patterns
 const int _emailMaxLength = 254;

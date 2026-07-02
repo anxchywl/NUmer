@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../../models/habit.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
 
 /// Horizontal scrollable bar for unsorted habits that can be dragged into the Eisenhower matrix
 class UnsortedHabitsBar extends StatelessWidget {

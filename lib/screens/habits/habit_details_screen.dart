@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/habit.dart';
-import '../../models/habit_category.dart';
-import '../../services/auth_service.dart';
-import '../../services/habit_service.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/models/habit_category.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/habit_service.dart';
 
-import 'widgets/habit_schedule_editor.dart';
-import 'widgets/habit_time_picker.dart';
-import '../../app_state.dart';
-import 'swipe_selector.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:numer_app/screens/habits/widgets/habit_schedule_editor.dart';
+import 'package:numer_app/screens/habits/widgets/habit_time_picker.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/screens/habits/swipe_selector.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitDetailsScreen extends StatefulWidget {
   final Habit habit;

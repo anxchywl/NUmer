@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../services/heatmap_service.dart';
+import 'package:numer_app/services/heatmap_service.dart';
 
 class HeatmapCalendar extends StatefulWidget {
   final DateTime focusedDay;

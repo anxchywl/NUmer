@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'habit_rule.dart';
+import 'package:numer_app/models/habit_rule.dart';
 
 enum HabitType {
   yesNo,

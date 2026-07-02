@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../models/person.dart';
-import '../../../models/contact_group.dart';
+import 'package:numer_app/models/person.dart';
+import 'package:numer_app/models/contact_group.dart';
 
 class PersonCard extends StatelessWidget {
   final Person person;

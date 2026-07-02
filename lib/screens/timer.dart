@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../app_state.dart';
-import '../models.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/models.dart';
 
-import '../l10n/app_localizations.dart';
-import '../widgets/app_toast.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 class TimerScreen extends StatefulWidget {
   

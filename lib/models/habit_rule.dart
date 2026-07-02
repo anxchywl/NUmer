@@ -1,4 +1,4 @@
-import 'habit.dart';
+import 'package:numer_app/models/habit.dart';
 
 class HabitRule {
   final DateTime endDate; // The date this rule STOPPED applying (exclusive)

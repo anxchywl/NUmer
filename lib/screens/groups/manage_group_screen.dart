@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/group.dart';
-import '../../services/auth_service.dart';
-import '../../services/group_service.dart';
-import '../../l10n/app_localizations.dart';
-import '../../widgets/user_profile_tile.dart';
-import '../../widgets/app_toast.dart';
+import 'package:numer_app/models/group.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/group_service.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/user_profile_tile.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 class ManageGroupScreen extends StatefulWidget {
   const ManageGroupScreen({super.key, required this.groupId});

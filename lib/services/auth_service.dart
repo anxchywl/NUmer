@@ -9,11 +9,11 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'notifications.dart';
-import 'storage.dart';
-import 'sync_service.dart';
-import 'user_storage.dart';
-import '../data/local/local_database.dart';
+import 'package:numer_app/services/notifications.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/services/user_storage.dart';
+import 'package:numer_app/data/local/local_database.dart';
 
 class AuthFailure implements Exception {
   final String message;

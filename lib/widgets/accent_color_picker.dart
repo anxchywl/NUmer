@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../app_state.dart';
-import '../l10n/app_localizations.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class AccentColorPicker extends StatefulWidget {
   final Color currentColor;

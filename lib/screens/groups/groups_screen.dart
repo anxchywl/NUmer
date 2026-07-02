@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/group.dart';
-import '../../services/auth_service.dart';
-import '../../services/group_service.dart';
-import '../../l10n/app_localizations.dart';
-import '../../widgets/group_leaderboard.dart';
-import '../../widgets/app_toast.dart';
-import '../../widgets/tip_icon.dart';
-import 'create_group_screen.dart';
-import 'manage_group_screen.dart';
+import 'package:numer_app/models/group.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/group_service.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/group_leaderboard.dart';
+import 'package:numer_app/widgets/app_toast.dart';
+import 'package:numer_app/widgets/tip_icon.dart';
+import 'package:numer_app/screens/groups/create_group_screen.dart';
+import 'package:numer_app/screens/groups/manage_group_screen.dart';
 
 class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});

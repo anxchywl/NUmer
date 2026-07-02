@@ -2,19 +2,19 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-import 'models.dart';
-import 'services/storage.dart';
-import 'services/notifications.dart';
-import 'services/recording_notification_service.dart';
-import 'services/sync_service.dart';
-import 'services/habit_service.dart';
-import 'services/startup_metrics.dart';
-import 'data/local/local_database.dart';
+import 'package:numer_app/models.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/services/notifications.dart';
+import 'package:numer_app/services/recording_notification_service.dart';
+import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/services/habit_service.dart';
+import 'package:numer_app/services/startup_metrics.dart';
+import 'package:numer_app/data/local/local_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'l10n/app_localizations.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 enum WeekStart { monday, sunday }
 

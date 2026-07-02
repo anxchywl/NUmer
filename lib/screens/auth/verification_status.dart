@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import '../../app_state.dart';
-import '../../services/sync_service.dart';
-import '../../services/auth_service.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/services/auth_service.dart';
 
 class EmailVerificationStatus extends StatefulWidget {
   const EmailVerificationStatus({super.key});

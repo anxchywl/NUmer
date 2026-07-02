@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import '../app_state.dart';
-import '../models.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/models.dart';
 
 class AlarmsScreen extends StatefulWidget {
   const AlarmsScreen({super.key});

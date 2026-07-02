@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
-import '../../models/person.dart';
-import '../../models/contact_group.dart';
-import '../../services/auth_service.dart';
-import '../../services/connections_service.dart';
-import 'add_person_sheet.dart';
+import 'package:numer_app/models/person.dart';
+import 'package:numer_app/models/contact_group.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/connections_service.dart';
+import 'package:numer_app/screens/connections/add_person_sheet.dart';
 
 class PersonDetailsScreen extends StatefulWidget {
   final String personId;

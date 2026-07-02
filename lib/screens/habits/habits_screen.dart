@@ -4,21 +4,21 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
-import '../../models/habit.dart';
-import '../../services/auth_service.dart';
-import '../../services/habit_service.dart';
-import '../../app_state.dart';
-import 'habits_calendar_screen.dart';
-import 'archived_habits_screen.dart';
-import 'widgets/habit_logging_sheet.dart';
-import 'widgets/eisenhower_matrix_widget.dart';
-import 'widgets/habit_sorter_card.dart';
-import 'widgets/habit_completion_indicator.dart';
-import 'habit_details_screen.dart';
-import 'add_habit_sheet.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/habit_service.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/screens/habits/habits_calendar_screen.dart';
+import 'package:numer_app/screens/habits/archived_habits_screen.dart';
+import 'package:numer_app/screens/habits/widgets/habit_logging_sheet.dart';
+import 'package:numer_app/screens/habits/widgets/eisenhower_matrix_widget.dart';
+import 'package:numer_app/screens/habits/widgets/habit_sorter_card.dart';
+import 'package:numer_app/screens/habits/widgets/habit_completion_indicator.dart';
+import 'package:numer_app/screens/habits/habit_details_screen.dart';
+import 'package:numer_app/screens/habits/add_habit_sheet.dart';
 
-import '../../services/storage.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitsScreen extends StatefulWidget {
   const HabitsScreen({super.key});

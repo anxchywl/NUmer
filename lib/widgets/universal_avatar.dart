@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-import '../models/profile_avatar.dart';
+import 'package:numer_app/models/profile_avatar.dart';
 
 class UniversalAvatar extends StatelessWidget {
   final String? userId;

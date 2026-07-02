@@ -1,16 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'habit_time_picker.dart';
+import 'package:numer_app/screens/habits/widgets/habit_time_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../models/habit.dart';
-import '../../../models/course.dart';
-import '../../../services/habit_service.dart';
-import '../../../services/storage.dart';
-import '../../../data/local/entities.dart';
-import '../../../app_state.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/models/course.dart';
+import 'package:numer_app/services/habit_service.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/data/local/entities.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitLoggingSheet extends StatefulWidget {
   final Habit habit;

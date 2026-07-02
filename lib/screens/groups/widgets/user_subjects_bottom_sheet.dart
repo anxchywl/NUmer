@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import '../../../models/group_statistics.dart';
-import '../../../services/group_service.dart';
-import '../../../l10n/app_localizations.dart';
-import '../../../widgets/universal_avatar.dart';
-import '../../../widgets/app_toast.dart';
+import 'package:numer_app/models/group_statistics.dart';
+import 'package:numer_app/services/group_service.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/universal_avatar.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 class UserSubjectsBottomSheet extends StatefulWidget {
   final String groupId;

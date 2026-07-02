@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
-import '../app_state.dart';
-import '../models.dart';
-import '../services/ai_analysis_service.dart';
-import '../services/storage.dart';
-import '../l10n/app_localizations.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/models.dart';
+import 'package:numer_app/services/ai_analysis_service.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class AiAnalysisScreen extends StatefulWidget {
   const AiAnalysisScreen({super.key});

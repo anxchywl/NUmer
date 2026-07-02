@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/person.dart';
-import '../../services/connections_service.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/models/person.dart';
+import 'package:numer_app/services/connections_service.dart';
 
 class PeopleCalendarScreen extends StatefulWidget {
   const PeopleCalendarScreen({super.key});

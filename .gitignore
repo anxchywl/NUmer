@@ -4,6 +4,10 @@
 *.pyc
 *.swp
 .DS_Store
+
+# Scratch / tool output that must never be committed
+analyze_output*.txt
+untranslated_messages.txt
 .atom/
 .build/
 .buildlog/

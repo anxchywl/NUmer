@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../l10n/app_localizations.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
-import '../models/profile_avatar.dart';
-import 'color_picker_button.dart';
-import 'app_toast.dart';
+import 'package:numer_app/models/profile_avatar.dart';
+import 'package:numer_app/widgets/color_picker_button.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 class ProfileFormData {
   const ProfileFormData({

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
-import '../../models/contact_group.dart';
-import '../../services/auth_service.dart';
-import '../../services/connections_service.dart';
+import 'package:numer_app/models/contact_group.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/connections_service.dart';
 
 class GroupsManagementSheet extends StatefulWidget {
   const GroupsManagementSheet({super.key});

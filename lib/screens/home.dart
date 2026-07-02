@@ -6,16 +6,16 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../app_state.dart';
-import '../models.dart';
-import '../services/storage.dart';
-import '../services/sync_service.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/models.dart';
+import 'package:numer_app/services/storage.dart';
+import 'package:numer_app/services/sync_service.dart';
 
-import 'ai_analysis_screen.dart';
-import '../widgets/color_picker_button.dart';
-import '../widgets/swipeable_course_item.dart';
-import '../l10n/app_localizations.dart';
-import '../widgets/app_toast.dart';
+import 'package:numer_app/screens/ai_analysis_screen.dart';
+import 'package:numer_app/widgets/color_picker_button.dart';
+import 'package:numer_app/widgets/swipeable_course_item.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 
 Future<void> showCourseTimeSheet(BuildContext context, Course course) {

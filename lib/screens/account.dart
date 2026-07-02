@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../app_state.dart';
-import '../widgets/profile_form.dart';
-import '../services/auth_service.dart';
-import '../services/sync_service.dart';
-import '../l10n/app_localizations.dart';
-import '../widgets/export_session_dialog.dart';
-import '../widgets/universal_avatar.dart';
-import '../widgets/accent_color_picker.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/widgets/profile_form.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/sync_service.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/export_session_dialog.dart';
+import 'package:numer_app/widgets/universal_avatar.dart';
+import 'package:numer_app/widgets/accent_color_picker.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;

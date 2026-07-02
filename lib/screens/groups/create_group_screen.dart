@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import '../../models/group.dart';
-import '../../services/group_service.dart';
-import '../../widgets/app_toast.dart';
+import 'package:numer_app/models/group.dart';
+import 'package:numer_app/services/group_service.dart';
+import 'package:numer_app/widgets/app_toast.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});

@@ -1,8 +1,8 @@
 import 'package:hive/hive.dart';
-export 'models/course.dart';
-export 'models/group.dart';
-export 'models/group_statistics.dart';
-export 'models/habit.dart';
+export 'package:numer_app/models/course.dart';
+export 'package:numer_app/models/group.dart';
+export 'package:numer_app/models/group_statistics.dart';
+export 'package:numer_app/models/habit.dart';
 
 class AlarmItem {
   final int id;

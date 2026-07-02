@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'storage.dart';
+import 'package:numer_app/services/storage.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 

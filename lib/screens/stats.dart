@@ -10,14 +10,14 @@ import 'package:numer_app/services/export_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 
-import '../models.dart';
-import '../services/storage.dart'; 
+import 'package:numer_app/models.dart';
+import 'package:numer_app/services/storage.dart'; 
 
-import '../widgets/heatmap_calendar.dart';
-import '../app_state.dart';
-import 'history.dart';
-import '../l10n/app_localizations.dart';
-import '../widgets/tip_icon.dart';
+import 'package:numer_app/widgets/heatmap_calendar.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/screens/history.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/widgets/tip_icon.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});

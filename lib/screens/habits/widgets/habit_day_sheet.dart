@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../../models/habit.dart';
-import '../../../services/habit_service.dart';
-import '../../../app_state.dart';
-import 'habit_logging_sheet.dart';
-import '../../../l10n/app_localizations.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/services/habit_service.dart';
+import 'package:numer_app/app_state.dart';
+import 'package:numer_app/screens/habits/widgets/habit_logging_sheet.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 
 class HabitDaySheet extends StatelessWidget {
   final DateTime date;

@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../l10n/app_localizations.dart';
-import '../../models/person.dart';
-import '../../services/auth_service.dart';
-import '../../services/connections_service.dart';
-import 'add_person_sheet.dart';
-import 'person_details_screen.dart';
-import 'groups_management_sheet.dart';
-import 'people_calendar_screen.dart';
-import 'widgets/person_card.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/models/person.dart';
+import 'package:numer_app/services/auth_service.dart';
+import 'package:numer_app/services/connections_service.dart';
+import 'package:numer_app/screens/connections/add_person_sheet.dart';
+import 'package:numer_app/screens/connections/person_details_screen.dart';
+import 'package:numer_app/screens/connections/groups_management_sheet.dart';
+import 'package:numer_app/screens/connections/people_calendar_screen.dart';
+import 'package:numer_app/screens/connections/widgets/person_card.dart';
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});

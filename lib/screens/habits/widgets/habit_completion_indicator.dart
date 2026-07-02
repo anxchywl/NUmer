@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/habit.dart';
-import '../../../widgets/progress_circle.dart';
+import 'package:numer_app/models/habit.dart';
+import 'package:numer_app/widgets/progress_circle.dart';
 
 class HabitCompletionIndicator extends StatelessWidget {
   final Habit habit;
