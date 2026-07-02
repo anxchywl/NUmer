@@ -11,7 +11,7 @@ import 'package:numer_app/models.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 
-import 'package:numer_app/screens/ai_analysis_screen.dart';
+import 'package:numer_app/features/ai_analysis/ai_analysis_screen.dart';
 import 'package:numer_app/widgets/color_picker_button.dart';
 import 'package:numer_app/widgets/swipeable_course_item.dart';
 import 'package:numer_app/l10n/app_localizations.dart';

@@ -9,7 +9,7 @@ import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/models.dart';
 import 'package:numer_app/models/habit_category.dart';
-import 'package:numer_app/services/ai_analysis_service.dart';
+import 'package:numer_app/features/ai_analysis/ai_analysis_service.dart';
 
 class Storage {
   Storage._();
