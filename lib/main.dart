@@ -16,6 +16,7 @@ import 'l10n/app_localizations.dart';
 
 import 'app_state.dart';
 import 'data/local/local_database.dart';
+import 'firebase_options.dart';
 import 'models.dart';
 import 'screens/account.dart';
 import 'screens/auth/auth_screen.dart';
@@ -118,7 +119,9 @@ ThemeMode _parseThemeMode(String? value) {
 }
 
 Future<void> _initializeApp({required bool useEmulator}) async {
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   if (!kIsWeb) {
     FirebaseFirestore.instance.settings =
