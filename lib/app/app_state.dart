@@ -17,14 +17,19 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
+// which day the week starts on for calendars and stats
 enum WeekStart { monday, sunday }
 
+// time window shown in the home summary card
 enum HomeSummaryRange { off, today, week, month, year, allTime }
 
+// how study progress is displayed on the home screen
 enum ProgressView { day, week, off }
 
+// current phase of a running pomodoro session
 enum PomodoroPhase { work, shortBreak, longBreak }
 
+// thrown when a new study session would overlap an existing one
 class SessionOverlapException implements Exception {
   final String message;
   SessionOverlapException(this.message);
@@ -32,6 +37,8 @@ class SessionOverlapException implements Exception {
   String toString() => message;
 }
 
+// central app state, holds profile, courses, sessions, timers and settings and
+// notifies the ui on change, backed by hive and synced through syncservice
 class AppState extends ChangeNotifier {
   static ThemeMode? _initialThemeMode;
   static void setInitialThemeMode(ThemeMode mode) {
@@ -43,7 +50,7 @@ class AppState extends ChangeNotifier {
   Future<void>? _loadFuture;
   Future<void>? _backgroundHydration;
   SyncService? _syncService;
-  HabitService? _habitService; // Injected
+  HabitService? _habitService; // injected
   bool _hydrated = false;
   bool get isHydrated => _hydrated;
   bool _profilePromptCompleted = false;
@@ -107,7 +114,7 @@ class AppState extends ChangeNotifier {
   Map<String, PomodoroPhase> pomodoroPhase = {};
   Map<String, DateTime?> pomodoroPhaseStart = {};
   Map<String, Duration> pomodoroPhaseElapsed = {};
-  // Backwards-compatible alias for older references named `pomodoroStart`.
+  // backwards-compatible alias for older references named pomodoroStart
   Map<String, DateTime?> get pomodoroStart => pomodoroPhaseStart;
   Map<String, int> pomodoroCompletedWork = {};
   final Map<String, int> _pomodoroLongBreakMinutes = {};
@@ -226,12 +233,13 @@ class AppState extends ChangeNotifier {
 
   void _queueReflection(String sessionId, int seconds) {
     if (!_quickNotesEnabled || seconds <= 0) return;
-    // Avoid queuing the same reflection multiple times.
+    // avoid queuing the same reflection multiple times
     final exists = _pendingReflections.any((e) => e.sessionId == sessionId);
     if (exists) return;
     _pendingReflections.add((sessionId: sessionId, duration: seconds));
   }
 
+  // stops and persists every running timer, stopwatch and pomodoro, used on sign-out and shutdown
   Future<void> stopAndSaveAllActiveSessions() async {
     final timerIds =
         timerRunning.keys.where((id) => timerRunning[id] == true).toList();
@@ -306,6 +314,7 @@ class AppState extends ChangeNotifier {
     _habitService = service;
   }
 
+  // reloads all state when the sync layer signals fresh remote data
   Future<void> _handleRemoteRefresh() async {
     try {
       await load(force: true);
@@ -316,6 +325,7 @@ class AppState extends ChangeNotifier {
     } catch (_) {}
   }
 
+  // loads all persisted state once, reusing the in-flight future for concurrent calls
   Future<void> load({bool force = false}) {
     if (_loadFuture != null) {
       return _loadFuture!;
@@ -327,6 +337,7 @@ class AppState extends ChangeNotifier {
     return _loadFuture!.whenComplete(() => _loadFuture = null);
   }
 
+  // asks the sync service to push and pull now, no-op if sync is not wired
   Future<void> triggerSync({bool full = false}) async {
     final sync = _syncService;
     if (sync == null) return;
@@ -337,12 +348,13 @@ class AppState extends ChangeNotifier {
     unawaited(triggerSync());
   }
 
+  // does the real load work, reads storage, hydrates the shell then finishes in the background
   Future<void> _performLoad({required bool force}) async {
     if (force || !_isLoaded) {
       _resetFields();
     }
 
-    // Parallelize independent storage reads for shell hydration only.
+    // parallelise independent storage reads used for shell hydration
     final results = await Future.wait([
       Storage.getMajor(), // 0
       Storage.getProfileName(), // 1
@@ -588,7 +600,7 @@ class AppState extends ChangeNotifier {
     await Storage.setAllowNudges(value);
     final sync = _syncService;
     if (sync != null) {
-      // Push immediately so group visibility updates without delay.
+      // push immediately so group visibility updates without delay
       await sync.syncNow(full: false);
     } else {
       _triggerSync();
@@ -834,6 +846,7 @@ class AppState extends ChangeNotifier {
   int todayTotalSeconds() =>
       _todayByCourseSeconds.values.fold(0, (a, b) => a + b);
 
+  // records study time for a course today, updates the streak and feeds linked habits
   Future<void> addStudySeconds(String courseId, int seconds) async {
     if (seconds <= 0) return;
     _todayByCourseSeconds[courseId] =
@@ -846,7 +859,7 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     unawaited(_maybeCelebrateProgress(courseId));
 
-    // Sync to Habits
+    // sync to habits
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -862,6 +875,7 @@ class AppState extends ChangeNotifier {
 
   bool get hasProfile => profileName != null && profileName!.trim().isNotEmpty;
 
+  // saves the user profile locally and, when a uid is given, pushes it to the remote doc
   Future<void> saveProfile({
     required String name,
     String? goal,
@@ -869,7 +883,7 @@ class AppState extends ChangeNotifier {
     String? contact,
     int? avatarIndex,
     int? avatarColorValue,
-    String? uid, // Optional UID for direct remote update
+    String? uid, // optional uid for a direct remote update
   }) async {
     final normalizedName = name.trim();
     if (normalizedName.isEmpty) return;
@@ -880,7 +894,7 @@ class AppState extends ChangeNotifier {
     profileContact = _cleanOptional(contact);
 
     profileAvatarIndex = avatarIndex;
-    profileAvatarImage = null; // Enforce no custom image
+    profileAvatarImage = null; // enforce no custom image
 
     profileAvatarColorValue = avatarColorValue;
     profileComplete = true;
@@ -900,7 +914,7 @@ class AppState extends ChangeNotifier {
     await Storage.setProfilePromptShown(true);
     _profilePromptCompleted = true;
 
-    // Direct cloud update if UID is provided to avoid waiting for periodic sync
+    // direct cloud update when a uid is provided, avoids waiting for periodic sync
     if (uid != null) {
       final cloudData = {
         'displayName': profileName,
@@ -1183,7 +1197,7 @@ class AppState extends ChangeNotifier {
     _saveActiveSession();
     notifyListeners();
 
-    // Live recording notification
+    // live recording notification
     if (_sessionNotificationsEnabled) {
       unawaited(_showTimerRecordingNotification(id));
     }
@@ -1263,7 +1277,7 @@ class AppState extends ChangeNotifier {
 
     await _saveActiveSession();
 
-    // Sync Time Habits matches Stopwatch logic
+    // sync time habits, mirrors the stopwatch logic
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -1303,7 +1317,7 @@ class AppState extends ChangeNotifier {
     _saveActiveSession();
     notifyListeners();
 
-    // Live recording notification
+    // live recording notification
     if (_sessionNotificationsEnabled) {
       _showStopwatchRecordingNotification(id);
     }
@@ -1382,7 +1396,7 @@ class AppState extends ChangeNotifier {
 
     await _saveActiveSession();
 
-    // Sync Time Habits
+    // sync time habits
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -1392,8 +1406,7 @@ class AppState extends ChangeNotifier {
           start,
           knownDelta: totalSecs.toDouble(),
         ));
-        // Provide 'Yes/No' habit completion update as well if needed?
-        // _habitService.updateHabitProgressFromCourse handles Yes/No.
+        // also push a yes/no habit completion update
         unawaited(_habitService!.updateHabitProgressFromCourse(
           userId: user.uid,
           courseId: id,
@@ -1539,7 +1552,7 @@ class AppState extends ChangeNotifier {
     _saveActiveSession();
     notifyListeners();
 
-    // Live recording notification
+    // live recording notification
     if (_sessionNotificationsEnabled) {
       _showPomodoroRecordingNotification(id);
     }
@@ -1721,7 +1734,7 @@ class AppState extends ChangeNotifier {
       _queueReflection(sessionId, secs);
     }
 
-    // Sync Time Habits
+    // sync time habits
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
@@ -2024,19 +2037,7 @@ class AppState extends ChangeNotifier {
         activeCourseId = c.id;
         activeKind = 'timer';
         activeStart = timerStart[c.id];
-        // Timer has no fixed end unless we fetch planned duration from somewhere (not here).
-        // User requirements say: "expectedEndTime (timer/pomodoro)".
-        // Timers in this app act like stopwatches counting UP usually? Or countdowns?
-        // timerRunning stores boolean.
-        // Assuming timers are countdowns? If so, we need the initial duration.
-        // But the user prompt says "expectedEndTime (timer/pomodoro) or sessionStartTime + 3h".
-        // If it's a timer (countdown), we need the target.
-        // If it's a stopwatch, we use 3h.
-        // Let's assume stopwatch = up, timer = down?
-        // Checking currentElapsedStopwatch in AppState suggests stopwatch is counting up.
-        // _scheduleTimerNotification suggests Timers have planned duration.
-        // Let's check _scheduleTimerNotification to see where it gets duration.
-        // It uses Preference 'timer_planned_$courseId'.
+        // timers have no fixed end here, the planned duration is resolved below
       }
 
       stops[c.id] = {
@@ -2065,7 +2066,7 @@ class AppState extends ChangeNotifier {
         activeCourseId = c.id;
         activeKind = 'pomodoro';
         activeStart = pomodoroPhaseStart[c.id];
-        // Pomodoro has fixed duration based on phase.
+        // pomodoro end is fixed by the current phase duration
         final duration = _pomodoroPhaseDuration(c.id);
         if (activeStart != null) {
           activeExpectedEnd = activeStart.add(duration);
@@ -2073,15 +2074,10 @@ class AppState extends ChangeNotifier {
       }
     }
 
-    // If we have a running timer, try to fetch planned duration
+    // for a running timer, use the planned duration from prefs, falling back to start + 3h
     if (activeKind == 'timer' &&
         activeStart != null &&
         activeCourseId != null) {
-      // We need to read async preferences potentially?
-      // Or store it in memory.
-      // Since we cannot await SharedPreferences easily here without refactor,
-      // we might check if we can calculate it.
-      // For now, let's default to start + 3h if undefined, but I'll try to find it.
       final prefs = await SharedPreferences.getInstance();
       final plannedSeconds = prefs.getInt('timer_planned_$activeCourseId') ?? 0;
       if (plannedSeconds > 0) {
@@ -2097,7 +2093,7 @@ class AppState extends ChangeNotifier {
       'pomodoros': pomos,
     });
 
-    // Broadcast to remote
+    // broadcast to remote
     final sync = _syncService;
     if (sync != null) {
       await sync.updateActiveSession(
@@ -2374,15 +2370,14 @@ class AppState extends ChangeNotifier {
     var stored = await Storage.getThemeMode();
 
     if (stored == null) {
-      // Fallback/Migration: Prefs -> Hive
+      // fallback migration, prefs -> hive
       final prefs = await SharedPreferences.getInstance();
       stored = prefs.getString(_kThemeKey);
       if (stored != null) {
         await Storage.setThemeMode(stored);
       }
     } else {
-      // Self-healing: Hive -> Prefs
-      // Ensure the lightweight Prefs (used for boot) matches the robust Hive storage
+      // self-healing, keep the lightweight boot prefs in sync with hive
       final prefs = await SharedPreferences.getInstance();
       if (prefs.getString(_kThemeKey) != stored) {
         await prefs.setString(_kThemeKey, stored);
@@ -2555,12 +2550,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     unawaited(_maybeCelebrateProgress(courseId));
 
-    // Sync to Habits
-    // Sync to Habits
+    // sync to habits
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Run Recalculation Sync for Time Habits
+        // recalculate time habits
         unawaited(_habitService!.syncTimeHabitsForCourse(
           user.uid,
           courseId,
@@ -2568,7 +2562,7 @@ class AppState extends ChangeNotifier {
           knownDelta: totalSecs.toDouble(),
         ));
 
-        // Use legacy update for Yes/No completion
+        // legacy update for yes/no completion
         unawaited(_habitService!.updateHabitProgressFromCourse(
           userId: user.uid,
           courseId: courseId,
@@ -2609,23 +2603,23 @@ class AppState extends ChangeNotifier {
       }
     }
 
-    // Sync habits for this course/date
+    // sync habits for this course and date
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && _habitService != null) {
-      // Time habits: recalculate from remaining sessions
+      // time habits, recalculate from remaining sessions
       unawaited(_habitService!.syncTimeHabitsForCourse(
         user.uid,
         courseId,
         startLocal,
         knownDelta: -duration.toDouble(),
       ));
-      // Yes/No habits: check if should revert auto-completion
+      // yes/no habits, revert auto-completion if needed
       unawaited(_habitService!
           .checkAndRevertHabitCompletion(user.uid, courseId, startLocal));
     }
 
     _updateStreak();
-    // Push destruction immediately (delta sync only)
+    // push the deletion immediately, delta sync only
     if (_syncService != null) {
       unawaited(_syncService!.pushDirty());
     }

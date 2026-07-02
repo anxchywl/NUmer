@@ -1,48 +1,41 @@
 # AGENTS.md
 
-Welcome, AI Agent! This document is designed to give you an immediate, high-fidelity technical understanding of the **NUmer** codebase so you can modify, debug, or extend the app safely and efficiently without violating established patterns.
+Welcome, AI Agent! This file tells you how to work in the **NUmer** codebase safely — how the
+code is organized and the rules you must not break. Read it first, then the doc that matches
+your task:
+
+- **What the app does** → [docs/PRODUCT.md](file:///Users/anx/numer_app/docs/PRODUCT.md)
+- **How it runs & ships** (offline-first data flow, Firebase, Cloud Functions, build/deploy)
+  → [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md)
 
 ---
 
-## 🛠 System Architecture
+## Repository Layout (read this first)
 
-NUmer is designed as an **offline-first** client-server architecture:
-
-```mermaid
-graph TD
-    UI[Flutter UI / Screens] -->|Reads / Writes| State[AppState Provider]
-    State -->|Triggers local mutations| DB[Local Hive Database]
-    State -->|Controls background services| Sync[SyncService]
-    Sync -->|Pushes dirty changes / Pulls new data| Firestore[(Cloud Firestore)]
-    Firestore -->|Triggers background aggregates| Functions[Firebase Cloud Functions]
-    Functions -->|FCM Push| FCM[Cloud Messaging]
-    Functions -->|Gemini API| Gemini[Gemini-2.0-Flash AI]
-```
-
-1. **Flutter Frontend**: Main application logic, UI, and navigation. Uses standard `Provider` and `ChangeNotifier` state management.
-2. **Local Caching (Hive)**: The application stores *everything* locally first in Hive boxes. If there is no internet, the app works fully (except for study groups and AI recommendations).
-3. **Synchronization (`SyncService`)**: Connects Hive and Cloud Firestore. Any updated or created local entity gets marked with a `dirty` flag and gets synchronized to Firestore once online.
-4. **Backend (Cloud Functions)**: Written in TypeScript (located in [functions](file:///Users/anx/numer_app/functions)). Computes leaderboards, handles security-sensitive tasks (like join codes, account deletions), sends FCM pushes, and connects to Gemini.
-
----
-
-## 📂 Repository Layout (read this first)
-
-The Dart code under `lib/` is organized **by feature**, not by type. See
-[docs/architecture.md](file:///Users/anx/numer_app/docs/architecture.md) for the full rationale.
+NUmer is a single Flutter package (not a monorepo). The Dart code under `lib/` is organized
+**by feature, not by type**, so every file has one obvious home and a domain can be
+understood by opening one folder.
 
 ```
 lib/
-  main.dart              # entrypoint only
-  app/                   # app shell: app_state.dart (global ChangeNotifier), bootstrap/root
-  core/                  # cross-cutting INFRA: data/ (hive db, storage, sync), notifications/, firebase_options
-  shared/                # PURE reusable UI (widgets/) — no business logic, no feature imports
-  features/              # one self-contained folder per domain (see below)
+  main.dart              # entrypoint only — runApp(NumerBootstrapApp(...))
+  app/                   # app shell specific to NUmer (not reusable)
+  core/                  # cross-cutting INFRA (side effects, singletons)
+  shared/                # PURE reusable UI — no business logic, no feature imports
+  features/              # the product — one self-contained folder per domain
   l10n/                  # generated localization — do not hand-edit
 ```
 
+- **`app/`** — composition root: `app_state.dart` (the global `ChangeNotifier`) plus, over
+  time, bootstrap/router/root-widget extracted from `main.dart`.
+- **`core/`** — headless infrastructure used by features: `data/` (Hive local DB, `storage`,
+  `sync_service`, `user_storage`), `notifications/`, `firebase_options.dart`,
+  `startup_metrics.dart`. Core never imports a feature.
+- **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, avatar, color
+  picker). If it references a domain model or does I/O, it does **not** belong here.
+
 Each feature under `lib/features/<name>/` owns everything for its domain and exposes a
-single barrel `<name>.dart`. Internal layout (subfolders appear only once a category has ~3+ files):
+single barrel `<name>.dart`:
 
 ```
 features/<name>/
@@ -53,11 +46,20 @@ features/<name>/
   widgets/         # widgets used only inside this feature
 ```
 
-Current features: `auth`, `account`, `habits`, `groups`, `connections`, `courses`,
-`sessions` (timer/alarms/study-sessions), `stats`, `history`, `ai_analysis`, `home`.
+**Grow-as-needed:** a feature starts flat; add a subfolder only once a category reaches ~3
+files. Small features (`ai_analysis`, `courses`) stay flat.
+
+Current features: `auth`, `account`, `habits`, `groups`, `courses`,
+`sessions` (timer/alarms), `stats`, `history`, `ai_analysis`, `home`, and
+`connections` (built but intentionally hidden — see the marker in `lib/main.dart`).
 
 **Dependency rule (one direction):** `features → core → shared`. `core`/`shared` must never
-import a feature; features import other features only via their barrel.
+import a feature; a feature imports another feature only via its barrel
+(`features/<other>/<other>.dart`), never its internal files.
+
+**Conventions:** absolute `package:numer_app/...` imports across features, relative within a
+feature; filenames are greppable by suffix (`*_screen.dart`, `*_service.dart`, `*_sheet.dart`);
+tests mirror the tree under `test/features/<name>/`, with app-level smoke tests in `test/smoke/`.
 
 ### Key locations
 
@@ -66,17 +68,20 @@ import a feature; features import other features only via their barrel.
 - **Synchronization Engine**: [lib/core/data/sync_service.dart](file:///Users/anx/numer_app/lib/core/data/sync_service.dart) — connectivity, full syncs, local-remote resolution.
 - **A feature** (e.g. habits): everything lives under [lib/features/habits/](file:///Users/anx/numer_app/lib/features/habits/) — models, `data/habit_service.dart`, screens, widgets.
 - **Native session Live Activity**: `ios/SessionLiveActivityExtension` + `ios/Shared` — owned by the `sessions` feature (see its README).
+- **Backend** (Cloud Functions, Firestore rules/data model): see [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md).
 
-### Backend (Firebase)
+### Creating a new feature
 
-- **Cloud Functions Source**: [functions/src/index.ts](file:///Users/anx/numer_app/functions/src/index.ts)
-  - Contains all Firestore triggers (calculating leaderboards) and HTTPS Callable Functions (nudges, join codes, AI analysis).
-- **Firestore Security Rules**: [firestore.rules](file:///Users/anx/numer_app/firestore.rules)
-  - Enforces database access controls. Make sure you read these rules if you add new collections or edit reading permissions.
+1. `mkdir lib/features/<name>` and add an empty `lib/features/<name>/<name>.dart` barrel.
+2. Add files flat; add subfolders only at ~3 files of a kind.
+3. `export` the public surface from the barrel.
+4. Register its route/provider in `app/` (wire it into `main.dart`).
+5. Add tests under `test/features/<name>/`.
+6. Reuse from `shared/` (UI) and `core/` (infra); never copy another feature's file.
 
 ---
 
-## ⚡ Core Development Rules for Agents
+## Core Development Rules for Agents
 
 ### 0. Scope changes to one feature folder
 Most tasks map to a single `lib/features/<name>/` folder — work there and stay there.
@@ -113,17 +118,13 @@ NUmer is fully localized into English (`en`), Russian (`ru`), and Kazakh (`kk`).
 
 ---
 
-## 📝 Common Gotchas & Troubleshooting
+## Agent Gotchas
 
-### Local Database Generation
-If you receive build runner or type adapter errors in Dart:
-- Verify that your Hive annotations (`@HiveType`, `@HiveField`) are set correctly.
-- If you need to rebuild Hive adapters, ensure you run the appropriate code generator.
-
-### Firebase Emulator
-If you test Cloud Functions locally, set `useEmulator = true` or configure your Firebase Options to target localhost. The emulator Suite covers Auth, Firestore, and Functions.
-
-### Gemini API Key Configuration
-If the AI analysis fails:
-- Check that the `GEMINI_API_KEY` is configured in your functions configuration.
-- The Cloud Function `analyzeCourseAi` uses the `gemini-2.0-flash` model. If you modify the prompt or parameters, keep it light and optimized.
+- **Hive adapters are hand-written** — this project does **not** run `build_runner`
+  (`hive_generator`/`build_runner` are intentionally not dependencies). If you add a Hive
+  type, write its `TypeAdapter` by hand (see the `Local*Adapter` classes in
+  `core/data/entities.dart`) with a unique `typeId`; changing an existing `typeId` or field
+  order breaks persisted data.
+- **Setup, emulator, secrets, deploy** are all in
+  [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md) — don't
+  reinvent commands here.

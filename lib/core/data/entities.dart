@@ -477,7 +477,7 @@ class LocalHabit extends HiveObject with SyncEntity {
   int sortOrder;
 
   @HiveField(26)
-  String last7Json; // JSON encoded Map<String,double>
+  String last7Json; // json-encoded Map<String,double>
 
   @HiveField(27)
   bool archived;
@@ -514,7 +514,7 @@ class LocalHabitHistory extends HiveObject with SyncEntity {
 
   @override
   @HiveField(0)
-  String id; // Composite: habitId_dateKey
+  String id; // composite key: habitId_dateKey
 
   @override
   @HiveField(1)
@@ -551,7 +551,7 @@ class LocalHabitHistory extends HiveObject with SyncEntity {
   bool deleted;
 
   @HiveField(11)
-  int version; // Incremented on each local edit for optimistic locking
+  int version; // incremented on each local edit for optimistic locking
 }
 
 class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {

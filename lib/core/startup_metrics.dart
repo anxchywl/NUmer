@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-/// Lightweight startup instrumentation.
+// lightweight startup instrumentation, tracks first frame, hydration and sync timing
 class StartupMetrics {
   StartupMetrics._();
 

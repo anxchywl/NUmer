@@ -4,33 +4,27 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 
-// ---------------------------------------------------------------------------
-// RecordingNotifService
-//
-// Displays a live-updating persistent notification while a study session is
-// active (Timer, Stopwatch, or Pomodoro).  Works on Android (foreground-style
-// ongoing notification) and iOS (periodically refreshed notification while the
-// app is in foreground; shows a static "Recording since HH:mm" subtitle when
-// backgrounded, which is the best achievable without a native Live Activity).
-// ---------------------------------------------------------------------------
+// shows a live-updating persistent notification while a study session is active,
+// android uses an ongoing notification, ios refreshes periodically in the foreground
+// and falls back to a static subtitle when backgrounded
 
 enum _SessionKind { timer, stopwatch, pomodoro }
 
-/// Callback types so the service can read live state from AppState without
-/// creating a hard circular dependency.
+// callback types so the service can read live state from appstate without a hard cycle
 typedef ElapsedCallback = Duration Function();
 typedef PomodoroInfoCallback = ({String phase, Duration remaining});
 typedef PomodoroQueryCallback = PomodoroInfoCallback Function();
 
+// singleton that manages the live study-session notification and ios live activity
 class RecordingNotifService {
   RecordingNotifService._();
   static final RecordingNotifService instance = RecordingNotifService._();
 
-  // ── Plugin ───────────────────────────────────────────────────────────────
+  // plugin ───────────────────────────────────────────────────────────────
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _pluginInited = false;
 
-  // ── Constants ────────────────────────────────────────────────────────────
+  // constants ────────────────────────────────────────────────────────────
   static const int _notifId = 888;
   static const String _channelId = 'recording_channel';
   static const String _channelName = 'Study Session';
@@ -39,7 +33,7 @@ class RecordingNotifService {
       MethodChannel('numer/live_activity_session');
   static const Duration _maxSessionDuration = Duration(hours: 3);
 
-  // ── State ────────────────────────────────────────────────────────────────
+  // state ────────────────────────────────────────────────────────────────
   _SessionKind? _kind;
   String? _courseId;
   String? _courseName;
@@ -48,7 +42,7 @@ class RecordingNotifService {
   DateTime? _expectedEndAt;
   bool _countsDown = false;
 
-  // Live-state readers injected by AppState
+  // live-state readers injected by appstate
   ElapsedCallback? _elapsedReader;
   PomodoroQueryCallback? _pomodoroReader;
 
@@ -57,9 +51,9 @@ class RecordingNotifService {
   bool _refreshQueued = false;
   bool _liveActivityStarted = false;
 
-  // ── Initialisation ───────────────────────────────────────────────────────
+  // initialisation ───────────────────────────────────────────────────────
 
-  /// Must be called once (from Notifs.init or from main) before any show().
+  /// must be called once before any show(), from notifs.init or main
   static Future<void> init() async {
     if (_pluginInited) return;
 
@@ -74,7 +68,7 @@ class RecordingNotifService {
       settings: InitializationSettings(android: android, iOS: ios),
     );
 
-    // Create dedicated low-importance channel (no sound/vibration on updates)
+    // dedicated low-importance channel, no sound or vibration on updates
     if (Platform.isAndroid) {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -94,9 +88,9 @@ class RecordingNotifService {
     _pluginInited = true;
   }
 
-  // ── Public API ───────────────────────────────────────────────────────────
+  // public api ───────────────────────────────────────────────────────────
 
-  /// Show / replace the persistent notification for a Timer session.
+  /// show or replace the persistent notification for a timer session
   void showTimer({
     required String courseId,
     required String courseName,
@@ -118,7 +112,7 @@ class RecordingNotifService {
     _requestRefresh();
   }
 
-  /// Show / replace the persistent notification for a Stopwatch session.
+  /// show or replace the persistent notification for a stopwatch session
   void showStopwatch({
     required String courseId,
     required String courseName,
@@ -139,7 +133,7 @@ class RecordingNotifService {
     _requestRefresh();
   }
 
-  /// Show / replace the persistent notification for a Pomodoro session.
+  /// show or replace the persistent notification for a pomodoro session
   void showPomodoro({
     required String courseId,
     required String courseName,
@@ -160,7 +154,7 @@ class RecordingNotifService {
     _requestRefresh();
   }
 
-  /// Mark session as paused (updates action buttons; stops ticker to save CPU).
+  /// mark the session paused, updates buttons and stops the ticker to save cpu
   void pause() {
     _paused = true;
     _ticker?.cancel();
@@ -168,14 +162,14 @@ class RecordingNotifService {
     _requestRefresh();
   }
 
-  /// Mark session as resumed (restarts ticker).
+  /// mark the session resumed and restart the ticker
   void resume() {
     _paused = false;
     _startTicker();
     _requestRefresh();
   }
 
-  /// Remove notification and stop all updates.
+  /// remove the notification and stop all updates
   void cancel() {
     _ticker?.cancel();
     _ticker = null;
@@ -195,7 +189,7 @@ class RecordingNotifService {
     }
   }
 
-  // ── Internal helpers ─────────────────────────────────────────────────────
+  // internal helpers ─────────────────────────────────────────────────────
 
   void _startTicker() {
     final needsTicker = _kind == _SessionKind.pomodoro && !_paused;
@@ -401,7 +395,7 @@ class RecordingNotifService {
 
   NotificationDetails _buildDetails() {
     const iosDetails = DarwinNotificationDetails(
-      presentAlert: false, // don't pop alert; just update notification
+      presentAlert: false,
       presentBanner: false,
       presentList: false,
       presentBadge: false,
@@ -428,7 +422,6 @@ class RecordingNotifService {
         usesChronometer: chrono.usesChronometer,
         chronometerCountDown: chrono.countsDown,
         timeoutAfter: chrono.timeoutAfterMs,
-        // Small icon handled by app icon; coloured with accent
         color: const Color(0xFF448AFF),
         visibility: NotificationVisibility.public,
         category: AndroidNotificationCategory.service,

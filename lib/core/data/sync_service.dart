@@ -13,6 +13,7 @@ import 'package:numer_app/core/startup_metrics.dart';
 
 enum SyncStatus { offline, syncing, upToDate }
 
+// keeps hive and firestore in sync, pushes dirty local records and pulls remote changes
 class SyncService extends ChangeNotifier {
   SyncService({
     FirebaseFirestore? firestore,
@@ -85,7 +86,7 @@ class SyncService extends ChangeNotifier {
     _isRunning = true;
 
     await _checkConnectivity();
-    // Reflect initial connectivity state immediately for UI; will be updated again during sync
+    // reflect initial connectivity for the ui, refined again during sync
     if (_online) {
       _setStatus(_isSyncing ? SyncStatus.syncing : SyncStatus.upToDate);
     } else {
@@ -112,22 +113,20 @@ class SyncService extends ChangeNotifier {
     });
 
     if (_online) {
-      // Fire-and-forget: Heartbeat can happen in background, don't block startup
+      // fire-and-forget, the heartbeat runs in the background and must not block startup
       unawaited(_claimSession());
     }
-    // Only start session conflict listener if not bootstrapping (new device login)
-    // For bootstrap case, we start it after bootstrap completes in _pullUser
+    // start the session-conflict listener unless bootstrapping, then it starts after _pulluser
     if (!bootstrap) {
       _listenActiveSession();
     }
 
     if (_online) {
       if (bootstrap) {
-        // New device / first login: block until minimal data is fetched.
+        // new device or first login, block until the minimal data is fetched
         await syncNow(full: true, startup: true);
       } else {
-        // Returning user with cache: Do NOT auto-sync on launch.
-        // We rely on "Manual Sync" or "Major Event" triggers.
+        // returning user with cache, no auto-sync on launch, we rely on manual or major-event triggers
         // unawaited(syncNow(full: false, startup: true));
       }
     } else {
@@ -192,7 +191,7 @@ class SyncService extends ChangeNotifier {
       if (_uid == null) return;
     }
 
-    // Only set status if not already part of a larger sync
+    // only set status when not already inside a larger sync
     final rootCall = !_isSyncing;
     if (rootCall) {
       _isSyncing = true;
@@ -204,8 +203,7 @@ class SyncService extends ChangeNotifier {
       final userDoc = _db.userDocOrNull;
 
       if (userDoc != null && userDoc.dirty) {
-        // On a fresh device with no cached profile, avoid overwriting remote
-        // fields with local defaults until we've pulled the remote user once.
+        // on a fresh device with no cached profile, dont overwrite remote fields with local defaults until the remote user is pulled
         if (!(_bootstrapping && !_hasPulledUser)) {
           await _pushUser(userDoc);
         }
@@ -281,7 +279,7 @@ class SyncService extends ChangeNotifier {
         if (userDoc != null && userDoc.dirty == false) userDoc.save(),
       ]);
 
-      // Push dirty habits
+      // push dirty habits
       final dirtyHabits = _db.dirtyHabits();
       await pushChunk<LocalHabit>(dirtyHabits, (batch, habit) async {
         final ref = _firestore
@@ -306,7 +304,7 @@ class SyncService extends ChangeNotifier {
         for (final h in dirtyHabits) _db.putHabit(h),
       ]);
 
-      // Push dirty habit history entries
+      // push dirty habit history entries
       final dirtyHistory = _db.dirtyHabitHistory();
       await pushChunk<LocalHabitHistory>(dirtyHistory, (batch, history) async {
         final ref = _firestore
@@ -322,7 +320,7 @@ class SyncService extends ChangeNotifier {
           'updatedAt': FieldValue.serverTimestamp(),
           'v': history.value,
           'm': history.manualValue,
-          'ver': history.version, // Version for optimistic locking
+          'ver': history.version, // version for optimistic locking
           'deleted': history.deleted,
         };
 
@@ -420,12 +418,12 @@ class SyncService extends ChangeNotifier {
     final docRef = _firestore.collection('users').doc(_uid);
 
     if (!isStudying) {
-      // Keep the device claim, but clear study data
+      // keep the device claim but clear study data
       await docRef.set({
         'activeSession': {
           'deviceId': _deviceId,
           'updatedAt': FieldValue.serverTimestamp(),
-          // Explicitly clear study fields by setting to null or omitting them if we replaced the map
+          // explicitly clear study fields since we replaced the map
           'courseId': null,
           'kind': null,
           'startUtc': null,
@@ -455,11 +453,7 @@ class SyncService extends ChangeNotifier {
   Future<void> _sendHeartbeat() async {
     if (_uid == null || _deviceId == null) return;
     final docRef = _firestore.collection('users').doc(_uid);
-    // Just update timestamp and deviceId, preserving other fields if we are syncing?
-    // Actually, _sendHeartbeat is called on app start. We typically assume no study session is active on fresh start unless we restore it?
-    // But local state restoration happens in AppState.
-    // So here we just claim the device.
-
+    // called on app start, just claims the device, active-session restore happens in appstate
     await docRef.set({
       'activeSession': {
         'deviceId': _deviceId,
@@ -531,14 +525,13 @@ class SyncService extends ChangeNotifier {
         return reads;
       }
       if (local.dirty && updatedAt > local.updatedAtMs) {
-        // Local has unpushed changes - preserve them instead of overwriting.
-        // The changes will be pushed on the next sync cycle.
+        // local has unpushed changes, keep them, they go out on the next sync cycle
         await _db.logConflict(
           collection: 'users',
           entityId: local.id,
           localUpdatedAtMs: local.updatedAtMs,
           remoteUpdatedAtMs: updatedAt,
-          resolvedWithRemote: false, // Local wins to preserve settings
+          resolvedWithRemote: false, // local wins to preserve settings
         );
         return reads;
       }
@@ -644,7 +637,7 @@ class SyncService extends ChangeNotifier {
     await _db.putSyncState(state);
     if (_bootstrapping) {
       _bootstrapping = false;
-      // Start listening for session conflicts now that we've bootstrapped
+      // start listening for session conflicts now that bootstrap is done
       _listenActiveSession();
     }
     return reads;
@@ -878,7 +871,7 @@ class SyncService extends ChangeNotifier {
     final resetAtMs = _timestampToMs(data['rs'] ?? data['latestResetAt']);
     final localResetAtMs = habit?.resetAtMs ?? 0;
 
-    // Parse stats map
+    // parse stats map
     final statsMap =
         (data['st'] ?? data['stats'] ?? {}) as Map<String, dynamic>;
     final totalCompletions =
@@ -889,11 +882,11 @@ class SyncService extends ChangeNotifier {
     final longestStreak =
         ((statsMap['ls'] ?? statsMap['longestStreak']) as num?)?.toInt() ?? 0;
 
-    // Parse last7 to JSON string
+    // parse last7 into a json string
     final last7Raw = data['l7'] ?? data['last7'] ?? {};
     final last7Json = last7Raw is Map ? jsonEncode(last7Raw) : '{}';
 
-    // Parse dates
+    // parse dates
     int startDateMs = DateTime.now().millisecondsSinceEpoch;
     if (data['sd'] is Timestamp) {
       startDateMs = (data['sd'] as Timestamp).toDate().millisecondsSinceEpoch;
@@ -918,12 +911,12 @@ class SyncService extends ChangeNotifier {
           (data['createdAt'] as Timestamp).toDate().millisecondsSinceEpoch;
     }
 
-    // Parse weekDays
+    // parse week days
     final weekDaysRaw = data['wd'] ?? data['weekDays'] ?? [];
     final weekDays =
         (weekDaysRaw as List).map((e) => (e as num).toInt()).toList();
 
-    // Parse connectedCourseIds
+    // parse connected course ids
     final ccRaw = data['cc'] ?? data['connectedCourseIds'] ?? [];
     final connectedCourseIds =
         (ccRaw as List).map((e) => e.toString()).toList();
@@ -972,7 +965,7 @@ class SyncService extends ChangeNotifier {
       await _clearLocalHabitProgressForReset(habit, resetAtMs);
     }
 
-    // Skip if local is dirty OR if local timestamp is newer than incoming remote
+    // skip when local is dirty or newer than the incoming remote
     if (habit.dirty || habit.updatedAtMs > updatedAt) {
       return;
     }
@@ -1023,8 +1016,7 @@ class SyncService extends ChangeNotifier {
     var maxSeen = cursor;
     var readCount = 0;
 
-    // We pull history for all non-deleted habits.
-    // Optimization: Only pull for habits that were recently synchronized or are active.
+    // pull history for all non-deleted habits
     final habits = _db.habits(includeDeleted: false).toList();
     if (habits.isEmpty) return 0;
 
@@ -1068,7 +1060,7 @@ class SyncService extends ChangeNotifier {
       return;
     }
     final dateKey = snapshot
-        .id; // Corrected: Firestore history IDs are dateKeys (YYYY-MM-DD)
+        .id; // firestore history ids are datekeys (yyyy-mm-dd)
     final id = '${habitId}_$dateKey';
 
     var history = _db.getHabitHistoryById(id);
@@ -1090,7 +1082,7 @@ class SyncService extends ChangeNotifier {
       return;
     }
 
-    // Skip if local is dirty or newer/equal
+    // skip when local is dirty or newer/equal
     if (history.dirty || history.updatedAtMs >= updatedAt) return;
 
     history
@@ -1175,7 +1167,7 @@ class SyncService extends ChangeNotifier {
       'updatedAt': FieldValue.serverTimestamp(),
     };
 
-    // Avoid overwriting remote fields with nulls when local cache is empty.
+    // dont overwrite remote fields with nulls when the local cache is empty
     payload.removeWhere((_, value) => value == null);
     return payload;
   }

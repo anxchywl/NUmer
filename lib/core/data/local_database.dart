@@ -4,6 +4,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:numer_app/core/data/entities.dart';
 
+// singleton wrapper over the hive boxes, registers adapters and exposes crud helpers
 class LocalDatabase {
   LocalDatabase._();
 
@@ -40,7 +41,7 @@ class LocalDatabase {
     await close();
     _currentUid = uid;
     
-    // Open all boxes in parallel for faster startup
+    // open all boxes in parallel for faster startup
     final results = await Future.wait([
       Hive.openBox<LocalUserDoc>('${uid}_user'),
       Hive.openBox<LocalCourse>('${uid}_courses'),
@@ -212,12 +213,7 @@ class LocalDatabase {
   }
   
   Future<void> putPeerSession(LocalSession session, String compositeKey) async {
-     // Store using composite key like ${userId}_${sessionId} to avoid collision if IDs clash (unlikely but safe)
-     // or just sessionId if we trust UUIDs. 
-     // Requirement says: groupId + memberId, wait.
-     // Storage Schema for Peer Data: "keyed by groupId + memberId" - wait, that's just cache access.
-     // Hive box is peer_sessions. We should store by sessionId, but we need to query by userId.
-     // Hive iteration is fast enough for small sets.
+     // stored under a composite key (e.g. userId_sessionId) to avoid collisions across peers
      await _peerSessionsBox?.put(compositeKey, session);
   }
 
@@ -337,7 +333,7 @@ class LocalDatabase {
     }
   }
 
-  // Habit CRUD
+  // habit crud
   Iterable<LocalHabit> habits({bool includeDeleted = false}) {
     final values = _habitsBox?.values ?? const Iterable.empty();
     if (includeDeleted) return values;
@@ -358,7 +354,7 @@ class LocalDatabase {
   Box<LocalHabit> get habitsBox =>
       _habitsBox ?? (throw StateError('Habits box not opened'));
 
-  // Habit History CRUD
+  // habit history crud
   Iterable<LocalHabitHistory> habitHistory({bool includeDeleted = false}) {
     final values = _habitHistoryBox?.values ?? const Iterable.empty();
     if (includeDeleted) return values;

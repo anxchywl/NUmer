@@ -1,16 +1,9 @@
-
-
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 const String _androidApiKey =
     String.fromEnvironment('FIREBASE_ANDROID_API_KEY');
 const String _iosApiKey = String.fromEnvironment('FIREBASE_IOS_API_KEY');
-
-
-
-
-
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {

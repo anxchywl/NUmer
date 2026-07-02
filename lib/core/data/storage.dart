@@ -12,6 +12,7 @@ import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/habits/models/habit_category.dart';
 import 'package:numer_app/features/ai_analysis/ai_analysis_service.dart';
 
+// static facade over the hive local database, primary read/write api for local models
 class Storage {
   Storage._();
 
@@ -27,7 +28,6 @@ class Storage {
   static const _metaProfilePromptShown = 'profile_prompt_shown_v1';
   static const _metaLocale = 'locale_v1';
   static const _metaHabitCategories = 'habit_categories_v1';
-  // static const _metaProgressHabitOrder = 'progress_habit_order_v1'; // Deprecated
   static const _metaLastExportMonth = 'last_export_month_v1';
   static const _metaBootstrapVersion = LocalDatabase.bootstrapMetaKey;
   static const _metaStreakSnapshot = LocalDatabase.streakMetaKey;
@@ -422,10 +422,10 @@ class Storage {
     await _saveUser(doc, dirty: false);
   }
 
-  // Eisenhower Matrix quadrant placements (local-only, not synced)
+  // eisenhower matrix quadrant placements, local-only and not synced
   static const _metaHabitQuadrants = 'habit_quadrants_v1';
 
-  /// Get habit → quadrant mapping (0-3 for quadrants, or null if unsorted)
+  /// habit → quadrant mapping, 0-3 for quadrants or null when unsorted
   static Map<String, int> getHabitQuadrantPlacements() {
     _ensureUser();
     final raw = _db.getMeta(_metaHabitQuadrants);
@@ -436,7 +436,7 @@ class Storage {
     return {};
   }
 
-  /// Save habit → quadrant placement (quadrant 0-3)
+  /// save a habit → quadrant placement, quadrant 0-3
   static Future<void> saveHabitQuadrantPlacement(String habitId, int quadrant) async {
     _ensureUser();
     final placements = getHabitQuadrantPlacements();
@@ -444,7 +444,7 @@ class Storage {
     await _db.putMeta(_metaHabitQuadrants, placements);
   }
 
-  /// Remove habit from quadrant placements
+  /// remove a habit from the quadrant placements
   static Future<void> removeHabitFromQuadrant(String habitId) async {
     _ensureUser();
     final placements = getHabitQuadrantPlacements();
@@ -460,7 +460,7 @@ class Storage {
   }
 
   static Future<void> setLocale(String? localeName) async {
-    if (_db.currentUid == null) return; // Skip if no user configured
+    if (_db.currentUid == null) return; // skip if no user configured
     await _db.putMeta(_metaLocale, localeName);
   }
 
@@ -889,8 +889,8 @@ class Storage {
 
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     final savedAtMs = (entry['savedAtMs'] as num?)?.toInt();
-    // Enforce 24h local-only visibility. Legacy entries without savedAtMs are
-    // treated as expired to satisfy the TTL requirement.
+    // enforce 24h local-only visibility, legacy entries without savedAtMs
+    // are treated as expired
     final expired = savedAtMs == null || nowMs - savedAtMs >= _analysisLocalTtl.inMilliseconds;
     if (expired) {
       map.remove(key);
@@ -907,7 +907,7 @@ class Storage {
       );
     }
 
-    // Defensive cleanup for malformed entry.
+    // defensive cleanup for a malformed entry
     map.remove(key);
     await _db.putMeta(_metaAnalysisContent, map);
     return null;
@@ -970,7 +970,7 @@ class Storage {
     await _db.putMeta(_metaGroupMemberStatsCache, data);
   }
 
-  // Member profile cache (name, major, goal, contact, avatar)
+  // member profile cache, name, major, goal, contact and avatar
   static const _metaMemberProfileCache = 'member_profile_cache_v1';
 
   static Future<Map<String, dynamic>?> getMemberProfileCache() async {
@@ -989,13 +989,13 @@ class Storage {
 
   static Future<void> clearMemberCacheForGroup(String groupId) async {
     _ensureUser();
-    // Clear member profiles for this group
+    // clear member profiles for this group
     final profileCache = await getMemberProfileCache();
     if (profileCache != null) {
       profileCache.removeWhere((key, _) => key.startsWith('${groupId}_'));
       await saveMemberProfileCache(profileCache);
     }
-    // Clear member stats for this group
+    // clear member stats for this group
     final statsCache = await getGroupMemberStatsCache();
     if (statsCache != null) {
       statsCache.removeWhere((key, _) => key.startsWith('${groupId}_'));
@@ -1096,11 +1096,7 @@ class Storage {
 
   static Future<void> putPeerSession(LocalSession session) async {
     _ensureUser();
-    // We use a composite key of targetUid_sessionId for the Hive box key
-    // But the session object itself has its own ID. 
-    // The box is per-current-user, so we just need to ensure uniqueness within the box.
-    // Since session IDs are UUIDs (mostly), they are unique.
-    // However, to follow the pattern I added in LocalDatabase:
+    // keyed by uid_sessionId to stay unique within the shared peer-sessions box
     await _db.putPeerSession(session, '${session.uid}_${session.id}');
   }
 
@@ -1178,29 +1174,14 @@ class Storage {
       final sEnd =
           DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
 
-      // Check overlap
+      // skip sessions outside the requested range
       if (sEnd.isBefore(startUtc) || sStart.isAfter(endUtc)) continue;
 
-      // We attribute the session to its start day (local time logic usually prefers start day attribution for simple heatmaps, 
-      // or split across days? HeatmapService previously split?
-      // HeatmapService previously did: "final dayKey = DateTime(sLocal.year ...)"
-      // It took the whole session and put it in the start day. 
-      // Let's stick to that for consistency unless split is better.
-      // Wait, original HeatmapService:
-      // final sUtc = (data['startUtc'] as Timestamp).toDate();
-      // final sLocal = sUtc.toLocal();
-      // final dayKey = DateTime(sLocal.year, sLocal.month, sLocal.day);
-      // minutes.update(dayKey, (v) => v + min, ...)
-      // It didn't split. It just dumped the whole duration into the start day.
-      // I will do the same but verify timezone. Storage.dailySeries splits. 
-      // If I want "Heatmap reflects changes instantly", maybe I should improve it to split?
-      // The user just said "Heatmap reflects changes instantly".
-      // Let's match previous behavior first: attribute to local start day.
-      
+      // attribute the whole session to its local start day, no splitting across days
       final sLocal = sStart.toLocal();
       final dayKey = DateTime(sLocal.year, sLocal.month, sLocal.day);
-      
-      // Filter by range based on dayKey
+
+      // filter by range based on dayKey
       if (dayKey.isBefore(start) || dayKey.isAfter(end)) continue;
 
       final minutes = (session.seconds / 60).floor();
@@ -1355,11 +1336,9 @@ class Storage {
       return;
     }
 
-    
-    // bool deletedAnyLocal = false; // REMOVED unused variable
     final affectedDays = <DateTime>[];
 
-    // Scan all sessions (fallback if key lookup failed or for timestamp match)
+    // scan all sessions as a fallback when the key lookup fails or matching by timestamp
     for (final item in _db.sessions(includeDeleted: true)) {
       bool match = false;
       if (item.id == id) {
@@ -1383,8 +1362,7 @@ class Storage {
         item.dirty = true;
         item.updatedAtMs = _now();
         await item.save();
-        // deletedAnyLocal = true; // REMOVED
-        // Track unique days affected
+        // track unique days affected
         final d = DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true).toLocal();
         final day = DateTime(d.year, d.month, d.day);
         if (!affectedDays.contains(day)) affectedDays.add(day);
@@ -1394,9 +1372,6 @@ class Storage {
     if (affectedDays.isNotEmpty) {
       _sessionUpdateController.add(affectedDays);
     }
-
-    // if (deletedAnyLocal) return; // REMOVED: potentially we still need to sync delete to cloud if IDs match
-
 
     if (courseId == null || startUtc == null || endUtc == null) return;
 
@@ -1490,8 +1465,8 @@ class Storage {
     await _db.putMeta(_metaHabitCategories, raw);
   }
 
-  // Removed getProgressHabitOrder, saveProgressHabitOrder, and removeHabitFromOrder
-  // Replaced by global sortOrder syncing.
+  // legacy per-view habit ordering was removed in favour of a global sortorder
+  
 
   // --- Habit Cache Methods ---
 
@@ -1500,13 +1475,13 @@ class Storage {
     return _db.habits(includeDeleted: includeDeleted).toList();
   }
 
-  /// Get only active (non-archived) habits from local cache
+  /// only active, non-archived habits from the local cache
   static List<LocalHabit> getActiveHabitsFromCache() {
     _ensureUser();
     return _db.habits().where((h) => !h.archived).toList();
   }
 
-  /// Get only archived habits from local cache
+  /// only archived habits from the local cache
   static List<LocalHabit> getArchivedHabitsFromCache() {
     _ensureUser();
     return _db.habits().where((h) => h.archived).toList();
@@ -1532,7 +1507,7 @@ class Storage {
     await _db.putHabitHistory(entry);
   }
 
-  /// Get habit history entries for a specific habit within a date range (local cache only)
+  /// habit history entries for one habit within a date range, local cache only
   static List<LocalHabitHistory> getHabitHistoryForDateRange(
     String habitId,
     DateTime start,
@@ -1549,7 +1524,7 @@ class Storage {
     }).toList();
   }
 
-  /// Get ALL habit history entries for ALL habits within a date range (local cache only)
+  /// habit history entries for all habits within a date range, local cache only
   static Map<String, List<LocalHabitHistory>> getAllHabitHistoryForDateRange(
     DateTime start,
     DateTime end,

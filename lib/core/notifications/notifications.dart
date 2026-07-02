@@ -5,6 +5,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:flutter_timezone/flutter_timezone.dart';
 
+// wraps flutter_local_notifications for reminders, alarms and session notifications
 class Notifs {
   static final _plugin = FlutterLocalNotificationsPlugin();
   static bool _inited = false;
@@ -12,12 +13,12 @@ class Notifs {
   static const _channelName = 'Notifications';
   static const _channelDescription = 'Timers, alarms, and nudges.';
 
-  /// Initializes the notification plugin.
-  /// [isBackground] should be true if called from a background isolate.
+  /// initializes the notification plugin
+  /// isBackground is true when called from a background isolate
   static Future<void> init({bool isBackground = false}) async {
     if (_inited) return;
     
-    // 1. Timezone Setup
+    // 1. timezone setup
     try {
         tzdata.initializeTimeZones();
         
@@ -57,7 +58,7 @@ class Notifs {
         } catch (_) {} 
     }
 
-    // 2. Plugin Initialization
+    // 2. plugin initialization
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
       requestAlertPermission: false, 
@@ -74,7 +75,7 @@ class Notifs {
     );
     debugPrint("Notifs: Plugin initialized: $success");
     
-    // 3. Create Android notification channel explicitly
+    // 3. create the android notification channel explicitly
     if (Platform.isAndroid) {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
@@ -97,7 +98,7 @@ class Notifs {
     required String body,
     required DateTime whenLocal,
   }) async {
-    // Ensure ID is a valid 32-bit int
+    // ensure the id is a valid 32-bit int
     id = id & 0x7FFFFFFF;
     await init();
     
@@ -105,7 +106,7 @@ class Notifs {
         final tzTime = tz.TZDateTime.from(whenLocal, tz.local);
         debugPrint("Notifs: Scheduling #$id for local: $whenLocal -> tz: $tzTime");
 
-        // Common details
+        // common details
         const details = NotificationDetails(
           android: AndroidNotificationDetails(
             _channelId,
@@ -147,7 +148,7 @@ class Notifs {
     required String title,
     required String body,
   }) async {
-    // Background safe init
+    // background-safe init
     await init(isBackground: true); 
 
     debugPrint("Notifs: Showing immediate notification $id");
@@ -182,14 +183,14 @@ class Notifs {
     required String body,
     required DateTime timeLocal, 
   }) async {
-    // Ensure ID is a valid 32-bit int
+    // ensure the id is a valid 32-bit int
     id = id & 0x7FFFFFFF;
     await init();
     final now = DateTime.now();
     var first = DateTime(
         now.year, now.month, now.day, timeLocal.hour, timeLocal.minute);
     
-    // If today's time has passed, schedule for tomorrow
+    // if the time has already passed today, schedule for tomorrow
     if (first.isBefore(now)) {
         first = first.add(const Duration(days: 1));
     }
@@ -226,7 +227,7 @@ class Notifs {
   }
 
   static Future<void> cancel(int id) async {
-    // Ensure ID matches the logic in schedule (32-bit positive int)
+    // ensure the id matches the schedule logic, 32-bit positive int
     id = id & 0x7FFFFFFF;
     debugPrint("Notifs: Cancelling $id");
     await _plugin.cancel(id: id);

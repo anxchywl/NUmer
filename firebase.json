@@ -17,7 +17,7 @@
         }
       },
       "dart": {
-        "lib/firebase_options.dart": {
+        "lib/core/firebase_options.dart": {
           "projectId": "numer-60744",
           "configurations": {
             "android": "1:814724149327:android:7289f30938dca04c113a3a",
@@ -28,8 +28,8 @@
     }
   },
   "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
+    "rules": "firestore/firestore.rules",
+    "indexes": "firestore/firestore.indexes.json"
   },
   "functions": {
     "source": "functions",

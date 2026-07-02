@@ -1,11 +1,11 @@
-# Miscellaneous
+# miscellaneous
 *.class
 *.log
 *.pyc
 *.swp
 .DS_Store
 
-# Scratch / tool output that must never be committed
+# scratch / tool output that must never be committed
 analyze_output*.txt
 untranslated_messages.txt
 .atom/
@@ -16,7 +16,7 @@ untranslated_messages.txt
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# intelliJ related
 *.iml
 *.ipr
 *.iws
@@ -37,19 +37,20 @@ migrate_working_dir/
 build/
 coverage/
 
-# Symbolication / obfuscation
+# symbolication / obfuscation
 app.*.symbols
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# android studio will place build artifacts here
 /android/app/debug
 /android/app/profile
 /android/app/release
 
-# Android
+# android
 android/.gradle/
 local.properties
 /.gradle
+android/app/google-services.json
 
 # iOS / Xcode
 ios/Pods/
@@ -67,13 +68,13 @@ DerivedData/
 *.mode2v3
 *.perspectivev3
 
-# Node / Firebase Functions
+# node / firebase functions
 functions/node_modules/
 functions/.firebase/
 functions/.runtimeconfig.json
 functions/lib/
 
-# Environment files with secrets
+# environment files with secrets
 functions/.env.local
 .env
 .env.*

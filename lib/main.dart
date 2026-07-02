@@ -41,6 +41,7 @@ import 'package:numer_app/core/startup_metrics.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/shared/widgets/loading_screen.dart';
 
+// activates firebase app check, skipped on web, emulator and non-release builds
 Future<void> _activateAppCheck({required bool useEmulator}) async {
   if (useEmulator) return;
   if (kIsWeb) {
@@ -72,6 +73,7 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
   );
 }
 
+// model for a single item in the ios-style bottom navigation bar
 class _IosNavItem {
   final String label;
   final IconData icon;
@@ -84,6 +86,7 @@ class _IosNavItem {
   });
 }
 
+// app entrypoint, preloads the stored theme then mounts the bootstrap widget
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   StartupMetrics.markAppStart();
@@ -105,6 +108,7 @@ Future<void> main() async {
   ));
 }
 
+// converts a stored preference string into a thememode
 ThemeMode _parseThemeMode(String? value) {
   switch (value) {
     case 'light':
@@ -116,6 +120,7 @@ ThemeMode _parseThemeMode(String? value) {
   }
 }
 
+// one-time firebase and hive bootstrap that runs before the app is usable
 Future<void> _initializeApp({required bool useEmulator}) async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -146,6 +151,7 @@ Future<void> _initializeApp({required bool useEmulator}) async {
   await RecordingNotifService.init();
 }
 
+// root widget, shows a loading shell until init completes then hands off to approot
 class NumerBootstrapApp extends StatelessWidget {
   final Future<void> initFuture;
   final ThemeMode initialTheme;
@@ -245,6 +251,7 @@ final ThemeData _darkTheme = ThemeData(
   ),
 );
 
+// top-level app widget, feeds theme, locale and accent colour into materialapp and routes
 class AppRoot extends StatefulWidget {
   const AppRoot({super.key});
 
@@ -372,6 +379,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   }
 }
 
+// picks which screen to show based on auth, email verification and profile state
 class AuthGate extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
   const AuthGate({super.key, this.onThemeChange});
@@ -546,6 +554,7 @@ class _AuthGateState extends State<AuthGate> {
   }
 }
 
+// main navigation shell that hosts the bottom-tab pages
 class _Shell extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
   const _Shell({this.onThemeChange});
@@ -554,6 +563,7 @@ class _Shell extends StatefulWidget {
   State<_Shell> createState() => _ShellState();
 }
 
+// keeps a tab page's state alive when the user switches between tabs
 class _KeepAlivePage extends StatefulWidget {
   const _KeepAlivePage({required this.child});
 
@@ -653,6 +663,9 @@ class _ShellState extends State<_Shell> {
       const HomeScreen(),
       const HabitsScreen(),
       const StatsScreen(),
+      // Connections feature is planned but intentionally hidden for now. The code in
+      // lib/features/connections/ is complete and kept in sync; to enable it, uncomment
+      // the line below AND add a matching entry to _buildDestinations()/_buildIosNavItems().
       // const ConnectionsScreen(),
       const GroupsScreen(),
       AccountScreen(onThemeChange: widget.onThemeChange),

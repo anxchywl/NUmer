@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class UserStorage {
   UserStorage._();
   static UserStorage? _instance;
