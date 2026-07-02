@@ -26,27 +26,46 @@ graph TD
 
 ---
 
-## 📂 Key Code Locations
+## 📂 Repository Layout (read this first)
 
-### Frontend (Flutter)
+The Dart code under `lib/` is organized **by feature**, not by type. See
+[docs/architecture.md](file:///Users/anx/numer_app/docs/architecture.md) for the full rationale.
 
-- **Global App State**: [lib/app_state.dart](file:///Users/anx/numer_app/lib/app_state.dart)
-  - This is the central `ChangeNotifier` for the app. It holds active session states, settings, timers, alarms, and notifies listeners on updates.
-- **Local Storage Interface**: [lib/services/storage.dart](file:///Users/anx/numer_app/lib/services/storage.dart)
-  - Wraps Hive boxes. Use this for reading/writing local models.
-- **Synchronization Engine**: [lib/services/sync_service.dart](file:///Users/anx/numer_app/lib/services/sync_service.dart)
-  - Monitors connectivity (`connectivity_plus`) and performs full syncs, heartbeats, and local-remote resolution.
-- **Connections Feature**:
-  - Service: [lib/services/connections_service.dart](file:///Users/anx/numer_app/lib/services/connections_service.dart)
-  - Model: [lib/models/person.dart](file:///Users/anx/numer_app/lib/models/person.dart)
-  - Screens: [lib/screens/connections/](file:///Users/anx/numer_app/lib/screens/connections/)
-- **Habits Feature**:
-  - Service: [lib/services/habit_service.dart](file:///Users/anx/numer_app/lib/services/habit_service.dart)
-  - Model: [lib/models/habit.dart](file:///Users/anx/numer_app/lib/models/habit.dart)
-  - Screens: [lib/screens/habits/](file:///Users/anx/numer_app/lib/screens/habits/)
-- **Study Groups**:
-  - Service: [lib/services/group_service.dart](file:///Users/anx/numer_app/lib/services/group_service.dart)
-  - Screens: [lib/screens/groups/](file:///Users/anx/numer_app/lib/screens/groups/)
+```
+lib/
+  main.dart              # entrypoint only
+  app/                   # app shell: app_state.dart (global ChangeNotifier), bootstrap/root
+  core/                  # cross-cutting INFRA: data/ (hive db, storage, sync), notifications/, firebase_options
+  shared/                # PURE reusable UI (widgets/) — no business logic, no feature imports
+  features/              # one self-contained folder per domain (see below)
+  l10n/                  # generated localization — do not hand-edit
+```
+
+Each feature under `lib/features/<name>/` owns everything for its domain and exposes a
+single barrel `<name>.dart`. Internal layout (subfolders appear only once a category has ~3+ files):
+
+```
+features/<name>/
+  <name>.dart      # public surface — import a feature ONLY via this barrel
+  models/          # domain types
+  data/            # services / repositories
+  screens/         # full-page routes
+  widgets/         # widgets used only inside this feature
+```
+
+Current features: `auth`, `account`, `habits`, `groups`, `connections`, `courses`,
+`sessions` (timer/alarms/study-sessions), `stats`, `history`, `ai_analysis`, `home`.
+
+**Dependency rule (one direction):** `features → core → shared`. `core`/`shared` must never
+import a feature; features import other features only via their barrel.
+
+### Key locations
+
+- **Global App State**: [lib/app/app_state.dart](file:///Users/anx/numer_app/lib/app/app_state.dart) — central `ChangeNotifier` (sessions, settings, timers, alarms).
+- **Local Storage Interface**: [lib/core/data/storage.dart](file:///Users/anx/numer_app/lib/core/data/storage.dart) — wraps Hive boxes; read/write local models here.
+- **Synchronization Engine**: [lib/core/data/sync_service.dart](file:///Users/anx/numer_app/lib/core/data/sync_service.dart) — connectivity, full syncs, local-remote resolution.
+- **A feature** (e.g. habits): everything lives under [lib/features/habits/](file:///Users/anx/numer_app/lib/features/habits/) — models, `data/habit_service.dart`, screens, widgets.
+- **Native session Live Activity**: `ios/SessionLiveActivityExtension` + `ios/Shared` — owned by the `sessions` feature (see its README).
 
 ### Backend (Firebase)
 
@@ -59,9 +78,15 @@ graph TD
 
 ## ⚡ Core Development Rules for Agents
 
+### 0. Scope changes to one feature folder
+Most tasks map to a single `lib/features/<name>/` folder — work there and stay there.
+Read that feature's `<name>.dart` barrel first to learn its surface. Put new shared UI in
+`shared/`, new infra in `core/`; never place business logic in `shared`/`core`, and never
+reach into another feature's non-barrel files.
+
 ### 1. Maintain the Offline-First Contract
 **Never write directly to Firestore from UI screens.**
-- Always mutate local Hive objects via [storage.dart](file:///Users/anx/numer_app/lib/services/storage.dart).
+- Always mutate local Hive objects via [storage.dart](file:///Users/anx/numer_app/lib/core/data/storage.dart).
 - Ensure models are written with `dirty = true` and `updatedAt = DateTime.now()`.
 - Let `SyncService` propagate changes asynchronously. Writing directly to Firestore disrupts the synchronization sequence and will cause sync loops or overwrite conflicts.
 

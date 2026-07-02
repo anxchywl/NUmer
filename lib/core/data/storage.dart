@@ -7,8 +7,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/core/data/local_database.dart';
-import 'package:numer_app/models.dart';
-import 'package:numer_app/models/habit_category.dart';
+import 'package:numer_app/features/sessions/models/alarm_item.dart';
+import 'package:numer_app/features/courses/course.dart';
+import 'package:numer_app/features/habits/models/habit_category.dart';
 import 'package:numer_app/features/ai_analysis/ai_analysis_service.dart';
 
 class Storage {

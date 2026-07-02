@@ -1,0 +1,296 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:numer_app/features/habits/models/habit.dart';
+import 'package:numer_app/features/habits/data/habit_service.dart';
+import 'package:numer_app/app/app_state.dart';
+import 'package:numer_app/features/habits/widgets/habit_logging_sheet.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+
+class HabitDaySheet extends StatelessWidget {
+  final DateTime date;
+  final List<Habit> allHabits;
+  final Map<String, double> progressMap;
+  final String userId;
+  final bool isReadOnly;
+
+  const HabitDaySheet({
+    super.key,
+    required this.date,
+    required this.allHabits,
+    required this.progressMap,
+    required this.userId,
+    this.isReadOnly = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final sortedHabits = _getDailyHabits();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header Handle
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(theme.brightness == Brightness.dark ? 120 : 60),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                DateFormat.yMMMMEEEEd(l10n.localeName).format(date),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.habitDailyOverview,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              if (sortedHabits.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(48, 24, 48, 48),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.event_busy_rounded, 
+                        size: 64, 
+                        color: theme.colorScheme.outlineVariant,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        l10n.habitNoHabitsThisDay, 
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: sortedHabits.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final habit = sortedHabits[index];
+                      return _HabitRow(
+                        habit: habit,
+                        date: date,
+                        progress: progressMap[habit.id] ?? 0,
+                        userId: userId,
+                        isReadOnly: isReadOnly,
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Habit> _getDailyHabits() {
+    // 1. Filter habits: show if scheduled OR has progress
+    final activeHabits = allHabits.where((h) {
+      final isScheduled = h.isScheduledFor(date);
+      final hasProgress = progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
+      return isScheduled || hasProgress;
+    }).toList();
+
+    // 2. Sort habits: completed first, then incomplete
+    activeHabits.sort((a, b) {
+      final progA = progressMap[a.id] ?? 0.0;
+      final progB = progressMap[b.id] ?? 0.0;
+      final doneA = progA >= a.targetValue;
+      final doneB = progB >= b.targetValue;
+
+      if (doneA && !doneB) return -1;
+      if (!doneA && doneB) return 1;
+      return 0; // Maintain original sort order (likely by creation or manual order) if both are same state
+    });
+
+    return activeHabits;
+  }
+}
+
+class _HabitRow extends StatelessWidget {
+  final Habit habit;
+  final DateTime date;
+  final double progress;
+  final String userId;
+  final bool isReadOnly;
+
+  const _HabitRow({
+    required this.habit,
+    required this.date,
+    required this.progress,
+    required this.userId,
+    required this.isReadOnly,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    
+    // Determine status
+    bool isCompleted = false;
+    if (habit.type == HabitType.yesNo) {
+      isCompleted = progress > 0;
+    } else {
+      isCompleted = progress >= habit.targetValue;
+    }
+    
+    final isPartial = !isCompleted && progress > 0;
+
+    return InkWell(
+      onTap: isReadOnly ? null : () {
+        _logProgress(context);
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(12),
+          border: isCompleted ? Border.all(color: habit.color.withAlpha(100)) : null,
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: habit.color.withAlpha(30),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
+                color: habit.color,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Name & Progress
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    habit.name,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      color: isCompleted ? theme.colorScheme.onSurface.withAlpha(150) : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (habit.type != HabitType.yesNo)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        _formatProgress(l10n),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                           color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            
+            // Status Icon
+            if (isCompleted)
+              Icon(Icons.check_circle, color: habit.color)
+            else if (isPartial)
+              Icon(Icons.timelapse, color: theme.colorScheme.tertiary)
+            else
+              Icon(Icons.circle_outlined, color: theme.colorScheme.outline),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatProgress(AppLocalizations l10n) {
+    final numberFormat = NumberFormat.decimalPattern(l10n.localeName);
+    if (habit.type == HabitType.time) {
+      final currentMins = (progress / 60).round();
+      final targetMins = (habit.targetValue / 60).round();
+      return "${numberFormat.format(currentMins)} / ${numberFormat.format(targetMins)} ${l10n.habitMinutesShort}";
+    }
+    final current = numberFormat.format(progress.toInt());
+    final target = numberFormat.format(habit.targetValue.toInt());
+    final unit = habit.unit ?? '';
+    return "$current / $target ${unit.isNotEmpty ? unit : ''}".trim();
+  }
+
+  void _logProgress(BuildContext context) async {
+    if (habit.type == HabitType.yesNo) {
+      HapticFeedback.lightImpact();
+      final isCompleted = progress >= habit.targetValue;
+      try {
+        await context.read<HabitService>().toggleCompletion(
+              userId: userId,
+              habit: habit,
+              date: date,
+              completed: !isCompleted,
+              mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
+            );
+      } catch (e) {
+        if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             SnackBar(content: Text("Error: $e"), backgroundColor: Theme.of(context).colorScheme.error),
+           );
+        }
+      }
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => HabitLoggingSheet(
+          habit: habit,
+          date: date,
+          userId: userId,
+          initialValue: progress,
+        ),
+      );
+    }
+  }
+}
