@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// rainbow swatch that opens the custom color dialog (or a caller-supplied picker)
 class ColorPickerButton extends StatelessWidget {
   final Color color;
   final ValueChanged<Color> onColorPicked;
@@ -52,6 +53,7 @@ class ColorPickerButton extends StatelessWidget {
   }
 }
 
+// saturation/value pad plus a hue slider for picking an arbitrary color
 class CustomColorPicker extends StatefulWidget {
   final Color initial;
   final ValueChanged<Color> onChanged;
@@ -176,6 +178,7 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
   }
 }
 
+// dialog wrapper that holds a pending color and returns it only on confirm
 class _ColorPickerDialog extends StatefulWidget {
   final Color initial;
   const _ColorPickerDialog({required this.initial});

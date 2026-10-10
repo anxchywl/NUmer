@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'package:numer_app/features/account/models/profile_avatar.dart';
 
+// avatar that resolves, in order, a live firestore image, a base64 image, an icon
+// option, or a silhouette; falls back to passed-in initial values while loading
 class UniversalAvatar extends StatelessWidget {
   final String? userId;
-  final String? name; // For initials fallback
+  final String? name;
   final int? initialAvatarIndex;
   final int? initialAvatarColorValue;
   final String? initialAvatarBase64;
@@ -63,7 +65,7 @@ class UniversalAvatar extends StatelessWidget {
           );
         }
 
-        // Fallback to initial data while loading or if no data
+        // fall back to initial data while loading or when the doc is missing
         return _buildContent(
           context,
           avatarIndex: initialAvatarIndex,
@@ -82,24 +84,24 @@ class UniversalAvatar extends StatelessWidget {
     Uint8List? avatarBytes,
     bool forceSilhouette = false,
   }) {
-    // 1. Force Silhouette if requested
+    // resolve the richest available source, silhouette being the last resort
     if (forceSilhouette) {
       return _buildSilhouette(context);
     }
 
-    // 2. Try Image (Memory)
+    // decoded image bytes
     if (avatarBytes != null && avatarBytes.isNotEmpty) {
       return _wrapImage(Image.memory(avatarBytes, fit: BoxFit.cover));
     }
 
-    // 2. Try Image (Base64)
+    // base64-encoded image
     if (avatarBase64 != null && avatarBase64.isNotEmpty) {
       try {
         return _wrapImage(Image.memory(base64Decode(avatarBase64), fit: BoxFit.cover));
       } catch (_) {}
     }
 
-    // 3. Try Icon
+    // preset icon option
     final option = profileAvatarOptionFor(avatarIndex);
     if (option != null) {
       final Color bgColor = avatarColorValue != null ? Color(avatarColorValue) : option.background;
@@ -120,7 +122,6 @@ class UniversalAvatar extends StatelessWidget {
       );
     }
 
-    // 4. Fallback to Silhouette
     return _buildSilhouette(context);
   }
 
