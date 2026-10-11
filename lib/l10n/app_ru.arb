@@ -112,24 +112,13 @@
   "deleteCourseTitle": "Удалить курс",
   "deleteCourseMessage": "Вы уверены? Все данные этого курса будут удалены.",
   "timeSavedMessage": "Время для \"{courseName}\" сохранено",
+  "aiAnalysisComingSoon": "Анализ курса скоро появится.",
   "courseAnalysis": "Анализ курса",
   "noCoursesAvailable": "Нет доступных курсов.",
   "selectCourse": "Выберите курс",
-  "timePeriod": "Период времени",
-  "oneMonth": "1 месяц",
-  "twoMonths": "2 месяца",
-  "threeMonths": "3 месяца",
   "sixMonths": "6 месяцев",
-  "limitOneAnalysisPerPeriod": "Лимит: 1 анализ за период.",
   "analysisUpdatesEveryPeriod": "Анализ обновляется с началом каждого нового периода.",
   "analysisAlreadyGenerated": "Вы уже создали анализ для этого периода.",
-  "minNotesRequired": "Минимум заметок: {current}/{total}. Чем больше заметок, тем точнее анализ.",
-  "@minNotesRequired": {
-    "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
   "@notesRequiredCount": {
     "placeholders": {
       "count": {
@@ -137,17 +126,9 @@
       }
     }
   },
-  "generateInsight": "Получить инсайт",
-  "analyzing": "Анализ...",
-  "analysisPlaceholder": "Выберите курс и период, чтобы получить AI-анализ вашей учебы.",
   "dayStatsTipLine1": "• Календарь показывает вашу учебную активность. Чем зеленее день, тем больше вы учились.",
   "dayStatsTipLine2": "• Вы можете редактировать время сессии и заметки в Истории.",
   "dayStatsTipLine3": "• Вы можете нажать на любой курс, и экран истории покажет сессии только по этому курсу.",
-  "overview": "Обзор",
-  "scrollUpHint": "Прокрутите вверх",
-  "topTopics": "Топ темы",
-  "insights": "Инсайты",
-  "recommendations": "Рекомендации",
 
   "syncOffline": "Офлайн",
   "syncSyncing": "Синхронизация…",
