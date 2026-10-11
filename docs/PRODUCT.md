@@ -1,8 +1,8 @@
 # Product
 
 **NUmer** is a collaborative study-group and personal-productivity app for students. It
-combines focus timers, habit tracking, course/goal management, social study groups with
-leaderboards, and AI insights into one offline-first dashboard, localized in English,
+combines focus timers, habit tracking, course/goal management, and social study groups with
+leaderboards into one offline-first dashboard, localized in English,
 Russian, and Kazakh.
 
 **Who it's for:** students building structured study routines, and study-group leaders who
@@ -48,8 +48,7 @@ plus per-member subject breakdowns. Members can **nudge** each other with motiva
 notifications, phrased in the recipient's preferred language.
 
 ### AI insights — `ai_analysis`
-AI analysis of a student's courses and study behavior, returning personalized focus
-recommendations.
+Paused. The Home entry points open a screen saying course analysis is coming soon.
 
 ### Statistics — `stats`
 Charts, calendars, and heatmaps visualizing study time and progress.
@@ -61,8 +60,8 @@ Browse past sessions and export logs to `.ics` (calendar), `.csv`, or `.xlsx` (E
 The composed landing surface tying the above together.
 
 ## Cross-cutting product traits
-- **Offline-first:** the app works fully without a connection; study groups and AI insights
-  are the only online-only areas.
+- **Offline-first:** the app works fully without a connection; study groups are the only
+  online-only area.
 - **Localized:** every user-facing string is available in English, Russian, and Kazakh.
 - **Notifications:** local reminders/alarms, recording notifications, and FCM push nudges.
 

@@ -14,7 +14,6 @@ graph TD
     Sync -->|push dirty / pull new| FS[(Cloud Firestore)]
     FS -->|triggers| Fn[Cloud Functions]
     Fn -->|FCM push| FCM[Cloud Messaging]
-    Fn -->|Gemini API| AI[Gemini 2.0 Flash]
 ```
 
 The app stores **everything locally in Hive first**. Local entities are marked `dirty` on
@@ -88,9 +87,11 @@ a group; see `firestore.rules` for exact access):
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `getMemberSubjectStats` | Per-subject study breakdown for a group member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
-| Callable | `analyzeCourseAi` | Call Gemini `2.0-flash` for study analysis |
 
 Callables enforce authentication and App Check.
+
+AI course analysis is paused: its callable has been removed and the app shows a coming-soon
+screen.
 
 ## Native platforms
 
@@ -137,8 +138,6 @@ firebase deploy --only functions
 ```
 
 ### Secrets & config
-- Gemini key for `analyzeCourseAi`:
-  `firebase functions:secrets:set GEMINI_API_KEY="..."`.
 - Platform Firebase config files (`google-services.json`, `GoogleService-Info.plist`) live in
   their platform dirs and are git-ignored.
 
@@ -154,7 +153,7 @@ Deferred intentionally to keep the shipping app stable — tackle incrementally:
 
 - Decompose the large `app/app_state.dart` `ChangeNotifier` into per-feature controllers.
 - Split `main.dart` into `app/bootstrap.dart`, `app/router.dart`, `app/app.dart`.
-- Break `core/data/storage.dart`'s dependency on a feature service (`ai_analysis`) so `core`
-  no longer imports a feature.
+- Break `core/data/storage.dart`'s imports of feature models (`courses`, `habits`,
+  `sessions`) so `core` no longer imports a feature.
 - Repair and unskip `test/features/account/accent_color_picker_test.dart` (pre-existing
   failure — slider-label assertions no longer match the widget).
