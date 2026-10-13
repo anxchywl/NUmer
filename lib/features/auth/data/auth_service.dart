@@ -818,15 +818,15 @@ class AuthController extends ChangeNotifier {
         if (change.type == DocumentChangeType.added) {
           final data = change.doc.data();
           if (data == null) continue;
-          
+
           final title = data['title'] as String? ?? 'Nudge';
           final body = data['body'] as String? ?? '';
-          
+
           if (body.isNotEmpty) {
             final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
             Notifs.showImmediate(id: id, title: title, body: body);
           }
-          
+
           change.doc.reference.update({'status': 'delivered'});
         }
       }

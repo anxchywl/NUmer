@@ -9,7 +9,8 @@ class EmailVerificationStatus extends StatefulWidget {
   const EmailVerificationStatus({super.key});
 
   @override
-  State<EmailVerificationStatus> createState() => _EmailVerificationStatusState();
+  State<EmailVerificationStatus> createState() =>
+      _EmailVerificationStatusState();
 }
 
 class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
@@ -48,17 +49,17 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
   Future<void> _checkVerification() async {
     if (_checking) return;
     setState(() => _checking = true);
-    
+
     try {
       final auth = context.read<AuthController>();
       final error = await auth.checkEmailVerified();
-      
+
       if (!mounted) return;
 
       if (error == null) {
-        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email verified! Loading your account...')),
+          const SnackBar(
+              content: Text('Email verified! Loading your account...')),
         );
         return;
       }
@@ -75,23 +76,23 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
 
   Future<void> _resendVerification() async {
     if (_countdown > 0) return;
-    
+
     final auth = context.read<AuthController>();
     final error = await auth.sendEmailVerification();
-    
+
     if (!mounted) return;
-    
+
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error)),
       );
       return;
     }
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Verification email sent!')),
     );
-    
+
     _startTimer();
   }
 
@@ -99,7 +100,7 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: colors.surface,
