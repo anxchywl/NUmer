@@ -40,7 +40,7 @@ class LocalDatabase {
     if (_currentUid == uid) return;
     await close();
     _currentUid = uid;
-    
+
     // open all boxes in parallel for faster startup
     final results = await Future.wait([
       Hive.openBox<LocalUserDoc>('${uid}_user'),
@@ -55,7 +55,7 @@ class LocalDatabase {
       Hive.openBox<LocalHabit>('${uid}_habits'),
       Hive.openBox<LocalHabitHistory>('${uid}_habit_history'),
     ]);
-    
+
     _userBox = results[0] as Box<LocalUserDoc>;
     _coursesBox = results[1] as Box<LocalCourse>;
     _sessionsBox = results[2] as Box<LocalSession>;
@@ -123,8 +123,8 @@ class LocalDatabase {
   }
 
   Iterable<LocalCourse> peerCourses(String targetUid) {
-     final values = _peerCoursesBox?.values ?? const Iterable.empty();
-     return values.where((c) => c.uid == targetUid && !c.deleted);
+    final values = _peerCoursesBox?.values ?? const Iterable.empty();
+    return values.where((c) => c.uid == targetUid && !c.deleted);
   }
 
   Iterable<LocalSession> sessions({bool includeDeleted = false}) {
@@ -132,10 +132,10 @@ class LocalDatabase {
     if (includeDeleted) return values;
     return values.where((s) => !s.deleted);
   }
-  
+
   Iterable<LocalSession> peerSessions(String targetUid) {
-     final values = _peerSessionsBox?.values ?? const Iterable.empty();
-     return values.where((s) => s.uid == targetUid && !s.deleted);
+    final values = _peerSessionsBox?.values ?? const Iterable.empty();
+    return values.where((s) => s.uid == targetUid && !s.deleted);
   }
 
   Iterable<LocalGoal> goals({bool includeDeleted = false}) {
@@ -159,7 +159,8 @@ class LocalDatabase {
           .where((g) => g.dirty)
           .toList(growable: false);
 
-  LocalUserDoc? get userDocOrNull => (_userBox?.isOpen ?? false) ? _userBox?.get(_currentUid) : null;
+  LocalUserDoc? get userDocOrNull =>
+      (_userBox?.isOpen ?? false) ? _userBox?.get(_currentUid) : null;
 
   SyncStateEntry syncStateForKey(String key) {
     if (_syncBox == null || !_syncBox!.isOpen) {
@@ -205,16 +206,16 @@ class LocalDatabase {
   LocalGoal? getGoalById(String id) => _goalsBox?.get(id);
 
   Future<void> putPeerCourse(LocalCourse course, String compositeKey) async {
-     await _peerCoursesBox?.put(compositeKey, course);
+    await _peerCoursesBox?.put(compositeKey, course);
   }
 
   Future<void> putSession(LocalSession session) async {
     await _sessionsBox?.put(session.id, session);
   }
-  
+
   Future<void> putPeerSession(LocalSession session, String compositeKey) async {
-     // stored under a composite key (e.g. userId_sessionId) to avoid collisions across peers
-     await _peerSessionsBox?.put(compositeKey, session);
+    // stored under a composite key (e.g. userId_sessionId) to avoid collisions across peers
+    await _peerSessionsBox?.put(compositeKey, session);
   }
 
   Future<void> putGoal(LocalGoal goal) async {
@@ -245,7 +246,7 @@ class LocalDatabase {
 
   Box<LocalConflict> get conflictsBox =>
       _conflictsBox ?? (throw StateError('Conflicts box not opened'));
-      
+
   Box<LocalSession> get peerSessionsBox =>
       _peerSessionsBox ?? (throw StateError('Peer sessions box not opened'));
 
@@ -361,8 +362,10 @@ class LocalDatabase {
     return values.where((h) => !h.deleted);
   }
 
-  Iterable<LocalHabitHistory> habitHistoryForHabit(String habitId, {bool includeDeleted = false}) {
-    return habitHistory(includeDeleted: includeDeleted).where((h) => h.habitId == habitId);
+  Iterable<LocalHabitHistory> habitHistoryForHabit(String habitId,
+      {bool includeDeleted = false}) {
+    return habitHistory(includeDeleted: includeDeleted)
+        .where((h) => h.habitId == habitId);
   }
 
   List<LocalHabitHistory> dirtyHabitHistory() =>
@@ -370,7 +373,8 @@ class LocalDatabase {
           .where((h) => h.dirty)
           .toList(growable: false);
 
-  LocalHabitHistory? getHabitHistoryById(String id) => _habitHistoryBox?.get(id);
+  LocalHabitHistory? getHabitHistoryById(String id) =>
+      _habitHistoryBox?.get(id);
 
   Future<void> putHabitHistory(LocalHabitHistory entry) async {
     await _habitHistoryBox?.put(entry.id, entry);
