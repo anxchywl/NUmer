@@ -13,7 +13,7 @@ void main() {
   testWidgets('AccentColorPicker renders and updates color',
       (WidgetTester tester) async {
     Color selectedColor = Colors.indigo;
-    
+
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [
@@ -38,7 +38,8 @@ void main() {
       ),
     );
 
-    final l10n = AppLocalizations.of(tester.element(find.byType(AccentColorPicker)))!;
+    final l10n =
+        AppLocalizations.of(tester.element(find.byType(AccentColorPicker)))!;
 
     // Verify sliders exist
     expect(find.text(l10n.hue), findsOneWidget);
