@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 // shows a floating snackbar for transient feedback, styled for normal or error state
 void showAppMessage(
-  BuildContext context, 
+  BuildContext context,
   String message, {
   bool isError = false,
   String? actionLabel,
@@ -16,7 +16,9 @@ void showAppMessage(
       content: Text(
         message,
         style: theme.textTheme.bodyMedium?.copyWith(
-          color: isError ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer,
+          color: isError
+              ? colorScheme.onErrorContainer
+              : colorScheme.onPrimaryContainer,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -24,10 +26,12 @@ void showAppMessage(
           ? SnackBarAction(
               label: actionLabel,
               onPressed: onAction,
-              textColor: isError ? colorScheme.onErrorContainer : colorScheme.primary,
+              textColor:
+                  isError ? colorScheme.onErrorContainer : colorScheme.primary,
             )
           : null,
-      backgroundColor: isError ? colorScheme.errorContainer : colorScheme.primaryContainer,
+      backgroundColor:
+          isError ? colorScheme.errorContainer : colorScheme.primaryContainer,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

@@ -116,7 +116,6 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
               height: height,
               child: Stack(
                 children: [
-                  
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -127,7 +126,6 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                       ),
                     ),
                   ),
-                  
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -140,7 +138,6 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
                       ),
                     ),
                   ),
-                  
                   Positioned(
                     left: _sat * width - 10,
                     top: (1 - _val) * height - 10,

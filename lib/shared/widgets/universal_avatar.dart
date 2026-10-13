@@ -97,14 +97,17 @@ class UniversalAvatar extends StatelessWidget {
     // base64-encoded image
     if (avatarBase64 != null && avatarBase64.isNotEmpty) {
       try {
-        return _wrapImage(Image.memory(base64Decode(avatarBase64), fit: BoxFit.cover));
+        return _wrapImage(
+            Image.memory(base64Decode(avatarBase64), fit: BoxFit.cover));
       } catch (_) {}
     }
 
     // preset icon option
     final option = profileAvatarOptionFor(avatarIndex);
     if (option != null) {
-      final Color bgColor = avatarColorValue != null ? Color(avatarColorValue) : option.background;
+      final Color bgColor = avatarColorValue != null
+          ? Color(avatarColorValue)
+          : option.background;
       return Container(
         width: size,
         height: size,
@@ -115,9 +118,12 @@ class UniversalAvatar extends StatelessWidget {
         child: Icon(
           option.icon,
           size: size * 0.6,
-          color: avatarColorValue != null 
-            ? (ThemeData.estimateBrightnessForColor(bgColor) == Brightness.dark ? Colors.white : Colors.black87)
-            : profileAvatarForeground(option),
+          color: avatarColorValue != null
+              ? (ThemeData.estimateBrightnessForColor(bgColor) ==
+                      Brightness.dark
+                  ? Colors.white
+                  : Colors.black87)
+              : profileAvatarForeground(option),
         ),
       );
     }
@@ -165,7 +171,8 @@ class UniversalAvatar extends StatelessWidget {
   }
 
   String? _readAvatarBase64(Map<String, dynamic> data) {
-    return data['profileAvatarImageBase64'] as String? ?? data['avatarImageBase64'] as String?;
+    return data['profileAvatarImageBase64'] as String? ??
+        data['avatarImageBase64'] as String?;
   }
 
   Uint8List? _readAvatarBytes(Map<String, dynamic> data) {

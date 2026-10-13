@@ -6,7 +6,7 @@ import 'package:numer_app/shared/widgets/universal_avatar.dart';
 // list tile that streams a user's live profile (avatar, name, major/goal) by id
 class UserProfileTile extends StatelessWidget {
   const UserProfileTile({
-    super.key, 
+    super.key,
     required this.userId,
     this.role,
     this.subtitle,
@@ -23,7 +23,10 @@ class UserProfileTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-      stream: FirebaseFirestore.instance.collection('users').doc(userId).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return _fallbackTile(context, showSpinner: false);
@@ -31,7 +34,8 @@ class UserProfileTile extends StatelessWidget {
 
         final data = snapshot.data?.data();
         if (data == null) {
-          return _fallbackTile(context, showSpinner: !snapshot.hasError && !snapshot.hasData);
+          return _fallbackTile(context,
+              showSpinner: !snapshot.hasError && !snapshot.hasData);
         }
 
         final profileName = data['profileName'] as String?;
@@ -92,7 +96,8 @@ class UserProfileTile extends StatelessWidget {
   }
 
   // composes major, goal and any custom subtitle, or null when there is nothing to show
-  Widget? _buildSubtitle(String? goal, String? major, Widget? subtitle, BuildContext context) {
+  Widget? _buildSubtitle(
+      String? goal, String? major, Widget? subtitle, BuildContext context) {
     final hasGoal = goal != null && goal.isNotEmpty;
     final hasMajor = major != null && major.isNotEmpty;
     final hasCustomSubtitle = subtitle != null;
@@ -111,12 +116,9 @@ class UserProfileTile extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (hasMajor)
-          Text(major, softWrap: true),
-        if (hasGoal)
-          Text(goal, softWrap: true),
-        if (hasCustomSubtitle)
-          subtitle,
+        if (hasMajor) Text(major, softWrap: true),
+        if (hasGoal) Text(goal, softWrap: true),
+        if (hasCustomSubtitle) subtitle,
       ],
     );
   }
