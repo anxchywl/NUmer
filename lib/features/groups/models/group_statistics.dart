@@ -13,7 +13,6 @@ class GroupStatistics {
     required this.periodEnd,
   });
 
-  
   int get averageStudyTimeSeconds {
     if (members.isEmpty) return 0;
     final total = members.fold<int>(0, (acc, m) => acc + m.studyTimeSeconds);
@@ -22,24 +21,22 @@ class GroupStatistics {
     return avg.toInt();
   }
 
-  
   int get totalStudyTimeSeconds {
     return members.fold<int>(0, (acc, m) => acc + m.studyTimeSeconds);
   }
 
-  
   MemberStudyData? get bestPerformer {
     if (members.isEmpty) return null;
-    return members.reduce((a, b) => a.studyTimeSeconds > b.studyTimeSeconds ? a : b);
+    return members
+        .reduce((a, b) => a.studyTimeSeconds > b.studyTimeSeconds ? a : b);
   }
 
-  
   MemberStudyData? get lowestPerformer {
     if (members.isEmpty) return null;
-    return members.reduce((a, b) => a.studyTimeSeconds < b.studyTimeSeconds ? a : b);
+    return members
+        .reduce((a, b) => a.studyTimeSeconds < b.studyTimeSeconds ? a : b);
   }
 
-  
   MemberStudyData? getMember(String userId) {
     try {
       return members.firstWhere((m) => m.userId == userId);
@@ -129,8 +126,10 @@ class MemberStudyData {
       avatarIndex: avatarIndex ?? this.avatarIndex,
       avatarColorValue: avatarColorValue ?? this.avatarColorValue,
       studyTimeSeconds: studyTimeSeconds ?? this.studyTimeSeconds,
-      todayStudyTimeSeconds: todayStudyTimeSeconds ?? this.todayStudyTimeSeconds,
-      monthStudyTimeSeconds: monthStudyTimeSeconds ?? this.monthStudyTimeSeconds,
+      todayStudyTimeSeconds:
+          todayStudyTimeSeconds ?? this.todayStudyTimeSeconds,
+      monthStudyTimeSeconds:
+          monthStudyTimeSeconds ?? this.monthStudyTimeSeconds,
       isLeader: isLeader ?? this.isLeader,
       isCurrentUser: isCurrentUser ?? this.isCurrentUser,
       dailyBreakdown: dailyBreakdown ?? this.dailyBreakdown,
@@ -142,7 +141,6 @@ class MemberStudyData {
     );
   }
 
-  
   double getPercentageOfAverage(int groupAverage) {
     if (groupAverage == 0) return 100.0;
     final pct = (studyTimeSeconds / groupAverage) * 100.0;
@@ -150,13 +148,11 @@ class MemberStudyData {
     return pct;
   }
 
-  
   String getFormattedStudyTime() => _formatSeconds(studyTimeSeconds);
 
   String getFormattedTodayStudyTime() => _formatSeconds(todayStudyTimeSeconds);
 
-  String getFormattedMonthStudyTime() =>
-      _formatSeconds(monthStudyTimeSeconds);
+  String getFormattedMonthStudyTime() => _formatSeconds(monthStudyTimeSeconds);
 
   String _formatSeconds(int seconds) {
     final hours = seconds ~/ 3600;
@@ -242,7 +238,7 @@ class MemberSubjectStats {
   factory MemberSubjectStats.fromJson(Map<String, dynamic> json) {
     final rawStatsMap = json['subjectStats'] as Map?;
     final subjectStats = <String, SubjectStat>{};
-    
+
     if (rawStatsMap != null) {
       for (final entry in rawStatsMap.entries) {
         final key = entry.key.toString();
@@ -273,27 +269,25 @@ extension StatisticsPeriodX on StatisticsPeriod {
         StatisticsPeriod.lastMonth => 'Month',
       };
 
-  
   (DateTime start, DateTime end) getDateRange() {
     final now = DateTime.now();
-    
+
     return switch (this) {
       StatisticsPeriod.today => (
-        DateTime(now.year, now.month, now.day, 0, 0, 0),
-        now, 
-      ),
+          DateTime(now.year, now.month, now.day, 0, 0, 0),
+          now,
+        ),
       StatisticsPeriod.last7Days => _getCurrentWeekRange(now),
       StatisticsPeriod.lastMonth => (
-        DateTime(now.year, now.month, 1, 0, 0, 0),
-        now, 
-      ),
+          DateTime(now.year, now.month, 1, 0, 0, 0),
+          now,
+        ),
     };
   }
 
-  
   (DateTime start, DateTime end) _getCurrentWeekRange(DateTime now) {
     final weekday = now.weekday;
-    final daysFromMonday = weekday - 1; 
+    final daysFromMonday = weekday - 1;
 
     final monday = DateTime(
       now.year,
@@ -304,6 +298,6 @@ extension StatisticsPeriodX on StatisticsPeriod {
       0,
     ).subtract(Duration(days: daysFromMonday));
 
-    return (monday, now); 
+    return (monday, now);
   }
 }

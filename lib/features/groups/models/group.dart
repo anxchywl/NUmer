@@ -57,7 +57,8 @@ class Group {
 
   factory Group.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? const <String, dynamic>{};
-    final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+    final createdAt =
+        (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final updatedAt = (data['updatedAt'] as Timestamp?)?.toDate() ?? createdAt;
     return Group(
       id: doc.id,

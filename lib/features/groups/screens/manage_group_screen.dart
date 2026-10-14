@@ -70,7 +70,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
       body: StreamBuilder<Group?>(
         stream: service.watchGroup(widget.groupId),
         builder: (context, snapshot) {
-          
           if (snapshot.hasError) {
             return Center(
               child: Column(
@@ -96,7 +95,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                   const SizedBox(height: 24),
                   FilledButton.icon(
                     onPressed: () {
-                      
                       setState(() {});
                     },
                     icon: const Icon(Icons.refresh),
@@ -111,23 +109,25 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
               !snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           final group = snapshot.data;
           if (group == null) {
             return Center(
               child: Text(AppLocalizations.of(context)!.groupNotFound),
             );
           }
-          if (!_initialized || _lastGroupId != widget.groupId || _lastUserId != currentUserId) {
+          if (!_initialized ||
+              _lastGroupId != widget.groupId ||
+              _lastUserId != currentUserId) {
             _visibility = group.visibility;
             _nameController.text = group.name;
             _descriptionController.text = group.description;
             _initialized = true;
             _lastGroupId = widget.groupId;
             _lastUserId = currentUserId;
-            
-            
-            _membershipStream = service.watchMembershipForUser(currentUserId!, widget.groupId);
+
+            _membershipStream =
+                service.watchMembershipForUser(currentUserId!, widget.groupId);
             _membersStream = service.watchGroupMembers(widget.groupId);
 
             if (_visibility == GroupVisibility.private) {
@@ -142,12 +142,15 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
           }
 
           return StreamBuilder<GroupMembership?>(
-            key: ValueKey('membership_builder_${widget.groupId}_$currentUserId'),
+            key:
+                ValueKey('membership_builder_${widget.groupId}_$currentUserId'),
             stream: _membershipStream,
             builder: (context, membershipSnap) {
               if (membershipSnap.hasError) {
                 return Center(
-                  child: Text(AppLocalizations.of(context)!.errorLoadingMemberships(membershipSnap.error.toString())),
+                  child: Text(AppLocalizations.of(context)!
+                      .errorLoadingMemberships(
+                          membershipSnap.error.toString())),
                 );
               }
               if (membershipSnap.connectionState == ConnectionState.waiting &&
@@ -185,12 +188,14 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 )
                               : const Icon(Icons.delete_outline),
                           tooltip: AppLocalizations.of(context)!.deleteGroup,
-                          onPressed: _deleting ? null : () => _confirmDelete(service),
+                          onPressed:
+                              _deleting ? null : () => _confirmDelete(service),
                         )
                       else
                         IconButton(
@@ -200,12 +205,14 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   height: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Theme.of(context).colorScheme.primary,
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
                                   ),
                                 )
                               : const Icon(Icons.logout),
                           tooltip: AppLocalizations.of(context)!.leaveGroup,
-                          onPressed: _leaving ? null : () => _leaveGroup(service),
+                          onPressed:
+                              _leaving ? null : () => _leaveGroup(service),
                           color: Theme.of(context).colorScheme.error,
                         ),
                       const SizedBox(width: 8),
@@ -238,13 +245,15 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                               ],
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: theme.colorScheme.surfaceContainerHighest
+                                fillColor: theme
+                                    .colorScheme.surfaceContainerHighest
                                     .withAlpha(50),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
-                                hintText: AppLocalizations.of(context)!.groupNameHint,
+                                hintText:
+                                    AppLocalizations.of(context)!.groupNameHint,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 12,
@@ -273,13 +282,15 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                               ],
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: theme.colorScheme.surfaceContainerHighest
+                                fillColor: theme
+                                    .colorScheme.surfaceContainerHighest
                                     .withAlpha(50),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
                                 ),
-                                hintText: AppLocalizations.of(context)!.descriptionHint,
+                                hintText: AppLocalizations.of(context)!
+                                    .descriptionHint,
                                 contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 12,
@@ -302,9 +313,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   label: Text(
                                     AppLocalizations.of(context)!.public,
                                     style: TextStyle(
-                                      fontWeight: _visibility == GroupVisibility.public
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                      fontWeight:
+                                          _visibility == GroupVisibility.public
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
                                     ),
                                   ),
                                   icon: Icon(
@@ -319,23 +331,26 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   label: Text(
                                     AppLocalizations.of(context)!.private,
                                     style: TextStyle(
-                                      fontWeight: _visibility == GroupVisibility.private
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                      fontWeight:
+                                          _visibility == GroupVisibility.private
+                                              ? FontWeight.bold
+                                              : FontWeight.normal,
                                     ),
                                   ),
                                   icon: Icon(
                                     Icons.lock,
-                                    color: _visibility == GroupVisibility.private
-                                        ? theme.colorScheme.primary
-                                        : null,
+                                    color:
+                                        _visibility == GroupVisibility.private
+                                            ? theme.colorScheme.primary
+                                            : null,
                                   ),
                                 ),
                               ],
                               selected: <GroupVisibility>{_visibility},
                               onSelectionChanged: isAdmin
                                   ? (selection) {
-                                      setState(() => _visibility = selection.first);
+                                      setState(
+                                          () => _visibility = selection.first);
                                     }
                                   : null,
                               showSelectedIcon: false,
@@ -346,10 +361,14 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                 controller: _codeController,
                                 enabled: isAdmin,
                                 decoration: InputDecoration(
-                                  labelText: AppLocalizations.of(context)!.groupCodeLabel,
-                                  hintText: AppLocalizations.of(context)!.joinCodeHint,
+                                  labelText: AppLocalizations.of(context)!
+                                      .groupCodeLabel,
+                                  hintText: AppLocalizations.of(context)!
+                                      .joinCodeHint,
                                   filled: true,
-                                  fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(50),
+                                  fillColor: theme
+                                      .colorScheme.surfaceContainerHighest
+                                      .withAlpha(50),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
@@ -360,12 +379,14 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   ),
                                 ),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+                                  FilteringTextInputFormatter.allow(
+                                      RegExp(r'[a-zA-Z0-9]')),
                                 ],
                                 validator: (value) {
-                                  if (_visibility == GroupVisibility.private && 
-                                     (value == null || value.trim().isEmpty)) {
-                                    return AppLocalizations.of(context)!.codeRequired;
+                                  if (_visibility == GroupVisibility.private &&
+                                      (value == null || value.trim().isEmpty)) {
+                                    return AppLocalizations.of(context)!
+                                        .codeRequired;
                                   }
                                   return null;
                                 },
@@ -376,15 +397,19 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      AppLocalizations.of(context)!.codeJoinPrompt,
-                                      style: theme.textTheme.bodySmall?.copyWith(
+                                      AppLocalizations.of(context)!
+                                          .codeJoinPrompt,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.secondary,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      AppLocalizations.of(context)!.friendJoinPrompt,
-                                      style: theme.textTheme.bodySmall?.copyWith(
+                                      AppLocalizations.of(context)!
+                                          .friendJoinPrompt,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
                                         color: theme.colorScheme.secondary,
                                       ),
                                     ),
@@ -396,7 +421,8 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(top: 8),
                                 child: Text(
-                                  AppLocalizations.of(context)!.onlyAdminVisibility,
+                                  AppLocalizations.of(context)!
+                                      .onlyAdminVisibility,
                                   style: theme.textTheme.bodySmall?.copyWith(
                                     color: theme.colorScheme.secondary,
                                   ),
@@ -413,7 +439,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                               child: SizedBox(
                                 width: double.infinity,
                                 child: Text(
-                                  _saving ? AppLocalizations.of(context)!.saving : AppLocalizations.of(context)!.saveChanges,
+                                  _saving
+                                      ? AppLocalizations.of(context)!.saving
+                                      : AppLocalizations.of(context)!
+                                          .saveChanges,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -439,7 +468,8 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                             ),
                             const SizedBox(height: 8),
                             StreamBuilder<List<GroupMember>>(
-                              key: ValueKey('members_builder_${widget.groupId}'),
+                              key:
+                                  ValueKey('members_builder_${widget.groupId}'),
                               stream: _membersStream,
                               builder: (context, memberSnap) {
                                 if (memberSnap.hasError) {
@@ -456,14 +486,18 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                           ),
                                           const SizedBox(height: 8),
                                           Text(
-                                            AppLocalizations.of(context)!.unableToLoadMembers,
+                                            AppLocalizations.of(context)!
+                                                .unableToLoadMembers,
                                             style: theme.textTheme.titleSmall,
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            AppLocalizations.of(context)!.checkConnectionTryAgain,
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant,
+                                            AppLocalizations.of(context)!
+                                                .checkConnectionTryAgain,
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                              color: theme
+                                                  .colorScheme.onSurfaceVariant,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -471,7 +505,9 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                           FilledButton.icon(
                                             onPressed: () => setState(() {}),
                                             icon: const Icon(Icons.refresh),
-                                            label: Text(AppLocalizations.of(context)!.retry),
+                                            label: Text(
+                                                AppLocalizations.of(context)!
+                                                    .retry),
                                           ),
                                         ],
                                       ),
@@ -484,14 +520,18 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                     !memberSnap.hasData) {
                                   return const Padding(
                                     padding: EdgeInsets.symmetric(vertical: 32),
-                                    child: Center(child: CircularProgressIndicator()),
+                                    child: Center(
+                                        child: CircularProgressIndicator()),
                                   );
                                 }
-                                final members = memberSnap.data ?? const <GroupMember>[];
+                                final members =
+                                    memberSnap.data ?? const <GroupMember>[];
                                 if (members.isEmpty) {
                                   return Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    child: Text(AppLocalizations.of(context)!.noMembersYetLabel),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    child: Text(AppLocalizations.of(context)!
+                                        .noMembersYetLabel),
                                   );
                                 }
                                 return Column(
@@ -552,10 +592,9 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
         groupId: widget.groupId,
         name: trimmedName,
         description: _descriptionController.text,
-        
         visibility: canEditAdvanced ? _visibility : null,
-        joinCode: (_visibility == GroupVisibility.private && canEditAdvanced) 
-            ? _codeController.text.trim() 
+        joinCode: (_visibility == GroupVisibility.private && canEditAdvanced)
+            ? _codeController.text.trim()
             : null,
       );
       if (!mounted) return;
@@ -658,8 +697,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
     }
   }
 
-
-
   Widget? _buildMemberTrailing({
     required GroupMember member,
     required String? currentUserId,
@@ -671,7 +708,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
     final isSelf = member.userId == currentUserId;
     final isMemberAdmin = member.role == GroupRole.admin;
 
-    
     if (isSelf) {
       String label;
       if (isCreator) {
@@ -693,79 +729,82 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
 
     // If current user is Creator, they can promote/demote
     if (isCreator) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-             if (isMemberAdmin)
-               IconButton(
-                 tooltip: AppLocalizations.of(context)!.demoteTooltip,
-                 icon: const Icon(Icons.arrow_downward),
-                 onPressed: () => _demoteMember(service, member.userId),
-               )
-             else
-               IconButton(
-                 tooltip: AppLocalizations.of(context)!.makeAdminTooltip,
-                 icon: const Icon(Icons.arrow_upward),
-                 onPressed: () => _promoteMember(service, member.userId),
-               ),
-              IconButton(
-                tooltip: AppLocalizations.of(context)!.removeMember,
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () => _removeMember(service, member.userId),
-              ),
-          ],
-        );
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isMemberAdmin)
+            IconButton(
+              tooltip: AppLocalizations.of(context)!.demoteTooltip,
+              icon: const Icon(Icons.arrow_downward),
+              onPressed: () => _demoteMember(service, member.userId),
+            )
+          else
+            IconButton(
+              tooltip: AppLocalizations.of(context)!.makeAdminTooltip,
+              icon: const Icon(Icons.arrow_upward),
+              onPressed: () => _promoteMember(service, member.userId),
+            ),
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.removeMember,
+            icon: const Icon(Icons.remove_circle_outline),
+            onPressed: () => _removeMember(service, member.userId),
+          ),
+        ],
+      );
     }
-    
+
     // If current user is Admin (but not creator)
     if (canManageMembers) {
-       // Cannot remove the creator or other admins (depending on rules, but definitely not creator)
-       // Usually admins cannot remove other admins. Let's stick to: Admins can remove MEMBERS.
-       // But waiting, requirement says: "New admins... Cannot remove the creator admin"
-       // It implies they CAN remove other members.
-       // Verify if member is creator.
-       if (member.userId == group.createdBy) {
-         return Chip(label: Text(AppLocalizations.of(context)!.owner)); // Or just Admin
-       }
-       
-       if (isMemberAdmin) {
-          return Chip(label: Text(AppLocalizations.of(context)!.admin));
-       }
+      // Cannot remove the creator or other admins (depending on rules, but definitely not creator)
+      // Usually admins cannot remove other admins. Let's stick to: Admins can remove MEMBERS.
+      // But waiting, requirement says: "New admins... Cannot remove the creator admin"
+      // It implies they CAN remove other members.
+      // Verify if member is creator.
+      if (member.userId == group.createdBy) {
+        return Chip(
+            label: Text(AppLocalizations.of(context)!.owner)); // Or just Admin
+      }
 
-       return IconButton(
-          tooltip: AppLocalizations.of(context)!.removeMember,
-          icon: const Icon(Icons.remove_circle_outline),
-          onPressed: () => _removeMember(service, member.userId),
-        );
+      if (isMemberAdmin) {
+        return Chip(label: Text(AppLocalizations.of(context)!.admin));
+      }
+
+      return IconButton(
+        tooltip: AppLocalizations.of(context)!.removeMember,
+        icon: const Icon(Icons.remove_circle_outline),
+        onPressed: () => _removeMember(service, member.userId),
+      );
     }
 
     if (isMemberAdmin) {
       return Chip(label: Text(AppLocalizations.of(context)!.administrator));
     }
-    
+
     return null;
   }
 
   Future<void> _promoteMember(GroupService service, String memberId) async {
-      try {
-        await service.promoteToAdmin(groupId: widget.groupId, memberId: memberId);
-        if (!mounted) return;
-        showAppMessage(context, AppLocalizations.of(context)!.memberPromoted);
-      } catch (e) {
-        if (!mounted) return;
-        showAppMessage(context, AppLocalizations.of(context)!.failedToPromote, isError: true);
-      }
+    try {
+      await service.promoteToAdmin(groupId: widget.groupId, memberId: memberId);
+      if (!mounted) return;
+      showAppMessage(context, AppLocalizations.of(context)!.memberPromoted);
+    } catch (e) {
+      if (!mounted) return;
+      showAppMessage(context, AppLocalizations.of(context)!.failedToPromote,
+          isError: true);
+    }
   }
 
   Future<void> _demoteMember(GroupService service, String memberId) async {
-      try {
-        await service.demoteToMember(groupId: widget.groupId, memberId: memberId);
-        if (!mounted) return;
-        showAppMessage(context, AppLocalizations.of(context)!.adminDemoted);
-      } catch (e) {
-        if (!mounted) return;
-        showAppMessage(context, AppLocalizations.of(context)!.failedToDemote, isError: true);
-      }
+    try {
+      await service.demoteToMember(groupId: widget.groupId, memberId: memberId);
+      if (!mounted) return;
+      showAppMessage(context, AppLocalizations.of(context)!.adminDemoted);
+    } catch (e) {
+      if (!mounted) return;
+      showAppMessage(context, AppLocalizations.of(context)!.failedToDemote,
+          isError: true);
+    }
   }
 
   Future<void> _removeMember(GroupService service, String memberId) async {
@@ -800,6 +839,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
       );
     }
   }
+
   Future<void> _loadCode(GroupService service) async {
     if (_codeLoaded) return;
     _codeLoaded = true;
@@ -808,10 +848,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
       if (mounted && code != null) {
         setState(() => _codeController.text = code);
       }
-    } catch (_) {
-      
-      
-      
-    }
+    } catch (_) {}
   }
 }
