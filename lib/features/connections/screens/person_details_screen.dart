@@ -20,7 +20,8 @@ class PersonDetailsScreen extends StatefulWidget {
 }
 
 class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
-  final TextEditingController _interactionNoteController = TextEditingController();
+  final TextEditingController _interactionNoteController =
+      TextEditingController();
   bool _isAddingInteraction = false;
 
   @override
@@ -36,10 +37,11 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
     return Consumer<ConnectionsService>(
       builder: (context, service, _) {
         final person = service.getPersonById(widget.personId);
-        
+
         if (person == null) {
           return Scaffold(
-            appBar: AppBar(title: Text(AppLocalizations.of(context)!.personNameLabel)),
+            appBar: AppBar(
+                title: Text(AppLocalizations.of(context)!.personNameLabel)),
             body: Center(
               child: Text(AppLocalizations.of(context)!.personNotFound),
             ),
@@ -76,11 +78,11 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                       tooltip: 'Email',
                       onPressed: () => _sendEmail(person.email!),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined),
-                      tooltip: AppLocalizations.of(context)!.edit,
-                      onPressed: () => _editPerson(context, person),
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined),
+                    tooltip: AppLocalizations.of(context)!.edit,
+                    onPressed: () => _editPerson(context, person),
+                  ),
                   PopupMenuButton<String>(
                     itemBuilder: (context) => [
                       PopupMenuItem(
@@ -89,7 +91,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                           children: [
                             Icon(Icons.delete_outline, color: Colors.red),
                             SizedBox(width: 8),
-                            Text(AppLocalizations.of(context)!.delete, style: TextStyle(color: Colors.red)),
+                            Text(AppLocalizations.of(context)!.delete,
+                                style: TextStyle(color: Colors.red)),
                           ],
                         ),
                       ),
@@ -102,7 +105,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                   ),
                 ],
               ),
-              
+
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -111,9 +114,11 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                     children: [
                       // Mark Contacted Today Button
                       FilledButton.icon(
-                        onPressed: () => _markContactedToday(context, person.id),
+                        onPressed: () =>
+                            _markContactedToday(context, person.id),
                         icon: const Icon(Icons.check_circle_outline),
-                        label: Text(AppLocalizations.of(context)!.markContactedToday),
+                        label: Text(
+                            AppLocalizations.of(context)!.markContactedToday),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           shape: RoundedRectangleBorder(
@@ -121,14 +126,14 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Contact Info Card
                       _buildInfoCard(context, person, groups),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Interaction Log Section
                       _buildInteractionLogSection(context, person),
                     ],
@@ -142,7 +147,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
     );
   }
 
-  Widget _buildInfoCard(BuildContext context, Person person, List<ContactGroup> groups) {
+  Widget _buildInfoCard(
+      BuildContext context, Person person, List<ContactGroup> groups) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -183,33 +189,38 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: groups.map((group) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: group.color.withAlpha(26),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: group.color.withAlpha(77)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(group.icon, size: 14, color: group.color),
-                          const SizedBox(width: 4),
-                          Text(
-                            group.name,
-                            style: TextStyle(
-                              color: group.color,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )).toList(),
+                    children: groups
+                        .map((group) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: group.color.withAlpha(26),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: group.color.withAlpha(77)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(group.icon,
+                                      size: 14, color: group.color),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    group.name,
+                                    style: TextStyle(
+                                      color: group.color,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ))
+                        .toList(),
                   ),
                 ],
               ),
             ),
-          
+
           // Tags
           if (person.tags.isNotEmpty)
             Padding(
@@ -227,26 +238,29 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
-                    children: person.tags.map((tag) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        '#$tag',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    )).toList(),
+                    children: person.tags
+                        .map((tag) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ))
+                        .toList(),
                   ),
                 ],
               ),
             ),
-          
+
           const Divider(height: 1),
-          
+
           // Contact Details
           if (person.phone != null && person.phone!.isNotEmpty)
             _buildInfoRow(
@@ -256,7 +270,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               value: person.phone!,
               onTap: () => _makeCall(person.phone!),
             ),
-          
+
           if (person.email != null && person.email!.isNotEmpty)
             _buildInfoRow(
               context,
@@ -265,7 +279,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               value: person.email!,
               onTap: () => _sendEmail(person.email!),
             ),
-          
+
           if (person.birthday != null)
             _buildInfoRow(
               context,
@@ -273,7 +287,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               label: 'Birthday', // TODO: Localize
               value: DateFormat.yMMMd().format(person.birthday!),
             ),
-          
+
           _buildInfoRow(
             context,
             icon: Icons.calendar_today_outlined,
@@ -283,7 +297,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                 : 'Not recorded', // TODO: add to arb if needed
             valueColor: person.needsFollowUp ? colorScheme.error : null,
           ),
-          
+
           if (person.notes != null && person.notes!.isNotEmpty)
             Padding(
               padding: const EdgeInsets.all(16),
@@ -418,7 +432,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               ],
             ),
           ),
-          
+
           // Add interaction form
           if (_isAddingInteraction)
             Padding(
@@ -428,9 +442,11 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                   TextField(
                     controller: _interactionNoteController,
                     decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.addInteractionHint,
+                      hintText:
+                          AppLocalizations.of(context)!.addInteractionHint,
                       filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withAlpha(128),
+                      fillColor:
+                          colorScheme.surfaceContainerHighest.withAlpha(128),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -461,9 +477,9 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                 ],
               ),
             ),
-          
+
           const Divider(height: 1),
-          
+
           // Log entries
           if (sortedLog.isEmpty)
             Padding(
@@ -547,14 +563,15 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
     );
   }
 
-  Future<void> _markContactedToday(BuildContext context, String personId) async {
+  Future<void> _markContactedToday(
+      BuildContext context, String personId) async {
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
-    
+
     final service = context.read<ConnectionsService>();
     await service.markContactedToday(uid, personId);
-    
+
     if (mounted && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -568,23 +585,23 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
   Future<void> _addInteraction(BuildContext context, String personId) async {
     final note = _interactionNoteController.text.trim();
     if (note.isEmpty) return;
-    
+
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
-    
+
     final service = context.read<ConnectionsService>();
     final now = DateTime.now();
-    
+
     final entry = InteractionEntry(
       id: now.millisecondsSinceEpoch.toString(),
       date: now,
       note: note,
       createdAt: now,
     );
-    
+
     await service.addInteraction(uid, personId, entry);
-    
+
     setState(() {
       _isAddingInteraction = false;
       _interactionNoteController.clear();
@@ -596,7 +613,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteContactTitle),
-        content: Text(AppLocalizations.of(context)!.deleteContactMessage(person.name)),
+        content: Text(
+            AppLocalizations.of(context)!.deleteContactMessage(person.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -612,15 +630,15 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
         ],
       ),
     );
-    
+
     if (confirmed == true && context.mounted) {
       final auth = context.read<AuthController>();
       final uid = auth.currentUser?.uid;
       if (uid == null) return;
-      
+
       final service = context.read<ConnectionsService>();
       await service.deletePerson(uid, person.id);
-      
+
       if (mounted && context.mounted) {
         Navigator.of(context).pop();
       }
