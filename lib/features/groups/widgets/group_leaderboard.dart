@@ -66,7 +66,8 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
     final cachedStats = cachedRecord?.stats;
 
     // Refresh if no cache, or if total seconds mismatch (content changed)
-    final shouldRefresh = cachedStats == null || cachedStats.totalSeconds != member.studyTimeSeconds;
+    final shouldRefresh = cachedStats == null ||
+        cachedStats.totalSeconds != member.studyTimeSeconds;
 
     if (!mounted) return;
 
@@ -170,7 +171,8 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
-                child: Text(AppLocalizations.of(context)!.errorLoadingLeaderboard(snapshot.error.toString())),
+                child: Text(AppLocalizations.of(context)!
+                    .errorLoadingLeaderboard(snapshot.error.toString())),
               );
             }
 
@@ -462,7 +464,7 @@ class _PodiumMemberState extends State<_PodiumMember>
       case 2:
         return Colors.grey.shade400;
       case 3:
-        return const Color(0xFFCD7F32); 
+        return const Color(0xFFCD7F32);
       default:
         return widget.colorScheme.primary;
     }
@@ -476,10 +478,11 @@ class _PodiumMemberState extends State<_PodiumMember>
     final isFirst = rank == 1;
     final size = isFirst ? 100.0 : 80.0;
     final buttonSize = isFirst ? 26.0 : 24.0;
-    
+
     // Check locally if session has expired
     final expiration = member.sessionRunUntil;
-    final isLocallyActive = member.isStudying && (expiration == null || DateTime.now().isBefore(expiration));
+    final isLocallyActive = member.isStudying &&
+        (expiration == null || DateTime.now().isBefore(expiration));
     final isStudying = isLocallyActive;
 
     return Column(
@@ -505,17 +508,18 @@ class _PodiumMemberState extends State<_PodiumMember>
                 final glowOpacity = 0.10 + 0.05 * t;
                 final blur = isFirst ? (20 + 6 * t) : (14 + 4 * t);
                 final spread = isFirst ? (2 + 1.0 * t) : (1.2 + 0.8 * t);
-                
-                final gapColor = isStudying ? const Color(0xFF4CAF50) : Colors.white;
-                final shadowColor = isStudying 
-                    ? const Color(0xFF4CAF50).withValues(alpha: 0.4 + 0.2 * t) 
+
+                final gapColor =
+                    isStudying ? const Color(0xFF4CAF50) : Colors.white;
+                final shadowColor = isStudying
+                    ? const Color(0xFF4CAF50).withValues(alpha: 0.4 + 0.2 * t)
                     : ringColor.withValues(alpha: glowOpacity);
 
                 return Container(
-                  padding: const EdgeInsets.all(3), 
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: ringColor, 
+                    color: ringColor,
                     boxShadow: [
                       BoxShadow(
                         color: shadowColor,
@@ -526,37 +530,35 @@ class _PodiumMemberState extends State<_PodiumMember>
                   ),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(3), 
+                    padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: gapColor, 
+                      color: gapColor,
                     ),
                     child: child,
                   ),
                 );
               },
-              child: Builder(
-                builder: (context) {
-                  // Rebuild when session expires
-                  final expiration = member.sessionRunUntil;
-                  if (expiration != null) {
-                    final now = DateTime.now();
-                    if (expiration.isAfter(now)) {
-                       // Note: AnimatedBuilder rebuilds every frame, so we don't need a separate timer here.
-                    }
+              child: Builder(builder: (context) {
+                // Rebuild when session expires
+                final expiration = member.sessionRunUntil;
+                if (expiration != null) {
+                  final now = DateTime.now();
+                  if (expiration.isAfter(now)) {
+                    // Note: AnimatedBuilder rebuilds every frame, so we don't need a separate timer here.
                   }
-                  
-                  return UniversalAvatar(
-                    userId: member.userId,
-                    name: member.name,
-                    initialAvatarIndex: member.avatarIndex,
-                    initialAvatarColorValue: member.avatarColorValue,
-                    initialAvatarBase64: member.avatarBase64,
-                    size: size,
-                    fontSize: isFirst ? 40 : 32,
-                  );
                 }
-              ),
+
+                return UniversalAvatar(
+                  userId: member.userId,
+                  name: member.name,
+                  initialAvatarIndex: member.avatarIndex,
+                  initialAvatarColorValue: member.avatarColorValue,
+                  initialAvatarBase64: member.avatarBase64,
+                  size: size,
+                  fontSize: isFirst ? 40 : 32,
+                );
+              }),
             ),
             Positioned(
               bottom: -10,
@@ -576,7 +578,7 @@ class _PodiumMemberState extends State<_PodiumMember>
                 child: Text(
                   AppLocalizations.of(context)!.rankLabel(rank),
                   style: widget.theme.textTheme.labelSmall?.copyWith(
-                    color: Colors.white, 
+                    color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -827,7 +829,8 @@ class _UserStatusDotState extends State<_UserStatusDot> {
   bool get _isLocallyActive {
     if (widget.isStudyingOverride != true) return false;
     final expiration = widget.sessionRunUntil;
-    if (expiration == null) return true; // No expiration set, assume active unless stopped
+    if (expiration == null)
+      return true; // No expiration set, assume active unless stopped
     return DateTime.now().isBefore(expiration);
   }
 
@@ -840,9 +843,7 @@ class _UserStatusDotState extends State<_UserStatusDot> {
       height: widget.size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isStudying
-            ? const Color(0xFF4CAF50) 
-            : Colors.grey.shade400, 
+        color: isStudying ? const Color(0xFF4CAF50) : Colors.grey.shade400,
         border: Border.all(
           color: Theme.of(context).scaffoldBackgroundColor,
           width: 2,
@@ -893,14 +894,15 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
     super.dispose();
   }
 
-  Future<void> _handleTap(bool isOnCooldown, Duration? remainingCooldown) async {
+  Future<void> _handleTap(
+      bool isOnCooldown, Duration? remainingCooldown) async {
     if (_sending) return;
     final l10n = AppLocalizations.of(context)!;
 
     if (isOnCooldown && remainingCooldown != null) {
       final minutes = remainingCooldown.inMinutes;
       final seconds = remainingCooldown.inSeconds % 60;
-      final msg = minutes > 0 
+      final msg = minutes > 0
           ? l10n.nudgeWaitMinutes(minutes)
           : l10n.nudgeWaitSeconds(seconds);
       showAppMessage(context, msg, isError: true);
@@ -913,8 +915,8 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
     }
 
     if (!widget.canReceiveNudges) {
-       showAppMessage(context, l10n.memberCannotReceiveNudges, isError: true);
-       return;
+      showAppMessage(context, l10n.memberCannotReceiveNudges, isError: true);
+      return;
     }
 
     setState(() => _sending = true);
@@ -925,7 +927,8 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
       }
     } catch (e) {
       if (mounted) {
-        showAppMessage(context, l10n.failedToSendNudge(e.toString()), isError: true);
+        showAppMessage(context, l10n.failedToSendNudge(e.toString()),
+            isError: true);
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -947,13 +950,13 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
         final lastNudge = snapshot.data;
         Duration? remaining;
         if (lastNudge != null) {
-           final end = lastNudge.add(const Duration(hours: 1));
-           final now = DateTime.now();
-           if (end.isAfter(now)) {
-             remaining = end.difference(now);
-           }
+          final end = lastNudge.add(const Duration(hours: 1));
+          final now = DateTime.now();
+          if (end.isAfter(now)) {
+            remaining = end.difference(now);
+          }
         }
-        
+
         final isOnCooldown = remaining != null && remaining.inSeconds > 0;
 
         return GestureDetector(
@@ -962,7 +965,9 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
             width: widget.size,
             height: widget.size,
             decoration: BoxDecoration(
-              color: isOnCooldown ? theme.colorScheme.surfaceContainerHighest : theme.colorScheme.primaryContainer,
+              color: isOnCooldown
+                  ? theme.colorScheme.surfaceContainerHighest
+                  : theme.colorScheme.primaryContainer,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
