@@ -50,7 +50,8 @@ features/<name>/
 files. Small features (`ai_analysis`, `courses`) stay flat.
 
 Current features: `auth`, `account`, `habits`, `groups`, `courses`,
-`sessions` (timer/alarms), `stats`, `history`, `ai_analysis`, `home`, and
+`sessions` (timer/alarms), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
+only), `home`, and
 `connections` (built but intentionally hidden — see the marker in `lib/main.dart`).
 
 **Dependency rule (one direction):** `features → core → shared`. `core`/`shared` must never
