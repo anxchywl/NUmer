@@ -22,15 +22,15 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
   late final HeatmapService _service;
   Map<DateTime, int> _dailyMinutes = {};
   late DateTime _currentFocusedDay;
-  
+
   static const List<Color> _greens = [
-    Colors.transparent, 
-    Color(0xFFD6F5D6), 
-    Color(0xFFB3E6B3), 
-    Color(0xFF80D180), 
-    Color(0xFF4DB84D), 
-    Color(0xFF269926), 
-    Color(0xFF196127), 
+    Colors.transparent,
+    Color(0xFFD6F5D6),
+    Color(0xFFB3E6B3),
+    Color(0xFF80D180),
+    Color(0xFF4DB84D),
+    Color(0xFF269926),
+    Color(0xFF196127),
   ];
 
   @override
@@ -55,7 +55,7 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
   }
 
   Future<void> _fetchMonth(DateTime date) async {
-    // Only fetch for the currently focused month. 
+    // Only fetch for the currently focused month.
     // The service handles caching.
     final data = await _service.fetchMonth(date);
     if (!mounted) return;
@@ -83,7 +83,7 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
   Widget build(BuildContext context) {
     return TableCalendar(
       firstDay: DateTime(2025, 1, 1),
-      lastDay: DateTime.now().add(const Duration(days: 365)), 
+      lastDay: DateTime.now().add(const Duration(days: 365)),
       focusedDay: _currentFocusedDay,
       locale: Localizations.localeOf(context).languageCode,
       selectedDayPredicate: (day) => isSameDay(widget.selectedDay, day),
@@ -105,16 +105,18 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
           return _buildCell(day, isToday: true);
         },
         selectedBuilder: (context, day, focusedDay) {
-           return _buildCell(day, isToday: isSameDay(day, DateTime.now()), isSelected: true);
+          return _buildCell(day,
+              isToday: isSameDay(day, DateTime.now()), isSelected: true);
         },
         outsideBuilder: (context, day, focusedDay) {
-          return null; 
+          return null;
         },
       ),
     );
   }
 
-  Widget _buildCell(DateTime day, {bool isToday = false, bool isSelected = false}) {
+  Widget _buildCell(DateTime day,
+      {bool isToday = false, bool isSelected = false}) {
     final key = DateTime(day.year, day.month, day.day);
     final minutes = _dailyMinutes[key] ?? 0;
     final color = _getColor(minutes);
@@ -126,26 +128,27 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
     textStyle = Theme.of(context).textTheme.bodyMedium;
 
     if (isSelected) {
-       decoration = BoxDecoration(
+      decoration = BoxDecoration(
         color: Theme.of(context).primaryColor,
         shape: BoxShape.circle,
       );
-      textStyle = textStyle?.copyWith(color: Colors.white, fontWeight: FontWeight.bold);
+      textStyle =
+          textStyle?.copyWith(color: Colors.white, fontWeight: FontWeight.bold);
     } else if (hasHeat) {
       decoration = BoxDecoration(
         color: color,
         shape: BoxShape.circle,
       );
       textStyle = textStyle?.copyWith(
-        color: _getLevel(minutes) > 4 ? Colors.white : Colors.black87,
-        fontWeight: FontWeight.w600
-      );
+          color: _getLevel(minutes) > 4 ? Colors.white : Colors.black87,
+          fontWeight: FontWeight.w600);
     } else if (isToday) {
-       decoration = BoxDecoration(
+      decoration = BoxDecoration(
         border: Border.all(color: Theme.of(context).primaryColor),
         shape: BoxShape.circle,
       );
-       textStyle = textStyle?.copyWith(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold);
+      textStyle = textStyle?.copyWith(
+          color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold);
     }
 
     return Center(
