@@ -13,7 +13,6 @@
     "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^7.0.2"
   },
