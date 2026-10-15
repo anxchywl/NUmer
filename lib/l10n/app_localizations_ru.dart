@@ -91,6 +91,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get coralPreset => 'Коралловый';
 
   @override
+  String get tealPreset => 'Бирюзовый';
+
+  @override
   String get createPreset => 'Создать пресет';
 
   @override
@@ -2145,4 +2148,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Скопировано в буфер обмена';
+
+  @override
+  String get sessionNotificationTitle => 'Напоминание о сессии';
+
+  @override
+  String sessionNotificationBody(String name) {
+    return 'Пришло время для вашей сессии $name!';
+  }
+
+  @override
+  String get sessionNotificationAction => 'Начать сессию';
 }

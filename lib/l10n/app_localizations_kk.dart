@@ -91,6 +91,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get coralPreset => 'Коралл';
 
   @override
+  String get tealPreset => 'Көкшіл';
+
+  @override
   String get createPreset => 'Пресет құру';
 
   @override
@@ -2120,4 +2123,15 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Алмасу буферіне көшірілді';
+
+  @override
+  String get sessionNotificationTitle => 'Сессия туралы еске салу';
+
+  @override
+  String sessionNotificationBody(String name) {
+    return '$name сессиясының уақыты келді.';
+  }
+
+  @override
+  String get sessionNotificationAction => 'Сессияны бастау';
 }

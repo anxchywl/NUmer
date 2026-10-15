@@ -262,6 +262,12 @@ abstract class AppLocalizations {
   /// **'Coral'**
   String get coralPreset;
 
+  /// No description provided for @tealPreset.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get tealPreset;
+
   /// No description provided for @createPreset.
   ///
   /// In en, this message translates to:
@@ -3969,6 +3975,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copied to clipboard'**
   String get copiedToClipboard;
+
+  /// No description provided for @sessionNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Session reminder'**
+  String get sessionNotificationTitle;
+
+  /// No description provided for @sessionNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'It is time for your {name} session.'**
+  String sessionNotificationBody(String name);
+
+  /// No description provided for @sessionNotificationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get sessionNotificationAction;
 }
 
 class _AppLocalizationsDelegate

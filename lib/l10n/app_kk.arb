@@ -999,5 +999,15 @@
       "error": { "type": "String" }
     }
   },
-  "add": "Қосу"
+  "add": "Қосу",
+  "sessionNotificationTitle": "Сессия туралы еске салу",
+  "sessionNotificationBody": "{name} сессиясының уақыты келді.",
+  "@sessionNotificationBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionNotificationAction": "Сессияны бастау"
 }
