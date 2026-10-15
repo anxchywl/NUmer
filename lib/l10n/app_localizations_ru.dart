@@ -323,6 +323,9 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get aiAnalysisComingSoon => 'Анализ курса скоро появится.';
+
+  @override
   String get courseAnalysis => 'Анализ курса';
 
   @override
@@ -332,22 +335,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get selectCourse => 'Выберите курс';
 
   @override
-  String get timePeriod => 'Период времени';
-
-  @override
-  String get oneMonth => '1 месяц';
-
-  @override
-  String get twoMonths => '2 месяца';
-
-  @override
-  String get threeMonths => '3 месяца';
-
-  @override
   String get sixMonths => '6 месяцев';
-
-  @override
-  String get limitOneAnalysisPerPeriod => 'Лимит: 1 анализ за период.';
 
   @override
   String get analysisUpdatesEveryPeriod =>
@@ -356,21 +344,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get analysisAlreadyGenerated =>
       'Вы уже создали анализ для этого периода.';
-
-  @override
-  String minNotesRequired(int current, int total) {
-    return 'Минимум заметок: $current/$total. Чем больше заметок, тем точнее анализ.';
-  }
-
-  @override
-  String get generateInsight => 'Получить инсайт';
-
-  @override
-  String get analyzing => 'Анализ...';
-
-  @override
-  String get analysisPlaceholder =>
-      'Выберите курс и период, чтобы получить AI-анализ вашей учебы.';
 
   @override
   String get dayStatsTipLine1 =>
@@ -383,21 +356,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get dayStatsTipLine3 =>
       '• Вы можете нажать на любой курс, и экран истории покажет сессии только по этому курсу.';
-
-  @override
-  String get overview => 'Обзор';
-
-  @override
-  String get scrollUpHint => 'Прокрутите вверх';
-
-  @override
-  String get topTopics => 'Топ темы';
-
-  @override
-  String get insights => 'Инсайты';
-
-  @override
-  String get recommendations => 'Рекомендации';
 
   @override
   String get syncOffline => 'Офлайн';

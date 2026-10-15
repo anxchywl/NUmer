@@ -670,6 +670,12 @@ abstract class AppLocalizations {
   /// **'Time for \"{courseName}\" saved'**
   String timeSavedMessage(String courseName);
 
+  /// No description provided for @aiAnalysisComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Course analysis is coming soon.'**
+  String get aiAnalysisComingSoon;
+
   /// No description provided for @courseAnalysis.
   ///
   /// In en, this message translates to:
@@ -688,41 +694,11 @@ abstract class AppLocalizations {
   /// **'Select course'**
   String get selectCourse;
 
-  /// No description provided for @timePeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Time period'**
-  String get timePeriod;
-
-  /// No description provided for @oneMonth.
-  ///
-  /// In en, this message translates to:
-  /// **'1 month'**
-  String get oneMonth;
-
-  /// No description provided for @twoMonths.
-  ///
-  /// In en, this message translates to:
-  /// **'2 months'**
-  String get twoMonths;
-
-  /// No description provided for @threeMonths.
-  ///
-  /// In en, this message translates to:
-  /// **'3 months'**
-  String get threeMonths;
-
   /// No description provided for @sixMonths.
   ///
   /// In en, this message translates to:
   /// **'6 months'**
   String get sixMonths;
-
-  /// No description provided for @limitOneAnalysisPerPeriod.
-  ///
-  /// In en, this message translates to:
-  /// **'Limit: 1 analysis per selected period.'**
-  String get limitOneAnalysisPerPeriod;
 
   /// No description provided for @analysisUpdatesEveryPeriod.
   ///
@@ -735,30 +711,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ve already generated an analysis for this period.'**
   String get analysisAlreadyGenerated;
-
-  /// No description provided for @minNotesRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimum notes required: {current}/{total}. More notes give better insights.'**
-  String minNotesRequired(int current, int total);
-
-  /// No description provided for @generateInsight.
-  ///
-  /// In en, this message translates to:
-  /// **'Generate insight'**
-  String get generateInsight;
-
-  /// No description provided for @analyzing.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyzing...'**
-  String get analyzing;
-
-  /// No description provided for @analysisPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a course and time period, then get AI-powered feedback of your studies.'**
-  String get analysisPlaceholder;
 
   /// No description provided for @dayStatsTipLine1.
   ///
@@ -777,36 +729,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'• You can tap on any course, and the history screen will show only the sessions for that course.'**
   String get dayStatsTipLine3;
-
-  /// No description provided for @overview.
-  ///
-  /// In en, this message translates to:
-  /// **'Overview'**
-  String get overview;
-
-  /// No description provided for @scrollUpHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Scroll up'**
-  String get scrollUpHint;
-
-  /// No description provided for @topTopics.
-  ///
-  /// In en, this message translates to:
-  /// **'Top topics'**
-  String get topTopics;
-
-  /// No description provided for @insights.
-  ///
-  /// In en, this message translates to:
-  /// **'Insights'**
-  String get insights;
-
-  /// No description provided for @recommendations.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommendations'**
-  String get recommendations;
 
   /// No description provided for @syncOffline.
   ///
