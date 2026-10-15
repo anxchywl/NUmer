@@ -67,4 +67,5 @@ The composed landing surface tying the above together.
 - **Notifications:** local reminders/alarms, recording notifications, and FCM push nudges.
 
 ## Platforms
-iOS, Android, and macOS. Currently released on the App Store (version 1.0.3).
+iOS, Android, and macOS. Live on the [App Store](https://apps.apple.com/kz/app/numer-app/id6759787785)
+and [Google Play](https://play.google.com/store/apps/details?id=app.anx.numer) (version 1.0.3).
