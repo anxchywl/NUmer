@@ -17,7 +17,6 @@ import 'package:numer_app/features/courses/swipeable_course_item.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
-
 Future<void> showCourseTimeSheet(BuildContext context, Course course) {
   final appState = context.read<AppState>();
   appState.setCourseSheetOpen(true);
@@ -55,11 +54,9 @@ const _colorChoices = <Color>[
   Color(0xFFEC4899), // Pink
 ];
 
-const int _kMaxSecs = 10800; 
+const int _kMaxSecs = 10800;
 
-const int _kDefaultSemesterWeeks = 14; 
-
-
+const int _kDefaultSemesterWeeks = 14;
 
 double _hoursPerCreditForLevel(int level) {
   switch (level) {
@@ -114,9 +111,7 @@ String _courseNameWithoutParentheses(String value) {
   return value.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
 }
 
-
 // _savedSnack removed
-
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -150,12 +145,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final state = context.watch<AppState>();
     final courses = state.courses;
 
-
-
     return Scaffold(
       body: NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
-          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+          if (notification.direction == ScrollDirection.reverse &&
+              _fabVisible) {
             setState(() => _fabVisible = false);
           } else if (notification.direction == ScrollDirection.forward &&
               !_fabVisible) {
@@ -214,8 +208,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return Padding(
                     key: ValueKey(c.id),
-                    padding:
-                        EdgeInsets.only(bottom: i == courses.length - 1 ? 0 : 8),
+                    padding: EdgeInsets.only(
+                        bottom: i == courses.length - 1 ? 0 : 8),
                     child: ReorderableDelayedDragStartListener(
                       index: i,
                       child: SwipeableCourseItem(
@@ -223,19 +217,22 @@ class _HomeScreenState extends State<HomeScreen> {
                           final ok = await showDialog<bool>(
                             context: context,
                             builder: (_) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!.deleteCourseTitle),
-                              content: Text(
-                                  AppLocalizations.of(context)!.deleteCourseMessage),
+                              title: Text(AppLocalizations.of(context)!
+                                  .deleteCourseTitle),
+                              content: Text(AppLocalizations.of(context)!
+                                  .deleteCourseMessage),
                               actions: [
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.pop(context, false),
-                                  child: Text(AppLocalizations.of(context)!.cancel),
+                                  child: Text(
+                                      AppLocalizations.of(context)!.cancel),
                                 ),
                                 FilledButton.icon(
                                   onPressed: () => Navigator.pop(context, true),
                                   icon: const Icon(Icons.delete),
-                                  label: Text(AppLocalizations.of(context)!.delete),
+                                  label: Text(
+                                      AppLocalizations.of(context)!.delete),
                                 ),
                               ],
                             ),
@@ -245,29 +242,36 @@ class _HomeScreenState extends State<HomeScreen> {
                         onDelete: () => state.removeCourse(c.id),
                         child: Builder(
                           builder: (context) {
-                            final showSummary = state.homeSummaryRange != HomeSummaryRange.off;
-                            final showProgress = state.progressView != ProgressView.off;
+                            final showSummary =
+                                state.homeSummaryRange != HomeSummaryRange.off;
+                            final showProgress =
+                                state.progressView != ProgressView.off;
                             final customGoalHours =
                                 state.goalHoursForCourse(c.id) ?? 0;
                             final hasCredits = (c.credits ?? 0) > 0;
-                            final willShowProgressBar =
-                                showProgress && (hasCredits || customGoalHours > 0);
-                            final isMinimal = !showSummary && !willShowProgressBar;
+                            final willShowProgressBar = showProgress &&
+                                (hasCredits || customGoalHours > 0);
+                            final isMinimal =
+                                !showSummary && !willShowProgressBar;
 
                             if (isMinimal) {
                               final courseTheme = Theme.of(context);
                               return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 6),
                                 leading: CircleAvatar(backgroundColor: c.color),
                                 title: Text(
                                   c.name,
-                                  style: courseTheme.textTheme.titleLarge?.copyWith(
+                                  style: courseTheme.textTheme.titleLarge
+                                      ?.copyWith(
                                     fontWeight: FontWeight.w500,
                                   ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                trailing: Icon(Icons.more_horiz, color: courseTheme.colorScheme.onSurfaceVariant),
+                                trailing: Icon(Icons.more_horiz,
+                                    color: courseTheme
+                                        .colorScheme.onSurfaceVariant),
                                 onTap: () => _openCourseTimeMenu(context, c),
                               );
                             }
@@ -288,7 +292,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       padding: const EdgeInsets.only(left: 8),
                                       child: _CreditsBadge(
                                         credits: c.credits!,
-                                        onTap: () => _openCreditsPopup(context, c),
+                                        onTap: () =>
+                                            _openCreditsPopup(context, c),
                                       ),
                                     ),
                                 ],
@@ -298,7 +303,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final showProgressBar =
                                       hasCredits || customGoalHours > 0;
                                   return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       if (showSummary)
                                         FutureBuilder<Map<String, int>>(
@@ -308,21 +314,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                             final secs = snap.data?[c.id] ?? 0;
                                             final label =
                                                 state.homeSummaryLabel(context);
-                                            return Text('$label: ${_fmtHMS(secs)}');
+                                            return Text(
+                                                '$label: ${_fmtHMS(secs)}');
                                           },
                                         ),
                                       if (showProgressBar && showProgress)
                                         FutureBuilder<int>(
-                                          future:
-                                              state.progressView == ProgressView.day
-                                                  ? Future<int>.value(
-                                                      state.todaySecondsFor(c.id),
-                                                    )
-                                                  : _weeklyElapsedForCourse(
-                                                      context, c.id),
+                                          future: state.progressView ==
+                                                  ProgressView.day
+                                              ? Future<int>.value(
+                                                  state.todaySecondsFor(c.id),
+                                                )
+                                              : _weeklyElapsedForCourse(
+                                                  context, c.id),
                                           builder: (context, snap) {
-                                            final elapsed =
-                                                (snap.data ?? 0); 
+                                            final elapsed = (snap.data ?? 0);
                                             final level = c.expLevel ?? 3;
                                             final weeklyHoursGoal =
                                                 customGoalHours > 0
@@ -339,21 +345,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 (weeklyHoursGoal * 3600)
                                                     .clamp(1, 1 << 31)
                                                     .toInt();
-                                            final targetSecs = state.progressView ==
-                                                    ProgressView.day
-                                                ? (weeklyGoalSecs / 7)
-                                                    .round()
-                                                    .clamp(1, 1 << 31)
-                                                : weeklyGoalSecs;
+                                            final targetSecs =
+                                                state.progressView ==
+                                                        ProgressView.day
+                                                    ? (weeklyGoalSecs / 7)
+                                                        .round()
+                                                        .clamp(1, 1 << 31)
+                                                    : weeklyGoalSecs;
                                             final progress = targetSecs <= 0
                                                 ? 0.0
                                                 : (elapsed / targetSecs)
                                                     .clamp(0.0, 1.0);
-                                            final labelPrefix =
-                                                state.progressView ==
-                                                        ProgressView.day
-                                                    ? AppLocalizations.of(context)!.dailyGoal
-                                                    : AppLocalizations.of(context)!.weeklyGoal;
+                                            final labelPrefix = state
+                                                        .progressView ==
+                                                    ProgressView.day
+                                                ? AppLocalizations.of(context)!
+                                                    .dailyGoal
+                                                : AppLocalizations.of(context)!
+                                                    .weeklyGoal;
                                             final targetHoursLabel =
                                                 state.progressView ==
                                                         ProgressView.day
@@ -361,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         .toStringAsFixed(1)
                                                     : weeklyHoursGoal
                                                         .toStringAsFixed(1);
-    
+
                                             return Padding(
                                               padding:
                                                   const EdgeInsets.only(top: 6),
@@ -374,12 +383,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         milliseconds: 350),
                                                     curve: Curves.easeOutCubic,
                                                     tween: Tween(
-                                                        begin: 0, end: progress),
+                                                        begin: 0,
+                                                        end: progress),
                                                     builder: (context, v, _) {
                                                       return ClipRRect(
                                                         borderRadius:
-                                                            BorderRadius.circular(
-                                                                6),
+                                                            BorderRadius
+                                                                .circular(6),
                                                         child:
                                                             LinearProgressIndicator(
                                                           value: v,
@@ -509,7 +519,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-
     );
   }
 
@@ -675,9 +684,7 @@ class _SyncStatusChip extends StatelessWidget {
       ),
     );
 
-    return tooltip == null
-        ? chip
-        : Tooltip(message: tooltip, child: chip);
+    return tooltip == null ? chip : Tooltip(message: tooltip, child: chip);
   }
 }
 
@@ -717,8 +724,6 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    
-    
     final pad = EdgeInsets.only(
       bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       left: 16,
@@ -734,7 +739,8 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(AppLocalizations.of(context)!.addCourse, style: Theme.of(context).textTheme.titleLarge),
+              Text(AppLocalizations.of(context)!.addCourse,
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _name,
@@ -749,8 +755,9 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                     RegExp(r'[\p{L}\p{N} ]', unicode: true),
                   ),
                 ],
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? AppLocalizations.of(context)!.required : null,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? AppLocalizations.of(context)!.required
+                    : null,
               ),
               const SizedBox(height: 12),
               Align(
@@ -765,7 +772,6 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                 spacing: 10,
                 runSpacing: 10,
                 children: [
-                  
                   for (final c in _colorChoices.take(13))
                     GestureDetector(
                       onTap: () => setState(() {
@@ -818,7 +824,7 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                 validator: (v) {
                   if (v == null || v.isEmpty) return null;
                   final val = double.tryParse(v);
-                  if (val == null) return 'Invalid number'; 
+                  if (val == null) return 'Invalid number';
                   if (val > 64) return 'Max 64';
                   return null;
                 },
@@ -880,15 +886,13 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                     expLevel: _hasCredits ? _expLevel : null,
                   );
 
-                  final appState =
-                      context.read<AppState>(); 
-                  final navigator =
-                      Navigator.of(context); 
+                  final appState = context.read<AppState>();
+                  final navigator = Navigator.of(context);
 
                   await appState.addCourse(course);
 
-                  if (!mounted) return; 
-                  navigator.pop(); 
+                  if (!mounted) return;
+                  navigator.pop();
                 },
                 child: Text(AppLocalizations.of(context)!.save),
               ),
@@ -923,8 +927,6 @@ void _openCreditsPopup(BuildContext context, Course c) async {
   final defaultWeekly = credits * perCred;
   final weekly = savedGoal ?? defaultWeekly;
 
-
-
   if (!context.mounted) return;
 
   showModalBottomSheet<void>(
@@ -945,7 +947,7 @@ void _openCreditsPopup(BuildContext context, Course c) async {
       return StatefulBuilder(
         builder: (ctx, setLocal) {
           final semester = customWeekly * _kDefaultSemesterWeeks;
-          
+
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
@@ -961,18 +963,21 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(AppLocalizations.of(context)!.setGoals, style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(AppLocalizations.of(context)!.setGoals,
+                        style: tt.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                     IconButton(
                       onPressed: () => Navigator.pop(ctx),
                       icon: const Icon(Icons.close),
                       style: IconButton.styleFrom(
-                        backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        backgroundColor: scheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Course Info
                 Row(
                   children: [
@@ -981,13 +986,15 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                     Expanded(
                       child: Text(
                         c.name,
-                        style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                        style: tt.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
@@ -1000,35 +1007,49 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                   ],
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Stats Card
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: scheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                    border: Border.all(
+                        color: scheme.outlineVariant.withValues(alpha: 0.5)),
                   ),
                   child: Column(
                     children: [
-                      _popupRow(AppLocalizations.of(context)!.semester(_kDefaultSemesterWeeks), _fmtHours(semester, context)),
-                       Divider(height: 16, color: scheme.outlineVariant.withValues(alpha: 0.5)),
-                      _popupRow(AppLocalizations.of(context)!.targetPerWeek, _fmtHours(customWeekly, context), isBold: true),
-                       Divider(height: 16, color: scheme.outlineVariant.withValues(alpha: 0.5)),
-                      _popupRow(AppLocalizations.of(context)!.targetPerDay, _fmtHours(customWeekly / 7, context)),
+                      _popupRow(
+                          AppLocalizations.of(context)!
+                              .semester(_kDefaultSemesterWeeks),
+                          _fmtHours(semester, context)),
+                      Divider(
+                          height: 16,
+                          color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                      _popupRow(AppLocalizations.of(context)!.targetPerWeek,
+                          _fmtHours(customWeekly, context),
+                          isBold: true),
+                      Divider(
+                          height: 16,
+                          color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                      _popupRow(AppLocalizations.of(context)!.targetPerDay,
+                          _fmtHours(customWeekly / 7, context)),
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Slider
-                Text(AppLocalizations.of(context)!.adjustWeeklyGoal, style: tt.labelLarge?.copyWith(color: scheme.primary)),
+                Text(AppLocalizations.of(context)!.adjustWeeklyGoal,
+                    style: tt.labelLarge?.copyWith(color: scheme.primary)),
                 const SizedBox(height: 8),
                 Text(
-                     AppLocalizations.of(context)!.hPerWeek(customWeekly.toStringAsFixed(1)), 
-                     style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.w600, color: scheme.primary),
-                     textAlign: TextAlign.center,
+                  AppLocalizations.of(context)!
+                      .hPerWeek(customWeekly.toStringAsFixed(1)),
+                  style: tt.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w600, color: scheme.primary),
+                  textAlign: TextAlign.center,
                 ),
                 Slider(
                   min: sliderMin,
@@ -1037,25 +1058,28 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                   value: customWeekly,
                   onChanged: (v) => setLocal(() => customWeekly = v),
                 ),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Save Button
                 FilledButton(
                   onPressed: () async {
                     final navigator = Navigator.of(context);
                     final l10n = AppLocalizations.of(context)!;
                     await appState.setCourseGoalHours(c.id, customWeekly);
-                    
+
                     if (!navigator.mounted) return;
                     navigator.pop();
                     showAppMessage(navigator.context, l10n.goalsUpdated);
                   },
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16)),
                   ),
-                  child: Text(AppLocalizations.of(context)!.save, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(AppLocalizations.of(context)!.save,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1073,21 +1097,17 @@ Widget _popupRow(String label, String value, {bool isBold = false}) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label, 
-          style: TextStyle(
-             color: Colors.grey.shade600, 
-             fontSize: 14,
-             fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-          )
-        ),
-        Text(
-          value, 
-          style: TextStyle(
-             fontSize: 15,
-             fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-          )
-        ),
+        Text(label,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+              fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+            )),
+        Text(value,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+            )),
       ],
     ),
   );
@@ -1101,7 +1121,8 @@ class _CreditsBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final bg = t.colorScheme.surfaceContainerHighest.withAlpha((0.7 * 255).round());
+    final bg =
+        t.colorScheme.surfaceContainerHighest.withAlpha((0.7 * 255).round());
     final fg = t.colorScheme.onSurface.withAlpha((0.9 * 255).round());
     final text = credits == 1
         ? '1 ${AppLocalizations.of(context)!.credits}'
@@ -1204,7 +1225,6 @@ class _FirstRunCreditsGateState extends State<_FirstRunCreditsGate> {
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
-
 class _AutoFinishWatcher extends StatefulWidget {
   const _AutoFinishWatcher();
 
@@ -1214,8 +1234,8 @@ class _AutoFinishWatcher extends StatefulWidget {
 
 class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
   Timer? _ticker;
-  String? _activeId; 
-  int? _plannedSecs; 
+  String? _activeId;
+  int? _plannedSecs;
 
   @override
   void initState() {
@@ -1224,7 +1244,6 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
       if (!mounted) return;
       final state = context.read<AppState>();
 
-      
       final timerEntry = state.timerRunning.entries.firstWhere(
         (e) => e.value == true,
         orElse: () => const MapEntry<String, bool>('', false),
@@ -1238,7 +1257,7 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
         orElse: () => const MapEntry<String, bool>('', false),
       );
 
-      String? kind; 
+      String? kind;
       String? id;
       if (timerEntry.value == true) {
         kind = 'timer';
@@ -1251,14 +1270,12 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
         id = pomoEntry.key;
       }
 
-      
       if (kind == null || id == null) {
         _activeId = null;
         _plannedSecs = null;
         return;
       }
 
-      
       if (_activeId != id) {
         _activeId = id;
         _plannedSecs = null;
@@ -1268,7 +1285,6 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
         }
       }
 
-      
       final courseName = state.courses
           .firstWhere(
             (c) => c.id == id,
@@ -1283,14 +1299,11 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           )
           .name;
 
-      
       if (kind == 'timer') {
         final elapsed = state.currentElapsedTimer(id).inSeconds;
         if (_plannedSecs != null &&
             _plannedSecs! > 0 &&
             elapsed >= _plannedSecs!) {
-          
-          
           final start = state.timerStart[id];
           DateTime? forcedEnd;
           if (start != null) {
@@ -1301,7 +1314,7 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           final p = await SharedPreferences.getInstance();
           await p.remove('timer_planned_$id');
 
-          if (!mounted) return; 
+          if (!mounted) return;
           showAppMessage(
             context,
             AppLocalizations.of(context)!.timeSavedMessage(
@@ -1316,7 +1329,7 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
         if (e >= _kMaxSecs) {
           await state.stopStopwatch(id);
 
-          if (!mounted) return; 
+          if (!mounted) return;
           showAppMessage(
             context,
             AppLocalizations.of(context)!.timeSavedMessage(
@@ -1326,11 +1339,9 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           _activeId = null;
           _plannedSecs = null;
         }
-      } else if (kind == 'pomodoro') {
-        
-      }
+      } else if (kind == 'pomodoro') {}
 
-      if (mounted) setState(() {}); 
+      if (mounted) setState(() {});
     });
   }
 
@@ -1344,8 +1355,6 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
   Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
-
-
 class _ActiveSessionBar extends StatefulWidget {
   const _ActiveSessionBar();
 
@@ -1356,12 +1365,12 @@ class _ActiveSessionBar extends StatefulWidget {
 class _ActiveSessionBarState extends State<_ActiveSessionBar> {
   Timer? _ticker;
   String? _cachedCourseId;
-  int? _plannedSecs; 
+  int? _plannedSecs;
 
   @override
   void initState() {
     super.initState();
-    
+
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
     });
@@ -1509,40 +1518,40 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
               const SizedBox(width: 12),
               FilledButton.tonalIcon(
                 onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final navigator = Navigator.of(context); 
-                
-                int seconds = 0;
-                String? snackMessage; 
+                  final messenger = ScaffoldMessenger.of(context);
+                  final navigator = Navigator.of(context);
 
-                if (kind == 'timer') {
-                  
-                  
-                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(
-                    _courseNameWithoutParentheses(course.name),
-                  );
-                  seconds = await state.stopTimer(courseId);
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('timer_planned_$courseId');
-                } else if (kind == 'stopwatch') {
-                  snackMessage = AppLocalizations.of(context)!.timeSavedMessage(
-                    _courseNameWithoutParentheses(course.name),
-                  );
-                  seconds = await state.stopStopwatch(courseId);
-                } else {
-                  await state.resetPomodoro(courseId);
-                  snackMessage =
-                      'Pomodoro for "${_courseNameWithoutParentheses(course.name)}" reset.';
-                }
+                  int seconds = 0;
+                  String? snackMessage;
 
-                if (kind != 'pomodoro' && seconds > 0) { 
-                   // Global listener handles reflection now
-                }
-                
-                if (messenger.mounted) {
-                  showAppMessage(navigator.context, snackMessage);
-                }
-              },
+                  if (kind == 'timer') {
+                    snackMessage =
+                        AppLocalizations.of(context)!.timeSavedMessage(
+                      _courseNameWithoutParentheses(course.name),
+                    );
+                    seconds = await state.stopTimer(courseId);
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('timer_planned_$courseId');
+                  } else if (kind == 'stopwatch') {
+                    snackMessage =
+                        AppLocalizations.of(context)!.timeSavedMessage(
+                      _courseNameWithoutParentheses(course.name),
+                    );
+                    seconds = await state.stopStopwatch(courseId);
+                  } else {
+                    await state.resetPomodoro(courseId);
+                    snackMessage =
+                        'Pomodoro for "${_courseNameWithoutParentheses(course.name)}" reset.';
+                  }
+
+                  if (kind != 'pomodoro' && seconds > 0) {
+                    // Global listener handles reflection now
+                  }
+
+                  if (messenger.mounted) {
+                    showAppMessage(navigator.context, snackMessage);
+                  }
+                },
                 icon: const Icon(Icons.stop_circle_outlined),
                 label: Text(
                   kind == 'timer'
@@ -1555,7 +1564,7 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
         ),
       ),
     );
-}
+  }
 
   String _pomodoroPhaseLabel(PomodoroPhase phase) {
     final l10n = AppLocalizations.of(context)!;
@@ -1570,8 +1579,6 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
   }
 }
 
-
-
 class _CourseTimeMenu extends StatefulWidget {
   final Course course;
   const _CourseTimeMenu({required this.course});
@@ -1584,7 +1591,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   late final TabController _tabs;
 
-  
   final _hCtrl = TextEditingController();
   final _mCtrl = TextEditingController();
   final _sCtrl = TextEditingController();
@@ -1593,13 +1599,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   final _mNode = FocusNode();
   final _sNode = FocusNode();
 
-  
   Timer? _ticker;
 
-  
   bool _kbOpen = false;
 
-  
   late final AnimationController _kbCtrl;
   late final Animation<Offset> _inputSlide;
   late final Animation<double> _fadeAway;
@@ -1609,7 +1612,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   int _lastSettledTab = 0;
   bool _restoringTab = false;
 
-  
   String get _plannedKey => 'timer_planned_${widget.course.id}';
   Future<void> _savePlannedSecs(int secs) async {
     final p = await SharedPreferences.getInstance();
@@ -1626,7 +1628,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     await p.remove(_plannedKey);
   }
 
-  
   bool _hasAnyActive(AppState s) =>
       s.timerRunning.values.any((v) => v == true) ||
       s.stopwatchRunning.values.any((v) => v == true) ||
@@ -1694,12 +1695,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     _mNode.addListener(_handleFocusChange);
     _sNode.addListener(_handleFocusChange);
 
-    
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) async {
       if (!mounted) return;
       final state = context.read<AppState>();
 
-      
       final planned = await _loadPlannedSecs();
       final isThisTimerRunning =
           (state.timerRunning[widget.course.id] ?? false);
@@ -1719,7 +1718,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         }
       }
 
-      
       if (state.stopwatchRunning[widget.course.id] ?? false) {
         final e = state.currentElapsedStopwatch(widget.course.id).inSeconds;
         if (e >= _kMaxSecs) {
@@ -1762,7 +1760,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   }
 
   void _updateCondensedMode() {
-    final bool timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
+    final bool timerFocused =
+        _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
     final bool shouldBeCondensed = _kbOpen && timerFocused;
 
     if (shouldBeCondensed) {
@@ -1875,11 +1874,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     return ok;
   }
 
-  
   Future<void> _startTimer() async {
     final state = context.read<AppState>();
 
-    
     if (_hasAnyActive(state)) {
       final info = _activeInfo(state);
       final otherId = info?.id;
@@ -1933,7 +1930,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Future<void> _doneTimer() async {
     final state = context.read<AppState>();
 
-    
     final navigator = Navigator.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -1947,14 +1943,13 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     if (seconds <= 0 || !state.courseSheetOpen) {
       navigator.pop();
     }
-    
+
     showAppMessage(
       navigator.context,
       l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
     );
   }
 
-  
   Future<void> _startStopwatch() async {
     final state = context.read<AppState>();
 
@@ -1994,14 +1989,12 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Future<void> _doneStopwatch() async {
     final state = context.read<AppState>();
 
-    
     if (!(state.stopwatchRunning[widget.course.id] ?? false) &&
         state.currentElapsedStopwatch(widget.course.id).inSeconds == 0) {
       _snack(AppLocalizations.of(context)!.nothingToSave, isError: true);
       return;
     }
 
-    
     final navigator = Navigator.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -2011,7 +2004,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     if (seconds <= 0 || !state.courseSheetOpen) {
       navigator.pop();
     }
-    
+
     showAppMessage(
       navigator.context,
       l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
@@ -2058,18 +2051,14 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
   Future<void> _resetPomodoroCycle() async {
     final state = context.read<AppState>();
-    
+
     await state.resetPomodoroAndSave(widget.course.id);
     if (mounted) setState(() {});
   }
 
-  
-
-  
   void _openEditCourseDialog(BuildContext context) {
     final state = context.read<AppState>();
 
-    
     final course = state.courses.firstWhere(
       (c) => c.id == widget.course.id,
       orElse: () => widget.course,
@@ -2093,21 +2082,21 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextField(
-                  controller: nameCtrl,
-                  autofocus: true,
-                  textCapitalization: TextCapitalization.words,
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(32),
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'[\p{L}\p{N} ]', unicode: true),
-                    ),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context)!.courseName,
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
+                        controller: nameCtrl,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(32),
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[\p{L}\p{N} ]', unicode: true),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.courseName,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(AppLocalizations.of(context)!.color,
@@ -2131,7 +2120,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                                   color: c,
                                   shape: BoxShape.circle,
                                   border: selected.toARGB32() == c.toARGB32()
-                                      ? Border.all(width: 3, color: Colors.black54)
+                                      ? Border.all(
+                                          width: 3, color: Colors.black54)
                                       : null,
                                 ),
                               ),
@@ -2140,7 +2130,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                             color: selected,
                             onCustomTap: () {
                               FocusManager.instance.primaryFocus?.unfocus();
-                              setLocal(() => showCustomPicker = !showCustomPicker);
+                              setLocal(
+                                  () => showCustomPicker = !showCustomPicker);
                             },
                             onColorPicked: (color) =>
                                 setLocal(() => selected = color),
@@ -2182,18 +2173,16 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       colorValue: selected.toARGB32(),
                     );
 
-                    
                     final navigator = Navigator.of(ctx);
                     final appState = ctx.read<AppState>();
 
                     await appState.updateCourse(updated);
 
-                    
                     if (!mounted) {
-                      return; 
+                      return;
                     }
-                    navigator.pop(); 
-                    setState(() {}); 
+                    navigator.pop();
+                    setState(() {});
                   },
                   child: const Text('Save'),
                 ),
@@ -2204,8 +2193,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       },
     );
   }
-
-  
 
   Widget _buildTimerTab() {
     final state = context.watch<AppState>();
@@ -2232,7 +2219,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
             double ay(double yPx) => ((yPx / h) * 2 - 1).clamp(-1.0, 1.0);
 
-            final timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
+            final timerFocused =
+                _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
             final bool isCondensed = _kbOpen && timerFocused;
             const double gapPx = 100;
             const double hintGapPx = 84;
@@ -2251,7 +2239,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
               height: h,
               child: Stack(
                 children: [
-                  
                   AnimatedAlign(
                     alignment: Alignment(0, ay(hintY)),
                     duration: dur,
@@ -2269,8 +2256,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                               Text(
                                 AppLocalizations.of(context)!.typeTimeToStudy,
                                 textAlign: TextAlign.center,
-                                style:
-                                    const TextStyle(fontSize: 14, color: Colors.grey),
+                                style: const TextStyle(
+                                    fontSize: 14, color: Colors.grey),
                               ),
                               SizedBox(height: 6),
                               Icon(Icons.arrow_downward,
@@ -2282,8 +2269,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       ),
                     ),
                   ),
-
-                  
                   AnimatedAlign(
                     alignment: Alignment(0, ay(inputsY)),
                     duration: dur,
@@ -2295,8 +2280,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       child: _timeInputsRow(enabled: inputsEnabled),
                     ),
                   ),
-
-                  
                   AnimatedAlign(
                     alignment: Alignment(0, ay(timerY)),
                     duration: dur,
@@ -2359,7 +2342,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          Text(AppLocalizations.of(context)!.maxTime, style: const TextStyle(color: Colors.grey)),
+          Text(AppLocalizations.of(context)!.maxTime,
+              style: const TextStyle(color: Colors.grey)),
         ],
       ),
     );
@@ -2371,8 +2355,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final remaining =
         state.currentPomodoroRemaining(widget.course.id).inSeconds;
     final elapsed = state.currentPomodoroElapsed(widget.course.id).inSeconds;
-    final total =
-        state.pomodoroPhaseDurationFor(widget.course.id).inSeconds;
+    final total = state.pomodoroPhaseDurationFor(widget.course.id).inSeconds;
     final completed = state.pomodoroCompletedWorkFor(widget.course.id);
     final isPaused = state.pomodoroPaused[widget.course.id] ?? false;
     final sliderValue = _pendingLongBreak ??
@@ -2384,8 +2367,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         (state.pomodoroPaused[widget.course.id] ?? false) ||
         elapsed > 0;
     final sliderEnabled = !hasStarted;
-    final phaseLabel = hasStarted 
-        ? _pomodoroPhaseLabel(phase) 
+    final phaseLabel = hasStarted
+        ? _pomodoroPhaseLabel(phase)
         : AppLocalizations.of(context)!.start;
 
     return LayoutBuilder(
@@ -2396,7 +2379,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: Column(
                   children: [
                     const Spacer(),
@@ -2410,7 +2394,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     Text(
                       _fmt(remaining),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 48, fontWeight: FontWeight.w800),
+                      style: const TextStyle(
+                          fontSize: 48, fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -2419,9 +2404,11 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      AppLocalizations.of(context)!.completedPomodoros(completed),
+                      AppLocalizations.of(context)!
+                          .completedPomodoros(completed),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                       textAlign: TextAlign.center,
                     ),
@@ -2430,7 +2417,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        AppLocalizations.of(context)!.longBreakLength(sliderValue.round()),
+                        AppLocalizations.of(context)!
+                            .longBreakLength(sliderValue.round()),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
@@ -2440,7 +2428,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       min: minLong,
                       max: maxLong,
                       divisions: (maxLong - minLong).round(),
-                      label: '${sliderValue.round()} ${AppLocalizations.of(context)!.minutes_plural}',
+                      label:
+                          '${sliderValue.round()} ${AppLocalizations.of(context)!.minutes_plural}',
                       onChanged: sliderEnabled
                           ? (value) => setState(() => _pendingLongBreak = value)
                           : null,
@@ -2470,10 +2459,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final hasSession = state.pomodoroRunning[widget.course.id] ?? false;
     final isPaused = state.pomodoroPaused[widget.course.id] ?? false;
     final onBreak = state.pomodoroIsOnBreak(widget.course.id);
-    final elapsed =
-        state.currentPomodoroElapsed(widget.course.id).inSeconds;
+    final elapsed = state.currentPomodoroElapsed(widget.course.id).inSeconds;
     final canReset = hasSession || elapsed > 0;
-  
 
     IconData primaryIcon;
     String primaryLabel;
@@ -2525,7 +2512,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           ),
         ),
         const SizedBox(height: 8),
-        
       ],
     );
   }
@@ -2541,8 +2527,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         return l10n.longBreak;
     }
   }
-
-  
 
   Widget _timeInputsRow({required bool enabled}) {
     return Row(
@@ -2682,7 +2666,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AppState>();
-    
+
     final live = state.courses.firstWhere(
       (c) => c.id == widget.course.id,
       orElse: () => widget.course,
@@ -2694,9 +2678,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final isPomodoroActiveForThis =
         (state.pomodoroRunning[widget.course.id] ?? false) ||
             (state.pomodoroPaused[widget.course.id] ?? false);
-    
-    final isAnyRunningCombined = isTimerRunningForThis || 
-        isStopwatchRunningForThis || 
+
+    final isAnyRunningCombined = isTimerRunningForThis ||
+        isStopwatchRunningForThis ||
         isPomodoroActiveForThis;
 
     final timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
@@ -2723,215 +2707,226 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           top: false,
           bottom: true,
           child: Column(
-          children: [
-            const SizedBox(height: 10),
-            Container(
-              height: 5,
-              width: 42,
-              decoration: BoxDecoration(
-                color: Colors.black26,
-                borderRadius: BorderRadius.circular(2.5),
+            children: [
+              const SizedBox(height: 10),
+              Container(
+                height: 5,
+                width: 42,
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
+              const SizedBox(height: 10),
+              ListTile(
+                leading: CircleAvatar(backgroundColor: live.color),
+                title: Text(live.name),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: live.hiddenFromLeaderboard
+                          ? AppLocalizations.of(context)!.unhideFromLeaderboard
+                          : AppLocalizations.of(context)!.hideFromLeaderboard,
+                      icon: Icon(
+                        live.hiddenFromLeaderboard
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: isAnyRunningCombined
+                            ? Colors.grey
+                            : Colors.blueGrey,
+                      ),
+                      onPressed: isAnyRunningCombined
+                          ? null
+                          : () async {
+                              final appState = context.read<AppState>();
+                              final updated = live.copyWith(
+                                  hiddenFromLeaderboard:
+                                      !live.hiddenFromLeaderboard);
+                              await appState.updateCourse(updated);
+                              setState(() {}); // Toggle icon state immediately
 
-            ListTile(
-              leading: CircleAvatar(backgroundColor: live.color),
-              title: Text(live.name),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                IconButton(
-                  tooltip: live.hiddenFromLeaderboard
-                      ? AppLocalizations.of(context)!.unhideFromLeaderboard
-                      : AppLocalizations.of(context)!.hideFromLeaderboard,
-                  icon: Icon(
-                    live.hiddenFromLeaderboard
-                        ? Icons.visibility_off
-                        : Icons.visibility,
-                    color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey,
-                  ),
-                  onPressed: isAnyRunningCombined
-                      ? null
-                      : () async {
-                          final appState = context.read<AppState>();
-                          final updated = live.copyWith(
-                              hiddenFromLeaderboard:
-                                  !live.hiddenFromLeaderboard);
-                          await appState.updateCourse(updated);
-                          setState(() {}); // Toggle icon state immediately
-                          
-                          if (!mounted || !context.mounted) return;
-                          
-                          // Brief delay so the user sees the icon change before the popup closes
-                          await Future.delayed(const Duration(milliseconds: 300));
-                          if (!mounted || !context.mounted) return;
-                          
-                          Navigator.pop(context);
+                              if (!mounted || !context.mounted) return;
 
-                          final msg = updated.hiddenFromLeaderboard
-                              ? AppLocalizations.of(context)!.courseHiddenFromLeaderboard
-                              : AppLocalizations.of(context)!.courseVisibleInLeaderboard;
-                          showAppMessage(context, msg);
-                        },
-                ),
-                IconButton(
-                  tooltip: AppLocalizations.of(context)!.edit,
-                  icon: Icon(Icons.edit, 
-                    color: isAnyRunningCombined ? Colors.grey : Colors.blueGrey
-                  ),
-                  onPressed: isAnyRunningCombined ? null : () => _openEditCourseDialog(context),
-                ),
-                  IconButton(
-                    icon: Icon(Icons.delete, 
-                      color: isAnyRunningCombined ? Colors.grey : Colors.red
+                              // Brief delay so the user sees the icon change before the popup closes
+                              await Future.delayed(
+                                  const Duration(milliseconds: 300));
+                              if (!mounted || !context.mounted) return;
+
+                              Navigator.pop(context);
+
+                              final msg = updated.hiddenFromLeaderboard
+                                  ? AppLocalizations.of(context)!
+                                      .courseHiddenFromLeaderboard
+                                  : AppLocalizations.of(context)!
+                                      .courseVisibleInLeaderboard;
+                              showAppMessage(context, msg);
+                            },
                     ),
-                    tooltip: 'Delete Course',
-                    onPressed: isAnyRunningCombined ? null : () async {
-                      
-                      final appState = context.read<AppState>();
-                      final navigator = Navigator.of(context);
+                    IconButton(
+                      tooltip: AppLocalizations.of(context)!.edit,
+                      icon: Icon(Icons.edit,
+                          color: isAnyRunningCombined
+                              ? Colors.grey
+                              : Colors.blueGrey),
+                      onPressed: isAnyRunningCombined
+                          ? null
+                          : () => _openEditCourseDialog(context),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.delete,
+                          color:
+                              isAnyRunningCombined ? Colors.grey : Colors.red),
+                      tooltip: 'Delete Course',
+                      onPressed: isAnyRunningCombined
+                          ? null
+                          : () async {
+                              final appState = context.read<AppState>();
+                              final navigator = Navigator.of(context);
 
-                      final ok = await showDialog<bool>(
-                        context: context,
-                        builder: (dialogCtx) => AlertDialog(
-                          title: Text(AppLocalizations.of(context)!.deleteCourseTitle),
-                          content: Text(AppLocalizations.of(context)!.deleteCourseMessage),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dialogCtx, false),
-                              child: Text(AppLocalizations.of(context)!.cancel),
-                            ),
-                            FilledButton.icon(
-                              onPressed: () => Navigator.pop(dialogCtx, true),
-                              icon: const Icon(Icons.delete),
-                              label: Text(AppLocalizations.of(context)!.delete),
-                            ),
-                          ],
-                        ),
-                      );
+                              final ok = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogCtx) => AlertDialog(
+                                  title: Text(AppLocalizations.of(context)!
+                                      .deleteCourseTitle),
+                                  content: Text(AppLocalizations.of(context)!
+                                      .deleteCourseMessage),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogCtx, false),
+                                      child: Text(
+                                          AppLocalizations.of(context)!.cancel),
+                                    ),
+                                    FilledButton.icon(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogCtx, true),
+                                      icon: const Icon(Icons.delete),
+                                      label: Text(
+                                          AppLocalizations.of(context)!.delete),
+                                    ),
+                                  ],
+                                ),
+                              );
 
-                      if (ok == true) {
-                        await appState.removeCourse(widget.course.id);
-                        
-                        navigator.pop(); 
-                      }
-                    },
-                  ),
-                ],
+                              if (ok == true) {
+                                await appState.removeCourse(widget.course.id);
+
+                                navigator.pop();
+                              }
+                            },
+                    ),
+                  ],
+                ),
               ),
-            ),
-
-            const SizedBox(height: 8),
-
-            
-            SizedBox(
-              height: kTextTabBarHeight,
-              width: double.infinity,
-              child: AnimatedCrossFade(
-                duration: const Duration(milliseconds: 300),
-                firstCurve: Curves.easeInOut,
-                secondCurve: Curves.easeInOut,
-                crossFadeState: isCondensed
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                firstChild: Center(
-                  child: TextButton(
-                    onPressed: () => _tabs.animateTo(0),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: const StadiumBorder(),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: kTextTabBarHeight,
+                width: double.infinity,
+                child: AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  firstCurve: Curves.easeInOut,
+                  secondCurve: Curves.easeInOut,
+                  crossFadeState: isCondensed
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                  firstChild: Center(
+                    child: TextButton(
+                      onPressed: () => _tabs.animateTo(0),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        shape: const StadiumBorder(),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context)!.timerTab,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
                     ),
-                    child: Text(
-                      AppLocalizations.of(context)!.timerTab,
-                      style:
-                          const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  secondChild: Align(
+                    alignment: Alignment.center,
+                    child: TabBar(
+                      controller: _tabs,
+                      labelColor: Theme.of(context).colorScheme.onSurface,
+                      tabs: [
+                        Tab(text: AppLocalizations.of(context)!.timerTab),
+                        Tab(text: AppLocalizations.of(context)!.stopwatchTab),
+                        Tab(text: AppLocalizations.of(context)!.pomodoroTab),
+                      ],
                     ),
                   ),
                 ),
-                secondChild: Align(
-                  alignment: Alignment.center,
-                  child: TabBar(
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: IgnorePointer(
+                  // Keep timer inputs interactive while keyboard is open so
+                  // users can switch H/M/S focus directly.
+                  ignoring: _kbOpen && _tabs.index != 0,
+                  child: TabBarView(
                     controller: _tabs,
-                    labelColor: Theme.of(context).colorScheme.onSurface,
-                    tabs: [
-                      Tab(text: AppLocalizations.of(context)!.timerTab),
-                      Tab(text: AppLocalizations.of(context)!.stopwatchTab),
-                      Tab(text: AppLocalizations.of(context)!.pomodoroTab),
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildTimerTab(),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        switchInCurve: Curves.easeOutCubic,
+                        switchOutCurve: Curves.easeInCubic,
+                        child: isCondensed
+                            ? const SizedBox.shrink()
+                            : _buildStopwatchTab(),
+                      ),
+                      _buildPomodoroTab(),
                     ],
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-
-            Expanded(
-              child: IgnorePointer(
-                // Keep timer inputs interactive while keyboard is open so
-                // users can switch H/M/S focus directly.
-                ignoring: _kbOpen && _tabs.index != 0,
-                child: TabBarView(
-                  controller: _tabs,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildTimerTab(),
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      child: isCondensed
-                          ? const SizedBox.shrink()
-                          : _buildStopwatchTab(),
-                    ),
-                    _buildPomodoroTab(),
-                  ],
-                ),
-              ),
-            ),
-
-            
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: _tabs.index == 2
-                  ? _buildPomodoroControls()
-                  : FadeTransition(
-                      opacity: ReverseAnimation(_fadeAway),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _tabs.index == 0
-                                  ? (isTimerRunningForThis || isPomodoroActiveForThis
-                                      ? null
-                                      : _startTimer)
-                                  : (isStopwatchRunningForThis || isPomodoroActiveForThis
-                                      ? null
-                                      : _startStopwatch),
-                              icon: const Icon(Icons.play_arrow),
-                              label: Text(AppLocalizations.of(context)!.start),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: _tabs.index == 2
+                    ? _buildPomodoroControls()
+                    : FadeTransition(
+                        opacity: ReverseAnimation(_fadeAway),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _tabs.index == 0
+                                    ? (isTimerRunningForThis ||
+                                            isPomodoroActiveForThis
+                                        ? null
+                                        : _startTimer)
+                                    : (isStopwatchRunningForThis ||
+                                            isPomodoroActiveForThis
+                                        ? null
+                                        : _startStopwatch),
+                                icon: const Icon(Icons.play_arrow),
+                                label:
+                                    Text(AppLocalizations.of(context)!.start),
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: _tabs.index == 0
-                                  ? (isTimerRunningForThis
-                                      ? _doneTimer
-                                      : null)
-                                  : (isStopwatchRunningForThis
-                                      ? _doneStopwatch
-                                      : null),
-                              icon: const Icon(Icons.check),
-                              label: Text(AppLocalizations.of(context)!.done),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: _tabs.index == 0
+                                    ? (isTimerRunningForThis
+                                        ? _doneTimer
+                                        : null)
+                                    : (isStopwatchRunningForThis
+                                        ? _doneStopwatch
+                                        : null),
+                                icon: const Icon(Icons.check),
+                                label: Text(AppLocalizations.of(context)!.done),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -2953,7 +2948,8 @@ class _StreakTitle extends StatelessWidget {
       return Text(
         l10n.noStreakYet,
         style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).round()),
+          color:
+              theme.colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).round()),
           fontWeight: FontWeight.w500,
         ),
       );
@@ -2971,7 +2967,9 @@ class _StreakTitle extends StatelessWidget {
         Text(
           l10n.streakDays(count),
           style: theme.textTheme.titleMedium?.copyWith(
-            color: hasToday ? state.accentColor : theme.colorScheme.onSurfaceVariant,
+            color: hasToday
+                ? state.accentColor
+                : theme.colorScheme.onSurfaceVariant,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.5,
           ),
