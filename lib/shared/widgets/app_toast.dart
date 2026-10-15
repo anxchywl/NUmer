@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-
+// shows a floating snackbar for transient feedback, styled for normal or error state
 void showAppMessage(
   BuildContext context, 
   String message, {

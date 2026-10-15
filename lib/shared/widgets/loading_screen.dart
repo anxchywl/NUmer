@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// full-screen placeholder shown while the app or a route is still loading
 class LoadingScreen extends StatelessWidget {
   final String message;
   final Color backgroundColor;
