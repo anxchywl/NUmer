@@ -37,6 +37,7 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
         tick();
       });
     }
+
     tick();
   }
 
@@ -69,7 +70,7 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    
+
     final h = widget.value ~/ 3600;
     final m = (widget.value % 3600) ~/ 60;
     final s = widget.value % 60;
@@ -77,15 +78,19 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildTimeUnit(h.toInt().toString().padLeft(2, '0'), l10n.habitTimeHourShort, 3600, theme),
+        _buildTimeUnit(h.toInt().toString().padLeft(2, '0'),
+            l10n.habitTimeHourShort, 3600, theme),
         _buildTimeSeparator(theme),
-        _buildTimeUnit(m.toInt().toString().padLeft(2, '0'), l10n.habitTimeMinuteShort, 60, theme),
+        _buildTimeUnit(m.toInt().toString().padLeft(2, '0'),
+            l10n.habitTimeMinuteShort, 60, theme),
         _buildTimeSeparator(theme),
-        _buildTimeUnit(s.toInt().toString().padLeft(2, '0'), l10n.habitTimeSecondShort, 1, theme),
+        _buildTimeUnit(s.toInt().toString().padLeft(2, '0'),
+            l10n.habitTimeSecondShort, 1, theme),
         const SizedBox(width: 8),
         IconButton(
           onPressed: () => widget.onChanged(0),
-          icon: Icon(Icons.refresh, color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+          icon: Icon(Icons.refresh,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
           tooltip: l10n.habitClearTime,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -94,7 +99,8 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
     );
   }
 
-  Widget _buildTimeUnit(String val, String label, double step, ThemeData theme) {
+  Widget _buildTimeUnit(
+      String val, String label, double step, ThemeData theme) {
     return GestureDetector(
       onTapDown: (_) {
         _startAdjusting(step);
@@ -105,13 +111,15 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color:
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(val, style: theme.textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: theme.colorScheme.onSurface,
-        )),
+        child: Text(val,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+            )),
       ),
     );
   }
@@ -119,7 +127,10 @@ class _HabitTimePickerState extends State<HabitTimePicker> {
   Widget _buildTimeSeparator(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Text(":", style: theme.textTheme.headlineMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5))),
+      child: Text(":",
+          style: theme.textTheme.headlineMedium?.copyWith(
+              color:
+                  theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5))),
     );
   }
 }

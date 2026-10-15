@@ -47,7 +47,7 @@ class ProgressCircle extends StatelessWidget {
               currentStrokeWidth = 5.0;
             }
           }
-          
+
           // Special case: if it's fully complete (target is 1.0), we want to show the checkmark.
           // We can fade in the checkmark as it reaches 1.0.
           final showCheckmark = animatedProgress >= 0.99;
@@ -103,16 +103,16 @@ class _ProgressPainter extends CustomPainter {
       // Draw filled circle
       canvas.drawCircle(center, radius, paint);
     } else {
-      // Draw background circle (optional, usually nice for context, but requirements said "Progress circle... Update only on Update progress... No extra text". 
+      // Draw background circle (optional, usually nice for context, but requirements said "Progress circle... Update only on Update progress... No extra text".
       // Requirement didn't explicitly ask for a track/background, but "Progress circle" usually implies one.
       // However, "Stroke thickness... 0-24% thin" implies we are just drawing the active part.
       // Let's stick to just the active part for now as per "No extra text, visual only" implying minimal.
-      // Wait, "Circle fully closed" at 100%. 
-      
+      // Wait, "Circle fully closed" at 100%.
+
       // Let's just draw the progress arc.
       // We need to account for stroke width so it doesn't clip.
       final correctedRadius = radius - strokeWidth / 2;
-      
+
       // Start from top (-pi/2)
       const startAngle = -math.pi / 2;
       final sweepAngle = 2 * math.pi * progress;
