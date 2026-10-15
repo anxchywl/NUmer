@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
@@ -8,8 +7,6 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class HistoryScreen extends StatefulWidget {
-  
-  
   final DateTime? startLocal;
   final DateTime? endLocal;
   final String? courseId;
@@ -34,7 +31,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     _future = _load();
   }
 
-  
   DateTime? _asDT(dynamic v) {
     if (v is DateTime) return v;
     if (v is String) return DateTime.tryParse(v);
@@ -43,17 +39,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   bool _overlaps(
       DateTime aStart, DateTime aEnd, DateTime bStart, DateTime bEnd) {
-    
     return aEnd.isAfter(bStart) && aStart.isBefore(bEnd);
   }
 
   Future<List<_SessionRow>> _load() async {
-    
     final appState = context.read<AppState>();
     final courses = appState.courses;
     final byId = {for (final c in courses) c.id: c};
 
-    
     final raw = await Storage.listSessions();
 
     final rows = <_SessionRow>[];
@@ -69,13 +62,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final kind = (m['kind'] as String?) ?? '';
       final notes = m['notes'] as String?;
 
-      
       final start =
           _asDT(m['startLocal']) ?? _asDT(m['startUtc']) ?? _asDT(m['start']);
       final end = _asDT(m['endLocal']) ?? _asDT(m['endUtc']) ?? _asDT(m['end']);
       if (id.isEmpty || start == null || end == null) continue;
 
-      
       if (filterCourseId != null &&
           filterCourseId.isNotEmpty &&
           courseId != filterCourseId) {
@@ -100,7 +91,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       );
     }
 
-    
     rows.sort((a, b) => b.start.compareTo(a.start));
     return rows;
   }
@@ -152,7 +142,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (ok != true) return;
     if (!mounted) return;
 
-    
     final appState = context.read<AppState>();
     await appState.deleteSession(
       id: id,
@@ -163,7 +152,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     if (!mounted) return;
 
-    
     setState(() {
       _future = _future.then((current) {
         final updated = List<_SessionRow>.from(current);
@@ -172,10 +160,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       });
     });
 
-    
     showAppMessage(context, AppLocalizations.of(context)!.sessionDeleted);
 
-    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() {
@@ -189,7 +175,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final courses = context.watch<AppState>().courses;
     final byId = {for (final c in courses) c.id: c};
 
-    
     Widget? banner;
     if (widget.startLocal != null && widget.endLocal != null) {
       final labelDate = _fmtDateOnly(context, widget.startLocal!);
@@ -235,7 +220,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             tooltip: AppLocalizations.of(context)!.addTime,
             icon: const Icon(Icons.add),
             onPressed: () async {
-              
               final base = widget.startLocal ?? DateTime.now();
               final day = DateTime(base.year, base.month, base.day);
 
@@ -251,7 +235,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               );
 
               if (mounted && added == true) {
-                
                 setState(() => _future = _load());
               }
             },
@@ -310,7 +293,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 }
-
 
 class _HistoryCard extends StatelessWidget {
   final Color color;
@@ -541,7 +523,6 @@ class _SessionNotesSheetState extends State<_SessionNotesSheet> {
   }
 }
 
-
 String _fmtHMS(int s) {
   final h = (s ~/ 3600).toString().padLeft(2, '0');
   final m = ((s % 3600) ~/ 60).toString().padLeft(2, '0');
@@ -552,8 +533,18 @@ String _fmtHMS(int s) {
 String _fmtDateOnly(BuildContext context, DateTime d) {
   final l10n = AppLocalizations.of(context)!;
   final months = [
-    l10n.jan, l10n.feb, l10n.mar, l10n.apr, l10n.mayShort, l10n.jun,
-    l10n.jul, l10n.aug, l10n.sep, l10n.oct, l10n.nov, l10n.dec
+    l10n.jan,
+    l10n.feb,
+    l10n.mar,
+    l10n.apr,
+    l10n.mayShort,
+    l10n.jun,
+    l10n.jul,
+    l10n.aug,
+    l10n.sep,
+    l10n.oct,
+    l10n.nov,
+    l10n.dec
   ];
   final mm = months[d.month - 1];
   final day = d.day.toString().padLeft(2, '0');
@@ -561,7 +552,6 @@ String _fmtDateOnly(BuildContext context, DateTime d) {
 }
 
 String _fmtDateTime(DateTime d) {
-  
   final h = d.hour.toString().padLeft(2, '0');
   final m = d.minute.toString().padLeft(2, '0');
   final s = d.second.toString().padLeft(2, '0');
@@ -584,11 +574,8 @@ String _kindLabel(BuildContext context, String kind) {
   }
 }
 
-
-
-
 class _AddTimeSheet extends StatefulWidget {
-  final DateTime day; 
+  final DateTime day;
   const _AddTimeSheet({required this.day});
 
   @override
@@ -600,27 +587,23 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
   late final PageController _pageCtrl;
   int _index = 0;
 
-  
   final _startCtrl = TextEditingController(text: '');
   final _endCtrl = TextEditingController(text: '');
 
-  
   bool _kbOpen = false;
   late final AnimationController _kbAnim;
-  late final Animation<Offset> _titleInputsLift; 
-  late final Animation<Offset> _carouselDown; 
-  late final Animation<double> _carouselFade; 
+  late final Animation<Offset> _titleInputsLift;
+  late final Animation<Offset> _carouselDown;
+  late final Animation<double> _carouselFade;
 
-  
   final GlobalKey _saveKey = GlobalKey();
-  double _liftPx = 0; 
+  double _liftPx = 0;
 
-  
   static const _animDur = Duration(milliseconds: 260);
   static const _curve = Curves.easeOutCubic;
-  static const double _titleLiftY = -0.06; 
-  static const double _carouselDownY = 0.22; 
-  static const double _bottomGutter = 16; 
+  static const double _titleLiftY = -0.06;
+  static const double _carouselDownY = 0.22;
+  static const double _bottomGutter = 16;
 
   @override
   void initState() {
@@ -655,7 +638,6 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     super.dispose();
   }
 
-  
   @override
   void didChangeMetrics() {
     final views = WidgetsBinding.instance.platformDispatcher.views;
@@ -672,7 +654,6 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     if (_kbOpen) {
       _kbAnim.forward();
     } else {
-      
       if (_startCtrl.text.trim().isNotEmpty) {
         _startCtrl.text = _normalizeHms(_startCtrl.text);
       }
@@ -682,7 +663,6 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
       _kbAnim.reverse();
     }
 
-    
     _scheduleRecalcLift();
     setState(() {});
   }
@@ -691,7 +671,6 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     WidgetsBinding.instance.addPostFrameCallback((_) => _recalcLiftIfNeeded());
   }
 
-  
   void _recalcLiftIfNeeded() {
     if (!mounted) return;
 
@@ -704,22 +683,18 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     if (box == null || !box.attached) return;
 
     final pos = box.localToGlobal(Offset.zero);
-    final saveBottom = pos.dy + box.size.height; 
+    final saveBottom = pos.dy + box.size.height;
 
-    
     final overlap = (saveBottom + _bottomGutter) - visibleBottom;
     final needed = overlap > 0 ? overlap : 0;
 
-    
     if ((needed - _liftPx).abs() > 1.0) {
       setState(() {
-        
         _liftPx = needed.clamp(0.0, mq.size.height * 0.66).toDouble();
       });
     }
   }
 
-  
   String _normalizeHms(String raw) {
     final d = raw.replaceAll(RegExp(r'[^0-9]'), '');
     String hh = '00', mm = '00', ss = '00';
@@ -762,19 +737,19 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
   DateTime _compose(DateTime day, ({int h, int m, int s}) t) =>
       DateTime(day.year, day.month, day.day, t.h, t.m, t.s);
 
-  
   Future<void> _save() async {
     final courses = context.read<AppState>().courses;
     if (courses.isEmpty) {
-      showAppMessage(context, AppLocalizations.of(context)!.addCourseFirst, isError: true);
+      showAppMessage(context, AppLocalizations.of(context)!.addCourseFirst,
+          isError: true);
       return;
     }
 
-    
     if (_startCtrl.text.trim().isEmpty || _endCtrl.text.trim().isEmpty) {
       showAppMessage(
         context,
-        AppLocalizations.of(context)!.invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
+        AppLocalizations.of(context)!
+            .invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
         isError: true,
       );
       return;
@@ -785,32 +760,33 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     if (startT == null || endT == null) {
       showAppMessage(
         context,
-        AppLocalizations.of(context)!.invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
+        AppLocalizations.of(context)!
+            .invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
         isError: true,
       );
       return;
     }
 
-    
     final start = _compose(widget.day, startT);
     final end = _compose(widget.day, endT);
 
-    
     final nowLocal = DateTime.now();
     if (start.isAfter(nowLocal) || end.isAfter(nowLocal)) {
-      showAppMessage(context, AppLocalizations.of(context)!.cannotEnterFutureTime, isError: true);
+      showAppMessage(
+          context, AppLocalizations.of(context)!.cannotEnterFutureTime,
+          isError: true);
       Navigator.pop(context);
       return;
     }
 
-    
     if (!end.isAfter(start)) {
-      showAppMessage(context, AppLocalizations.of(context)!.startTimeLaterThanEndTime, isError: true);
+      showAppMessage(
+          context, AppLocalizations.of(context)!.startTimeLaterThanEndTime,
+          isError: true);
       Navigator.pop(context);
       return;
     }
 
-    
     final safeIndex = _index.clamp(0, courses.length - 1).toInt();
     final course = courses[safeIndex];
     try {
@@ -821,24 +797,25 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
           );
     } on SessionOverlapException catch (_) {
       if (!mounted) return;
-      showAppMessage(context, AppLocalizations.of(context)!.alreadyStudiedThisPeriod, isError: true);
+      showAppMessage(
+          context, AppLocalizations.of(context)!.alreadyStudiedThisPeriod,
+          isError: true);
       Navigator.pop(context);
       return;
     }
 
     if (!mounted) return;
     Navigator.pop(context, true);
-    showAppMessage(context, AppLocalizations.of(context)!.timeAddedToCourse(course.name));
+    showAppMessage(
+        context, AppLocalizations.of(context)!.timeAddedToCourse(course.name));
   }
 
-  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final courses = context.watch<AppState>().courses;
 
-    
     _scheduleRecalcLift();
 
     final mq = MediaQuery.of(context);
@@ -854,7 +831,6 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
         child: AnimatedPadding(
           duration: _animDur,
           curve: _curve,
-          
           padding: EdgeInsets.only(bottom: _liftPx),
           child: ConstrainedBox(
             constraints:
@@ -872,19 +848,16 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        
                         Container(
                           width: 44,
                           height: 5,
                           decoration: BoxDecoration(
-                            color:
-                              scheme.onSurfaceVariant.withAlpha((0.30 * 255).round()),
+                            color: scheme.onSurfaceVariant
+                                .withAlpha((0.30 * 255).round()),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
                         const SizedBox(height: 12),
-
-                        
                         SlideTransition(
                           position: _titleInputsLift,
                           child: Column(
@@ -898,29 +871,27 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                               _HmsField(
                                 label: AppLocalizations.of(context)!.startTime,
                                 controller: _startCtrl,
-                                hint: AppLocalizations.of(context)!.timeFormatHint,
+                                hint: AppLocalizations.of(context)!
+                                    .timeFormatHint,
                                 onSubmitted: (_) => _scheduleRecalcLift(),
                               ),
                               const SizedBox(height: 10),
                               _HmsField(
                                 label: AppLocalizations.of(context)!.endTime,
                                 controller: _endCtrl,
-                                hint: AppLocalizations.of(context)!.timeFormatHint,
+                                hint: AppLocalizations.of(context)!
+                                    .timeFormatHint,
                                 onSubmitted: (_) => _scheduleRecalcLift(),
                               ),
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 12),
                         Divider(
                             height: 20,
                             thickness: 1,
                             color: scheme.outlineVariant),
-
                         const SizedBox(height: 6),
-
-                        
                         if (courses.isEmpty)
                           FadeTransition(
                             opacity: _carouselFade,
@@ -930,7 +901,8 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                 color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                                child: Text(AppLocalizations.of(context)!.noCoursesAvailable),
+                              child: Text(AppLocalizations.of(context)!
+                                  .noCoursesAvailable),
                             ),
                           )
                         else
@@ -971,8 +943,8 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                                   BorderRadius.circular(16),
                                               border: Border.all(
                                                 color: selected
-                                                    ? scheme.primary
-                                                      .withAlpha((0.40 * 255).round())
+                                                    ? scheme.primary.withAlpha(
+                                                        (0.40 * 255).round())
                                                     : scheme.outlineVariant,
                                               ),
                                             ),
@@ -1007,10 +979,7 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                               ),
                             ),
                           ),
-
                         const SizedBox(height: 14),
-
-                        
                         SizedBox(
                           key: _saveKey,
                           width: double.infinity,
@@ -1033,27 +1002,24 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
   }
 }
 
-
 class _HmsAutoColonFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
-    
     final digits = newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
 
-    const max = 6; 
+    const max = 6;
     final take = digits.length > max ? digits.substring(0, max) : digits;
 
     final buf = StringBuffer();
     for (int i = 0; i < take.length; i++) {
-      if (i == 2 || i == 4) buf.write(':'); 
+      if (i == 2 || i == 4) buf.write(':');
       buf.write(take[i]);
     }
     final formatted = buf.toString();
 
-    
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),
@@ -1084,7 +1050,6 @@ class _HmsFieldState extends State<_HmsField> {
     final raw = widget.controller.text.trim();
     if (state == null || raw.isEmpty) return;
 
-    
     final normalized = state._normalizeHms(raw);
     widget.controller.value = TextEditingValue(
       text: normalized,
@@ -1101,24 +1066,18 @@ class _HmsFieldState extends State<_HmsField> {
       textInputAction: widget.label.toLowerCase() == 'end'
           ? TextInputAction.done
           : TextInputAction.next,
-
-      
       onChanged: (_) {},
-
-      
       onSubmitted: (v) {
         _normalizeNow();
         widget.onSubmitted?.call(widget.controller.text);
       },
       onEditingComplete: _normalizeNow,
-
-      
       inputFormatters: [
         _HmsAutoColonFormatter(),
       ],
       decoration: InputDecoration(
         labelText: widget.label,
-        hintText: widget.hint, 
+        hintText: widget.hint,
         border: const OutlineInputBorder(),
         isDense: true,
       ),
