@@ -33,22 +33,22 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
     super.initState();
     _index = widget.items.indexOf(widget.selectedValue);
     if (_index == -1) _index = 0;
-    
+
     _anim = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 200));
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
   }
-  
+
   @override
   void didUpdateWidget(covariant SwipeSelector<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedValue != oldWidget.selectedValue) {
-       final newIndex = widget.items.indexOf(widget.selectedValue);
-       if (newIndex != -1 && newIndex != _index) {
-         _index = newIndex;
-         // We do not animate here usually to avoid loop, 
-         // but if external change happens, we update _index instantly.
-       }
+      final newIndex = widget.items.indexOf(widget.selectedValue);
+      if (newIndex != -1 && newIndex != _index) {
+        _index = newIndex;
+        // We do not animate here usually to avoid loop,
+        // but if external change happens, we update _index instantly.
+      }
     }
   }
 
@@ -60,10 +60,10 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
     setState(() => _slideDir = dir.toDouble());
     await _anim.forward(from: 0);
     if (!mounted) return;
-    
+
     setState(() => _index = newIndex);
     widget.onChanged(widget.items[_index]);
-    
+
     if (!mounted) return;
     await _anim.reverse();
   }
@@ -71,7 +71,7 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         final velocity = details.primaryVelocity ?? 0;
@@ -83,7 +83,8 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: widget.backgroundColor ?? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color: widget.backgroundColor ??
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         ),
         child: SlideTransition(
           position: _slide.drive(Tween<Offset>(

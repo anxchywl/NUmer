@@ -49,7 +49,8 @@ class HabitDaySheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(theme.brightness == Brightness.dark ? 120 : 60),
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                        theme.brightness == Brightness.dark ? 120 : 60),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -71,7 +72,7 @@ class HabitDaySheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              
+
               if (sortedHabits.isEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(48, 24, 48, 48),
@@ -79,13 +80,13 @@ class HabitDaySheet extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        Icons.event_busy_rounded, 
-                        size: 64, 
+                        Icons.event_busy_rounded,
+                        size: 64,
                         color: theme.colorScheme.outlineVariant,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        l10n.habitNoHabitsThisDay, 
+                        l10n.habitNoHabitsThisDay,
                         textAlign: TextAlign.center,
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
@@ -125,7 +126,8 @@ class HabitDaySheet extends StatelessWidget {
     // 1. Filter habits: show if scheduled OR has progress
     final activeHabits = allHabits.where((h) {
       final isScheduled = h.isScheduledFor(date);
-      final hasProgress = progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
+      final hasProgress =
+          progressMap.containsKey(h.id) && progressMap[h.id]! > 0;
       return isScheduled || hasProgress;
     }).toList();
 
@@ -164,7 +166,7 @@ class _HabitRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    
+
     // Determine status
     bool isCompleted = false;
     if (habit.type == HabitType.yesNo) {
@@ -172,20 +174,24 @@ class _HabitRow extends StatelessWidget {
     } else {
       isCompleted = progress >= habit.targetValue;
     }
-    
+
     final isPartial = !isCompleted && progress > 0;
 
     return InkWell(
-      onTap: isReadOnly ? null : () {
-        _logProgress(context);
-      },
+      onTap: isReadOnly
+          ? null
+          : () {
+              _logProgress(context);
+            },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
-          border: isCompleted ? Border.all(color: habit.color.withAlpha(100)) : null,
+          border: isCompleted
+              ? Border.all(color: habit.color.withAlpha(100))
+              : null,
         ),
         child: Row(
           children: [
@@ -197,13 +203,15 @@ class _HabitRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
+                IconData(habit.iconCodePoint,
+                    fontFamily: habit.iconFamily,
+                    fontPackage: habit.iconPackage),
                 color: habit.color,
                 size: 20,
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Name & Progress
             Expanded(
               child: Column(
@@ -213,8 +221,11 @@ class _HabitRow extends StatelessWidget {
                     habit.name,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted ? theme.colorScheme.onSurface.withAlpha(150) : theme.colorScheme.onSurface,
+                      decoration:
+                          isCompleted ? TextDecoration.lineThrough : null,
+                      color: isCompleted
+                          ? theme.colorScheme.onSurface.withAlpha(150)
+                          : theme.colorScheme.onSurface,
                     ),
                   ),
                   if (habit.type != HabitType.yesNo)
@@ -223,14 +234,14 @@ class _HabitRow extends StatelessWidget {
                       child: Text(
                         _formatProgress(l10n),
                         style: theme.textTheme.bodySmall?.copyWith(
-                           color: theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
                 ],
               ),
             ),
-            
+
             // Status Icon
             if (isCompleted)
               Icon(Icons.check_circle, color: habit.color)
@@ -267,13 +278,16 @@ class _HabitRow extends StatelessWidget {
               habit: habit,
               date: date,
               completed: !isCompleted,
-              mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
+              mondayFirst:
+                  context.read<AppState>().weekStart == WeekStart.monday,
             );
       } catch (e) {
         if (context.mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text("Error: $e"), backgroundColor: Theme.of(context).colorScheme.error),
-           );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text("Error: $e"),
+                backgroundColor: Theme.of(context).colorScheme.error),
+          );
         }
       }
     } else {
