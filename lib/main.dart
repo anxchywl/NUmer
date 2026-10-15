@@ -704,9 +704,8 @@ class _ShellState extends State<_Shell> {
             ),
         ],
       ),
-      bottomNavigationBar: isIOS
-          ? null
-          : _buildDefaultNavigationBar(context, destinations),
+      bottomNavigationBar:
+          isIOS ? null : _buildDefaultNavigationBar(context, destinations),
     );
   }
 
@@ -930,8 +929,7 @@ class _ShellState extends State<_Shell> {
                                             overflow: TextOverflow.ellipsis,
                                             style: theme.textTheme.labelSmall
                                                 ?.copyWith(
-                                              fontSize:
-                                                  selected ? 12.0 : 11.0,
+                                              fontSize: selected ? 12.0 : 11.0,
                                               color: selected
                                                   ? scheme.primary
                                                   : scheme.onSurface
