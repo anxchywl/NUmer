@@ -61,6 +61,27 @@ import a feature; a feature imports another feature only via its barrel
 feature; filenames are greppable by suffix (`*_screen.dart`, `*_service.dart`, `*_sheet.dart`);
 tests mirror the tree under `test/features/<name>/`, with app-level smoke tests in `test/smoke/`.
 
+### Comment style
+
+Keep comments short, lowercase, and free of trailing punctuation (`.` `!` `?`). Put one before
+each important class or function saying what it is for, not how it works line by line. Explain
+the *why* the code cannot; don't restate the signature, and don't leave commented-out code or
+stream-of-consciousness notes.
+
+```dart
+// picks which screen to show based on auth, verification and profile state
+class AuthGate extends StatefulWidget { ... }
+
+// records study time for a course today, updates the streak and feeds linked habits
+Future<void> addStudySeconds(String courseId, int seconds) async { ... }
+```
+
+- lowercase, including tech names in prose (`firebase`, `hive`) — but keep real code
+  identifiers in their true case (`pomodoroStart`, `LocalSession`)
+- prefer `//`; keep `///` only where dartdoc/IDE hover genuinely helps, and lowercase its text too
+- skip comments on trivial getters/setters and obvious `loadX`/`setX` pairs — a comment should
+  add something the name doesn't
+
 ### Key locations
 
 - **Global App State**: [lib/app/app_state.dart](file:///Users/anx/numer_app/lib/app/app_state.dart) — central `ChangeNotifier` (sessions, settings, timers, alarms).

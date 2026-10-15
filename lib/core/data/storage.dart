@@ -10,7 +10,6 @@ import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/features/sessions/models/alarm_item.dart';
 import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/habits/models/habit_category.dart';
-import 'package:numer_app/features/ai_analysis/ai_analysis_service.dart';
 
 // static facade over the hive local database, primary read/write api for local models
 class Storage {
@@ -838,8 +837,6 @@ class Storage {
     await _saveUser(doc);
   }
 
-  static const _metaAnalysisLog = 'analysis_log_v1';
-
   static DateTime? getLastExportMonth() {
     _ensureUser();
     final raw = LocalDatabase.instance.getMeta(_metaLastExportMonth);
@@ -853,105 +850,6 @@ class Storage {
     _ensureUser();
     final key = '${date.year}-${date.month.toString().padLeft(2, "0")}-01';
     await LocalDatabase.instance.putMeta(_metaLastExportMonth, key);
-  }
-
-  static Future<int?> getLastAnalysisTimestamp(String courseId, int periodMonths) async {
-    _ensureUser();
-    final raw = _db.getMeta(_metaAnalysisLog);
-    if (raw is Map) {
-      final key = '${courseId}_${periodMonths}m';
-      return raw[key] as int?;
-    }
-    return null;
-  }
-
-  static Future<void> setLastAnalysisTimestamp(String courseId, int periodMonths, int timestamp) async {
-    _ensureUser();
-    final raw = _db.getMeta(_metaAnalysisLog) ?? {};
-    final map = Map<String, dynamic>.from(raw as Map);
-    final key = '${courseId}_${periodMonths}m';
-    map[key] = timestamp;
-    await _db.putMeta(_metaAnalysisLog, map);
-  }
-
-  static const _metaAnalysisContent = 'analysis_content_v1';
-  static const Duration _analysisLocalTtl = Duration(hours: 24);
-
-  static Future<AiCourseAnalysis?> getCourseAnalysis(String courseId, AnalysisPeriod period) async {
-    _ensureUser();
-    final raw = _db.getMeta(_metaAnalysisContent);
-    if (raw is! Map) return null;
-
-    final map = Map<String, dynamic>.from(raw);
-    final key = '${courseId}_${period.months}m';
-    final entry = map[key];
-    if (entry is! Map) return null;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    final savedAtMs = (entry['savedAtMs'] as num?)?.toInt();
-    // enforce 24h local-only visibility, legacy entries without savedAtMs
-    // are treated as expired
-    final expired = savedAtMs == null || nowMs - savedAtMs >= _analysisLocalTtl.inMilliseconds;
-    if (expired) {
-      map.remove(key);
-      await _db.putMeta(_metaAnalysisContent, map);
-      return null;
-    }
-
-    final data = entry['data'];
-    if (data is Map) {
-      return AiCourseAnalysis.fromJson(
-        Map<String, dynamic>.from(data),
-        courseId,
-        period,
-      );
-    }
-
-    // defensive cleanup for a malformed entry
-    map.remove(key);
-    await _db.putMeta(_metaAnalysisContent, map);
-    return null;
-  }
-
-  static Future<void> purgeExpiredCourseAnalyses() async {
-    _ensureUser();
-    final raw = _db.getMeta(_metaAnalysisContent);
-    if (raw is! Map) return;
-    final map = Map<String, dynamic>.from(raw);
-    if (map.isEmpty) return;
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    var changed = false;
-    final keys = map.keys.toList(growable: false);
-    for (final key in keys) {
-      final entry = map[key];
-      if (entry is! Map) {
-        map.remove(key);
-        changed = true;
-        continue;
-      }
-      final savedAtMs = (entry['savedAtMs'] as num?)?.toInt();
-      if (savedAtMs == null ||
-          nowMs - savedAtMs >= _analysisLocalTtl.inMilliseconds) {
-        map.remove(key);
-        changed = true;
-      }
-    }
-    if (changed) {
-      await _db.putMeta(_metaAnalysisContent, map);
-    }
-  }
-
-  static Future<void> saveCourseAnalysis(String courseId, AiCourseAnalysis analysis) async {
-    _ensureUser();
-    final raw = _db.getMeta(_metaAnalysisContent) ?? {};
-    final map = Map<String, dynamic>.from(raw as Map);
-    final key = '${courseId}_${analysis.period.months}m';
-    map[key] = {
-      'savedAtMs': DateTime.now().millisecondsSinceEpoch,
-      'data': analysis.toJson(),
-    };
-    await _db.putMeta(_metaAnalysisContent, map);
   }
 
   static const _metaGroupMemberStatsCache = 'group_member_stats_cache_v1';
