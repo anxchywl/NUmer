@@ -836,8 +836,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                             ? null
                                             : (b) => setState(() {
                                                   _type = HabitType.yesNo;
-                                                  if (_target == 0.0)
+                                                  if (_target == 0.0) {
                                                     _target = 1.0;
+                                                  }
                                                 }),
                                       ),
                                       ChoiceChip(
@@ -866,8 +867,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                             ? null
                                             : (b) => setState(() {
                                                   _type = HabitType.numeric;
-                                                  if (_target == 1.0)
+                                                  if (_target == 1.0) {
                                                     _target = 0.0;
+                                                  }
                                                 }),
                                       ),
                                       ChoiceChip(
@@ -894,8 +896,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                             ? null
                                             : (b) => setState(() {
                                                   _type = HabitType.time;
-                                                  if (_target == 1.0)
+                                                  if (_target == 1.0) {
                                                     _target = 0.0;
+                                                  }
                                                 }),
                                       ),
                                     ],
@@ -1332,8 +1335,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                         HabitPeriod.year => 365,
                                                       };
                                                       if (_frequencyGoal >
-                                                          maxVal)
+                                                          maxVal) {
                                                         _frequencyGoal = maxVal;
+                                                      }
                                                     });
                                                   },
                                                   child: _buildPeriodToggle(
@@ -1625,8 +1629,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                               firstDate: DateTime(2025, 1, 1),
                               lastDate: maxDate,
                             );
-                            if (picked != null)
+                            if (picked != null) {
                               setState(() => _startDate = picked);
+                            }
                           },
                   ),
                   const Divider(),
@@ -1660,8 +1665,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                       : DateTime(2025, 1, 1),
                               lastDate: maxDate,
                             );
-                            if (picked != null)
+                            if (picked != null) {
                               setState(() => _endDate = picked);
+                            }
                           },
                   ),
 
@@ -2157,8 +2163,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     if (courses.isEmpty) return const SizedBox.shrink();
 
     // Only show for Yes/No and Time
-    if (_type != HabitType.yesNo && _type != HabitType.time)
+    if (_type != HabitType.yesNo && _type != HabitType.time) {
       return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
