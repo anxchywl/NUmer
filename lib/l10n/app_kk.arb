@@ -120,35 +120,16 @@
     }
   },
 
+  "aiAnalysisComingSoon": "Курс талдауы жақында пайда болады.",
   "courseAnalysis": "Курс талдауы",
   "noCoursesAvailable": "Курстар жоқ.",
   "selectCourse": "Курсты таңдаңыз",
-  "timePeriod": "Уақыт кезеңі",
-  "oneMonth": "1 ай",
-  "twoMonths": "2 ай",
-  "threeMonths": "3 ай",
   "sixMonths": "6 ай",
-  "limitOneAnalysisPerPeriod": "Шектеу: таңдалған кезеңге 1 талдау.",
   "analysisUpdatesEveryPeriod": "Талдау әр жаңа кезеңде жаңартылады.",
   "analysisAlreadyGenerated": "Бұл кезең үшін талдау бұрын жасалған.",
-  "minNotesRequired": "Жазбалардың минималды саны: {current}/{total}. Көбірек жазба — сапалы талдау.",
-  "@minNotesRequired": {
-    "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
-  "generateInsight": "Инсайт алу",
-  "analyzing": "Талданып жатыр...",
-  "analysisPlaceholder": "Курс пен уақыт кезеңін таңдап, оқуңыз бойынша AI-талдау алыңыз.",
   "dayStatsTipLine1": "• Күнтізбе оқу белсенділігін көрсетеді. Күн неғұрлым жасыл болса, соғұрлым көп оқыдыңыз.",
   "dayStatsTipLine2": "• Сессия уақытын және жазбаларды Тарих бөлімінде өңдей аласыз.",
   "dayStatsTipLine3": "• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.",
-  "overview": "Шолу",
-  "scrollUpHint": "Жоғары жылжыңыз",
-  "topTopics": "Үздік тақырыптар",
-  "insights": "Инсайттар",
-  "recommendations": "Ұсыныстар",
 
   "syncOffline": "Офлайн",
   "syncSyncing": "Синхрондалып жатыр…",

@@ -322,6 +322,9 @@ class AppLocalizationsKk extends AppLocalizations {
   }
 
   @override
+  String get aiAnalysisComingSoon => 'Курс талдауы жақында пайда болады.';
+
+  @override
   String get courseAnalysis => 'Курс талдауы';
 
   @override
@@ -331,22 +334,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get selectCourse => 'Курсты таңдаңыз';
 
   @override
-  String get timePeriod => 'Уақыт кезеңі';
-
-  @override
-  String get oneMonth => '1 ай';
-
-  @override
-  String get twoMonths => '2 ай';
-
-  @override
-  String get threeMonths => '3 ай';
-
-  @override
   String get sixMonths => '6 ай';
-
-  @override
-  String get limitOneAnalysisPerPeriod => 'Шектеу: таңдалған кезеңге 1 талдау.';
 
   @override
   String get analysisUpdatesEveryPeriod =>
@@ -355,21 +343,6 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get analysisAlreadyGenerated =>
       'Бұл кезең үшін талдау бұрын жасалған.';
-
-  @override
-  String minNotesRequired(int current, int total) {
-    return 'Жазбалардың минималды саны: $current/$total. Көбірек жазба — сапалы талдау.';
-  }
-
-  @override
-  String get generateInsight => 'Инсайт алу';
-
-  @override
-  String get analyzing => 'Талданып жатыр...';
-
-  @override
-  String get analysisPlaceholder =>
-      'Курс пен уақыт кезеңін таңдап, оқуңыз бойынша AI-талдау алыңыз.';
 
   @override
   String get dayStatsTipLine1 =>
@@ -382,21 +355,6 @@ class AppLocalizationsKk extends AppLocalizations {
   @override
   String get dayStatsTipLine3 =>
       '• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.';
-
-  @override
-  String get overview => 'Шолу';
-
-  @override
-  String get scrollUpHint => 'Жоғары жылжыңыз';
-
-  @override
-  String get topTopics => 'Үздік тақырыптар';
-
-  @override
-  String get insights => 'Инсайттар';
-
-  @override
-  String get recommendations => 'Ұсыныстар';
 
   @override
   String get syncOffline => 'Офлайн';

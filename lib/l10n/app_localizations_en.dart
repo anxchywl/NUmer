@@ -323,6 +323,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get aiAnalysisComingSoon => 'Course analysis is coming soon.';
+
+  @override
   String get courseAnalysis => 'Course analysis';
 
   @override
@@ -332,23 +335,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectCourse => 'Select course';
 
   @override
-  String get timePeriod => 'Time period';
-
-  @override
-  String get oneMonth => '1 month';
-
-  @override
-  String get twoMonths => '2 months';
-
-  @override
-  String get threeMonths => '3 months';
-
-  @override
   String get sixMonths => '6 months';
-
-  @override
-  String get limitOneAnalysisPerPeriod =>
-      'Limit: 1 analysis per selected period.';
 
   @override
   String get analysisUpdatesEveryPeriod =>
@@ -357,21 +344,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get analysisAlreadyGenerated =>
       'You\'ve already generated an analysis for this period.';
-
-  @override
-  String minNotesRequired(int current, int total) {
-    return 'Minimum notes required: $current/$total. More notes give better insights.';
-  }
-
-  @override
-  String get generateInsight => 'Generate insight';
-
-  @override
-  String get analyzing => 'Analyzing...';
-
-  @override
-  String get analysisPlaceholder =>
-      'Select a course and time period, then get AI-powered feedback of your studies.';
 
   @override
   String get dayStatsTipLine1 =>
@@ -384,21 +356,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dayStatsTipLine3 =>
       '• You can tap on any course, and the history screen will show only the sessions for that course.';
-
-  @override
-  String get overview => 'Overview';
-
-  @override
-  String get scrollUpHint => 'Scroll up';
-
-  @override
-  String get topTopics => 'Top topics';
-
-  @override
-  String get insights => 'Insights';
-
-  @override
-  String get recommendations => 'Recommendations';
 
   @override
   String get syncOffline => 'Offline';
