@@ -45,13 +45,12 @@ We use your information to:
 - Provide core features like courses, timers, sessions, goals, and reflections.
 - Sync your data across devices.
 - Enable group functionality, leaderboards, and aggregated study statistics.
-- Generate AI-based study insights when you request them.
 - Communicate important account or verification information.
 - Maintain security, prevent abuse, and improve the App.
 
 
 3) AI analysis
-When you request AI analysis, we send a prompt that may include your course name, study session summaries, and reflection text to our cloud function. The cloud function uses the API to generate a response. We do not send your password to the AI service. AI output is returned to the App and may be stored with your account data to show history.
+AI analysis is currently unavailable. The current version of the App does not send your course names, study session summaries, or reflection text to an AI service.
 
 
 4) Sharing and disclosure
