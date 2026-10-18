@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # proves a change is acceptable, run before reporting and in ci
-# not run here: device builds, emulator tests, deploys
+# not run here: device builds, emulator tests (run: cd functions && npm run test:emulator), deploys
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -13,4 +13,4 @@ bash scripts/check_copy.sh
 bash scripts/check_design.sh
 flutter test --coverage
 bash scripts/coverage_floor.sh coverage/lcov.info "$(cat scripts/coverage_floor.txt)"
-(cd functions && npm ci && npm run build)
+(cd functions && npm ci && npm run build && npm test)
