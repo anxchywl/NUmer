@@ -9,10 +9,9 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:numer_app/features/history/data/export_service.dart';
 import 'package:share_plus/share_plus.dart';
 
-
 import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/habits/models/habit.dart';
-import 'package:numer_app/core/data/storage.dart'; 
+import 'package:numer_app/core/data/storage.dart';
 
 import 'package:numer_app/features/stats/widgets/heatmap_calendar.dart';
 import 'package:numer_app/app/app_state.dart';
@@ -27,7 +26,6 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
-  
   DateTime _day = _strip(DateTime.now());
   static DateTime _strip(DateTime d) => DateTime(d.year, d.month, d.day);
   bool get _isToday => _strip(DateTime.now()) == _day;
@@ -37,12 +35,13 @@ class _StatsScreenState extends State<StatsScreen> {
     final minDate = DateTime(2025, 1, 1);
     final prevDay = _day.subtract(const Duration(days: 1));
     if (prevDay.isBefore(minDate)) return;
-    
+
     setState(() {
       _day = prevDay;
       _sliceTooltip = null;
     });
   }
+
   void _nextDay() {
     if (_isToday) return;
     setState(() {
@@ -50,6 +49,7 @@ class _StatsScreenState extends State<StatsScreen> {
       _sliceTooltip = null;
     });
   }
+
   void _goToday() {
     if (_isToday) return;
     setState(() {
@@ -57,6 +57,7 @@ class _StatsScreenState extends State<StatsScreen> {
       _sliceTooltip = null;
     });
   }
+
   Future<void> _pickDay(BuildContext context) async {
     await showModalBottomSheet(
       context: context,
@@ -93,22 +94,23 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  
-  _Range _range = _Range.week; 
-  int _shift = 0;              
+  _Range _range = _Range.week;
+  int _shift = 0;
 
   void _prevRange() {
     final minDate = DateTime(2025, 1, 1);
     final weekStart = context.read<AppState>().weekStart;
-    final (prevStart, _) = _rangeBounds(DateTime.now(), _range, _shift - 1, weekStart);
-    
+    final (prevStart, _) =
+        _rangeBounds(DateTime.now(), _range, _shift - 1, weekStart);
+
     if (prevStart.isBefore(minDate)) return;
-    
+
     setState(() {
       _shift -= 1;
       _tooltip = null;
     });
   }
+
   void _nextRange() {
     if (_shift >= 0) return;
     setState(() {
@@ -116,34 +118,34 @@ class _StatsScreenState extends State<StatsScreen> {
       _tooltip = null;
     });
   }
+
   void _setRange(_Range r) => setState(() {
         _range = r;
         _shift = 0;
         _tooltip = null;
       });
 
-  
   _BucketTooltip? _tooltip;
 
   // -- Habit Stats State --
   String? _selectedHabitId;
 
-  
   Map<String, _HabitStatsResult>? _allHabitsStatsCache;
   bool _loadingHabitsStats = false;
   StreamSubscription<void>? _historyUpdatesSub;
-  
+
   // Cache key to detect if we need to reload
   // For now, load once or on demand.
 
-  final DateTime _habitStatsMonth = DateTime(DateTime.now().year, DateTime.now().month);
+  final DateTime _habitStatsMonth =
+      DateTime(DateTime.now().year, DateTime.now().month);
   late PageController _habitPageCtrl;
 
   @override
   void initState() {
     super.initState();
     _habitPageCtrl = PageController(viewportFraction: 0.85);
-    
+
     // Listen for history updates to invalidate cache
     final habitService = context.read<HabitService>();
     _historyUpdatesSub = habitService.historyUpdates.listen((_) {
@@ -163,20 +165,19 @@ class _StatsScreenState extends State<StatsScreen> {
     super.dispose();
   }
 
-
   Future<void> _loadAllHabitsStats(List<Habit> habits, String uid) async {
     if (_loadingHabitsStats) return;
     setState(() => _loadingHabitsStats = true);
-    
+
     final service = context.read<HabitService>();
     final results = <String, _HabitStatsResult>{};
-    
+
     for (final habit in habits) {
       if (habit.archived) continue;
       final stats = await _computeHabitStats(habit, service, uid);
       results[habit.id] = stats;
     }
-    
+
     if (mounted) {
       setState(() {
         _allHabitsStatsCache = results;
@@ -185,12 +186,14 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  Future<_HabitStatsResult> _computeHabitStats(Habit habit, HabitService service, String uid) async {
+  Future<_HabitStatsResult> _computeHabitStats(
+      Habit habit, HabitService service, String uid) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     // Start from habit start date
-    final start = DateTime(habit.startDate.year, habit.startDate.month, habit.startDate.day);
-    
+    final start = DateTime(
+        habit.startDate.year, habit.startDate.month, habit.startDate.day);
+
     // If future start date, no stats
     if (start.isAfter(today)) {
       return const _HabitStatsResult(0, 0, 0, 0.0);
@@ -199,7 +202,8 @@ class _StatsScreenState extends State<StatsScreen> {
     // End date: habit.endDate or Today
     DateTime end = today;
     if (habit.endDate != null) {
-      final e = DateTime(habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
+      final e = DateTime(
+          habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
       if (e.isBefore(today)) end = e;
     }
 
@@ -210,84 +214,85 @@ class _StatsScreenState extends State<StatsScreen> {
       if (h.deleted) continue;
       historyMap[h.dateKey] = h.value ?? 0.0;
     }
-    
+
     int required = 0;
     int completed = 0;
-    
-    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-       // Period-based logic (Matches HabitService.recalculateStreak)
-       DateTime getPeriodStart(DateTime d) {
-         switch (habit.frequencyPeriod!) {
-           case HabitPeriod.week:
-             // Align with Monday
-             return d.subtract(Duration(days: d.weekday - 1));
-           case HabitPeriod.month:
-             return DateTime(d.year, d.month, 1);
-           case HabitPeriod.year:
-             return DateTime(d.year, 1, 1);
-         }
-       }
-       
-       DateTime getNextPeriodStart(DateTime pStart) {
-          switch (habit.frequencyPeriod!) {
-           case HabitPeriod.week:
-             return pStart.add(const Duration(days: 7));
-           case HabitPeriod.month:
-             return DateTime(pStart.year, pStart.month + 1, 1);
-           case HabitPeriod.year:
-             return DateTime(pStart.year + 1, 1, 1);
-         }
-       }
 
-       DateTime pStart = getPeriodStart(start);
-       
-       while (!pStart.isAfter(end)) {
-          final pNext = getNextPeriodStart(pStart);
-          final pEnd = pNext.subtract(const Duration(days: 1));
-          
-          final iStart = pStart.isBefore(start) ? start : pStart;
-          final iEnd = pEnd.isAfter(end) ? end : pEnd;
-          
-          if (!iStart.isAfter(iEnd)) {
-             required += (habit.frequencyGoal ?? 1); 
-             
-             int periodCompletions = 0;
-             DateTime d = iStart; 
-             while (!d.isAfter(iEnd)) {
-                final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-                if ((historyMap[k] ?? 0) >= habit.targetValue) {
-                  periodCompletions++;
-                }
-                d = d.add(const Duration(days: 1));
-             }
-             
-             final goal = habit.frequencyGoal ?? 1;
-             final capped = periodCompletions > goal ? goal : periodCompletions;
-             completed += capped;
+    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
+      // Period-based logic (Matches HabitService.recalculateStreak)
+      DateTime getPeriodStart(DateTime d) {
+        switch (habit.frequencyPeriod!) {
+          case HabitPeriod.week:
+            // Align with Monday
+            return d.subtract(Duration(days: d.weekday - 1));
+          case HabitPeriod.month:
+            return DateTime(d.year, d.month, 1);
+          case HabitPeriod.year:
+            return DateTime(d.year, 1, 1);
+        }
+      }
+
+      DateTime getNextPeriodStart(DateTime pStart) {
+        switch (habit.frequencyPeriod!) {
+          case HabitPeriod.week:
+            return pStart.add(const Duration(days: 7));
+          case HabitPeriod.month:
+            return DateTime(pStart.year, pStart.month + 1, 1);
+          case HabitPeriod.year:
+            return DateTime(pStart.year + 1, 1, 1);
+        }
+      }
+
+      DateTime pStart = getPeriodStart(start);
+
+      while (!pStart.isAfter(end)) {
+        final pNext = getNextPeriodStart(pStart);
+        final pEnd = pNext.subtract(const Duration(days: 1));
+
+        final iStart = pStart.isBefore(start) ? start : pStart;
+        final iEnd = pEnd.isAfter(end) ? end : pEnd;
+
+        if (!iStart.isAfter(iEnd)) {
+          required += (habit.frequencyGoal ?? 1);
+
+          int periodCompletions = 0;
+          DateTime d = iStart;
+          while (!d.isAfter(iEnd)) {
+            final k =
+                "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+            if ((historyMap[k] ?? 0) >= habit.targetValue) {
+              periodCompletions++;
+            }
+            d = d.add(const Duration(days: 1));
           }
-          pStart = pNext;
-       }
+
+          final goal = habit.frequencyGoal ?? 1;
+          final capped = periodCompletions > goal ? goal : periodCompletions;
+          completed += capped;
+        }
+        pStart = pNext;
+      }
     } else {
-       // Day-based logic
-       int totalDays = end.difference(start).inDays + 1;
-       for (var i = 0; i < totalDays; i++) {
-          final d = start.add(Duration(days: i));
-          if (habit.isScheduledFor(d)) {
-             required++;
-             final k = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-             if ((historyMap[k] ?? 0) >= habit.targetValue) {
-                completed++;
-             }
+      // Day-based logic
+      int totalDays = end.difference(start).inDays + 1;
+      for (var i = 0; i < totalDays; i++) {
+        final d = start.add(Duration(days: i));
+        if (habit.isScheduledFor(d)) {
+          required++;
+          final k =
+              "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+          if ((historyMap[k] ?? 0) >= habit.targetValue) {
+            completed++;
           }
-       }
+        }
+      }
     }
-    
+
     final notCompleted = required - completed;
     final rate = required > 0 ? (completed / required * 100) : 0.0;
-    
+
     return _HabitStatsResult(required, completed, notCompleted, rate);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -297,18 +302,18 @@ class _StatsScreenState extends State<StatsScreen> {
     final weekStart = state.weekStart;
     final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
     final mediaQuery = MediaQuery.of(context);
-    final navBottomOffset =
-        mediaQuery.padding.bottom > 0 ? (mediaQuery.padding.bottom * 0.38) : 4.0;
+    final navBottomOffset = mediaQuery.padding.bottom > 0
+        ? (mediaQuery.padding.bottom * 0.38)
+        : 4.0;
     const navHeight = 66.0;
     const extra = 12.0;
     final bottomScrollClearance =
         isIOS ? navHeight + navBottomOffset + extra : 24.0;
 
-    
     final pieFuture = _loadPieForDay(_day, courses);
 
-    
-    final (start, end) = _rangeBounds(DateTime.now(), _range, _shift, weekStart);
+    final (start, end) =
+        _rangeBounds(DateTime.now(), _range, _shift, weekStart);
     final bucketsFuture = _loadBucketsForRange(start, end, _range, courses);
 
     return Scaffold(
@@ -334,9 +339,9 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
               child: Column(
                 children: [
-                  
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       children: [
                         IconButton(
@@ -353,19 +358,24 @@ class _StatsScreenState extends State<StatsScreen> {
                                 flex: 2,
                                 child: TextButton.icon(
                                   onPressed: () => _pickDay(context),
-                                  icon: const Icon(Icons.calendar_today, size: 20),
+                                  icon: const Icon(Icons.calendar_today,
+                                      size: 20),
                                   label: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       _fmtDateLong(_day, context),
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
                                     ),
                                   ),
                                   style: TextButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 8),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      side: BorderSide(color: Theme.of(context).dividerColor),
+                                      side: BorderSide(
+                                          color:
+                                              Theme.of(context).dividerColor),
                                     ),
                                   ),
                                 ),
@@ -375,11 +385,13 @@ class _StatsScreenState extends State<StatsScreen> {
                                 child: OutlinedButton(
                                   onPressed: _isToday ? null : _goToday,
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12),
                                   ),
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
-                                    child: Text(AppLocalizations.of(context)!.today),
+                                    child: Text(
+                                        AppLocalizations.of(context)!.today),
                                   ),
                                 ),
                               ),
@@ -394,8 +406,6 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     ),
                   ),
-
-                  
                   FutureBuilder<_PiePayload>(
                     future: pieFuture,
                     builder: (context, snap) {
@@ -407,14 +417,13 @@ class _StatsScreenState extends State<StatsScreen> {
                           totalSeconds: total,
                           slices: slices,
                           tooltip: _sliceTooltip,
-                          onSliceTap: (tap) => setState(() => _sliceTooltip = tap),
+                          onSliceTap: (tap) =>
+                              setState(() => _sliceTooltip = tap),
                           onDismiss: () => setState(() => _sliceTooltip = null),
                         ),
                       );
                     },
                   ),
-
-                  
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Center(
@@ -422,13 +431,18 @@ class _StatsScreenState extends State<StatsScreen> {
                         icon: const Icon(Icons.history, size: 18),
                         label: Text(AppLocalizations.of(context)!.history),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          textStyle:
+                              const TextStyle(fontWeight: FontWeight.w600),
                         ),
                         onPressed: () async {
                           final dayStart = _strip(_day);
-                          final dayEnd = _isToday ? DateTime.now() : dayStart.add(const Duration(days: 1));
+                          final dayEnd = _isToday
+                              ? DateTime.now()
+                              : dayStart.add(const Duration(days: 1));
                           final selectedCourseId = _sliceTooltip?.id;
 
                           await Navigator.of(context).push(
@@ -449,9 +463,6 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             ),
           ),
-
-          
-
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
@@ -467,16 +478,24 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: Wrap(
                       spacing: 8,
                       children: [
-                        _SegChip(label: AppLocalizations.of(context)!.week,  selected: _range == _Range.week,  onTap: () => _setRange(_Range.week)),
-                        _SegChip(label: AppLocalizations.of(context)!.month, selected: _range == _Range.month, onTap: () => _setRange(_Range.month)),
-                        _SegChip(label: AppLocalizations.of(context)!.year,  selected: _range == _Range.year,  onTap: () => _setRange(_Range.year)),
+                        _SegChip(
+                            label: AppLocalizations.of(context)!.week,
+                            selected: _range == _Range.week,
+                            onTap: () => _setRange(_Range.week)),
+                        _SegChip(
+                            label: AppLocalizations.of(context)!.month,
+                            selected: _range == _Range.month,
+                            onTap: () => _setRange(_Range.month)),
+                        _SegChip(
+                            label: AppLocalizations.of(context)!.year,
+                            selected: _range == _Range.year,
+                            onTap: () => _setRange(_Range.year)),
                       ],
                     ),
                   ),
-
-                  
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                     child: Row(
                       children: [
                         IconButton(
@@ -488,17 +507,20 @@ class _StatsScreenState extends State<StatsScreen> {
                           child: TextButton(
                             onPressed: null,
                             style: TextButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 8),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: Theme.of(context).dividerColor),
+                                side: BorderSide(
+                                    color: Theme.of(context).dividerColor),
                               ),
                             ),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
                                 _periodLabel(start, end, _range),
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700),
                               ),
                             ),
                           ),
@@ -511,12 +533,11 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     ),
                   ),
-                  
-                  
                   FutureBuilder<_BucketsPayload>(
                     future: bucketsFuture,
                     builder: (context, snap) {
-                      final payload = snap.data ?? const _BucketsPayload.empty();
+                      final payload =
+                          snap.data ?? const _BucketsPayload.empty();
                       final buckets = payload.buckets;
                       final totalSecs = payload.totalSeconds;
 
@@ -532,8 +553,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         if (sum > maxYFinal) maxYFinal = sum;
                       }
                       final interval = _niceInterval(maxYFinal);
-                      final maxYAdjusted =
-                          (maxYFinal == 0 ? 1.0 : (maxYFinal / interval).ceil() * interval);
+                      final maxYAdjusted = (maxYFinal == 0
+                          ? 1.0
+                          : (maxYFinal / interval).ceil() * interval);
 
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -543,48 +565,65 @@ class _StatsScreenState extends State<StatsScreen> {
                           child: AspectRatio(
                             aspectRatio: 1.35,
                             child: TweenAnimationBuilder<double>(
-                              key: ValueKey('bars-$_range-$_shift-${unit.name}-$totalSecs'),
+                              key: ValueKey(
+                                  'bars-$_range-$_shift-${unit.name}-$totalSecs'),
                               tween: Tween(begin: 0, end: 1),
                               duration: const Duration(milliseconds: 650),
                               curve: Curves.easeOutCubic,
                               builder: (context, t, _) {
-                                final effectiveT = Curves.easeOutCubic.transform(t);
+                                final effectiveT =
+                                    Curves.easeOutCubic.transform(t);
                                 return LayoutBuilder(
                                   builder: (context, c) {
-                                    final n = buckets.isEmpty ? 1 : buckets.length;
+                                    final n =
+                                        buckets.isEmpty ? 1 : buckets.length;
                                     final chartW = c.maxWidth;
 
                                     final slot = chartW / n;
                                     final proposed = slot * 0.85;
-                                    final bw = proposed.clamp(4.0, 34.0).toDouble();
+                                    final bw =
+                                        proposed.clamp(4.0, 34.0).toDouble();
 
                                     final (animatedGroups, _) =
-                                        _buildAnimatedGroups(buckets, courses, unitScale, effectiveT, bw);
+                                        _buildAnimatedGroups(buckets, courses,
+                                            unitScale, effectiveT, bw);
 
                                     return Stack(
                                       children: [
                                         BarChart(
                                           BarChartData(
-                                            alignment: BarChartAlignment.spaceBetween,
+                                            alignment:
+                                                BarChartAlignment.spaceBetween,
                                             minY: 0,
                                             maxY: maxYAdjusted,
                                             barGroups: animatedGroups,
                                             gridData: FlGridData(
-                                              show: true,
-                                              drawVerticalLine: false,
-                                              horizontalInterval: interval,
-                                              getDrawingHorizontalLine: (v) =>
-                                                  FlLine(color: Theme.of(context).dividerColor, strokeWidth: 1)
-                                            ),
+                                                show: true,
+                                                drawVerticalLine: false,
+                                                horizontalInterval: interval,
+                                                getDrawingHorizontalLine: (v) =>
+                                                    FlLine(
+                                                        color: Theme.of(context)
+                                                            .dividerColor,
+                                                        strokeWidth: 1)),
                                             titlesData: FlTitlesData(
                                               leftTitles: AxisTitles(
                                                 axisNameWidget: Padding(
-                                                  padding: const EdgeInsets.only(bottom: 6),
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          bottom: 6),
                                                   child: Text(
                                                     _unitLabel(unit, context),
-                                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                                          fontWeight: FontWeight.w700,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall
+                                                        ?.copyWith(
+                                                          color: Theme.of(
+                                                                  context)
+                                                              .colorScheme
+                                                              .onSurfaceVariant,
+                                                          fontWeight:
+                                                              FontWeight.w700,
                                                         ),
                                                   ),
                                                 ),
@@ -593,12 +632,21 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   showTitles: true,
                                                   reservedSize: 44,
                                                   interval: interval,
-                                                  getTitlesWidget: (v, meta) => Padding(
-                                                    padding: const EdgeInsets.only(right: 8),
+                                                  getTitlesWidget: (v, meta) =>
+                                                      Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            right: 8),
                                                     child: Text(
                                                       _fmtAxisTick(v, unit),
-                                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .colorScheme
+                                                                .onSurfaceVariant,
                                                           ),
                                                     ),
                                                   ),
@@ -609,28 +657,50 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   showTitles: true,
                                                   getTitlesWidget: (v, meta) {
                                                     final idx = v.toInt();
-                                                    if (idx < 0 || idx >= buckets.length) return const SizedBox.shrink();
+                                                    if (idx < 0 ||
+                                                        idx >= buckets.length)
+                                                      return const SizedBox
+                                                          .shrink();
                                                     return Padding(
-                                                      padding: const EdgeInsets.only(top: 6),
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 6),
                                                       child: Text(
-                                                        _xLabel(buckets[idx], _range, weekStart),
-                                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                              color: Theme.of(context).colorScheme.onSurface,
+                                                        _xLabel(buckets[idx],
+                                                            _range, weekStart),
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: Theme.of(
+                                                                      context)
+                                                                  .colorScheme
+                                                                  .onSurface,
                                                             ),
                                                       ),
                                                     );
                                                   },
                                                 ),
                                               ),
-                                              rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                              topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                              rightTitles: const AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                      showTitles: false)),
+                                              topTitles: const AxisTitles(
+                                                  sideTitles: SideTitles(
+                                                      showTitles: false)),
                                             ),
-                                            borderData: FlBorderData(show: false),
+                                            borderData:
+                                                FlBorderData(show: false),
                                             barTouchData: BarTouchData(
                                               enabled: totalSecs > 0,
                                               handleBuiltInTouches: false,
-                                              touchTooltipData: BarTouchTooltipData(
-                                                getTooltipItem: (group, groupIndex, rod, rodIndex) => null, 
+                                              touchTooltipData:
+                                                  BarTouchTooltipData(
+                                                getTooltipItem: (group,
+                                                        groupIndex,
+                                                        rod,
+                                                        rodIndex) =>
+                                                    null,
                                               ),
                                               touchCallback: (event, response) {
                                                 if (!mounted) return;
@@ -638,20 +708,29 @@ class _StatsScreenState extends State<StatsScreen> {
                                                 // If the user lifts their finger or moves away from bars,
                                                 // we don't clear the tooltip immediately.
                                                 // This allows the pop-up to stay visible on the last selected point.
-                                                if (response == null || response.spot == null) return;
+                                                if (response == null ||
+                                                    response.spot == null)
+                                                  return;
 
-                                                final anchor = _extractLocal(event);
+                                                final anchor =
+                                                    _extractLocal(event);
                                                 if (anchor == null) return;
 
-                                                final idx = response.spot!.touchedBarGroupIndex;
-                                                if (idx < 0 || idx >= buckets.length) return;
+                                                final idx = response
+                                                    .spot!.touchedBarGroupIndex;
+                                                if (idx < 0 ||
+                                                    idx >= buckets.length)
+                                                  return;
 
                                                 final bucket = buckets[idx];
-                                                final items = _buildTooltipDetails(bucket, courses);
+                                                final items =
+                                                    _buildTooltipDetails(
+                                                        bucket, courses);
                                                 setState(() {
                                                   _tooltip = _BucketTooltip(
                                                     anchor: anchor,
-                                                    title: _tooltipTitle(bucket, _range),
+                                                    title: _tooltipTitle(
+                                                        bucket, _range),
                                                     items: items,
                                                   );
                                                 });
@@ -666,10 +745,20 @@ class _StatsScreenState extends State<StatsScreen> {
                                             child: IgnorePointer(
                                               child: Center(
                                                 child: Text(
-                                                  AppLocalizations.of(context)!.noData,
-                                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                        color: Theme.of(context).colorScheme.onSurface.withAlpha((0.55 * 255).round()),
-                                                        fontWeight: FontWeight.w700,
+                                                  AppLocalizations.of(context)!
+                                                      .noData,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodyMedium
+                                                      ?.copyWith(
+                                                        color: Theme.of(context)
+                                                            .colorScheme
+                                                            .onSurface
+                                                            .withAlpha(
+                                                                (0.55 * 255)
+                                                                    .round()),
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
                                                 ),
                                               ),
@@ -690,16 +779,14 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             ),
           ),
-
-          
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
-                    title: (_range == _Range.week)
-                      ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisWeek}'
-                      : (_range == _Range.month)
-                        ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisMonth}'
-                        : '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisYear}',
+              title: (_range == _Range.week)
+                  ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisWeek}'
+                  : (_range == _Range.month)
+                      ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisMonth}'
+                      : '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisYear}',
               useCard: false,
               child: FutureBuilder<_BucketsPayload>(
                 future: bucketsFuture,
@@ -718,7 +805,8 @@ class _StatsScreenState extends State<StatsScreen> {
 
                   final courseById = {for (final c in courses) c.id: c};
                   final positive = perCourse.entries
-                      .where((e) => courseById.containsKey(e.key) && e.value > 0)
+                      .where(
+                          (e) => courseById.containsKey(e.key) && e.value > 0)
                       .toList()
                     ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -743,14 +831,18 @@ class _StatsScreenState extends State<StatsScreen> {
 
                   Widget content;
                   if (_range == _Range.year) {
-                    final (start, end) = _rangeBounds(DateTime.now(), _range, _shift, weekStart);
+                    final (start, end) =
+                        _rangeBounds(DateTime.now(), _range, _shift, weekStart);
                     final days = end.difference(start).inDays;
                     content = FutureBuilder<List<Map<String, int>>>(
                       future: Storage.dailySeries(start, days),
                       builder: (context, daySnap) {
                         final list = daySnap.data ?? const <Map<String, int>>[];
-                        final activeDays = list.where((m) => m.values.any((s) => s > 0)).length;
-                        final avgSecs = activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
+                        final activeDays = list
+                            .where((m) => m.values.any((s) => s > 0))
+                            .length;
+                        final avgSecs =
+                            activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
                         return _StatsBlock(
                           totalSecs: totalSecs,
                           avgSecs: avgSecs,
@@ -764,8 +856,10 @@ class _StatsScreenState extends State<StatsScreen> {
                       },
                     );
                   } else {
-                    final activeDays = buckets.where((b) => b.totalSeconds > 0).length;
-                    final avgSecs = activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
+                    final activeDays =
+                        buckets.where((b) => b.totalSeconds > 0).length;
+                    final avgSecs =
+                        activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
                     content = _StatsBlock(
                       totalSecs: totalSecs,
                       avgSecs: avgSecs,
@@ -786,15 +880,13 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             ),
           ),
-          
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
-              title: AppLocalizations.of(context)!.habitStatistics, 
+              title: AppLocalizations.of(context)!.habitStatistics,
               child: _buildHabitStatistics(context),
             ),
           ),
-
           SliverPadding(
             padding: EdgeInsets.only(bottom: bottomScrollClearance),
           ),
@@ -842,7 +934,8 @@ class _StatsScreenState extends State<StatsScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -856,19 +949,17 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  
-
   Future<_PiePayload> _loadPieForDay(DateTime day, List<Course> courses) async {
     final valid = courses.map((c) => c.id).toSet();
-  final start = _strip(day);
-  final isToday = _strip(day) == _strip(DateTime.now());
-  final end = isToday ? DateTime.now() : start.add(const Duration(days: 1));
+    final start = _strip(day);
+    final isToday = _strip(day) == _strip(DateTime.now());
+    final end = isToday ? DateTime.now() : start.add(const Duration(days: 1));
     final perCourse = await Storage.secondsByCourseBetween(start, end);
 
     final slices = <_Slice>[];
     int total = 0;
     perCourse.forEach((courseId, secs0) {
-      if (!valid.contains(courseId)) return; 
+      if (!valid.contains(courseId)) return;
       final secs = secs0 < 0 ? 0 : secs0;
       if (secs <= 0) return;
       final course = courses.firstWhere((c) => c.id == courseId);
@@ -886,101 +977,100 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<_BucketsPayload> _loadBucketsForRange(
-  DateTime start,
-  DateTime end,
-  _Range r,
-  List<Course> courses,
-) async {
-  final valid = courses.map((c) => c.id).toSet();
-  final buckets = <_Bucket>[];
-  int totalSecs = 0;
+    DateTime start,
+    DateTime end,
+    _Range r,
+    List<Course> courses,
+  ) async {
+    final valid = courses.map((c) => c.id).toSet();
+    final buckets = <_Bucket>[];
+    int totalSecs = 0;
 
-  if (r == _Range.week || r == _Range.month) {
-    final days = end.difference(start).inDays;
-    final now = DateTime.now();
-    final todayKey = DateTime(now.year, now.month, now.day);
-
-    for (var i = 0; i < days; i++) {
-      final dayStart = DateTime(start.year, start.month, start.day).add(Duration(days: i));
-      final isToday = DateTime(dayStart.year, dayStart.month, dayStart.day) == todayKey;
-      final dayEnd = isToday ? now : dayStart.add(const Duration(days: 1));
-
-      final map = await Storage.secondsByCourseBetween(dayStart, dayEnd);
-
-      final cleaned = <String, int>{};
-      map.forEach((k, v) {
-        if (!valid.contains(k)) return; 
-        final secs = v < 0 ? 0 : v;
-        if (secs > 0) {
-          cleaned[k] = secs;
-          totalSecs += secs;
-        }
-      });
-
-      
-      for (final c in courses) {
-        cleaned.putIfAbsent(c.id, () => 0);
-      }
-
-      buckets.add(_Bucket(date: dayStart, secondsByCourse: cleaned));
-    }
-  } else {
-    
-    for (var month = 1; month <= 12; month++) {
-      final monthStart = DateTime(start.year, month, 1);
-      final monthEnd = DateTime(start.year, month + 1, 1);
+    if (r == _Range.week || r == _Range.month) {
+      final days = end.difference(start).inDays;
       final now = DateTime.now();
-      final effectiveEnd = (monthEnd.isAfter(now) && now.isAfter(monthStart)) ? now : monthEnd;
+      final todayKey = DateTime(now.year, now.month, now.day);
 
-      final map = await Storage.secondsByCourseBetween(monthStart, effectiveEnd);
-      final cleaned = <String, int>{};
-      map.forEach((k, v) {
-        if (!valid.contains(k)) return; 
-        final secs = v < 0 ? 0 : v;
-        if (secs > 0) {
-          cleaned[k] = secs;
-          totalSecs += secs;
+      for (var i = 0; i < days; i++) {
+        final dayStart =
+            DateTime(start.year, start.month, start.day).add(Duration(days: i));
+        final isToday =
+            DateTime(dayStart.year, dayStart.month, dayStart.day) == todayKey;
+        final dayEnd = isToday ? now : dayStart.add(const Duration(days: 1));
+
+        final map = await Storage.secondsByCourseBetween(dayStart, dayEnd);
+
+        final cleaned = <String, int>{};
+        map.forEach((k, v) {
+          if (!valid.contains(k)) return;
+          final secs = v < 0 ? 0 : v;
+          if (secs > 0) {
+            cleaned[k] = secs;
+            totalSecs += secs;
+          }
+        });
+
+        for (final c in courses) {
+          cleaned.putIfAbsent(c.id, () => 0);
         }
-      });
-      for (final c in courses) {
-        cleaned.putIfAbsent(c.id, () => 0);
+
+        buckets.add(_Bucket(date: dayStart, secondsByCourse: cleaned));
       }
-      buckets.add(_Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true));
+    } else {
+      for (var month = 1; month <= 12; month++) {
+        final monthStart = DateTime(start.year, month, 1);
+        final monthEnd = DateTime(start.year, month + 1, 1);
+        final now = DateTime.now();
+        final effectiveEnd =
+            (monthEnd.isAfter(now) && now.isAfter(monthStart)) ? now : monthEnd;
+
+        final map =
+            await Storage.secondsByCourseBetween(monthStart, effectiveEnd);
+        final cleaned = <String, int>{};
+        map.forEach((k, v) {
+          if (!valid.contains(k)) return;
+          final secs = v < 0 ? 0 : v;
+          if (secs > 0) {
+            cleaned[k] = secs;
+            totalSecs += secs;
+          }
+        });
+        for (final c in courses) {
+          cleaned.putIfAbsent(c.id, () => 0);
+        }
+        buckets.add(
+            _Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true));
+      }
     }
+
+    return _BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
   }
 
-  return _BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
-}
-
-  
-
   (List<BarChartGroupData>, double) _buildAnimatedGroups(
-  List<_Bucket> buckets,
-  List<Course> courses,
-  double unitScale,
-  double t,
-  double barWidth, 
-) {
+    List<_Bucket> buckets,
+    List<Course> courses,
+    double unitScale,
+    double t,
+    double barWidth,
+  ) {
     final groups = <BarChartGroupData>[];
     double fullMaxY = 0;
     const double stagger = 0.03;
 
-    
     final courseById = {for (final c in courses) c.id: c};
 
     for (var i = 0; i < buckets.length; i++) {
       final b = buckets[i];
 
-      
       double accFinal = 0;
       final segs = <({double from, double to, Color color})>[];
 
       final entries = b.secondsByCourse.entries.toList()
-        ..sort((a, b) => a.key.compareTo(b.key)); 
+        ..sort((a, b) => a.key.compareTo(b.key));
 
       for (final e in entries) {
         final course = courseById[e.key];
-        if (course == null) continue; 
+        if (course == null) continue;
         final segValue = (e.value / unitScale).toDouble();
         if (segValue <= 0) continue;
         final from = accFinal;
@@ -991,7 +1081,6 @@ class _StatsScreenState extends State<StatsScreen> {
 
       fullMaxY = math.max(fullMaxY, accFinal);
 
-      
       final start = i * stagger;
       final localT = (t - start) / (1 - start);
       final tt = localT.clamp(0.0, 1.0);
@@ -1011,8 +1100,9 @@ class _StatsScreenState extends State<StatsScreen> {
             BarChartRodData(
               toY: hasData ? (accFinal * tt) : 0,
               width: barWidth,
-              color: Colors.transparent, 
-              borderRadius: hasData ? BorderRadius.circular(6) : BorderRadius.zero,
+              color: Colors.transparent,
+              borderRadius:
+                  hasData ? BorderRadius.circular(6) : BorderRadius.zero,
               rodStackItems: hasData ? items : const [],
             ),
           ],
@@ -1023,15 +1113,13 @@ class _StatsScreenState extends State<StatsScreen> {
     return (groups, fullMaxY);
   }
 
-  
-
-  (DateTime, DateTime) _rangeBounds(DateTime base, _Range r, int shift, WeekStart weekStart) {
+  (DateTime, DateTime) _rangeBounds(
+      DateTime base, _Range r, int shift, WeekStart weekStart) {
     switch (r) {
       case _Range.week:
-        
         final int delta = (weekStart == WeekStart.monday)
-            ? (base.weekday - DateTime.monday)                 
-            : (base.weekday % 7);                               
+            ? (base.weekday - DateTime.monday)
+            : (base.weekday % 7);
         final anchor = _strip(base.subtract(Duration(days: delta)));
         final start = anchor.add(Duration(days: 7 * shift));
         final end = start.add(const Duration(days: 7));
@@ -1056,11 +1144,27 @@ class _StatsScreenState extends State<StatsScreen> {
       case _Range.week:
         final l10n = AppLocalizations.of(context)!;
         final w = (weekStart == WeekStart.sunday)
-            ? [l10n.sun, l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat]
-            : [l10n.mon, l10n.tue, l10n.wed, l10n.thu, l10n.fri, l10n.sat, l10n.sun];
+            ? [
+                l10n.sun,
+                l10n.mon,
+                l10n.tue,
+                l10n.wed,
+                l10n.thu,
+                l10n.fri,
+                l10n.sat
+              ]
+            : [
+                l10n.mon,
+                l10n.tue,
+                l10n.wed,
+                l10n.thu,
+                l10n.fri,
+                l10n.sat,
+                l10n.sun
+              ];
         final idx = (weekStart == WeekStart.sunday)
-            ? (b.date.weekday % 7) 
-            : (b.date.weekday - 1); 
+            ? (b.date.weekday % 7)
+            : (b.date.weekday - 1);
         final safe = idx.clamp(0, 6);
         return w[safe];
 
@@ -1105,8 +1209,9 @@ class _StatsScreenState extends State<StatsScreen> {
       final secs = entry.value;
       if (secs <= 0) continue;
       final c = courseById[entry.key];
-      if (c == null) continue; 
-      items.add(_TooltipItem(color: c.color, label: c.name, valueHms: _fmtHMS(secs)));
+      if (c == null) continue;
+      items.add(
+          _TooltipItem(color: c.color, label: c.name, valueHms: _fmtHMS(secs)));
     }
     if (items.isEmpty) {
       items.add(_TooltipItem(
@@ -1117,185 +1222,220 @@ class _StatsScreenState extends State<StatsScreen> {
     }
     return items;
   }
+
   Widget _buildHabitStatistics(BuildContext context) {
     // Let's get it from FirebaseAuth for now or Provider.
-    final uid = context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ?? firebase_auth.FirebaseAuth.instance.currentUser?.uid;
-    
+    final uid = context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ??
+        firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+
     if (uid == null) return const SizedBox.shrink();
 
     return StreamBuilder<List<Habit>>(
-      stream: context.read<HabitService>().habitsStream(uid),
-      builder: (context, snapshot) {
-        final habits = snapshot.data ?? [];
-        if (habits.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Text(
-                AppLocalizations.of(context)!.habitStatsEmptyState,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        // Trigger stats load if needed
-        if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
-             WidgetsBinding.instance.addPostFrameCallback((_) {
-               _loadAllHabitsStats(habits, uid);
-             });
-        }
-        
-        // Initial Page Selection
-        if (_selectedHabitId == null && habits.isNotEmpty) {
-           _selectedHabitId = habits.first.id;
-        }
-
-        return _buildHabitLayout(context, habits, uid);
-      }
-    );
-  }
-  
-  // Refactored inner layout to handle the stream wrapping
-  Widget _buildHabitLayout(BuildContext context, List<Habit> habits, String uid) {
-      final l10n = AppLocalizations.of(context)!;
-      // Trigger stats load (idempotent-ish)
-      // If we want live updates, we need to know when to force reload.
-      // The StreamBuilder above rebuilds this widget on event.
-      // So every time this builds, we might want to ensure stats are fresh.
-      // But _loadSetState prevents loops.
-      // We need to invalidate _allHabitsStatsCache upon stream event.
-      // How does the stream builder pass "event" down? It doesn't.
-      
-      // Better approach: Listen in initState/didChangeDependencies?
-      // But we are in a mixin/state class.
-      // Let's just add the listener in initState and dispose in dispose.
-      
-      return Column(
-          children: [
-            // Month Chooser REMOVED (moved to dialog)
-            
-            // Swipe Selector (PageView)
-            SizedBox(
-              height: 180, 
-              child: PageView.builder(
-                controller: _habitPageCtrl,
-                itemCount: habits.length,
-                onPageChanged: (index) {
-                   setState(() => _selectedHabitId = habits[index].id);
-                },
-                itemBuilder: (context, index) {
-                   final habit = habits[index];
-                   final stats = _allHabitsStatsCache?[habit.id];
-                   
-                   return AnimatedBuilder(
-                     animation: _habitPageCtrl,
-                     builder: (context, child) {
-                        return Padding(
-                           padding: const EdgeInsets.symmetric(horizontal: 4), // Tighter padding
-                           child: child,
-                        );
-                     },
-                     // Refined Card Style
-                     child: Container(
-                       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-                       decoration: BoxDecoration(
-                         color: Theme.of(context).colorScheme.surfaceContainerLow, // Softer background
-                         borderRadius: BorderRadius.circular(20),
-                         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                       ),
-                       child: Padding(
-                         padding: const EdgeInsets.all(16),
-                         child: Column(
-                           crossAxisAlignment: CrossAxisAlignment.stretch,
-                           children: [
-                             Row(
-                               children: [
-                                  Icon(IconData(habit.iconCodePoint, fontFamily: habit.iconFamily, fontPackage: habit.iconPackage), color: habit.color),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      habit.name, 
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
-                                    ),
-                                  ),
-                               ],
-                             ),
-                             const Spacer(),
-                             if (stats == null)
-                               const Center(child: CircularProgressIndicator())
-                             else ...[
-                               _buildStatRow(context, l10n.habitStatsCompletionRate, "${stats.completionRate.toStringAsFixed(1)}%"),
-                               const SizedBox(height: 12),
-                               Row(
-                                 children: [
-                                   Expanded(child: _buildStatCard(context, l10n.habitStatsCompleted, "${stats.completed}", Colors.green)),
-                                   const SizedBox(width: 8),
-                                   Expanded(child: _buildStatCard(context, l10n.habitStatsMissed, "${stats.notCompleted}", Colors.redAccent)),
-                                 ],
-                               ),
-                             ]
-                           ],
-                         ),
-                       ),
-                     ),
-                   );
-                },
-              ),
-            ),
-
-            const SizedBox(height: 16),
-            
-            // Export Button (Outlined Style)
-            
-            // Export Button (Centered)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+        stream: context.read<HabitService>().habitsStream(uid),
+        builder: (context, snapshot) {
+          final habits = snapshot.data ?? [];
+          if (habits.isEmpty) {
+            return Padding(
+              padding: const EdgeInsets.all(32),
               child: Center(
-                child: OutlinedButton.icon(
-                  onPressed: () => _showDownloadBottomSheet(context, habits, uid), 
-                  icon: const Icon(Icons.download, size: 18),
-                  label: Text(l10n.habitReportDownload),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                child: Text(
+                  AppLocalizations.of(context)!.habitStatsEmptyState,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          // Trigger stats load if needed
+          if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _loadAllHabitsStats(habits, uid);
+            });
+          }
+
+          // Initial Page Selection
+          if (_selectedHabitId == null && habits.isNotEmpty) {
+            _selectedHabitId = habits.first.id;
+          }
+
+          return _buildHabitLayout(context, habits, uid);
+        });
+  }
+
+  // Refactored inner layout to handle the stream wrapping
+  Widget _buildHabitLayout(
+      BuildContext context, List<Habit> habits, String uid) {
+    final l10n = AppLocalizations.of(context)!;
+    // Trigger stats load (idempotent-ish)
+    // If we want live updates, we need to know when to force reload.
+    // The StreamBuilder above rebuilds this widget on event.
+    // So every time this builds, we might want to ensure stats are fresh.
+    // But _loadSetState prevents loops.
+    // We need to invalidate _allHabitsStatsCache upon stream event.
+    // How does the stream builder pass "event" down? It doesn't.
+
+    // Better approach: Listen in initState/didChangeDependencies?
+    // But we are in a mixin/state class.
+    // Let's just add the listener in initState and dispose in dispose.
+
+    return Column(
+      children: [
+        // Month Chooser REMOVED (moved to dialog)
+
+        // Swipe Selector (PageView)
+        SizedBox(
+          height: 180,
+          child: PageView.builder(
+            controller: _habitPageCtrl,
+            itemCount: habits.length,
+            onPageChanged: (index) {
+              setState(() => _selectedHabitId = habits[index].id);
+            },
+            itemBuilder: (context, index) {
+              final habit = habits[index];
+              final stats = _allHabitsStatsCache?[habit.id];
+
+              return AnimatedBuilder(
+                animation: _habitPageCtrl,
+                builder: (context, child) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 4), // Tighter padding
+                    child: child,
+                  );
+                },
+                // Refined Card Style
+                child: Container(
+                  margin:
+                      const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerLow, // Softer background
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .outlineVariant
+                            .withValues(alpha: 0.5)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                                IconData(habit.iconCodePoint,
+                                    fontFamily: habit.iconFamily,
+                                    fontPackage: habit.iconPackage),
+                                color: habit.color),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                habit.name,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        if (stats == null)
+                          const Center(child: CircularProgressIndicator())
+                        else ...[
+                          _buildStatRow(context, l10n.habitStatsCompletionRate,
+                              "${stats.completionRate.toStringAsFixed(1)}%"),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                  child: _buildStatCard(
+                                      context,
+                                      l10n.habitStatsCompleted,
+                                      "${stats.completed}",
+                                      Colors.green)),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                  child: _buildStatCard(
+                                      context,
+                                      l10n.habitStatsMissed,
+                                      "${stats.notCompleted}",
+                                      Colors.redAccent)),
+                            ],
+                          ),
+                        ]
+                      ],
+                    ),
                   ),
                 ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Export Button (Outlined Style)
+
+        // Export Button (Centered)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Center(
+            child: OutlinedButton.icon(
+              onPressed: () => _showDownloadBottomSheet(context, habits, uid),
+              icon: const Icon(Icons.download, size: 18),
+              label: Text(l10n.habitReportDownload),
+              style: OutlinedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            const SizedBox(height: 16),
-          ],
-        );
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
   }
 
   Widget _buildStatRow(BuildContext context, String label, String value) {
-     final isKK = Localizations.localeOf(context).languageCode == 'kk';
-     return Row(
-       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-       children: [
-         Expanded(
-           child: Text(
-             label, 
-             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-               color: Theme.of(context).hintColor,
-               fontSize: isKK ? 13 : null,
-             ),
-             maxLines: 2,
-             overflow: TextOverflow.visible,
-           ),
-         ),
-         const SizedBox(width: 8),
-         Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-       ],
-     );
+    final isKK = Localizations.localeOf(context).languageCode == 'kk';
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).hintColor,
+                  fontSize: isKK ? 13 : null,
+                ),
+            maxLines: 2,
+            overflow: TextOverflow.visible,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(value,
+            style: Theme.of(context)
+                .textTheme
+                .titleLarge
+                ?.copyWith(fontWeight: FontWeight.bold)),
+      ],
+    );
   }
 
-  Widget _buildStatCard(BuildContext context, String label, String value, Color color) {
+  Widget _buildStatCard(
+      BuildContext context, String label, String value, Color color) {
     final isKK = Localizations.localeOf(context).languageCode == 'kk';
     // Cleaner stat card: no border, subtle background
     return Container(
@@ -1306,23 +1446,24 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
       child: Column(
         children: [
-           Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
-           Text(
-             label, 
-             style: TextStyle(
-               fontSize: isKK ? 10 : 11, 
-               color: color.withValues(alpha: 0.8)
-             ),
-             textAlign: TextAlign.center,
-             maxLines: 2,
-             softWrap: true,
-           ),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            label,
+            style: TextStyle(
+                fontSize: isKK ? 10 : 11, color: color.withValues(alpha: 0.8)),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            softWrap: true,
+          ),
         ],
       ),
     );
   }
-  
-  Future<void> _showDownloadBottomSheet(BuildContext context, List<Habit> habits, String uid) async {
+
+  Future<void> _showDownloadBottomSheet(
+      BuildContext context, List<Habit> habits, String uid) async {
     DateTime selectedMonth = _habitStatsMonth;
     String selectedFormat = 'excel'; // Default to Excel
     bool isExporting = false;
@@ -1330,7 +1471,7 @@ class _StatsScreenState extends State<StatsScreen> {
     String? filePath;
     int countdown = 0;
     Timer? timer;
-    
+
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1338,124 +1479,131 @@ class _StatsScreenState extends State<StatsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          final l10n = AppLocalizations.of(context)!;
-          final theme = Theme.of(context);
-          final scheme = theme.colorScheme;
+      builder: (ctx) => StatefulBuilder(builder: (context, setSheetState) {
+        final l10n = AppLocalizations.of(context)!;
+        final theme = Theme.of(context);
+        final scheme = theme.colorScheme;
 
-          Future<void> triggerExport() async {
-            ExportService.markExportStarted();
-            setSheetState(() {
-              isExporting = true;
-              countdown = 0;
-            });
-            try {
-              final path = await _generateFile(context, habits, uid, selectedMonth, selectedFormat);
-              if (context.mounted) {
-                setSheetState(() {
-                  isSuccess = true;
-                  filePath = path;
-                });
-              }
-            } catch (e) {
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(l10n.habitReportFailed(e.toString())),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
-            } finally {
-              if (context.mounted) {
-                setSheetState(() => isExporting = false);
-              }
+        Future<void> triggerExport() async {
+          ExportService.markExportStarted();
+          setSheetState(() {
+            isExporting = true;
+            countdown = 0;
+          });
+          try {
+            final path = await _generateFile(
+                context, habits, uid, selectedMonth, selectedFormat);
+            if (context.mounted) {
+              setSheetState(() {
+                isSuccess = true;
+                filePath = path;
+              });
+            }
+          } catch (e) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.habitReportFailed(e.toString())),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
+          } finally {
+            if (context.mounted) {
+              setSheetState(() => isExporting = false);
             }
           }
-          
-          void startCountdown() {
-            final remaining = ExportService.remainingCooldownSeconds;
-            if (remaining == 0) {
+        }
+
+        void startCountdown() {
+          final remaining = ExportService.remainingCooldownSeconds;
+          if (remaining == 0) {
+            triggerExport();
+            return;
+          }
+
+          setSheetState(() {
+            isExporting = true;
+            countdown = remaining;
+          });
+          timer = Timer.periodic(const Duration(seconds: 1), (t) {
+            if (countdown > 1) {
+              setSheetState(() => countdown--);
+            } else {
+              t.cancel();
               triggerExport();
-              return;
             }
+          });
+        }
 
-            setSheetState(() {
-              isExporting = true;
-              countdown = remaining;
-            });
-            timer = Timer.periodic(const Duration(seconds: 1), (t) {
-              if (countdown > 1) {
-                setSheetState(() => countdown--);
-              } else {
-                t.cancel();
-                triggerExport();
-              }
-            });
-          }
+        void cancelCountdown() {
+          timer?.cancel();
+          setSheetState(() {
+            isExporting = false;
+            countdown = 0;
+          });
+        }
 
-          void cancelCountdown() {
-            timer?.cancel();
-            setSheetState(() {
-              isExporting = false;
-              countdown = 0;
-            });
-          }
+        // Update the periodic timer to call triggerExport
+        if (timer != null && !timer!.isActive && countdown == 1) {
+          // This is a bit tricky inside build.
+          // Better to handle it in the timer callback itself.
+        }
 
-          // Update the periodic timer to call triggerExport
-          if (timer != null && !timer!.isActive && countdown == 1) {
-             // This is a bit tricky inside build. 
-             // Better to handle it in the timer callback itself.
-          }
-
-          return Padding(
-            padding: EdgeInsets.only(
+        return Padding(
+          padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               left: 24,
               right: 24,
-              top: 24
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.habitReportTitle, 
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                
-                // Animated content switcher
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 500),
-                  layoutBuilder: (currentChild, previousChildren) {
-                    return Stack(
-                      alignment: Alignment.topCenter,
-                      children: <Widget>[
-                        ...previousChildren,
-                        if (currentChild != null) currentChild,
-                      ],
-                    );
-                  },
-                  transitionBuilder: (child, animation) {
-                    final isIncoming = child.key == ValueKey(isSuccess);
-                    
-                    final offset = isIncoming 
-                      ? Tween<Offset>(begin: const Offset(0, 0.2), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic))
-                      : Tween<Offset>(begin: const Offset(0, -0.2), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeInCubic));
-                    
-                    return FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: offset,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: isSuccess
-                    ? _buildSuccessView(l10n, theme, scheme, filePath, selectedFormat)
+              top: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.habitReportTitle,
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Animated content switcher
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    alignment: Alignment.topCenter,
+                    children: <Widget>[
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  final isIncoming = child.key == ValueKey(isSuccess);
+
+                  final offset = isIncoming
+                      ? Tween<Offset>(
+                              begin: const Offset(0, 0.2), end: Offset.zero)
+                          .animate(CurvedAnimation(
+                              parent: animation, curve: Curves.easeOutCubic))
+                      : Tween<Offset>(
+                              begin: const Offset(0, -0.2), end: Offset.zero)
+                          .animate(CurvedAnimation(
+                              parent: animation, curve: Curves.easeInCubic));
+
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: offset,
+                      child: child,
+                    ),
+                  );
+                },
+                child: isSuccess
+                    ? _buildSuccessView(
+                        l10n, theme, scheme, filePath, selectedFormat)
                     : _buildSelectionView(
                         context,
                         l10n,
@@ -1463,65 +1611,70 @@ class _StatsScreenState extends State<StatsScreen> {
                         scheme,
                         selectedMonth,
                         selectedFormat,
-                        (newMonth) => setSheetState(() => selectedMonth = newMonth),
-                        (newFormat) => setSheetState(() => selectedFormat = newFormat),
+                        (newMonth) =>
+                            setSheetState(() => selectedMonth = newMonth),
+                        (newFormat) =>
+                            setSheetState(() => selectedFormat = newFormat),
                       ),
-                ),
-                
-                const SizedBox(height: 32),
-                               FilledButton(
-                  onPressed: isSuccess 
+              ),
+
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: isSuccess
                     ? () => Navigator.pop(context)
-                    : (isExporting 
-                        ? (countdown > 0 ? cancelCountdown : null) 
+                    : (isExporting
+                        ? (countdown > 0 ? cancelCountdown : null)
                         : startCountdown),
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isExporting) ...[
-                        if (countdown > 0)
-                          const Icon(Icons.close, color: Colors.white)
-                        else
-                          const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isExporting) ...[
+                      if (countdown > 0)
+                        const Icon(Icons.close, color: Colors.white)
+                      else
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
                           ),
-                        const SizedBox(width: 8),
-                      ] else if (!isSuccess) ...[
-                        const Icon(Icons.download),
-                        const SizedBox(width: 8),
-                      ],
-                      Text(
-                        isExporting
-                          ? (countdown > 0 ? l10n.cancel : l10n.exporting)
-                          : (isSuccess ? l10n.done : l10n.habitReportDownloadAction),
-                      ),
+                        ),
+                      const SizedBox(width: 8),
+                    ] else if (!isSuccess) ...[
+                      const Icon(Icons.download),
+                      const SizedBox(width: 8),
                     ],
+                    Text(
+                      isExporting
+                          ? (countdown > 0 ? l10n.cancel : l10n.exporting)
+                          : (isSuccess
+                              ? l10n.done
+                              : l10n.habitReportDownloadAction),
+                    ),
+                  ],
+                ),
+              ),
+              if (isExporting && countdown > 0)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    l10n.habitReportDownloadCountdown(countdown),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: scheme.primary),
                   ),
                 ),
-                if (isExporting && countdown > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(
-                      l10n.habitReportDownloadCountdown(countdown),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall?.copyWith(color: scheme.primary),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          );
-        }
-      ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      }),
     ).then((_) => timer?.cancel());
   }
 
@@ -1545,20 +1698,22 @@ class _StatsScreenState extends State<StatsScreen> {
             IconButton(
               onPressed: () {
                 final minDate = DateTime(2025, 1, 1);
-                final prevMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
-                
+                final prevMonth =
+                    DateTime(selectedMonth.year, selectedMonth.month - 1);
+
                 if (prevMonth.isBefore(minDate)) {
                   return;
                 }
-                
+
                 onMonthChanged(prevMonth);
               },
               icon: Icon(
                 Icons.chevron_left,
                 color: () {
                   final minDate = DateTime(2025, 1, 1);
-                  final prevMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
-                  
+                  final prevMonth =
+                      DateTime(selectedMonth.year, selectedMonth.month - 1);
+
                   if (prevMonth.isBefore(minDate)) {
                     return theme.disabledColor;
                   }
@@ -1568,14 +1723,15 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
             Expanded(
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.dividerColor),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    "${_monthName(context, selectedMonth.month)} ${selectedMonth.year}", 
+                    "${_monthName(context, selectedMonth.month)} ${selectedMonth.year}",
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
@@ -1588,12 +1744,13 @@ class _StatsScreenState extends State<StatsScreen> {
               onPressed: () {
                 final now = DateTime.now();
                 final currentMonth = DateTime(now.year, now.month);
-                final nextMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
-                
+                final nextMonth =
+                    DateTime(selectedMonth.year, selectedMonth.month + 1);
+
                 if (nextMonth.isAfter(currentMonth)) {
                   return;
                 }
-                
+
                 onMonthChanged(nextMonth);
               },
               icon: Icon(
@@ -1601,8 +1758,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 color: () {
                   final now = DateTime.now();
                   final currentMonth = DateTime(now.year, now.month);
-                  final nextMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
-                  
+                  final nextMonth =
+                      DateTime(selectedMonth.year, selectedMonth.month + 1);
+
                   if (nextMonth.isAfter(currentMonth)) {
                     return theme.disabledColor;
                   }
@@ -1612,9 +1770,9 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ],
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // Format Selector
         Text(
           l10n.exportFormat,
@@ -1637,9 +1795,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 },
                 selectedColor: theme.colorScheme.secondaryContainer,
                 labelStyle: TextStyle(
-                  color: selectedFormat == 'csv' 
-                    ? theme.colorScheme.onSecondaryContainer 
-                    : theme.colorScheme.onSurface,
+                  color: selectedFormat == 'csv'
+                      ? theme.colorScheme.onSecondaryContainer
+                      : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1656,9 +1814,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 },
                 selectedColor: theme.colorScheme.secondaryContainer,
                 labelStyle: TextStyle(
-                  color: selectedFormat == 'excel' 
-                    ? theme.colorScheme.onSecondaryContainer
-                    : theme.colorScheme.onSurface,
+                  color: selectedFormat == 'excel'
+                      ? theme.colorScheme.onSecondaryContainer
+                      : theme.colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1708,7 +1866,8 @@ class _StatsScreenState extends State<StatsScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     if (filePath != null) {
-                      await SharePlus.instance.share(ShareParams(files: [XFile(filePath)]));
+                      await SharePlus.instance
+                          .share(ShareParams(files: [XFile(filePath)]));
                     }
                   },
                   icon: const Icon(Icons.share),
@@ -1722,143 +1881,146 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  Future<String> _generateFile(BuildContext context, List<Habit> habits,
+      String uid, DateTime monthDate, String format) async {
+    // Removed "Generating CSV..." snackbar message
+    final l10n = AppLocalizations.of(context)!;
+    // Calculate month name early to avoid async gap usage of context
+    final monthName = _monthName(context, monthDate.month);
 
-  Future<String> _generateFile(BuildContext context, List<Habit> habits, String uid, DateTime monthDate, String format) async {
-      // Removed "Generating CSV..." snackbar message
-      final l10n = AppLocalizations.of(context)!;
-      // Calculate month name early to avoid async gap usage of context
-      final monthName = _monthName(context, monthDate.month);
+    try {
+      final start = DateTime(monthDate.year, monthDate.month, 1);
+      final daysInMonth =
+          DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+      final end = DateTime(monthDate.year, monthDate.month, daysInMonth);
 
-      try {
-        final start = DateTime(monthDate.year, monthDate.month, 1);
-        final daysInMonth = DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
-        final end = DateTime(monthDate.year, monthDate.month, daysInMonth);
-        
-        // 1. Fetch History
-        final activeHabits = habits.where((h) => !h.archived).toList();
-        final habitHistoryMap = <String, Map<String, double>>{};
-        for (final habit in activeHabits) {
-          final localHabit = Storage.getHabitById(habit.id);
-          final resetAtMs = localHabit?.resetAtMs ?? 0;
-          final historyList = Storage.getHabitHistoryForDateRange(
-            habit.id,
-            start,
-            end,
-          );
-          final map = <String, double>{};
-          for (final entry in historyList) {
-            if (resetAtMs > 0 && entry.updatedAtMs < resetAtMs) {
-              continue;
-            }
-            if (entry.deleted) continue;
-            map[entry.dateKey] = entry.value ?? 0.0;
+      // 1. Fetch History
+      final activeHabits = habits.where((h) => !h.archived).toList();
+      final habitHistoryMap = <String, Map<String, double>>{};
+      for (final habit in activeHabits) {
+        final localHabit = Storage.getHabitById(habit.id);
+        final resetAtMs = localHabit?.resetAtMs ?? 0;
+        final historyList = Storage.getHabitHistoryForDateRange(
+          habit.id,
+          start,
+          end,
+        );
+        final map = <String, double>{};
+        for (final entry in historyList) {
+          if (resetAtMs > 0 && entry.updatedAtMs < resetAtMs) {
+            continue;
           }
-          habitHistoryMap[habit.id] = map;
+          if (entry.deleted) continue;
+          map[entry.dateKey] = entry.value ?? 0.0;
         }
-        
-        // 2. Prepare Rows (Pivoted)
-        // Header - use English for CSV, localized for Excel
-        final dayLabel = format == 'csv' ? 'Day' : l10n.csvDay;
-        final header = <dynamic>[dayLabel];
-        for (final h in activeHabits) {
-          header.add(h.name);
-        }
-        final rows = <List<dynamic>>[header];
-        
-        // Days Rows
-        final habitCompletions = <String, int>{}; // Track total completions for Rate
-        final habitTargets = <String, int>{}; // Track total targets
-        
-        for (int day = 1; day <= daysInMonth; day++) {
-           final d = DateTime(monthDate.year, monthDate.month, day);
-           final dateKey = "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-           final today = DateTime.now();
-           final todayDate = DateTime(today.year, today.month, today.day);
-           
-           final row = <dynamic>[day];
-           
-           // Check if this is a future date
-           final isFuture = d.isAfter(todayDate);
-           
-           for (final h in activeHabits) {
-              // For future dates, leave cell empty
-              if (isFuture) {
-                row.add('');
-                continue;
-              }
-              
-              // Calc Target (only for dates up to today)
-              bool isScheduled = h.isScheduledFor(d);
-              if (isScheduled) {
-                 habitTargets[h.id] = (habitTargets[h.id] ?? 0) + 1;
-              }
-              
-              final map = habitHistoryMap[h.id];
-              final val = map?[dateKey];
-              
-              if (val != null && val >= h.targetValue) {
-                 row.add('X'); 
-                 // If scheduled, it counts to completion rate
-                 if (isScheduled) {
-                    habitCompletions[h.id] = (habitCompletions[h.id] ?? 0) + 1;
-                 }
-              } else if (isScheduled) {
-                 // Undone required/scheduled day
-                 row.add('-');
-              } else {
-                 // Non-required day
-                 row.add('');
-              }
-           }
-           rows.add(row);
-        }
-        
-        // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
-        final totalLabel = format == 'csv' ? 'Total completed' : l10n.csvTotalCompleted;
-        final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
-        final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
-        
-        final totalRow = <dynamic>[totalLabel];
-        final targetRow = <dynamic>[targetLabel];
-        final rateRow = <dynamic>[rateLabel];
-        
-        for (final h in activeHabits) {
-           final comp = habitCompletions[h.id] ?? 0;
-           final targ = habitTargets[h.id] ?? 0;
-           final rate = targ > 0 ? (comp / targ * 100) : 0.0;
-           
-           totalRow.add(comp);
-           targetRow.add(targ);
-           rateRow.add("${rate.toStringAsFixed(1)}%");
-        }
-        
-        rows.add([]); // Spacer
-        rows.add(totalRow);
-        rows.add(targetRow);
-        rows.add(rateRow);
-        
-        // 4. Generate File
-        // Localized filename: habits_MonthName_YYYY.{format}
-        final fileExtension = format == 'excel' ? 'xlsx' : 'csv';
-        final fileName = "${l10n.habitReportFileName(monthName, monthDate.year)}.$fileExtension";
-        
-        final String path;
-        if (format == 'excel') {
-          path = await ExportService.generateExcelFile(fileName: fileName, rows: rows);
-        } else {
-          path = await ExportService.generateCsvFile(fileName: fileName, rows: rows);
-        }
-        
-        return path;
-
-      } catch (e) {
-        rethrow;
+        habitHistoryMap[habit.id] = map;
       }
+
+      // 2. Prepare Rows (Pivoted)
+      // Header - use English for CSV, localized for Excel
+      final dayLabel = format == 'csv' ? 'Day' : l10n.csvDay;
+      final header = <dynamic>[dayLabel];
+      for (final h in activeHabits) {
+        header.add(h.name);
+      }
+      final rows = <List<dynamic>>[header];
+
+      // Days Rows
+      final habitCompletions =
+          <String, int>{}; // Track total completions for Rate
+      final habitTargets = <String, int>{}; // Track total targets
+
+      for (int day = 1; day <= daysInMonth; day++) {
+        final d = DateTime(monthDate.year, monthDate.month, day);
+        final dateKey =
+            "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+        final today = DateTime.now();
+        final todayDate = DateTime(today.year, today.month, today.day);
+
+        final row = <dynamic>[day];
+
+        // Check if this is a future date
+        final isFuture = d.isAfter(todayDate);
+
+        for (final h in activeHabits) {
+          // For future dates, leave cell empty
+          if (isFuture) {
+            row.add('');
+            continue;
+          }
+
+          // Calc Target (only for dates up to today)
+          bool isScheduled = h.isScheduledFor(d);
+          if (isScheduled) {
+            habitTargets[h.id] = (habitTargets[h.id] ?? 0) + 1;
+          }
+
+          final map = habitHistoryMap[h.id];
+          final val = map?[dateKey];
+
+          if (val != null && val >= h.targetValue) {
+            row.add('X');
+            // If scheduled, it counts to completion rate
+            if (isScheduled) {
+              habitCompletions[h.id] = (habitCompletions[h.id] ?? 0) + 1;
+            }
+          } else if (isScheduled) {
+            // Undone required/scheduled day
+            row.add('-');
+          } else {
+            // Non-required day
+            row.add('');
+          }
+        }
+        rows.add(row);
+      }
+
+      // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
+      final totalLabel =
+          format == 'csv' ? 'Total completed' : l10n.csvTotalCompleted;
+      final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
+      final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
+
+      final totalRow = <dynamic>[totalLabel];
+      final targetRow = <dynamic>[targetLabel];
+      final rateRow = <dynamic>[rateLabel];
+
+      for (final h in activeHabits) {
+        final comp = habitCompletions[h.id] ?? 0;
+        final targ = habitTargets[h.id] ?? 0;
+        final rate = targ > 0 ? (comp / targ * 100) : 0.0;
+
+        totalRow.add(comp);
+        targetRow.add(targ);
+        rateRow.add("${rate.toStringAsFixed(1)}%");
+      }
+
+      rows.add([]); // Spacer
+      rows.add(totalRow);
+      rows.add(targetRow);
+      rows.add(rateRow);
+
+      // 4. Generate File
+      // Localized filename: habits_MonthName_YYYY.{format}
+      final fileExtension = format == 'excel' ? 'xlsx' : 'csv';
+      final fileName =
+          "${l10n.habitReportFileName(monthName, monthDate.year)}.$fileExtension";
+
+      final String path;
+      if (format == 'excel') {
+        path = await ExportService.generateExcelFile(
+            fileName: fileName, rows: rows);
+      } else {
+        path =
+            await ExportService.generateCsvFile(fileName: fileName, rows: rows);
+      }
+
+      return path;
+    } catch (e) {
+      rethrow;
+    }
   }
 }
-
-
-
 
 Offset? _extractLocal(FlTouchEvent e) {
   if (e is FlTapUpEvent) return e.localPosition;
@@ -1870,7 +2032,6 @@ Offset? _extractLocal(FlTouchEvent e) {
   if (e is FlPointerHoverEvent) return e.localPosition;
   return null;
 }
-
 
 class _ChartWithTooltipOverlay extends StatelessWidget {
   final _BucketTooltip? tooltip;
@@ -1923,7 +2084,7 @@ class _TooltipBubble extends StatelessWidget {
       color: scheme.surfaceContainerHighest,
       elevation: 4,
       borderRadius: BorderRadius.circular(10),
-  child: ConstrainedBox(
+      child: ConstrainedBox(
         constraints: const BoxConstraints(
           minWidth: 160,
           maxWidth: 240,
@@ -2029,10 +2190,14 @@ class _StatsBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             ),
           ),
           child: Column(
@@ -2073,7 +2238,8 @@ class _StatsBlock extends StatelessWidget {
               child: _DetailStatCard(
                 title: l10n.leastStudied,
                 value: leastName,
-                subValue: (leastSecs > 0 && mostSecs > 0) ? _fmtHMS(leastSecs) : null,
+                subValue:
+                    (leastSecs > 0 && mostSecs > 0) ? _fmtHMS(leastSecs) : null,
                 accentColor: leastColor,
                 icon: Icons.trending_down,
               ),
@@ -2142,7 +2308,10 @@ class _DetailStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -2150,7 +2319,9 @@ class _DetailStatCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(icon,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant),
               const SizedBox(width: 4),
               Expanded(
                 child: FittedBox(
@@ -2159,10 +2330,10 @@ class _DetailStatCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                    ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        ),
                   ),
                 ),
               ),
@@ -2188,9 +2359,9 @@ class _DetailStatCard extends StatelessWidget {
                     Text(
                       value,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2198,9 +2369,11 @@ class _DetailStatCard extends StatelessWidget {
                       Text(
                         subValue!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                           color: Theme.of(context).colorScheme.onSurfaceVariant,
-                           fontSize: 10,
-                        ),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                              fontSize: 10,
+                            ),
                       ),
                   ],
                 ),
@@ -2217,7 +2390,8 @@ class _SegChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _SegChip({required this.label, required this.selected, required this.onTap});
+  const _SegChip(
+      {required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -2261,170 +2435,177 @@ class _PieChartWithTooltip extends StatefulWidget {
 class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
   @override
   Widget build(BuildContext context) {
-
     return GestureDetector(
-      
       behavior: HitTestBehavior.opaque,
       onTap: widget.onDismiss,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          
-SizedBox(
-  width: double.infinity,
-  height: 300,
-  child: LayoutBuilder(
-    builder: (context, constraints) {
-      final w = constraints.maxWidth;
-      final h = constraints.maxHeight;
-      // Use more realistic max dimensions or better, handle it dynamically.
-      // For now, let's just make the boundary checks more robust.
-      const tooltipW = 160.0;
-      const tooltipH = 80.0;
+          SizedBox(
+            width: double.infinity,
+            height: 300,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final w = constraints.maxWidth;
+                final h = constraints.maxHeight;
+                // Use more realistic max dimensions or better, handle it dynamically.
+                // For now, let's just make the boundary checks more robust.
+                const tooltipW = 160.0;
+                const tooltipH = 80.0;
 
-      final safeLocal = widget.tooltip?.local ?? Offset.zero;
-      double left = safeLocal.dx - tooltipW / 2;
-      double top  = safeLocal.dy - tooltipH - 12;
+                final safeLocal = widget.tooltip?.local ?? Offset.zero;
+                double left = safeLocal.dx - tooltipW / 2;
+                double top = safeLocal.dy - tooltipH - 12;
 
-      // Ensure it's within the LayoutBuilder constraints with some padding
-      if (left < 12) left = 12;
-      if (left + tooltipW > w - 12) left = w - tooltipW - 12;
+                // Ensure it's within the LayoutBuilder constraints with some padding
+                if (left < 12) left = 12;
+                if (left + tooltipW > w - 12) left = w - tooltipW - 12;
 
-      if (top < 12 && widget.tooltip != null) {
-        // If it flies off top, show below the point
-        top = safeLocal.dy + 12;
-      }
-      if (top + tooltipH > h - 12) {
-        // If it flies off bottom, push it up
-        top = h - tooltipH - 12;
-      }
+                if (top < 12 && widget.tooltip != null) {
+                  // If it flies off top, show below the point
+                  top = safeLocal.dy + 12;
+                }
+                if (top + tooltipH > h - 12) {
+                  // If it flies off bottom, push it up
+                  top = h - tooltipH - 12;
+                }
 
-      return Stack(
-        alignment: Alignment.center,
-        children: [
-          
-          PieChart(
-            PieChartData(
-              startDegreeOffset: -90,
-              sectionsSpace: 2,
-              centerSpaceRadius: 60,
-              sections: widget.slices.isEmpty
-    ? [
-          PieChartSectionData(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha((0.6 * 255).round()),
-          value: 1,
-          radius: 90,
-          showTitle: false,
-        ),
-      ]
-    : [
-        for (final s in widget.slices)
-          () {
-            final percent = widget.totalSeconds == 0
-                ? 0
-                : s.seconds / widget.totalSeconds;
-            final showTitle = percent >= 0.03;
-            final label = showTitle
-                ? _pieSectionTitle(s.name, s.seconds, context)
-                : '';
-            return PieChartSectionData(
-              color: s.color,
-              value: s.seconds.toDouble(),
-              radius: 90,
-              showTitle: showTitle,
-              title: label,
-              titleStyle: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 11,
-                  ),
-              titlePositionPercentageOffset: 0.65,
-            );
-          }(),
-      ],
-              pieTouchData: PieTouchData(
-                touchCallback: (event, response) {
-                  if (event is! FlTapUpEvent) return;
-                  final touched = response?.touchedSection;
-                  if (touched == null) return;
-                  final index = touched.touchedSectionIndex;
-                  if (index < 0 || index >= widget.slices.length) return;
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        startDegreeOffset: -90,
+                        sectionsSpace: 2,
+                        centerSpaceRadius: 60,
+                        sections: widget.slices.isEmpty
+                            ? [
+                                PieChartSectionData(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withAlpha((0.6 * 255).round()),
+                                  value: 1,
+                                  radius: 90,
+                                  showTitle: false,
+                                ),
+                              ]
+                            : [
+                                for (final s in widget.slices)
+                                  () {
+                                    final percent = widget.totalSeconds == 0
+                                        ? 0
+                                        : s.seconds / widget.totalSeconds;
+                                    final showTitle = percent >= 0.03;
+                                    final label = showTitle
+                                        ? _pieSectionTitle(
+                                            s.name, s.seconds, context)
+                                        : '';
+                                    return PieChartSectionData(
+                                      color: s.color,
+                                      value: s.seconds.toDouble(),
+                                      radius: 90,
+                                      showTitle: showTitle,
+                                      title: label,
+                                      titleStyle: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 11,
+                                          ),
+                                      titlePositionPercentageOffset: 0.65,
+                                    );
+                                  }(),
+                              ],
+                        pieTouchData: PieTouchData(
+                          touchCallback: (event, response) {
+                            if (event is! FlTapUpEvent) return;
+                            final touched = response?.touchedSection;
+                            if (touched == null) return;
+                            final index = touched.touchedSectionIndex;
+                            if (index < 0 || index >= widget.slices.length)
+                              return;
 
-                  final s = widget.slices[index];
-                  final local = event.localPosition;
+                            final s = widget.slices[index];
+                            final local = event.localPosition;
 
-                  widget.onSliceTap?.call(
-                    _SliceTooltip(local: local, id: s.id, name: s.name, seconds: s.seconds),
-                  );
-                },
-              ),
-            ),
-          duration: const Duration(milliseconds: 350),
-          curve: Curves.easeOutCubic,
-          ),
-
-        
-        if (widget.totalSeconds == 0 || widget.slices.isEmpty)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Center(
-                child: Text(
-                  AppLocalizations.of(context)!.noData,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.black45,
-                        fontWeight: FontWeight.w700,
+                            widget.onSliceTap?.call(
+                              _SliceTooltip(
+                                  local: local,
+                                  id: s.id,
+                                  name: s.name,
+                                  seconds: s.seconds),
+                            );
+                          },
+                        ),
                       ),
-                ),
-              ),
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOutCubic,
+                    ),
+                    if (widget.totalSeconds == 0 || widget.slices.isEmpty)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: Center(
+                            child: Text(
+                              AppLocalizations.of(context)!.noData,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.black45,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    if (widget.totalSeconds > 0 && widget.slices.isNotEmpty)
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.total,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                      fontSize: 13,
+                                    ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            _fmtHMS(widget.totalSeconds),
+                            style: const TextStyle(
+                                fontSize: 22, fontWeight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
+                    if (widget.tooltip != null)
+                      Positioned.fill(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: widget.onDismiss,
+                          child: const SizedBox.expand(),
+                        ),
+                      ),
+                    if (widget.tooltip != null)
+                      Positioned(
+                        left: left,
+                        top: top,
+                        child: IntrinsicWidth(
+                          child: IntrinsicHeight(
+                            child: _FadeInTooltipCard(data: widget.tooltip!),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
-          
-          if (widget.totalSeconds > 0 && widget.slices.isNotEmpty)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.total,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontSize: 13,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _fmtHMS(widget.totalSeconds),
-                  style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-
-          
-          if (widget.tooltip != null)
-            Positioned.fill(
-              child: GestureDetector(
-                
-                behavior: HitTestBehavior.opaque,
-                onTap: widget.onDismiss,
-                child: const SizedBox.expand(),
-              ),
-            ),
-
-          
-          if (widget.tooltip != null)
-            Positioned(
-              left: left,
-              top: top,
-              child: IntrinsicWidth(
-                child: IntrinsicHeight(
-                  child: _FadeInTooltipCard(data: widget.tooltip!),
-                ),
-              ),
-            ),
-        ],
-      );
-    },
-  ),
-),
         ],
       ),
     );
@@ -2474,7 +2655,8 @@ class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
             children: [
               Text(
                 widget.data.name,
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -2495,17 +2677,20 @@ class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
   }
 }
 
-
 class _SliceTooltip {
   final Offset local;
   final String id;
   final String name;
   final int seconds;
-  _SliceTooltip({required this.local, required this.id,  required this.name, required this.seconds});
+  _SliceTooltip(
+      {required this.local,
+      required this.id,
+      required this.name,
+      required this.seconds});
 }
 
 class _Bucket {
-  final DateTime date; 
+  final DateTime date;
   final Map<String, int> secondsByCourse;
   final bool isMonth;
   _Bucket({
@@ -2519,17 +2704,19 @@ class _Bucket {
 }
 
 class _BucketTooltip {
-  final Offset anchor; 
+  final Offset anchor;
   final String title;
   final List<_TooltipItem> items;
-  _BucketTooltip({required this.anchor, required this.title, required this.items});
+  _BucketTooltip(
+      {required this.anchor, required this.title, required this.items});
 }
 
 class _TooltipItem {
   final Color color;
   final String label;
   final String valueHms;
-  _TooltipItem({required this.color, required this.label, required this.valueHms});
+  _TooltipItem(
+      {required this.color, required this.label, required this.valueHms});
 }
 
 class _Slice {
@@ -2560,10 +2747,8 @@ class _BucketsPayload {
         totalSeconds = 0;
 }
 
-
-
-
 enum _Range { week, month, year }
+
 enum _TimeUnit { seconds, minutes, hours }
 
 class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
@@ -2574,7 +2759,6 @@ class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
 
   @override
   BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    
     return BoxConstraints(
       minWidth: 0,
       maxWidth: constraints.maxWidth,
@@ -2585,10 +2769,6 @@ class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
 
   @override
   Offset getPositionForChild(Size size, Size childSize) {
-    
-    
-
-    
     // Center horizontally on anchor
     double left = anchor.dx - (childSize.width / 2);
 
@@ -2631,23 +2811,28 @@ _TimeUnit _pickUnit(int totalSeconds) {
 
 double _scaleForUnit(_TimeUnit u) {
   switch (u) {
-    case _TimeUnit.seconds: return 1;
-    case _TimeUnit.minutes: return 60;
-    case _TimeUnit.hours:   return 3600;
+    case _TimeUnit.seconds:
+      return 1;
+    case _TimeUnit.minutes:
+      return 60;
+    case _TimeUnit.hours:
+      return 3600;
   }
 }
 
 String _unitLabel(_TimeUnit u, BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   switch (u) {
-    case _TimeUnit.seconds: return l10n.seconds_plural;
-    case _TimeUnit.minutes: return l10n.minutes_plural;
-    case _TimeUnit.hours:   return l10n.hours_plural;
+    case _TimeUnit.seconds:
+      return l10n.seconds_plural;
+    case _TimeUnit.minutes:
+      return l10n.minutes_plural;
+    case _TimeUnit.hours:
+      return l10n.hours_plural;
   }
 }
 
 String _fmtAxisTick(double v, _TimeUnit u) {
-  
   String numStr;
   if (v == 0 || v.abs() >= 10) {
     numStr = v.toStringAsFixed(0);
@@ -2678,11 +2863,10 @@ String _fmtHMS(int s) {
   return '$h:$m:$sec';
 }
 
-
 String _shortTimeLabel(int seconds, BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   if (seconds >= 3600) return '${(seconds / 3600).round()}${l10n.hUnit}';
-  if (seconds >= 60)   return '${(seconds / 60).round()}${l10n.mUnit}';
+  if (seconds >= 60) return '${(seconds / 60).round()}${l10n.mUnit}';
   return '$seconds${l10n.sUnit}';
 }
 
@@ -2728,14 +2912,27 @@ String _fmtTotalVerbose(int s, BuildContext context) {
   final parts = <String>[];
   if (h > 0) parts.add('$h ${h == 1 ? l10n.hour : l10n.hours_plural}');
   if (m > 0) parts.add('$m ${m == 1 ? l10n.minute : l10n.minutes_plural}');
-  if (sec > 0 || parts.isEmpty) parts.add('$sec ${sec == 1 ? l10n.second : l10n.seconds_plural}');
+  if (sec > 0 || parts.isEmpty)
+    parts.add('$sec ${sec == 1 ? l10n.second : l10n.seconds_plural}');
   return '${parts.join(" ")} ${l10n.total.toLowerCase()}';
 }
 
 String _fmtDateShort(DateTime d, BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
-  final mo = [l10n.jan, l10n.feb, l10n.mar, l10n.apr, l10n.may, l10n.jun,
-              l10n.jul, l10n.aug, l10n.sep, l10n.oct, l10n.nov, l10n.dec];
+  final mo = [
+    l10n.jan,
+    l10n.feb,
+    l10n.mar,
+    l10n.apr,
+    l10n.may,
+    l10n.jun,
+    l10n.jul,
+    l10n.aug,
+    l10n.sep,
+    l10n.oct,
+    l10n.nov,
+    l10n.dec
+  ];
   final i = (d.month - 1);
   final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
   return '${mo[safe]} ${d.day}';
@@ -2743,8 +2940,20 @@ String _fmtDateShort(DateTime d, BuildContext context) {
 
 String _fmtDateLong(DateTime d, BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
-  final mo = [l10n.jan, l10n.feb, l10n.mar, l10n.apr, l10n.may, l10n.jun,
-              l10n.jul, l10n.aug, l10n.sep, l10n.oct, l10n.nov, l10n.dec];
+  final mo = [
+    l10n.jan,
+    l10n.feb,
+    l10n.mar,
+    l10n.apr,
+    l10n.may,
+    l10n.jun,
+    l10n.jul,
+    l10n.aug,
+    l10n.sep,
+    l10n.oct,
+    l10n.nov,
+    l10n.dec
+  ];
   final i = (d.month - 1);
   final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
   return '${mo[safe]} ${d.day}, ${d.year}';
@@ -2753,41 +2962,58 @@ String _fmtDateLong(DateTime d, BuildContext context) {
 String _monthName(BuildContext context, int m) {
   final l10n = AppLocalizations.of(context)!;
   switch (m) {
-    case 1: return l10n.january;
-    case 2: return l10n.february;
-    case 3: return l10n.march;
-    case 4: return l10n.april;
-    case 5: return l10n.may;
-    case 6: return l10n.june;
-    case 7: return l10n.july;
-    case 8: return l10n.august;
-    case 9: return l10n.september;
-    case 10: return l10n.october;
-    case 11: return l10n.november;
-    case 12: return l10n.december;
-    default: return '';
+    case 1:
+      return l10n.january;
+    case 2:
+      return l10n.february;
+    case 3:
+      return l10n.march;
+    case 4:
+      return l10n.april;
+    case 5:
+      return l10n.may;
+    case 6:
+      return l10n.june;
+    case 7:
+      return l10n.july;
+    case 8:
+      return l10n.august;
+    case 9:
+      return l10n.september;
+    case 10:
+      return l10n.october;
+    case 11:
+      return l10n.november;
+    case 12:
+      return l10n.december;
+    default:
+      return '';
   }
 }
 
 String _prevLabel(BuildContext context, _Range r) {
   final l10n = AppLocalizations.of(context)!;
   switch (r) {
-    case _Range.week:  return l10n.previousWeek;
-    case _Range.month: return l10n.previousMonth;
-    case _Range.year:  return l10n.previousYear;
+    case _Range.week:
+      return l10n.previousWeek;
+    case _Range.month:
+      return l10n.previousMonth;
+    case _Range.year:
+      return l10n.previousYear;
   }
 }
 
 String _nextLabel(BuildContext context, _Range r) {
   final l10n = AppLocalizations.of(context)!;
   switch (r) {
-    case _Range.week:  return l10n.nextWeek;
-    case _Range.month: return l10n.nextMonth;
-    case _Range.year:  return l10n.nextYear;
+    case _Range.week:
+      return l10n.nextWeek;
+    case _Range.month:
+      return l10n.nextMonth;
+    case _Range.year:
+      return l10n.nextYear;
   }
 }
-
-
 
 class _HabitStatsResult {
   final int required;
@@ -2795,5 +3021,6 @@ class _HabitStatsResult {
   final int notCompleted;
   final double completionRate;
 
-  const _HabitStatsResult(this.required, this.completed, this.notCompleted, this.completionRate);
+  const _HabitStatsResult(
+      this.required, this.completed, this.notCompleted, this.completionRate);
 }

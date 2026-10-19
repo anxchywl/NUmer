@@ -14,7 +14,7 @@ class HeatmapService extends ChangeNotifier {
 
   void _onSessionUpdates(List<DateTime> dates) {
     if (dates.isEmpty) return;
-    
+
     // Invalidate cache for affected months
     bool changed = false;
     for (final date in dates) {
@@ -24,7 +24,7 @@ class HeatmapService extends ChangeNotifier {
         changed = true;
       }
     }
-    
+
     // Notify listeners so UI can re-fetch if needed
     if (changed) {
       notifyListeners();
@@ -37,18 +37,18 @@ class HeatmapService extends ChangeNotifier {
   /// Given TableCalendar works with "focusedDay", we should probably cache by month.
   Future<Map<DateTime, int>> fetchMonth(DateTime month) async {
     final monthKey = DateTime(month.year, month.month, 1);
-    
+
     if (_cache.containsKey(monthKey)) {
       return _cache[monthKey]!;
     }
 
     // Calculate range: First day of month to last day of month.
-    // We strictly fetch this month's data. 
-    // If TableCalendar shows surrounding days, they will be fetched when "focusedDay" changes 
-    // OR we should perhaps fetch a bit more. 
+    // We strictly fetch this month's data.
+    // If TableCalendar shows surrounding days, they will be fetched when "focusedDay" changes
+    // OR we should perhaps fetch a bit more.
     // Requirement: "Load current month only".
     // "Update if changed day is in currently loaded month".
-    
+
     final start = monthKey;
     final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
 
