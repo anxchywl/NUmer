@@ -89,8 +89,9 @@ class _HabitSorterCardState extends State<HabitSorterCard>
               scale: 0.95,
               child: Material(
                 elevation: 12,
-                borderRadius: BorderRadius.circular(16), // Match container radius
-                color: Colors.transparent, 
+                borderRadius:
+                    BorderRadius.circular(16), // Match container radius
+                color: Colors.transparent,
                 child: _buildCardContent(theme, habitColor, isDragging: true),
               ),
             ),
@@ -105,17 +106,22 @@ class _HabitSorterCardState extends State<HabitSorterCard>
     );
   }
 
-  Widget _buildCardContent(ThemeData theme, Color habitColor, {bool isDragging = false}) {
+  Widget _buildCardContent(ThemeData theme, Color habitColor,
+      {bool isDragging = false}) {
     return Container(
       width: isDragging ? MediaQuery.of(context).size.width - 32 : null,
       height: 70, // Compact height matching calendar strip area approx
-      margin: isDragging ? null : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: isDragging
+          ? null
+          : const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: isDragging ? habitColor : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isDragging ? habitColor : theme.colorScheme.outlineVariant.withAlpha(50),
+          color: isDragging
+              ? habitColor
+              : theme.colorScheme.outlineVariant.withAlpha(50),
           width: 1,
         ),
         boxShadow: [
@@ -131,16 +137,20 @@ class _HabitSorterCardState extends State<HabitSorterCard>
           // Drag Indicator
           Icon(
             Icons.drag_indicator_rounded,
-            color: isDragging ? Colors.white.withAlpha(200) : theme.colorScheme.onSurfaceVariant.withAlpha(100),
+            color: isDragging
+                ? Colors.white.withAlpha(200)
+                : theme.colorScheme.onSurfaceVariant.withAlpha(100),
             size: 20,
           ),
           const SizedBox(width: 12),
-          
+
           // Icon
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isDragging ? Colors.white.withAlpha(40) : habitColor.withAlpha(30),
+              color: isDragging
+                  ? Colors.white.withAlpha(40)
+                  : habitColor.withAlpha(30),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -150,7 +160,7 @@ class _HabitSorterCardState extends State<HabitSorterCard>
             ),
           ),
           const SizedBox(width: 12),
-          
+
           // Text Details
           Expanded(
             child: Column(
@@ -160,7 +170,8 @@ class _HabitSorterCardState extends State<HabitSorterCard>
                 Text(
                   widget.habit.name,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: isDragging ? Colors.white : theme.colorScheme.onSurface,
+                    color:
+                        isDragging ? Colors.white : theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -170,7 +181,9 @@ class _HabitSorterCardState extends State<HabitSorterCard>
                 Text(
                   AppLocalizations.of(context)!.habitDragToCategorize,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDragging ? Colors.white.withAlpha(180) : theme.colorScheme.onSurfaceVariant,
+                    color: isDragging
+                        ? Colors.white.withAlpha(180)
+                        : theme.colorScheme.onSurfaceVariant,
                     fontSize: 12,
                   ),
                 ),

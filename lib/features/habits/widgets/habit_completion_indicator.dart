@@ -20,7 +20,7 @@ class HabitCompletionIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isCompleted = currentValue >= habit.targetValue;
-    
+
     if (habit.type == HabitType.yesNo) {
       return AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -30,18 +30,21 @@ class HabitCompletionIndicator extends StatelessWidget {
           color: isCompleted ? habit.color : Colors.transparent,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isCompleted ? habit.color : theme.colorScheme.outline.withValues(alpha: 0.3),
+            color: isCompleted
+                ? habit.color
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: 2, // Consistent border width
           ),
         ),
-        child: isCompleted 
-            ? Icon(Icons.check, color: Colors.white, size: size * 0.55) 
+        child: isCompleted
+            ? Icon(Icons.check, color: Colors.white, size: size * 0.55)
             : null,
       );
     } else {
       // Numeric / Time
-      final progress = habit.targetValue > 0 ? currentValue / habit.targetValue : 0.0;
-      
+      final progress =
+          habit.targetValue > 0 ? currentValue / habit.targetValue : 0.0;
+
       // Calculate milestone-based stroke width
       double dynamicStrokeWidth = 2.0;
       if (progress >= 0.75) {
@@ -67,7 +70,7 @@ class HabitCompletionIndicator extends StatelessWidget {
               ),
             ),
           ),
-          
+
           // Progress Ring or Full Checkmark
           if (isCompleted)
             AnimatedContainer(
