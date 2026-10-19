@@ -193,7 +193,8 @@ class Person {
     if (phone != null && phone!.isNotEmpty) map['ph'] = phone;
     if (email != null && email!.isNotEmpty) map['em'] = email;
     if (notes != null && notes!.isNotEmpty) map['nt'] = notes;
-    if (lastContactedAt != null) map['lc'] = Timestamp.fromDate(lastContactedAt!);
+    if (lastContactedAt != null)
+      map['lc'] = Timestamp.fromDate(lastContactedAt!);
     if (birthday != null) map['bd'] = Timestamp.fromDate(birthday!);
     if (remindToReachOut) map['rm'] = true;
     if (interactionLog.isNotEmpty) {
@@ -257,9 +258,7 @@ class Person {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Person &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is Person && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

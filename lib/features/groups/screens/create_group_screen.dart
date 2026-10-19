@@ -102,7 +102,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                 labelText: 'Description',
                 hintText: 'What is this group about?',
                 filled: true,
-                 border: OutlineInputBorder(
+                border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
                 ),
@@ -135,7 +135,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     title: 'Public',
                     icon: Icons.public,
                     isSelected: _visibility == GroupVisibility.public,
-                    onTap: () => setState(() => _visibility = GroupVisibility.public),
+                    onTap: () =>
+                        setState(() => _visibility = GroupVisibility.public),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -144,7 +145,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     title: 'Private',
                     icon: Icons.lock,
                     isSelected: _visibility == GroupVisibility.private,
-                    onTap: () => setState(() => _visibility = GroupVisibility.private),
+                    onTap: () =>
+                        setState(() => _visibility = GroupVisibility.private),
                   ),
                 ),
               ],
@@ -201,7 +203,8 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                       )
                     : const Text(
                         'Create Community',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
               ),
             ),
@@ -225,9 +228,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    
-    
-    if (_visibility == GroupVisibility.private && _codeController.text.trim().length < 4) {
+
+    if (_visibility == GroupVisibility.private &&
+        _codeController.text.trim().length < 4) {
       showAppMessage(
         context,
         'Access code must be at least 4 characters',
@@ -243,7 +246,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         visibility: _visibility,
-        joinCode: _visibility == GroupVisibility.private ? _codeController.text.trim() : null,
+        joinCode: _visibility == GroupVisibility.private
+            ? _codeController.text.trim()
+            : null,
       );
       if (!mounted) return;
       showAppMessage(context, 'Group created successfully!');
@@ -280,10 +285,14 @@ class _VisibilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
-    final borderColor = isSelected ? colorScheme.primary : colorScheme.outlineVariant;
-    final backgroundColor = isSelected ? colorScheme.primaryContainer.withValues(alpha: 0.3) : Colors.transparent;
-    final iconColor = isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant;
+
+    final borderColor =
+        isSelected ? colorScheme.primary : colorScheme.outlineVariant;
+    final backgroundColor = isSelected
+        ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+        : Colors.transparent;
+    final iconColor =
+        isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant;
     final textColor = isSelected ? colorScheme.primary : colorScheme.onSurface;
 
     return InkWell(

@@ -17,56 +17,59 @@ class Notifs {
   /// isBackground is true when called from a background isolate
   static Future<void> init({bool isBackground = false}) async {
     if (_inited) return;
-    
+
     // 1. timezone setup
     try {
-        tzdata.initializeTimeZones();
-        
-        String? timeZoneName;
-        if (isBackground) {
-            try {
-                final dynamic result = await FlutterTimezone.getLocalTimezone().timeout(const Duration(seconds: 2));
-                timeZoneName = result?.toString();
-            } catch (e) {
-                debugPrint("Notifs: Timezone detection timed out/failed in background: $e");
-            }
-        } else {
-            try {
-                final dynamic result = await FlutterTimezone.getLocalTimezone();
-                timeZoneName = result?.toString();
-            } catch (e) {
-                 debugPrint("Notifs: Timezone detection failed: $e");
-            }
-        }
+      tzdata.initializeTimeZones();
 
-        if (timeZoneName != null) {
-            try {
-                tz.setLocalLocation(tz.getLocation(timeZoneName));
-                debugPrint("Notifs: Timezone initialized to $timeZoneName");
-            } catch (e) {
-                debugPrint("Notifs: Invalid timezone '$timeZoneName', falling back to UTC. Error: $e");
-                tz.setLocalLocation(tz.UTC);
-            }
-        } else {
-            debugPrint("Notifs: No timezone name found, using UTC");
-            tz.setLocalLocation(tz.UTC);
-        }
-    } catch (e) {
-        debugPrint("Notifs: Timezone init failed: $e, falling back to UTC");
+      String? timeZoneName;
+      if (isBackground) {
         try {
-            tz.setLocalLocation(tz.UTC);
-        } catch (_) {} 
+          final dynamic result = await FlutterTimezone.getLocalTimezone()
+              .timeout(const Duration(seconds: 2));
+          timeZoneName = result?.toString();
+        } catch (e) {
+          debugPrint(
+              "Notifs: Timezone detection timed out/failed in background: $e");
+        }
+      } else {
+        try {
+          final dynamic result = await FlutterTimezone.getLocalTimezone();
+          timeZoneName = result?.toString();
+        } catch (e) {
+          debugPrint("Notifs: Timezone detection failed: $e");
+        }
+      }
+
+      if (timeZoneName != null) {
+        try {
+          tz.setLocalLocation(tz.getLocation(timeZoneName));
+          debugPrint("Notifs: Timezone initialized to $timeZoneName");
+        } catch (e) {
+          debugPrint(
+              "Notifs: Invalid timezone '$timeZoneName', falling back to UTC. Error: $e");
+          tz.setLocalLocation(tz.UTC);
+        }
+      } else {
+        debugPrint("Notifs: No timezone name found, using UTC");
+        tz.setLocalLocation(tz.UTC);
+      }
+    } catch (e) {
+      debugPrint("Notifs: Timezone init failed: $e, falling back to UTC");
+      try {
+        tz.setLocalLocation(tz.UTC);
+      } catch (_) {}
     }
 
     // 2. plugin initialization
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const ios = DarwinInitializationSettings(
-      requestAlertPermission: false, 
+      requestAlertPermission: false,
       requestSoundPermission: false,
       requestBadgePermission: false,
     );
     const initSetting = InitializationSettings(android: android, iOS: ios);
-    
+
     final success = await _plugin.initialize(
       settings: initSetting,
       onDidReceiveNotificationResponse: (response) {
@@ -74,12 +77,13 @@ class Notifs {
       },
     );
     debugPrint("Notifs: Plugin initialized: $success");
-    
+
     // 3. create the android notification channel explicitly
     if (Platform.isAndroid) {
       final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
-      await androidPlugin?.createNotificationChannel(const AndroidNotificationChannel(
+      await androidPlugin
+          ?.createNotificationChannel(const AndroidNotificationChannel(
         _channelId,
         _channelName,
         description: _channelDescription,
@@ -101,45 +105,46 @@ class Notifs {
     // ensure the id is a valid 32-bit int
     id = id & 0x7FFFFFFF;
     await init();
-    
-    try {
-        final tzTime = tz.TZDateTime.from(whenLocal, tz.local);
-        debugPrint("Notifs: Scheduling #$id for local: $whenLocal -> tz: $tzTime");
 
-        // common details
-        const details = NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channelId,
-            _channelName,
-            channelDescription: _channelDescription,
-            importance: Importance.max,
-            priority: Priority.max,
-            showWhen: true,
-            enableVibration: true,
-            playSound: true,
-            category: AndroidNotificationCategory.reminder,
-            visibility: NotificationVisibility.public,
-          ),
-          iOS: DarwinNotificationDetails(
-            presentAlert: true,
-            presentBadge: true,
-            presentSound: true,
-            interruptionLevel: InterruptionLevel.critical,
-          ),
-        );
-        
-        await _plugin.zonedSchedule(
-          id: id,
-          title: title,
-          body: body,
-          scheduledDate: tzTime,
-          notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          matchDateTimeComponents: null,
-        );
-        debugPrint("Notifs: Scheduled inexact for $id");
+    try {
+      final tzTime = tz.TZDateTime.from(whenLocal, tz.local);
+      debugPrint(
+          "Notifs: Scheduling #$id for local: $whenLocal -> tz: $tzTime");
+
+      // common details
+      const details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          importance: Importance.max,
+          priority: Priority.max,
+          showWhen: true,
+          enableVibration: true,
+          playSound: true,
+          category: AndroidNotificationCategory.reminder,
+          visibility: NotificationVisibility.public,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          interruptionLevel: InterruptionLevel.critical,
+        ),
+      );
+
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzTime,
+        notificationDetails: details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        matchDateTimeComponents: null,
+      );
+      debugPrint("Notifs: Scheduled inexact for $id");
     } catch (e, stack) {
-        debugPrint("Notifs: Fatal error scheduling $id: $e\n$stack");
+      debugPrint("Notifs: Fatal error scheduling $id: $e\n$stack");
     }
   }
 
@@ -149,7 +154,7 @@ class Notifs {
     required String body,
   }) async {
     // background-safe init
-    await init(isBackground: true); 
+    await init(isBackground: true);
 
     debugPrint("Notifs: Showing immediate notification $id");
     await _plugin.show(
@@ -181,7 +186,7 @@ class Notifs {
     required int id,
     required String title,
     required String body,
-    required DateTime timeLocal, 
+    required DateTime timeLocal,
   }) async {
     // ensure the id is a valid 32-bit int
     id = id & 0x7FFFFFFF;
@@ -189,10 +194,10 @@ class Notifs {
     final now = DateTime.now();
     var first = DateTime(
         now.year, now.month, now.day, timeLocal.hour, timeLocal.minute);
-    
+
     // if the time has already passed today, schedule for tomorrow
     if (first.isBefore(now)) {
-        first = first.add(const Duration(days: 1));
+      first = first.add(const Duration(days: 1));
     }
 
     final tzTime = tz.TZDateTime.from(first, tz.local);
@@ -221,7 +226,7 @@ class Notifs {
           presentSound: true,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle, 
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -235,7 +240,7 @@ class Notifs {
 
   static Future<void> cancelAll() async {
     debugPrint("Notifs: Cancelling ALL");
-    await init(); 
+    await init();
     await _plugin.cancelAll();
   }
 }

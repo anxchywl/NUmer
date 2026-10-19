@@ -2,7 +2,6 @@ import 'dart:typed_data';
 
 import 'package:hive/hive.dart';
 
-
 mixin SyncEntity {
   String get id;
   set id(String value);
@@ -578,15 +577,25 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       activeSessionDeviceId: reader.read() as String?,
       activeSessionUpdatedAtMs: reader.read() as int?,
       pendingCoursePrompt: reader.read() as bool,
-      quickNotesEnabled: (reader.availableBytes > 0 ? reader.read() : true) as bool,
-      avatarColorValue: (reader.availableBytes > 0 ? reader.read() : null) as int?,
-      profileComplete: (reader.availableBytes > 0 ? reader.read() : false) as bool,
-      profileContact: (reader.availableBytes > 0 ? reader.read() : null) as String?,
+      quickNotesEnabled:
+          (reader.availableBytes > 0 ? reader.read() : true) as bool,
+      avatarColorValue:
+          (reader.availableBytes > 0 ? reader.read() : null) as int?,
+      profileComplete:
+          (reader.availableBytes > 0 ? reader.read() : false) as bool,
+      profileContact:
+          (reader.availableBytes > 0 ? reader.read() : null) as String?,
       allowNudges: (reader.availableBytes > 0 ? reader.read() : true) as bool,
-      eisenhowerMatrixEnabled: (reader.availableBytes > 0 ? (reader.read() ?? false) : false) as bool,
-      onboardingCompleted: (reader.availableBytes > 0 ? (reader.read() ?? false) : false) as bool,
-      bootstrapVersion: (reader.availableBytes > 0 ? reader.read() : null) as int?,
-      sessionNotificationsEnabled: (reader.availableBytes > 0 ? (reader.read() ?? true) : true) as bool,
+      eisenhowerMatrixEnabled: (reader.availableBytes > 0
+          ? (reader.read() ?? false)
+          : false) as bool,
+      onboardingCompleted: (reader.availableBytes > 0
+          ? (reader.read() ?? false)
+          : false) as bool,
+      bootstrapVersion:
+          (reader.availableBytes > 0 ? reader.read() : null) as int?,
+      sessionNotificationsEnabled:
+          (reader.availableBytes > 0 ? (reader.read() ?? true) : true) as bool,
     );
   }
 

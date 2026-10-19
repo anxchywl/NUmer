@@ -19,13 +19,13 @@ class AddPersonSheet extends StatefulWidget {
 
 class _AddPersonSheetState extends State<AddPersonSheet> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _notesController;
   late TextEditingController _tagsController;
-  
+
   Set<String> _selectedGroupIds = {};
   DateTime? _lastContactedAt;
   bool _remindToReachOut = false;
@@ -36,13 +36,14 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
   @override
   void initState() {
     super.initState();
-    
+
     final person = widget.person;
     _nameController = TextEditingController(text: person?.name ?? '');
     _phoneController = TextEditingController(text: person?.phone ?? '');
     _emailController = TextEditingController(text: person?.email ?? '');
     _notesController = TextEditingController(text: person?.notes ?? '');
-    _tagsController = TextEditingController(text: person?.tags.join(', ') ?? '');
+    _tagsController =
+        TextEditingController(text: person?.tags.join(', ') ?? '');
     _selectedGroupIds = person?.groupIds.toSet() ?? {};
     _lastContactedAt = person?.lastContactedAt;
     _remindToReachOut = person?.remindToReachOut ?? false;
@@ -83,8 +84,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      _isEditing 
-                          ? AppLocalizations.of(context)!.editPersonTitle 
+                      _isEditing
+                          ? AppLocalizations.of(context)!.editPersonTitle
                           : AppLocalizations.of(context)!.addPersonTitle,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
@@ -98,9 +99,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                 ],
               ),
             ),
-            
+
             const Divider(height: 1),
-            
+
             // Form
             Expanded(
               child: SingleChildScrollView(
@@ -130,9 +131,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                         ],
                         textCapitalization: TextCapitalization.words,
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Groups (multi-select)
                       Text(
                         AppLocalizations.of(context)!.groupsLabel,
@@ -151,7 +152,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           spacing: 8,
                           runSpacing: 8,
                           children: groups.map((group) {
-                            final isSelected = _selectedGroupIds.contains(group.id);
+                            final isSelected =
+                                _selectedGroupIds.contains(group.id);
                             return FilterChip(
                               label: Text(group.name),
                               selected: isSelected,
@@ -159,7 +161,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                               avatar: isSelected
                                   ? null
                                   : CircleAvatar(
-                                      backgroundColor: group.color.withAlpha(51),
+                                      backgroundColor:
+                                          group.color.withAlpha(51),
                                       child: Icon(
                                         group.icon,
                                         size: 14,
@@ -178,9 +181,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                             );
                           }).toList(),
                         ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Tags
                       TextFormField(
                         controller: _tagsController,
@@ -200,9 +203,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Phone
                       TextFormField(
                         controller: _phoneController,
@@ -215,12 +218,13 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                         keyboardType: TextInputType.phone,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(20),
-                          FilteringTextInputFormatter.allow(RegExp(r'[\d\s\-+().]')),
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d\s\-+().]')),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Email
                       TextFormField(
                         controller: _emailController,
@@ -235,9 +239,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           LengthLimitingTextInputFormatter(128),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Notes
                       TextFormField(
                         controller: _notesController,
@@ -252,9 +256,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           LengthLimitingTextInputFormatter(500),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Last Contacted
                       ListTile(
                         contentPadding: EdgeInsets.zero,
@@ -262,7 +266,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           Icons.calendar_today_outlined,
                           color: colorScheme.primary,
                         ),
-                        title: Text(AppLocalizations.of(context)!.lastContactedLabel),
+                        title: Text(
+                            AppLocalizations.of(context)!.lastContactedLabel),
                         subtitle: Text(
                           _lastContactedAt != null
                               ? DateFormat.yMMMd().format(_lastContactedAt!)
@@ -290,13 +295,14 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Remind me toggle
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(AppLocalizations.of(context)!.remindMeLabel),
+                        title:
+                            Text(AppLocalizations.of(context)!.remindMeLabel),
                         subtitle: Text(
                           'Coming soon',
                           style: TextStyle(color: colorScheme.onSurfaceVariant),
@@ -308,14 +314,14 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 32),
                     ],
                   ),
                 ),
               ),
             ),
-            
+
             // Save Button
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
@@ -333,8 +339,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_isEditing 
-                        ? AppLocalizations.of(context)!.saveChanges 
+                    : Text(_isEditing
+                        ? AppLocalizations.of(context)!.saveChanges
                         : AppLocalizations.of(context)!.addPersonTitle),
               ),
             ),
@@ -387,7 +393,7 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
       firstDate: DateTime(2000),
       lastDate: now,
     );
-    
+
     if (picked != null) {
       setState(() => _lastContactedAt = picked);
     }
@@ -395,37 +401,47 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSaving = true);
-    
+
     try {
       final auth = context.read<AuthController>();
       final uid = auth.currentUser?.uid;
       if (uid == null) return;
-      
+
       final service = context.read<ConnectionsService>();
       final now = DateTime.now();
-      
+
       // Parse tags
       final tagsText = _tagsController.text.trim();
       final tags = tagsText.isNotEmpty
-          ? tagsText.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList()
+          ? tagsText
+              .split(',')
+              .map((t) => t.trim())
+              .where((t) => t.isNotEmpty)
+              .toList()
           : <String>[];
-      
+
       if (_isEditing) {
         // Update existing person
         final updatedPerson = widget.person!.copyWith(
           name: _nameController.text.trim(),
           groupIds: _selectedGroupIds.toList(),
           tags: tags,
-          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
+          email: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim(),
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
           lastContactedAt: _lastContactedAt,
           remindToReachOut: _remindToReachOut,
           updatedAt: now,
         );
-        
+
         await service.updatePerson(uid, updatedPerson);
       } else {
         // Create new person
@@ -434,25 +450,33 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
           name: _nameController.text.trim(),
           groupIds: _selectedGroupIds.toList(),
           tags: tags,
-          phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
-          email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-          notes: _notesController.text.trim().isEmpty ? null : _notesController.text.trim(),
+          phone: _phoneController.text.trim().isEmpty
+              ? null
+              : _phoneController.text.trim(),
+          email: _emailController.text.trim().isEmpty
+              ? null
+              : _emailController.text.trim(),
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
           lastContactedAt: _lastContactedAt,
           remindToReachOut: _remindToReachOut,
           createdAt: now,
           updatedAt: now,
         );
-        
+
         await service.addPerson(uid, newPerson);
       }
-      
+
       if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.errorSaving(e.toString()))),
+          SnackBar(
+              content: Text(
+                  AppLocalizations.of(context)!.errorSaving(e.toString()))),
         );
       }
     } finally {

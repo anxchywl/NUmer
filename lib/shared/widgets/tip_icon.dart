@@ -55,7 +55,7 @@ class _TipIconState extends State<TipIcon> {
           CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
-            offset: const Offset(-240, 40), 
+            offset: const Offset(-240, 40),
             child: Material(
               color: Colors.transparent,
               child: TapRegion(
