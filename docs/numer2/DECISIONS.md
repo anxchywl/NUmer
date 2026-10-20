@@ -303,17 +303,18 @@ recent sign-in is required from versions that can re-authenticate.
 
 Evidence: R 4.
 
-### D-19 Email delivery. Resolved in shape, provider open.
+### D-19 Email delivery. Resolved.
 
 - Sending goes through one `MailSender` interface with a single HTTPS implementation, so the
   provider can change without touching the callables.
 - Templates: one layout, EN, RU and KK, HTML with inline styles plus a plain-text part. The
   subject never contains the code. No links, no images, no tracking.
 - Sender: a dedicated subdomain of a domain the owner controls, with SPF, DKIM and DMARC.
-- **Open:** the provider and the sending domain. Recommended: a provider with an HTTPS API
-  and a free tier covering a few hundred emails a day, on a `mail.` subdomain. Provider
-  pricing was not fact-checked; the owner confirms it at sign-up. Delivery to `@nu.edu.kz`
-  is tested before release (`USER_ACTIONS.md`).
+- Provider: Resend. Its free tier is 3,000 emails a month, capped at 100 a day (checked
+  2026-11-27); move to Pro once daily sign-ups and resets approach the cap.
+- Domain: `mail.anxchywl.dev`, a subdomain of a domain the owner already uses elsewhere, so
+  its own `_dmarc.mail` record leaves the root domain's policy alone. Delivery to
+  `@nu.edu.kz` is tested before release (`USER_ACTIONS.md`).
 
 ---
 
@@ -553,15 +554,15 @@ NUmer's rules come first; the module repos' rules are merged in where NUmer had 
 
 ---
 
-## G. Open, waiting on the owner
+## G. Owner answers (2026-11-27)
 
-| # | Question | Blocks |
-|---|---|---|
-| O-1 | Confirm the tab layout in D-20 | P3-05 |
-| O-2 | Email provider and sending domain (D-19) | P1-01 |
-| O-3 | Legal advice on data localization (D-09) | nothing in the plan; a known risk |
-| O-4 | Is the Events bot process meant to be running in production? | P4 Events tasks |
-| O-5 | Did Gradus ship standalone with real user data? Does Clavis hold bookings under old student ids? | the import step in the Gradus and Clavis tasks |
-| O-6 | Replace users' avatar glyphs with Material ones (D-30)? | P5-05 |
-| O-7 | Add crash reporting (a new SDK and a privacy-policy line)? Recommended yes | P0-14 |
-| O-8 | Target device for the performance baseline | P0-14 |
+| # | Question | Answer | Blocks |
+|---|---|---|---|
+| O-1 | Confirm the tab layout in D-20 | yes, the D-20 layout | P3-05 |
+| O-2 | Email provider and sending domain (D-19) | Resend, `mail.anxchywl.dev` | P1-01 |
+| O-3 | Legal advice on data localization (D-09) | not sought; the risk stays open | nothing in the plan |
+| O-4 | Is the Events bot process meant to be running in production? | yes | P4 Events tasks |
+| O-5 | Did Gradus ship standalone with real user data? Does Clavis hold bookings under old student ids? | no to both; no import step | the import step in the Gradus and Clavis tasks |
+| O-6 | Replace users' avatar glyphs with Material ones (D-30)? | no, keep the glyphs | P5-05 |
+| O-7 | Add crash reporting (a new SDK and a privacy-policy line)? | yes, Crashlytics | P0-14 |
+| O-8 | Target device for the performance baseline | Samsung Galaxy S23 | P0-14 |
