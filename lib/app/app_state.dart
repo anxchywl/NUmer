@@ -2147,20 +2147,19 @@ class AppState extends ChangeNotifier {
       startMs: start?.millisecondsSinceEpoch,
       expectedEndMs: expectedEnd?.millisecondsSinceEpoch,
     );
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'active_session_sig_$uid';
-    final cached = _sentSessionSignature;
-    final last = cached?.$1 == uid ? cached?.$2 : prefs.getString(key);
-    if (signature == last) return;
+    if (_sentSessionSignature == (uid, signature)) return;
 
     // writes are acknowledged late when offline, so the old signature is stale once sent
     final attempt = ++_sessionSendCount;
     _sentSessionSignature = null;
-    await prefs.remove(key);
     final sent = await send();
     if (!sent || attempt != _sessionSendCount) return;
     _sentSessionSignature = (uid, signature);
-    await prefs.setString(key, signature);
+  }
+
+  void _forgetSentSession() {
+    _sessionSendCount++;
+    _sentSessionSignature = null;
   }
 
   Future<Map<String, int>> secondsByCourseBetween(
@@ -2353,11 +2352,12 @@ class AppState extends ChangeNotifier {
 
   Future<void> reset() async {
     await clearAll();
-    _sentSessionSignature = null;
+    _forgetSentSession();
     _isLoaded = false;
   }
 
   void unload() {
+    _forgetSentSession();
     _resetFields();
     _isLoaded = false;
     _hydrated = false;
