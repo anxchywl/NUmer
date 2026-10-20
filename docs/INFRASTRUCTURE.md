@@ -58,7 +58,8 @@ Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 - **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/`, one folder per area,
   re-exported by `functions/src/index.ts`).
 - **Cloud Messaging (FCM)** — nudge push notifications.
-- **App Check** — enforced in release; debug provider in debug builds (`main.dart`).
+- **App Check** — activated by the app in release; debug provider in debug builds (`main.dart`).
+  Cloud Functions enforce it only for the callables listed in the configuration below.
 - Dart config generated at `lib/core/firebase_options.dart` (wired via the `flutter` block in
   `firebase.json`).
 
@@ -93,7 +94,10 @@ a group; see `firestore.rules` for exact access):
 | Callable | `getMemberSubjectStats` | Per-subject study breakdown for a group member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
 
-Callables enforce authentication and App Check.
+Callables enforce authentication. App Check is off by default and switched on per callable:
+list export names, comma-separated, in `APPCHECK_ENFORCED` in `functions/.env` (`*` means all;
+`functions/.env.example` shows the key), then deploy functions. A listed callable rejects a
+request without a valid App Check token with `failed-precondition` and reason `app-check`.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
