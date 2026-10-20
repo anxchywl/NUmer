@@ -4,7 +4,7 @@ import { db } from '../shared/admin';
 import { requireAppCheck } from '../shared/app_check';
 
 export const sendNudge = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'sendNudge');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated.');
   }
