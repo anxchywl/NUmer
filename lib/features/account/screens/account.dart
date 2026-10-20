@@ -37,7 +37,6 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Future<void> _confirmDeleteAccount() async {
-    
     final auth = context.read<AuthController>();
     final appState = context.read<AppState>();
     final syncService = context.read<SyncService>();
@@ -64,14 +63,16 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               Text(
                 'This action is permanent and can not be undone.',
-                style: TextStyle(fontWeight: FontWeight.bold, color: scheme.error),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: scheme.error),
               ),
               const SizedBox(height: 8),
               const Text('Deleting your account will:'),
               const SizedBox(height: 4),
               const Text('• Remove all your study sessions'),
               const Text('• Delete your courses and habits progress'),
-              const Text('• Remove you from your group and delete group you created if any'),
+              const Text(
+                  '• Remove you from your group and delete group you created if any'),
               const Text('• Erase your profile and settings'),
               const SizedBox(height: 12),
               Text(l10n.deleteAccountHoldConfirmDetail),
@@ -111,7 +112,7 @@ class _AccountScreenState extends State<AccountScreen> {
     if (confirmed != true) return;
 
     if (!mounted) return;
-    
+
     await appState.stopAndSaveAllActiveSessions();
     await appState.waitForPendingReflections();
     await syncService.syncNow();
@@ -132,7 +133,6 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
 
-    
     String? error;
     try {
       error = await auth.deleteAccount();
@@ -149,7 +149,6 @@ class _AccountScreenState extends State<AccountScreen> {
       return;
     }
 
-    
     navigator.pushNamedAndRemoveUntil('/', (route) => false);
   }
 
@@ -160,8 +159,7 @@ class _AccountScreenState extends State<AccountScreen> {
     final auth = context.watch<AuthController>();
     final user = auth.currentUser;
     final theme = Theme.of(context);
-    
-    
+
     if (user == null) {
       return Scaffold(
         body: CustomScrollView(
@@ -178,8 +176,8 @@ class _AccountScreenState extends State<AccountScreen> {
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
-                child:
-                    Text(AppLocalizations.of(context)!.pleaseSignInToViewAccount),
+                child: Text(
+                    AppLocalizations.of(context)!.pleaseSignInToViewAccount),
               ),
             ),
           ],
@@ -188,12 +186,15 @@ class _AccountScreenState extends State<AccountScreen> {
     }
 
     final profile = auth.profile;
-    final displayName = (state.profileName != null && state.profileName!.trim().isNotEmpty)
-      ? state.profileName!.trim()
-      : (((profile?['displayName'] as String?) ?? user.displayName ?? 'Unknown user')
-        .trim());
+    final displayName =
+        (state.profileName != null && state.profileName!.trim().isNotEmpty)
+            ? state.profileName!.trim()
+            : (((profile?['displayName'] as String?) ??
+                    user.displayName ??
+                    'Unknown user')
+                .trim());
     final loginLabel =
-      (profile?['login'] as String?) ?? user.email ?? 'Unknown login';
+        (profile?['login'] as String?) ?? user.email ?? 'Unknown login';
 
     return Scaffold(
       body: CustomScrollView(
@@ -211,7 +212,6 @@ class _AccountScreenState extends State<AccountScreen> {
             padding: const EdgeInsets.all(16),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(
@@ -230,7 +230,8 @@ class _AccountScreenState extends State<AccountScreen> {
                             userId: user.uid,
                             name: displayName,
                             initialAvatarIndex: state.profileAvatarIndex,
-                            initialAvatarColorValue: state.profileAvatarColorValue,
+                            initialAvatarColorValue:
+                                state.profileAvatarColorValue,
                             alwaysShowSilhouette: true,
                             size: 48,
                           ),
@@ -252,26 +253,31 @@ class _AccountScreenState extends State<AccountScreen> {
                                       final authController =
                                           context.read<AuthController>();
                                       final appState = context.read<AppState>();
-                                      final syncService = context.read<SyncService>();
+                                      final syncService =
+                                          context.read<SyncService>();
                                       final navigator = Navigator.of(context);
-                                      
-                                      await appState.stopAndSaveAllActiveSessions();
-                                      await appState.waitForPendingReflections();
+
+                                      await appState
+                                          .stopAndSaveAllActiveSessions();
+                                      await appState
+                                          .waitForPendingReflections();
                                       await syncService.syncNow();
-                                      
+
                                       await authController.signOut();
                                       if (!mounted) return;
                                       appState.reset();
                                       navigator.pushReplacementNamed('/auth');
                                     },
-                                style: TextButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  textStyle: const TextStyle(fontSize: 13),
-                                ),
-                                icon: const Icon(Icons.logout, size: 18),
-                                label: Text(AppLocalizations.of(context)!.signOut),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: const TextStyle(fontSize: 13),
+                              ),
+                              icon: const Icon(Icons.logout, size: 18),
+                              label:
+                                  Text(AppLocalizations.of(context)!.signOut),
                             ),
                             const Spacer(),
                             FilledButton.icon(
@@ -281,29 +287,31 @@ class _AccountScreenState extends State<AccountScreen> {
                                   : () => context
                                       .read<SyncService>()
                                       .syncNow(full: true),
-                                style: FilledButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  minimumSize: Size.zero,
-                                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                  textStyle: const TextStyle(fontSize: 13),
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                textStyle: const TextStyle(fontSize: 13),
+                              ),
+                              icon: context.watch<SyncService>().status ==
+                                      SyncStatus.syncing
+                                  ? const SizedBox(
+                                      height: 16,
+                                      width: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.sync, size: 18),
+                              label: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  context.watch<SyncService>().status ==
+                                          SyncStatus.syncing
+                                      ? AppLocalizations.of(context)!.syncing
+                                      : AppLocalizations.of(context)!.syncNow,
                                 ),
-                                icon: context.watch<SyncService>().status ==
-                                        SyncStatus.syncing
-                                    ? const SizedBox(
-                                        height: 16,
-                                        width: 16,
-                                        child: CircularProgressIndicator(
-                                            strokeWidth: 2),
-                                      )
-                                    : const Icon(Icons.sync, size: 18),
-                                label: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    context.watch<SyncService>().status == SyncStatus.syncing
-                                        ? AppLocalizations.of(context)!.syncing
-                                        : AppLocalizations.of(context)!.syncNow,
-                                  ),
-                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -326,7 +334,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(
-                              color: Theme.of(context).colorScheme.outlineVariant),
+                              color:
+                                  Theme.of(context).colorScheme.outlineVariant),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
@@ -343,15 +352,15 @@ class _AccountScreenState extends State<AccountScreen> {
                                 AppLocalizations.of(context)!.save,
                             onSubmit: (data) async {
                               final appState = context.read<AppState>();
-                                await appState.saveProfile(
-                                  name: data.name,
-                                  goal: data.goal,
-                                  majorText: data.major,
-                                  contact: data.contact,
-                                  avatarIndex: data.avatarIndex,
-                                  avatarColorValue: data.avatarColorValue,
-                                  uid: auth.currentUser?.uid,
-                                );
+                              await appState.saveProfile(
+                                name: data.name,
+                                goal: data.goal,
+                                majorText: data.major,
+                                contact: data.contact,
+                                avatarIndex: data.avatarIndex,
+                                avatarColorValue: data.avatarColorValue,
+                                uid: auth.currentUser?.uid,
+                              );
                             },
                           ),
                         ),
@@ -365,439 +374,468 @@ class _AccountScreenState extends State<AccountScreen> {
                         ),
                       ),
                 const SizedBox(height: 32),
-          
-          Text(
-            AppLocalizations.of(context)!.appearance,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<ThemeMode>(
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                minimumSize: const Size(0, 48),
-              ),
-              segments: [
-                ButtonSegment(
-                    value: ThemeMode.light,
-                    icon: const Icon(Icons.light_mode_outlined),
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(AppLocalizations.of(context)!.light, style: const TextStyle(fontSize: 12)),
-                    )),
-                ButtonSegment(
-                    value: ThemeMode.system,
-                    icon: const Icon(Icons.settings_suggest_outlined),
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(AppLocalizations.of(context)!.system, style: const TextStyle(fontSize: 12)),
-                    )),
-                ButtonSegment(
-                    value: ThemeMode.dark,
-                    icon: const Icon(Icons.dark_mode_outlined),
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(AppLocalizations.of(context)!.dark, style: const TextStyle(fontSize: 12)),
-                    )),
-              ],
-              selected: {mode},
-              onSelectionChanged: (s) async {
-                final mode = s.first;
-                // onThemeChange already calls setThemeMode, so we just call it
-                await widget.onThemeChange?.call(mode);
-              },
-              ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              leading: Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: state.accentColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Theme.of(context).colorScheme.outline,
-                    width: 1,
+                Text(
+                  AppLocalizations.of(context)!.appearance,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-              ),
-              title: Text(AppLocalizations.of(context)!.accentColor),
-              subtitle: Text(AppLocalizations.of(context)!.accentColorDescription),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  useSafeArea: true,
-                  backgroundColor: Theme.of(context).colorScheme.surface,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                  ),
-                  builder: (context) => Padding(
-                    padding: EdgeInsets.only(
-                      left: 24,
-                      right: 24,
-                      top: 16,
-                      bottom: 16 + MediaQuery.of(context).viewInsets.bottom,
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
                     ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Drag Handle
-                          Container(
-                            width: 32,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                              borderRadius: BorderRadius.circular(2),
+                    segments: [
+                      ButtonSegment(
+                          value: ThemeMode.light,
+                          icon: const Icon(Icons.light_mode_outlined),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(AppLocalizations.of(context)!.light,
+                                style: const TextStyle(fontSize: 12)),
+                          )),
+                      ButtonSegment(
+                          value: ThemeMode.system,
+                          icon: const Icon(Icons.settings_suggest_outlined),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(AppLocalizations.of(context)!.system,
+                                style: const TextStyle(fontSize: 12)),
+                          )),
+                      ButtonSegment(
+                          value: ThemeMode.dark,
+                          icon: const Icon(Icons.dark_mode_outlined),
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(AppLocalizations.of(context)!.dark,
+                                style: const TextStyle(fontSize: 12)),
+                          )),
+                    ],
+                    selected: {mode},
+                    onSelectionChanged: (s) async {
+                      final mode = s.first;
+                      // onThemeChange already calls setThemeMode, so we just call it
+                      await widget.onThemeChange?.call(mode);
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: state.accentColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outline,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    title: Text(AppLocalizations.of(context)!.accentColor),
+                    subtitle: Text(
+                        AppLocalizations.of(context)!.accentColorDescription),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
+                        ),
+                        builder: (context) => Padding(
+                          padding: EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                            top: 16,
+                            bottom:
+                                16 + MediaQuery.of(context).viewInsets.bottom,
+                          ),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Drag Handle
+                                Container(
+                                  width: 32,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant
+                                        .withValues(alpha: 0.4),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  AppLocalizations.of(context)!.accentColor,
+                                  style:
+                                      Theme.of(context).textTheme.headlineSmall,
+                                ),
+                                const SizedBox(height: 24),
+                                AccentColorPicker(
+                                  currentColor: state.accentColor,
+                                  onColorChanged: (color) {
+                                    state.setAccentColor(color);
+                                  },
+                                  onSave: () {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            AppLocalizations.of(context)!.accentColor,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 24),
-                          AccentColorPicker(
-                            currentColor: state.accentColor,
-                            onColorChanged: (color) {
-                              state.setAccentColor(color);
-                            },
-                            onSave: () {
-                              Navigator.pop(context);
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                        ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  AppLocalizations.of(context)!.language,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<String>(
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                    segments: const [
+                      ButtonSegment(
+                          value: 'ru',
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Русский',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          )),
+                      ButtonSegment(
+                          value: 'en',
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'English',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          )),
+                      ButtonSegment(
+                          value: 'kk',
+                          label: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Қазақша',
+                              maxLines: 1,
+                              softWrap: false,
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          )),
+                    ],
+                    selected: {Localizations.localeOf(context).languageCode},
+                    onSelectionChanged: (Set<String> newSelection) async {
+                      final newLocale = newSelection.first;
+                      if (newLocale ==
+                          Localizations.localeOf(context).languageCode) return;
+
+                      final appState = context.read<AppState>();
+                      await appState.setLocale(Locale(newLocale));
+                    },
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  AppLocalizations.of(context)!.weekStartsOn,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<WeekStart>(
+                    showSelectedIcon: false,
+                    style: SegmentedButton.styleFrom(
+                      minimumSize: const Size(0, 48),
+                    ),
+                    segments: [
+                      ButtonSegment(
+                        value: WeekStart.monday,
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(AppLocalizations.of(context)!.mon,
+                              style: const TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                      ButtonSegment(
+                        value: WeekStart.sunday,
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(AppLocalizations.of(context)!.sun,
+                              style: const TextStyle(fontSize: 12)),
+                        ),
+                      ),
+                    ],
+                    selected: {state.weekStart},
+                    onSelectionChanged: (s) =>
+                        context.read<AppState>().setWeekStart(s.first),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Divider(color: Colors.grey.shade300, thickness: 1),
+                const SizedBox(height: 16),
+                Text(
+                  AppLocalizations.of(context)!.displayTotalStudyTime,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _HomeSummarySwipeSelector(),
+                const SizedBox(height: 24),
+                Text(
+                  AppLocalizations.of(context)!.displayProgressBar,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const _ProgressViewSelector(),
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    AppLocalizations.of(context)!.justSwipeIt,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Divider(color: Colors.grey.shade300, thickness: 1),
+                const SizedBox(height: 24),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: SwitchListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    secondary: Icon(
+                      Icons.notes_rounded,
+                      color: state.quickNotesEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withAlpha(128),
+                    ),
+                    title: Text(AppLocalizations.of(context)!.quickNotes),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.quickNotesDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 32),
-          
-          Text(
-            AppLocalizations.of(context)!.language,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<String>(
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                minimumSize: const Size(0, 48),
-              ),
-              segments: const [
-                ButtonSegment(
-                    value: 'ru',
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Русский', 
-                        maxLines: 1, 
-                        softWrap: false, 
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    )),
-                ButtonSegment(
-                    value: 'en',
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'English', 
-                        maxLines: 1, 
-                        softWrap: false, 
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    )),
-                ButtonSegment(
-                    value: 'kk',
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Қазақша', 
-                        maxLines: 1, 
-                        softWrap: false, 
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    )),
-              ],
-              selected: {Localizations.localeOf(context).languageCode},
-              onSelectionChanged: (Set<String> newSelection) async {
-                final newLocale = newSelection.first;
-                if (newLocale == Localizations.localeOf(context).languageCode) return;
-                
-                final appState = context.read<AppState>();
-                await appState.setLocale(Locale(newLocale));
-              },
-            ),
-          ),
-          const SizedBox(height: 32),
-
-
-          
-          Text(
-            AppLocalizations.of(context)!.weekStartsOn,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<WeekStart>(
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                minimumSize: const Size(0, 48),
-              ),
-              segments: [
-                ButtonSegment(
-                  value: WeekStart.monday, 
-                  label: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(AppLocalizations.of(context)!.mon, style: const TextStyle(fontSize: 12)),
+                    value: state.quickNotesEnabled,
+                    onChanged: (v) => state.setQuickNotesEnabled(v),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
-                ButtonSegment(
-                  value: WeekStart.sunday, 
-                  label: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(AppLocalizations.of(context)!.sun, style: const TextStyle(fontSize: 12)),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: SwitchListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    secondary: Icon(
+                      Icons.notifications_active_rounded,
+                      color: state.allowNudges
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withAlpha(128),
+                    ),
+                    title:
+                        Text(AppLocalizations.of(context)!.wantToReceiveNudges),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .wantToReceiveNudgesDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: state.allowNudges,
+                    onChanged: (v) => state.setAllowNudges(v),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                   ),
                 ),
-              ],
-              selected: {state.weekStart},
-              onSelectionChanged: (s) =>
-                  context.read<AppState>().setWeekStart(s.first),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          Divider(color: Colors.grey.shade300, thickness: 1),
-          const SizedBox(height: 16),
-          Text(
-            AppLocalizations.of(context)!.displayTotalStudyTime,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          _HomeSummarySwipeSelector(),
-          const SizedBox(height: 24),
-          Text(
-            AppLocalizations.of(context)!.displayProgressBar,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _ProgressViewSelector(),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              AppLocalizations.of(context)!.justSwipeIt,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.outline),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Divider(color: Colors.grey.shade300, thickness: 1),
-          const SizedBox(height: 24),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: SwitchListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              secondary: Icon(
-                Icons.notes_rounded,
-                color: state.quickNotesEnabled 
-                  ? Theme.of(context).colorScheme.primary 
-                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
-              ),
-              title: Text(AppLocalizations.of(context)!.quickNotes),
-              subtitle: Text(
-                AppLocalizations.of(context)!.quickNotesDescription,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: SwitchListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    secondary: Icon(
+                      Icons.grid_view_rounded,
+                      color: state.eisenhowerMatrixEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withAlpha(128),
+                    ),
+                    title: Text(AppLocalizations.of(context)!.eisenhowerMatrix),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.eisenhowerMatrixDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: state.eisenhowerMatrixEnabled,
+                    onChanged: (v) => state.setEisenhowerMatrixEnabled(v),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
-              ),
-              value: state.quickNotesEnabled,
-              onChanged: (v) => state.setQuickNotesEnabled(v),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: SwitchListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              secondary: Icon(
-                Icons.notifications_active_rounded,
-                color: state.allowNudges 
-                  ? Theme.of(context).colorScheme.primary 
-                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
-              ),
-              title: Text(AppLocalizations.of(context)!.wantToReceiveNudges),
-              subtitle: Text(
-                AppLocalizations.of(context)!.wantToReceiveNudgesDescription,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: SwitchListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    secondary: Icon(
+                      Icons.mark_chat_unread_rounded,
+                      color: state.sessionNotificationsEnabled
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant
+                              .withAlpha(128),
+                    ),
+                    title:
+                        Text(AppLocalizations.of(context)!.sessionNotification),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!
+                          .sessionNotificationDescription,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    value: state.sessionNotificationsEnabled,
+                    onChanged: (v) => state.setSessionNotificationsEnabled(v),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
-              ),
-              value: state.allowNudges,
-              onChanged: (v) => state.setAllowNudges(v),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: SwitchListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              secondary: Icon(
-                Icons.grid_view_rounded,
-                color: state.eisenhowerMatrixEnabled 
-                  ? Theme.of(context).colorScheme.primary 
-                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
-              ),
-              title: Text(AppLocalizations.of(context)!.eisenhowerMatrix),
-              subtitle: Text(
-                AppLocalizations.of(context)!.eisenhowerMatrixDescription,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
+                  child: ListTile(
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    title: Text(AppLocalizations.of(context)!.exportToCalendar),
+                    subtitle: Text(
+                      AppLocalizations.of(context)!.exportToCalendarSubtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        builder: (context) => const ExportSessionSheet(),
+                      );
+                    },
+                  ),
                 ),
-              ),
-              value: state.eisenhowerMatrixEnabled,
-              onChanged: (v) => state.setEisenhowerMatrixEnabled(v),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: SwitchListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              secondary: Icon(
-                Icons.mark_chat_unread_rounded,
-                color: state.sessionNotificationsEnabled 
-                  ? Theme.of(context).colorScheme.primary 
-                  : Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(128),
-              ),
-              title: Text(AppLocalizations.of(context)!.sessionNotification),
-              subtitle: Text(
-                AppLocalizations.of(context)!.sessionNotificationDescription,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
+                const SizedBox(height: 24),
+                Divider(color: Colors.grey.shade300, thickness: 1),
+                ListTile(
+                  dense: true,
+                  visualDensity: VisualDensity.compact,
+                  leading: Icon(
+                    Icons.delete_forever,
+                    color: Theme.of(context).colorScheme.error,
+                    size: 20,
+                  ),
+                  title: Text(AppLocalizations.of(context)!.deleteAccount,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontSize: 14,
+                      )),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.deleteAccountSubtitle,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  enabled: !auth.isBusy,
+                  onTap: auth.isBusy ? null : _confirmDeleteAccount,
                 ),
-              ),
-              value: state.sessionNotificationsEnabled,
-              onChanged: (v) => state.setSessionNotificationsEnabled(v),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
-            ),
-            child: ListTile(
-              dense: true,
-              visualDensity: VisualDensity.compact,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              title: Text(AppLocalizations.of(context)!.exportToCalendar),
-              subtitle: Text(
-                AppLocalizations.of(context)!.exportToCalendarSubtitle,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontSize: 12,
-                ),
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (context) => const ExportSessionSheet(),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          Divider(color: Colors.grey.shade300, thickness: 1),
-
-          
-          ListTile(
-            dense: true,
-            visualDensity: VisualDensity.compact,
-            leading: Icon(Icons.delete_forever, 
-              color: Theme.of(context).colorScheme.error,
-              size: 20,
-            ),
-            title: Text(AppLocalizations.of(context)!.deleteAccount, 
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                fontSize: 14,
-              )
-            ),
-            subtitle: Text(
-              AppLocalizations.of(context)!.deleteAccountSubtitle,
-              style: const TextStyle(fontSize: 12),
-            ),
-            enabled: !auth.isBusy,
-            onTap: auth.isBusy ? null : _confirmDeleteAccount,
-          ),
               ]),
             ),
           ),
@@ -943,10 +981,12 @@ class _HoldToConfirmButtonState extends State<_HoldToConfirmButton>
 /// Second confirmation dialog that requires typing exact phrase
 class _DeleteAccountTextConfirmDialog extends StatefulWidget {
   @override
-  State<_DeleteAccountTextConfirmDialog> createState() => _DeleteAccountTextConfirmDialogState();
+  State<_DeleteAccountTextConfirmDialog> createState() =>
+      _DeleteAccountTextConfirmDialogState();
 }
 
-class _DeleteAccountTextConfirmDialogState extends State<_DeleteAccountTextConfirmDialog> {
+class _DeleteAccountTextConfirmDialogState
+    extends State<_DeleteAccountTextConfirmDialog> {
   final _controller = TextEditingController();
   static const _requiredPhrase = 'I really want to delete my account';
   bool _isValid = false;
@@ -1117,7 +1157,7 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-                color: Theme.of(context)
+              color: Theme.of(context)
                   .colorScheme
                   .surfaceContainerHighest
                   .withAlpha((0.4 * 255).round()),
@@ -1219,7 +1259,7 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-                color: Theme.of(context)
+              color: Theme.of(context)
                   .colorScheme
                   .surfaceContainerHighest
                   .withAlpha((0.4 * 255).round()),
