@@ -25,6 +25,12 @@ Executors never deploy, never push and never connect to the server. Wherever a s
 | O-7 | Add crash reporting (a new SDK and one line in the privacy policy)? | yes | P0-14 |
 | O-8 | Which Android device is the performance reference? | the oldest mid-range phone you own | P0-14 |
 
+**Answers (2026-11-27):** O-1 yes, the D-20 layout. O-4 yes, the Events bot runs in production.
+O-5 no: Gradus, Clavis and the Events bot hold no real user data yet. O-7 yes, add crash
+reporting. Sign-in stays email and password with 6-digit codes for verification and reset
+(Microsoft sign-in was considered and dropped: NU IT approval is uncertain). Still open: O-2,
+O-3, O-6, O-8.
+
 ### A-2 See the real Firebase numbers
 **Why:** the cost model rests on an assumed usage pattern. **Waits:** nothing blocks, but it
 tells you whether P0-08 worked.
