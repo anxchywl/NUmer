@@ -741,8 +741,9 @@ class HabitService {
           final dateKey = _dateKey(walker);
           if (fullCompletionMap.containsKey(dateKey)) {
             tempStreak++;
-            if (tempStreak > longestStreakValue)
+            if (tempStreak > longestStreakValue) {
               longestStreakValue = tempStreak;
+            }
           } else {
             tempStreak = 0;
           }

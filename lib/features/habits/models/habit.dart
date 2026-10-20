@@ -247,12 +247,15 @@ class Habit {
     final map = toFirestore();
     map['id'] = id;
     // Replace Timestamps with ISO Strings for JSON
-    if (map['sd'] is Timestamp)
+    if (map['sd'] is Timestamp) {
       map['sd'] = (map['sd'] as Timestamp).toDate().toIso8601String();
-    if (map['ed'] is Timestamp)
+    }
+    if (map['ed'] is Timestamp) {
       map['ed'] = (map['ed'] as Timestamp).toDate().toIso8601String();
-    if (map['cr'] is Timestamp)
+    }
+    if (map['cr'] is Timestamp) {
       map['cr'] = (map['cr'] as Timestamp).toDate().toIso8601String();
+    }
     return jsonEncode(map);
   }
 
@@ -421,8 +424,9 @@ class Habit {
     if (endDate != null) map['ed'] = Timestamp.fromDate(endDate!);
     map['ar'] = archived;
     if (connectedCourseIds.isNotEmpty) map['cc'] = connectedCourseIds;
-    if (previousRules.isNotEmpty)
+    if (previousRules.isNotEmpty) {
       map['pr'] = previousRules.map((r) => r.toJson()).toList();
+    }
 
     return map;
   }

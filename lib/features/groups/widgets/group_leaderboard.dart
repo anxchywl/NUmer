@@ -829,8 +829,9 @@ class _UserStatusDotState extends State<_UserStatusDot> {
   bool get _isLocallyActive {
     if (widget.isStudyingOverride != true) return false;
     final expiration = widget.sessionRunUntil;
-    if (expiration == null)
+    if (expiration == null) {
       return true; // No expiration set, assume active unless stopped
+    }
     return DateTime.now().isBefore(expiration);
   }
 

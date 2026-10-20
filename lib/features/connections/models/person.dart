@@ -193,8 +193,9 @@ class Person {
     if (phone != null && phone!.isNotEmpty) map['ph'] = phone;
     if (email != null && email!.isNotEmpty) map['em'] = email;
     if (notes != null && notes!.isNotEmpty) map['nt'] = notes;
-    if (lastContactedAt != null)
+    if (lastContactedAt != null) {
       map['lc'] = Timestamp.fromDate(lastContactedAt!);
+    }
     if (birthday != null) map['bd'] = Timestamp.fromDate(birthday!);
     if (remindToReachOut) map['rm'] = true;
     if (interactionLog.isNotEmpty) {

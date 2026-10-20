@@ -658,9 +658,10 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   getTitlesWidget: (v, meta) {
                                                     final idx = v.toInt();
                                                     if (idx < 0 ||
-                                                        idx >= buckets.length)
+                                                        idx >= buckets.length) {
                                                       return const SizedBox
                                                           .shrink();
+                                                    }
                                                     return Padding(
                                                       padding:
                                                           const EdgeInsets.only(
@@ -709,8 +710,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                                 // we don't clear the tooltip immediately.
                                                 // This allows the pop-up to stay visible on the last selected point.
                                                 if (response == null ||
-                                                    response.spot == null)
+                                                    response.spot == null) {
                                                   return;
+                                                }
 
                                                 final anchor =
                                                     _extractLocal(event);
@@ -719,8 +721,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                                 final idx = response
                                                     .spot!.touchedBarGroupIndex;
                                                 if (idx < 0 ||
-                                                    idx >= buckets.length)
+                                                    idx >= buckets.length) {
                                                   return;
+                                                }
 
                                                 final bucket = buckets[idx];
                                                 final items =
@@ -2525,8 +2528,9 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                             final touched = response?.touchedSection;
                             if (touched == null) return;
                             final index = touched.touchedSectionIndex;
-                            if (index < 0 || index >= widget.slices.length)
+                            if (index < 0 || index >= widget.slices.length) {
                               return;
+                            }
 
                             final s = widget.slices[index];
                             final local = event.localPosition;
@@ -2912,8 +2916,9 @@ String _fmtTotalVerbose(int s, BuildContext context) {
   final parts = <String>[];
   if (h > 0) parts.add('$h ${h == 1 ? l10n.hour : l10n.hours_plural}');
   if (m > 0) parts.add('$m ${m == 1 ? l10n.minute : l10n.minutes_plural}');
-  if (sec > 0 || parts.isEmpty)
+  if (sec > 0 || parts.isEmpty) {
     parts.add('$sec ${sec == 1 ? l10n.second : l10n.seconds_plural}');
+  }
   return '${parts.join(" ")} ${l10n.total.toLowerCase()}';
 }
 

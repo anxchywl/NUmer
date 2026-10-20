@@ -564,7 +564,9 @@ class _AccountScreenState extends State<AccountScreen> {
                     onSelectionChanged: (Set<String> newSelection) async {
                       final newLocale = newSelection.first;
                       if (newLocale ==
-                          Localizations.localeOf(context).languageCode) return;
+                          Localizations.localeOf(context).languageCode) {
+                        return;
+                      }
 
                       final appState = context.read<AppState>();
                       await appState.setLocale(Locale(newLocale));

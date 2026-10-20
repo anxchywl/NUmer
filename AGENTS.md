@@ -64,24 +64,18 @@ tests mirror the tree under `test/features/<name>/`, with app-level smoke tests 
 
 ### Comment style
 
-Keep comments short, lowercase, and free of trailing punctuation (`.` `!` `?`). Put one before
-each important class or function saying what it is for, not how it works line by line. Explain
-the *why* the code cannot; don't restate the signature, and don't leave commented-out code or
-stream-of-consciousness notes.
+Write a comment only where the *why* is not obvious from the code. Never explain what the
+code does; names and structure do that.
 
 ```dart
-// picks which screen to show based on auth, verification and profile state
-class AuthGate extends StatefulWidget { ... }
-
-// records study time for a course today, updates the streak and feeds linked habits
-Future<void> addStudySeconds(String courseId, int seconds) async { ... }
+// good: host may not register our delegate, so the feature scopes its own
+// bad:  This method loads the listings from the repository.
 ```
 
-- lowercase, including tech names in prose (`firebase`, `hive`) — but keep real code
-  identifiers in their true case (`pomodoroStart`, `LocalSession`)
-- prefer `//`; keep `///` only where dartdoc/IDE hover genuinely helps, and lowercase its text too
-- skip comments on trivial getters/setters and obvious `loadX`/`setX` pairs — a comment should
-  add something the name doesn't
+- one line, concise, all lowercase, no trailing punctuation
+- keep real code identifiers in their true case (`pomodoroStart`, `LocalSession`)
+- `//` only: no docstrings (`///`) and no multi-line comment blocks
+- no commented-out code and no stream-of-consciousness notes
 
 ### Key locations
 
@@ -139,6 +133,24 @@ NUmer is fully localized into English (`en`), Russian (`ru`), and Kazakh (`kk`).
 - Localization keys are declared in translation files.
 
 ---
+
+## Verify before reporting
+
+Run `./scripts/verify.sh` and report its real output. A task is not done until it passes.
+The script does not run device builds, emulator tests or deploys.
+
+## Code conventions
+
+- **Comments**: see [Comment style](#comment-style)
+- **Language**: English for code, comments, docs and commits
+- **Commits**: conventional prefix (`feat`, `fix`, `refactor`, `docs`, `chore`, `test`), lowercase, imperative, no period, subject line only, no trailers
+- **Shape**: follow the file's existing patterns; early returns; small single-purpose functions; short descriptive names; `lower_snake_case.dart` with `*_screen.dart`, `*_service.dart`, `*_sheet.dart` suffixes
+- **Leftovers**: no debug prints, commented-out code, temporary variables or emoji
+- **Errors**: catch the specific failure you handle; never catch broadly or swallow
+- **Scope**: no unrequested features, abstractions, dependencies or error handling; edit existing files where possible
+- **Tests**: `flutter_test` with hand-written fakes, no mocking package; tests mirror the source tree; functions and rules are tested against the emulator
+- **Coverage**: NUmer: the floor is the baseline measured in P0-02, rounded down, and may only rise. Module repos keep their own floors
+- **Docs**: each doc owns its subject once; a change that makes `AGENTS.md`, `README.md` or `docs/*` wrong fixes them in the same commit
 
 ## Agent Gotchas
 

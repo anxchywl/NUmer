@@ -252,8 +252,9 @@ class _HabitsScreenState extends State<HabitsScreen>
             StreamBuilder<List<Habit>>(
               stream: habitService.habitsStream(uid),
               builder: (context, snapshot) {
-                if (!snapshot.hasData)
+                if (!snapshot.hasData) {
                   return const SliverToBoxAdapter(child: SizedBox());
+                }
                 final allHabits = snapshot.data!;
                 final appState = context.watch<AppState>();
 
@@ -361,8 +362,9 @@ class _HabitsScreenState extends State<HabitsScreen>
                 return StreamBuilder<List<Habit>>(
                   stream: habitService.habitsStream(uid),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData)
+                    if (!snapshot.hasData) {
                       return const SliverToBoxAdapter(child: SizedBox());
+                    }
                     final habits = snapshot.data!.where((h) {
                       if (!h.isScheduledFor(_selectedDate)) return false;
 
@@ -1056,8 +1058,9 @@ class _HabitItemState extends State<_HabitItem> {
         return l10n.habitFrequencyEveryDay;
       case HabitFrequencyType.specificDays:
         if (widget.habit.frequencyPeriod == HabitPeriod.month) {
-          if (widget.habit.weekDays.isEmpty)
+          if (widget.habit.weekDays.isEmpty) {
             return l10n.habitFrequencySpecificMonth;
+          }
           final days = widget.habit.weekDays.toList()..sort();
           final dayLabels = days.map((d) => numberFormat.format(d)).join(", ");
           return l10n.habitFrequencyDaysLabel(dayLabels);
