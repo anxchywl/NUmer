@@ -143,6 +143,13 @@ firebase deploy --only firestore:rules
 firebase deploy --only functions
 ```
 
+### CI
+- `.github/workflows/ci.yml` runs `./scripts/verify.sh` and the host script tests on pull
+  requests and pushes to `main`.
+- `.github/workflows/identity.yml` runs `backend/numer_identity/scripts/verify.sh` (ruff,
+  mypy strict, pytest with a 95% coverage floor) on Python 3.12 when a pull request or a
+  push to `main` touches `backend/numer_identity/**`.
+
 ### Secrets & config
 - Platform Firebase config files (`google-services.json`, `GoogleService-Info.plist`) live in
   their platform dirs and are git-ignored.
@@ -152,6 +159,7 @@ firebase deploy --only functions
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
+- Module backend token verification: `backend/numer_identity/` (see its README)
 
 ## Known follow-ups (technical debt)
 
