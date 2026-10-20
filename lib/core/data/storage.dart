@@ -79,12 +79,10 @@ class Storage {
     await _db.putUser(doc);
   }
 
-  static final _sessionUpdateController = StreamController<List<DateTime>>.broadcast();
-  static Stream<List<DateTime>> get sessionUpdates => _sessionUpdateController.stream;
-
-  
-  
-  
+  static final _sessionUpdateController =
+      StreamController<List<DateTime>>.broadcast();
+  static Stream<List<DateTime>> get sessionUpdates =>
+      _sessionUpdateController.stream;
 
   static Future<String?> getMajor() async => _userDoc().major;
 
@@ -129,8 +127,7 @@ class Storage {
     await _saveUser(doc);
   }
 
-  static Future<int?> getProfileAvatarIndex() async =>
-      _userDoc().avatarIndex;
+  static Future<int?> getProfileAvatarIndex() async => _userDoc().avatarIndex;
 
   static Future<void> setProfileAvatarIndex(int? index) async {
     final doc = _userDoc();
@@ -147,7 +144,7 @@ class Storage {
         (bytes == null || bytes.isEmpty) ? null : Uint8List.fromList(bytes);
     await _saveUser(doc);
   }
-  
+
   static Future<int?> getProfileAvatarColor() async =>
       _userDoc().avatarColorValue;
 
@@ -221,8 +218,6 @@ class Storage {
     await _saveUser(doc, dirty: false);
   }
 
-
-
   static Future<int?> getAccentColor() async {
     if (_db.currentUid == null) return null;
     final val = _db.getMeta(_metaAccentColor);
@@ -244,7 +239,8 @@ class Storage {
     return [];
   }
 
-  static Future<void> saveUserColorPresets(List<Map<String, dynamic>> presets) async {
+  static Future<void> saveUserColorPresets(
+      List<Map<String, dynamic>> presets) async {
     _ensureUser();
     await _db.putMeta(_metaUserColorPresets, presets);
   }
@@ -429,14 +425,15 @@ class Storage {
     _ensureUser();
     final raw = _db.getMeta(_metaHabitQuadrants);
     if (raw is Map) {
-      return raw.map<String, int>((key, value) =>
-          MapEntry(key.toString(), (value as num).toInt()));
+      return raw.map<String, int>(
+          (key, value) => MapEntry(key.toString(), (value as num).toInt()));
     }
     return {};
   }
 
   /// save a habit → quadrant placement, quadrant 0-3
-  static Future<void> saveHabitQuadrantPlacement(String habitId, int quadrant) async {
+  static Future<void> saveHabitQuadrantPlacement(
+      String habitId, int quadrant) async {
     _ensureUser();
     final placements = getHabitQuadrantPlacements();
     placements[habitId] = quadrant.clamp(0, 3);
@@ -462,10 +459,6 @@ class Storage {
     if (_db.currentUid == null) return; // skip if no user configured
     await _db.putMeta(_metaLocale, localeName);
   }
-
-  
-  
-  
 
   static List<Course> _mapCourses(Iterable<LocalCourse> source) {
     return source
@@ -503,7 +496,6 @@ class Storage {
     final now = _now();
     final incomingIds = {for (final c in courses) c.id};
 
-    
     for (final entry in box.values) {
       if (!incomingIds.contains(entry.id) && !entry.deleted) {
         entry.deleted = true;
@@ -513,7 +505,6 @@ class Storage {
       }
     }
 
-    
     for (final course in courses) {
       final existing = box.get(course.id);
       if (existing == null) {
@@ -628,8 +619,8 @@ class Storage {
     _ensureUser();
     final raw = _db.getMeta(_metaCourseMinutes);
     if (raw is Map) {
-      return raw.map<String, int>((key, value) =>
-          MapEntry(key.toString(), (value as num).toInt()));
+      return raw.map<String, int>(
+          (key, value) => MapEntry(key.toString(), (value as num).toInt()));
     }
     final map = <String, int>{};
     for (final c in _db.courses()) {
@@ -652,10 +643,6 @@ class Storage {
       await course.save();
     }
   }
-
-  
-  
-  
 
   static Future<Map<String, double>> getCourseGoalHours() async {
     _ensureUser();
@@ -712,10 +699,6 @@ class Storage {
     }
   }
 
-  
-  
-  
-
   static Future<Map<String, int>> getPomodoroLongBreakMinutes() async {
     _ensureUser();
     final out = <String, int>{};
@@ -744,10 +727,6 @@ class Storage {
     await course.save();
   }
 
-  
-  
-  
-
   static Future<Map<String, Object?>?> getDailyState() async {
     _ensureUser();
     final raw = _db.getMeta(_metaDailyState);
@@ -756,8 +735,7 @@ class Storage {
       final inner = raw['map'];
       if (dateKey == null || inner is! Map) return null;
       final parsed = inner.map<String, int>(
-        (key, value) =>
-            MapEntry(key.toString(), (value as num?)?.toInt() ?? 0),
+        (key, value) => MapEntry(key.toString(), (value as num?)?.toInt() ?? 0),
       );
       return {'dateKey': dateKey, 'map': parsed};
     }
@@ -863,7 +841,8 @@ class Storage {
     return null;
   }
 
-  static Future<void> saveGroupMemberStatsCache(Map<String, dynamic> data) async {
+  static Future<void> saveGroupMemberStatsCache(
+      Map<String, dynamic> data) async {
     _ensureUser();
     await _db.putMeta(_metaGroupMemberStatsCache, data);
   }
@@ -900,8 +879,6 @@ class Storage {
       await saveGroupMemberStatsCache(statsCache);
     }
   }
-
-  
 
   static Map<String, dynamic> _sessionToJson(LocalSession session) {
     final startUtc =
@@ -949,7 +926,8 @@ class Storage {
       deleted: false,
     );
     await _db.putSession(session);
-    _sessionUpdateController.add([DateTime(startLocal.year, startLocal.month, startLocal.day)]);
+    _sessionUpdateController
+        .add([DateTime(startLocal.year, startLocal.month, startLocal.day)]);
     return id;
   }
 
@@ -1027,7 +1005,8 @@ class Storage {
     return entry.lastPullMs;
   }
 
-  static Future<void> setLastPeerCourseSync(String targetUid, int timestamp) async {
+  static Future<void> setLastPeerCourseSync(
+      String targetUid, int timestamp) async {
     _ensureUser();
     final entry = _db.syncStateForKey('peer_courses_$targetUid');
     entry.lastPullMs = timestamp;
@@ -1056,6 +1035,7 @@ class Storage {
     }
     return result;
   }
+
   static Future<Map<DateTime, int>> getDailyTotals(
       DateTime start, DateTime end) async {
     _ensureUser();
@@ -1150,9 +1130,9 @@ class Storage {
     if (year == null || month == null || day == null) return;
 
     final dayStart = DateTime(year, month, day);
-    final hasSessions =
-        (await secondsByCourseBetween(dayStart, dayStart.add(const Duration(days: 1))))
-            .isNotEmpty;
+    final hasSessions = (await secondsByCourseBetween(
+            dayStart, dayStart.add(const Duration(days: 1))))
+        .isNotEmpty;
     if (hasSessions) {
       await _db.putMeta(_metaLegacyDailyMigrated, true);
       return;
@@ -1188,8 +1168,8 @@ class Storage {
     _ensureUser();
     final snapshot = await getDailyState();
     if (snapshot == null) return;
-    final map = Map<String, int>.from(
-        snapshot['map'] as Map<String, int>? ?? const {});
+    final map =
+        Map<String, int>.from(snapshot['map'] as Map<String, int>? ?? const {});
     map.remove(courseId);
     await saveDailyState(snapshot['dateKey'] as String? ?? '', map);
   }
@@ -1221,15 +1201,17 @@ class Storage {
     DateTime? endUtc,
   }) async {
     _ensureUser();
-    
+
     final session = _db.getSessionById(id);
     if (session != null) {
       session.deleted = true;
       session.dirty = true;
       session.updatedAtMs = _now();
       await session.save();
-      
-      final d = DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true).toLocal();
+
+      final d =
+          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true)
+              .toLocal();
       _sessionUpdateController.add([DateTime(d.year, d.month, d.day)]);
       return;
     }
@@ -1261,7 +1243,9 @@ class Storage {
         item.updatedAtMs = _now();
         await item.save();
         // track unique days affected
-        final d = DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true).toLocal();
+        final d =
+            DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true)
+                .toLocal();
         final day = DateTime(d.year, d.month, d.day);
         if (!affectedDays.contains(day)) affectedDays.add(day);
       }
@@ -1273,12 +1257,10 @@ class Storage {
 
     if (courseId == null || startUtc == null || endUtc == null) return;
 
-    
     final firestore = FirebaseFirestore.instance;
     final auth = FirebaseAuth.instance;
     final userId = auth.currentUser?.uid;
     if (userId != null) {
-      
       final querySnapshot = await firestore
           .collection('users')
           .doc(userId)
@@ -1288,7 +1270,6 @@ class Storage {
           .where('endUtc', isEqualTo: Timestamp.fromDate(endUtc))
           .get();
 
-      
       final batch = firestore.batch();
       for (final doc in querySnapshot.docs) {
         batch.update(doc.reference, {
@@ -1297,13 +1278,12 @@ class Storage {
         });
       }
 
-      
       final sessionDoc = firestore
           .collection('users')
           .doc(userId)
           .collection('sessions')
           .doc(id);
-      
+
       final sessionSnapshot = await sessionDoc.get();
       if (sessionSnapshot.exists) {
         batch.update(sessionDoc, {
@@ -1321,7 +1301,8 @@ class Storage {
     final session = _db.getSessionById(id);
     if (session == null) return;
     final normalized = notes?.trim();
-    session.notes = (normalized == null || normalized.isEmpty) ? null : normalized;
+    session.notes =
+        (normalized == null || normalized.isEmpty) ? null : normalized;
     session.dirty = true;
     session.updatedAtMs = _now();
     await session.save();
@@ -1352,19 +1333,22 @@ class Storage {
     _ensureUser();
     final raw = _db.getMeta(_metaHabitCategories);
     if (raw is List) {
-       return raw.map((item) => HabitCategory.fromJson(Map<String, dynamic>.from(item as Map))).toList();
+      return raw
+          .map((item) =>
+              HabitCategory.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList();
     }
     return [];
   }
 
-  static Future<void> saveHabitCategories(List<HabitCategory> categories) async {
+  static Future<void> saveHabitCategories(
+      List<HabitCategory> categories) async {
     _ensureUser();
     final raw = categories.map((c) => c.toJson()).toList();
     await _db.putMeta(_metaHabitCategories, raw);
   }
 
   // legacy per-view habit ordering was removed in favour of a global sortorder
-  
 
   // --- Habit Cache Methods ---
 
@@ -1415,10 +1399,11 @@ class Storage {
     final allHistory = _db.habitHistoryForHabit(habitId);
     final startKey = _dateKeyFromDateTime(start);
     final endKey = _dateKeyFromDateTime(end);
-    
+
     return allHistory.where((entry) {
       final entryKey = entry.dateKey;
-      return entryKey.compareTo(startKey) >= 0 && entryKey.compareTo(endKey) <= 0;
+      return entryKey.compareTo(startKey) >= 0 &&
+          entryKey.compareTo(endKey) <= 0;
     }).toList();
   }
 
@@ -1431,11 +1416,12 @@ class Storage {
     final allHistory = _db.habitHistory();
     final startKey = _dateKeyFromDateTime(start);
     final endKey = _dateKeyFromDateTime(end);
-    
+
     final result = <String, List<LocalHabitHistory>>{};
     for (final entry in allHistory) {
       final entryKey = entry.dateKey;
-      if (entryKey.compareTo(startKey) >= 0 && entryKey.compareTo(endKey) <= 0) {
+      if (entryKey.compareTo(startKey) >= 0 &&
+          entryKey.compareTo(endKey) <= 0) {
         result.putIfAbsent(entry.habitId, () => []).add(entry);
       }
     }

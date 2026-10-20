@@ -1059,8 +1059,8 @@ class SyncService extends ChangeNotifier {
     if (resetAtMs > 0 && updatedAt < resetAtMs) {
       return;
     }
-    final dateKey = snapshot
-        .id; // firestore history ids are datekeys (yyyy-mm-dd)
+    final dateKey =
+        snapshot.id; // firestore history ids are datekeys (yyyy-mm-dd)
     final id = '${habitId}_$dateKey';
 
     var history = _db.getHabitHistoryById(id);
