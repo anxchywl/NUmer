@@ -42,3 +42,4 @@ jobs:
       - run: find infra -name '*.sh' -exec shellcheck {} +
       - run: bash infra/host/test/run.sh
       - run: bash infra/backup/test/run.sh
+      - run: bash infra/monitor/test/run.sh
