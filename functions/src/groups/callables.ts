@@ -5,7 +5,7 @@ import { requireAppCheck } from '../shared/app_check';
 import { PeriodKey, resolvePeriodRange } from '../shared/periods';
 
 export const deleteGroupCallable = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'deleteGroupCallable');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
@@ -55,7 +55,7 @@ export const deleteGroupCallable = functions.https.onCall(async (data, context) 
 });
 
 export const joinPrivateGroup = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'joinPrivateGroup');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
@@ -140,7 +140,7 @@ export const joinPrivateGroup = functions.https.onCall(async (data, context) => 
 });
 
 export const getMemberSubjectStats = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'getMemberSubjectStats');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
