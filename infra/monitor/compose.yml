@@ -1,0 +1,46 @@
+name: numer-monitor
+
+services:
+  monitor:
+    image: curlimages/curl:8.17.0
+    entrypoint: ["/bin/sh", "/monitor.sh"]
+    env_file:
+      # optional so that the config can be checked against the example alone
+      - path: monitor.env
+        required: false
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    restart: unless-stopped
+    volumes:
+      - ./monitor.sh:/monitor.sh:ro
+      - type: bind
+        source: ${MUTO_BACKUP_DIR:?}
+        target: /backups/muto
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${EVENTS_BOT_BACKUP_DIR:?}
+        target: /backups/events_bot
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${CLAVIS_BACKUP_DIR:?}
+        target: /backups/clavis
+        read_only: true
+        bind:
+          create_host_path: false
+      # the directory is mounted so that a replaced log file stays visible
+      - type: bind
+        source: ${RESTORE_LOG_DIR:?}
+        target: /restore-log
+        read_only: true
+        bind:
+          create_host_path: false
