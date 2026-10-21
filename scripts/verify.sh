@@ -14,3 +14,8 @@ bash scripts/check_design.sh
 flutter test --coverage
 bash scripts/coverage_floor.sh coverage/lcov.info "$(cat scripts/coverage_floor.txt)"
 (cd functions && npm ci && npm run build && npm test)
+if command -v shellcheck >/dev/null; then
+  find infra -name '*.sh' -exec shellcheck {} +
+else
+  echo "shellcheck is not installed, skipping infra scripts"
+fi
