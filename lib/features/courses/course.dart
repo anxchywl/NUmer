@@ -49,8 +49,8 @@ class Course {
         day: j['day'] as String,
         start: j['start'] as String,
         end: j['end'] as String,
-        colorValue:
-            (j['colorValue'] as num?)?.toInt() ?? const Color(0xFF3B82F6).toARGB32(),
+        colorValue: (j['colorValue'] as num?)?.toInt() ??
+            const Color(0xFF3B82F6).toARGB32(),
         credits: (j['credits'] as num?)?.toDouble(),
         expLevel: j['expLevel'] as int?,
         sortOrder: (j['sortOrder'] as num?)?.toInt(),
