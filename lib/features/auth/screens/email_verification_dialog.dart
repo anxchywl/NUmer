@@ -7,7 +7,8 @@ class EmailVerificationDialog extends StatefulWidget {
   const EmailVerificationDialog({super.key});
 
   @override
-  State<EmailVerificationDialog> createState() => _EmailVerificationDialogState();
+  State<EmailVerificationDialog> createState() =>
+      _EmailVerificationDialogState();
 }
 
 class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
@@ -28,28 +29,26 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
   }
 
   void _startPolling() {
-    
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) => _checkVerification());
+    _timer =
+        Timer.periodic(const Duration(seconds: 3), (_) => _checkVerification());
   }
 
   Future<void> _checkVerification() async {
     if (_checking || _verified) return;
-    
+
     setState(() => _checking = true);
     try {
       final auth = context.read<AuthController>();
       final error = await auth.checkEmailVerified();
-      
+
       if (error == null) {
-        
         setState(() => _verified = true);
         _timer?.cancel();
-        
+
         if (!mounted) return;
-        
-        
+
         await Future.delayed(const Duration(milliseconds: 800));
-        
+
         if (!mounted) return;
         Navigator.of(context).pop(true);
       }
@@ -63,11 +62,11 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
   Future<void> _resendEmail() async {
     final messenger = ScaffoldMessenger.of(context);
     final auth = context.read<AuthController>();
-    
+
     final error = await auth.sendEmailVerification();
-    
+
     if (!mounted) return;
-    
+
     if (error == null) {
       messenger.showSnackBar(
         const SnackBar(content: Text('Verification email sent!')),
@@ -85,7 +84,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
     final colors = theme.colorScheme;
 
     return PopScope(
-      canPop: false, 
+      canPop: false,
       child: Dialog(
         backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(
@@ -97,9 +96,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
             border: Border.all(color: colors.outlineVariant),
             boxShadow: [
               BoxShadow(
-                color: colors.shadow.withAlpha((
-                  (theme.brightness == Brightness.dark ? 0.5 : 0.08) * 255
-                ).round()),
+                color: colors.shadow.withAlpha(
+                    ((theme.brightness == Brightness.dark ? 0.5 : 0.08) * 255)
+                        .round()),
                 blurRadius: 40,
                 offset: const Offset(0, 18),
               ),
@@ -131,7 +130,8 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                           height: 64,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                              color: colors.primary.withAlpha((0.5 * 255).round()),
+                            color:
+                                colors.primary.withAlpha((0.5 * 255).round()),
                           ),
                         ),
                     ],
