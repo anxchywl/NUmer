@@ -12,9 +12,9 @@ your task:
 
 ## Repository Layout (read this first)
 
-NUmer is a single Flutter package (not a monorepo). The Dart code under `lib/` is organized
-**by feature, not by type**, so every file has one obvious home and a domain can be
-understood by opening one folder.
+NUmer is a Flutter app plus a small Python library for the module backends. The Dart code
+under `lib/` is organized **by feature, not by type**, so every file has one obvious home
+and a domain can be understood by opening one folder.
 
 ```
 lib/
@@ -24,6 +24,8 @@ lib/
   shared/                # PURE reusable UI — no business logic, no feature imports
   features/              # the product — one self-contained folder per domain
   l10n/                  # generated localization — do not hand-edit
+backend/
+  numer_identity/        # python Firebase ID-token verifier for module backends
 ```
 
 - **`app/`** — composition root: `app_state.dart` (the global `ChangeNotifier`) plus, over
@@ -33,6 +35,9 @@ lib/
   `startup_metrics.dart`. Core never imports a feature.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, avatar, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
+- **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
+  token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`
+  (see its README).
 
 Each feature under `lib/features/<name>/` owns everything for its domain and exposes a
 single barrel `<name>.dart`:
