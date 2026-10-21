@@ -80,3 +80,8 @@ functions/.env.local
 .env.*
 .env.local
 key.properties
+
+# python identity library
+backend/numer_identity/dist/
+backend/numer_identity/.coverage
+.venv/
