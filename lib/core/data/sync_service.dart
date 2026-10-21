@@ -9,6 +9,7 @@ import 'package:hive/hive.dart';
 
 import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/core/data/local_database.dart';
+import 'package:numer_app/core/data/sync_schedule.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 
 enum SyncStatus { offline, syncing, upToDate }
@@ -26,6 +27,7 @@ class SyncService extends ChangeNotifier {
   final FirebaseFirestore _firestore;
   final Connectivity _connectivity;
   final LocalDatabase _db;
+  final SyncSchedule _schedule = const SyncSchedule();
 
   SyncStatus _status = SyncStatus.offline;
   SyncStatus get status => _status;
@@ -38,6 +40,7 @@ class SyncService extends ChangeNotifier {
   bool _hasPulledUser = false;
   bool _isRunning = false;
   bool _isSyncing = false;
+  bool _pushPending = false;
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _activeSessionSub;
@@ -155,7 +158,48 @@ class SyncService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> syncNow({bool full = false, bool startup = false}) async {
+  Future<void> syncNow({
+    bool full = false,
+    bool startup = false,
+    bool force = false,
+  }) {
+    return _runGuarded(
+      () async {
+        if (startup) {
+          StartupMetrics.markSyncStart(bootstrap: full);
+        }
+        await pushDirty();
+        final shouldPull = _schedule.shouldPull(
+          nowMs: _now(),
+          lastPullMs: lastPull?.millisecondsSinceEpoch,
+          force: force || full,
+        );
+        final readCount = shouldPull ? await pullSince(full: full) : 0;
+        if (startup) {
+          StartupMetrics.markSyncComplete(readCount: readCount);
+        }
+      },
+      onError: () {
+        if (startup) {
+          StartupMetrics.markSyncComplete(readCount: 0);
+        }
+      },
+    );
+  }
+
+  Future<void> pushNow() async {
+    // the running sync may have already collected its dirty records
+    if (_isSyncing) {
+      _pushPending = true;
+      return;
+    }
+    await _runGuarded(pushDirty);
+  }
+
+  Future<void> _runGuarded(
+    Future<void> Function() body, {
+    VoidCallback? onError,
+  }) async {
     if (!_isRunning || _isSyncing || !_online || _uid == null) {
       return;
     }
@@ -163,19 +207,10 @@ class SyncService extends ChangeNotifier {
     _setStatus(SyncStatus.syncing);
     lastError = null;
     try {
-      if (startup) {
-        StartupMetrics.markSyncStart(bootstrap: full);
-      }
-      await pushDirty();
-      final readCount = await pullSince(full: full);
-      if (startup) {
-        StartupMetrics.markSyncComplete(readCount: readCount);
-      }
+      await body();
       _setStatus(SyncStatus.upToDate);
     } catch (err, stack) {
-      if (startup) {
-        StartupMetrics.markSyncComplete(readCount: 0);
-      }
+      onError?.call();
       if (kDebugMode) {
         print('Sync failed: $err\n$stack');
       }
@@ -183,6 +218,10 @@ class SyncService extends ChangeNotifier {
       _setStatus(SyncStatus.offline);
     } finally {
       _isSyncing = false;
+      if (_pushPending) {
+        _pushPending = false;
+        await pushNow();
+      }
     }
   }
 
