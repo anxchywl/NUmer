@@ -22,7 +22,7 @@ class ConnectionsScreen extends StatefulWidget {
 class _ConnectionsScreenState extends State<ConnectionsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  
+
   String _searchQuery = '';
   String? _selectedGroupId;
   ConnectionsSortMode _sortMode = ConnectionsSortMode.recent;
@@ -39,14 +39,14 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
 
   Future<void> _initializeService() async {
     if (_initialized) return;
-    
+
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
-    
+
     final service = context.read<ConnectionsService>();
     await service.initialize(uid);
-    
+
     if (mounted) {
       setState(() => _initialized = true);
     }
@@ -67,33 +67,35 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
     final currentUser = auth.currentUser;
 
     if (currentUser == null) {
-    return Scaffold(
-      body: NotificationListener<UserScrollNotification>(
-        onNotification: (notification) {
-          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
-            setState(() => _fabVisible = false);
-          } else if (notification.direction == ScrollDirection.forward &&
-              !_fabVisible) {
-            setState(() => _fabVisible = true);
-          }
-          return false;
-        },
-        child: CustomScrollView(
-        slivers: [
-            SliverAppBar(
-              title: Text(AppLocalizations.of(context)!.connectionsTabLabel),
-            ),
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Text(AppLocalizations.of(context)!.signInToViewConnections),
+      return Scaffold(
+        body: NotificationListener<UserScrollNotification>(
+          onNotification: (notification) {
+            if (notification.direction == ScrollDirection.reverse &&
+                _fabVisible) {
+              setState(() => _fabVisible = false);
+            } else if (notification.direction == ScrollDirection.forward &&
+                !_fabVisible) {
+              setState(() => _fabVisible = true);
+            }
+            return false;
+          },
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                title: Text(AppLocalizations.of(context)!.connectionsTabLabel),
               ),
-            ),
-          ],
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: Text(
+                      AppLocalizations.of(context)!.signInToViewConnections),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-    );
-  }
+      );
+    }
 
     return Scaffold(
       body: Consumer<ConnectionsService>(
@@ -106,7 +108,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
             searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
             groupId: _selectedGroupId,
           );
-          
+
           final sortedPeople = service.sortPeople(filteredPeople, _sortMode);
           final groups = service.groups;
 
@@ -120,9 +122,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                     icon: const Icon(Icons.calendar_month_outlined),
                     tooltip: 'Calendar', // TODO: Localize
                     onPressed: () {
-                       Navigator.of(context).push(
-                         MaterialPageRoute(builder: (_) => const PeopleCalendarScreen()),
-                       );
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                            builder: (_) => const PeopleCalendarScreen()),
+                      );
                     },
                   ),
                   IconButton(
@@ -132,7 +135,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                   ),
                 ],
               ),
-              
+
               // Search and Filter Section
               SliverToBoxAdapter(
                 child: Padding(
@@ -145,7 +148,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                         controller: _searchController,
                         focusNode: _searchFocusNode,
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!.searchConnectionsHint,
+                          hintText: AppLocalizations.of(context)!
+                              .searchConnectionsHint,
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
@@ -157,20 +161,22 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                                 )
                               : null,
                           filled: true,
-                          fillColor: colorScheme.surfaceContainerHighest.withAlpha(128),
+                          fillColor: colorScheme.surfaceContainerHighest
+                              .withAlpha(128),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
                         ),
                         onChanged: (val) {
                           setState(() => _searchQuery = val.trim());
                         },
                       ),
-                      
+
                       const SizedBox(height: 12),
-                      
+
                       // Group Filter Chips
                       if (groups.isNotEmpty) ...[
                         SizedBox(
@@ -182,7 +188,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                               Padding(
                                 padding: const EdgeInsets.only(right: 8),
                                 child: FilterChip(
-                                  label: Text(AppLocalizations.of(context)!.filterAll),
+                                  label: Text(
+                                      AppLocalizations.of(context)!.filterAll),
                                   selected: _selectedGroupId == null,
                                   onSelected: (_) {
                                     setState(() => _selectedGroupId = null);
@@ -191,43 +198,46 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                               ),
                               // Group chips
                               ...groups.map((group) => Padding(
-                                padding: const EdgeInsets.only(right: 8),
-                                child: FilterChip(
-                                  label: Text(group.name),
-                                  selected: _selectedGroupId == group.id,
-                                  selectedColor: group.color.withAlpha(51),
-                                  avatar: _selectedGroupId == group.id
-                                      ? null
-                                      : CircleAvatar(
-                                          backgroundColor: group.color.withAlpha(51),
-                                          child: Icon(
-                                            group.icon,
-                                            size: 14,
-                                            color: group.color,
-                                          ),
-                                        ),
-                                  onSelected: (_) {
-                                    setState(() {
-                                      _selectedGroupId = _selectedGroupId == group.id
+                                    padding: const EdgeInsets.only(right: 8),
+                                    child: FilterChip(
+                                      label: Text(group.name),
+                                      selected: _selectedGroupId == group.id,
+                                      selectedColor: group.color.withAlpha(51),
+                                      avatar: _selectedGroupId == group.id
                                           ? null
-                                          : group.id;
-                                    });
-                                  },
-                                ),
-                              )),
+                                          : CircleAvatar(
+                                              backgroundColor:
+                                                  group.color.withAlpha(51),
+                                              child: Icon(
+                                                group.icon,
+                                                size: 14,
+                                                color: group.color,
+                                              ),
+                                            ),
+                                      onSelected: (_) {
+                                        setState(() {
+                                          _selectedGroupId =
+                                              _selectedGroupId == group.id
+                                                  ? null
+                                                  : group.id;
+                                        });
+                                      },
+                                    ),
+                                  )),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
                       ],
-                      
+
                       // Sort Selector
                       // Sort Selector (Cyclic Tap)
                       InkWell(
                         onTap: _cycleSortMode,
                         borderRadius: BorderRadius.circular(8),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 4),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -255,13 +265,13 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 8),
                     ],
                   ),
                 ),
               ),
-              
+
               // People List or Empty State
               if (sortedPeople.isEmpty)
                 SliverFillRemaining(
@@ -278,22 +288,25 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                         final personGroups = groups
                             .where((g) => person.groupIds.contains(g.id))
                             .toList();
-                        
+
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: PersonCard(
                             person: person,
                             groups: personGroups,
                             onTap: () => _openPersonDetails(context, person),
-                            onCall: person.phone != null && person.phone!.isNotEmpty
-                                ? () => _makeCall(person.phone!)
-                                : null,
-                            onMessage: person.phone != null && person.phone!.isNotEmpty
-                                ? () => _sendMessage(person.phone!)
-                                : null,
-                            onEmail: person.email != null && person.email!.isNotEmpty
-                                ? () => _sendEmail(person.email!)
-                                : null,
+                            onCall:
+                                person.phone != null && person.phone!.isNotEmpty
+                                    ? () => _makeCall(person.phone!)
+                                    : null,
+                            onMessage:
+                                person.phone != null && person.phone!.isNotEmpty
+                                    ? () => _sendMessage(person.phone!)
+                                    : null,
+                            onEmail:
+                                person.email != null && person.email!.isNotEmpty
+                                    ? () => _sendEmail(person.email!)
+                                    : null,
                           ),
                         );
                       },
@@ -402,7 +415,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
               icon: const Icon(Icons.person_add),
               label: Text(AppLocalizations.of(context)!.addPersonTitle),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

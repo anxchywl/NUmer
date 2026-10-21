@@ -17,11 +17,11 @@ class GroupsManagementSheet extends StatefulWidget {
 class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   bool _isCreating = false;
   String? _editingGroupId;
-  
+
   final TextEditingController _nameController = TextEditingController();
   Color _selectedColor = Colors.blue;
   IconData _selectedIcon = Icons.group;
-  
+
   static const List<Color> _colorChoices = [
     Color(0xFF4285F4), // Google Blue
     Color(0xFF34A853), // Google Green
@@ -34,7 +34,7 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
     Color(0xFF607D8B), // Blue Grey
     Color(0xFFE91E63), // Pink
   ];
-  
+
   static const List<IconData> _iconChoices = [
     Icons.group,
     Icons.work,
@@ -93,16 +93,16 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               ],
             ),
           ),
-          
+
           const Divider(height: 1),
-          
+
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 // Existing Groups
                 ...groups.map((group) => _buildGroupTile(context, group)),
-                
+
                 // Create New Group Section
                 if (_isCreating)
                   _buildCreateForm(context)
@@ -182,7 +182,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                     children: [
                       Icon(Icons.delete_outline, color: Colors.red),
                       SizedBox(width: 8),
-                      Text(AppLocalizations.of(context)!.delete, style: TextStyle(color: Colors.red)),
+                      Text(AppLocalizations.of(context)!.delete,
+                          style: TextStyle(color: Colors.red)),
                     ],
                   ),
                 ),
@@ -225,7 +226,7 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Name input
           TextField(
             controller: _nameController,
@@ -244,11 +245,12 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               LengthLimitingTextInputFormatter(32),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Color picker
-          Text(AppLocalizations.of(context)!.color, style: theme.textTheme.labelMedium),
+          Text(AppLocalizations.of(context)!.color,
+              style: theme.textTheme.labelMedium),
           const SizedBox(height: 8),
           SizedBox(
             height: 40,
@@ -257,7 +259,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               itemCount: _colorChoices.length,
               itemBuilder: (context, index) {
                 final color = _colorChoices[index];
-                final isSelected = _selectedColor.toARGB32() == color.toARGB32();
+                final isSelected =
+                    _selectedColor.toARGB32() == color.toARGB32();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
@@ -266,7 +269,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                       backgroundColor: color,
                       radius: 16,
                       child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
+                          ? const Icon(Icons.check,
+                              color: Colors.white, size: 16)
                           : null,
                     ),
                   ),
@@ -274,9 +278,9 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Icon picker
           Text('Icon', style: theme.textTheme.labelMedium),
           const SizedBox(height: 8),
@@ -320,9 +324,9 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Action buttons
           Row(
             children: [
@@ -337,7 +341,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               ),
               const Spacer(),
               FilledButton(
-                onPressed: _nameController.text.trim().isEmpty ? null : _createGroup,
+                onPressed:
+                    _nameController.text.trim().isEmpty ? null : _createGroup,
                 child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
@@ -368,7 +373,7 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // Name input
           TextField(
             controller: _nameController,
@@ -386,11 +391,12 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               LengthLimitingTextInputFormatter(32),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Color picker
-          Text(AppLocalizations.of(context)!.color, style: theme.textTheme.labelMedium),
+          Text(AppLocalizations.of(context)!.color,
+              style: theme.textTheme.labelMedium),
           const SizedBox(height: 8),
           SizedBox(
             height: 40,
@@ -399,7 +405,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               itemCount: _colorChoices.length,
               itemBuilder: (context, index) {
                 final color = _colorChoices[index];
-                final isSelected = _selectedColor.toARGB32() == color.toARGB32();
+                final isSelected =
+                    _selectedColor.toARGB32() == color.toARGB32();
                 return Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: GestureDetector(
@@ -408,7 +415,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                       backgroundColor: color,
                       radius: 16,
                       child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white, size: 16)
+                          ? const Icon(Icons.check,
+                              color: Colors.white, size: 16)
                           : null,
                     ),
                   ),
@@ -416,11 +424,12 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Icon picker
-          Text('Icon', style: theme.textTheme.labelMedium), // TODO: add to arb if needed
+          Text('Icon',
+              style: theme.textTheme.labelMedium), // TODO: add to arb if needed
           const SizedBox(height: 8),
           SizedBox(
             height: 48,
@@ -462,9 +471,9 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               },
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Action buttons
           Row(
             children: [
@@ -494,14 +503,14 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   Future<void> _createGroup() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    
+
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
-    
+
     final service = context.read<ConnectionsService>();
     final now = DateTime.now();
-    
+
     final newGroup = ContactGroup(
       id: now.millisecondsSinceEpoch.toString(),
       name: name,
@@ -510,9 +519,9 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
       createdAt: now,
       updatedAt: now,
     );
-    
+
     await service.createGroup(uid, newGroup);
-    
+
     setState(() {
       _isCreating = false;
       _nameController.clear();
@@ -522,20 +531,20 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   Future<void> _saveGroup(ContactGroup group) async {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
-    
+
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
-    
+
     final service = context.read<ConnectionsService>();
-    
+
     // Update name if changed
     if (name != group.name) {
       await service.renameGroup(uid, group.id, name);
     }
-    
+
     // Update appearance if changed
-    if (_selectedColor.toARGB32() != group.colorValue || 
+    if (_selectedColor.toARGB32() != group.colorValue ||
         _selectedIcon.codePoint != group.iconCodePoint) {
       await service.updateGroupAppearance(
         uid,
@@ -544,20 +553,22 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
         iconCodePoint: _selectedIcon.codePoint,
       );
     }
-    
+
     setState(() {
       _editingGroupId = null;
       _nameController.clear();
     });
   }
 
-  Future<void> _confirmDeleteGroup(BuildContext context, ContactGroup group) async {
+  Future<void> _confirmDeleteGroup(
+      BuildContext context, ContactGroup group) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteConnectionGroupTitle),
         content: Text(
-          AppLocalizations.of(context)!.deleteConnectionGroupMessage(group.name),
+          AppLocalizations.of(context)!
+              .deleteConnectionGroupMessage(group.name),
         ),
         actions: [
           TextButton(
@@ -574,12 +585,12 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
         ],
       ),
     );
-    
+
     if (confirmed == true && context.mounted) {
       final auth = context.read<AuthController>();
       final uid = auth.currentUser?.uid;
       if (uid == null) return;
-      
+
       final service = context.read<ConnectionsService>();
       await service.deleteGroup(uid, group.id);
     }
