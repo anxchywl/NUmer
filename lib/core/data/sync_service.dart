@@ -446,14 +446,14 @@ class SyncService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateActiveSession({
+  Future<bool> updateActiveSession({
     required bool isStudying,
     String? courseId,
     String? kind,
     DateTime? start,
     DateTime? expectedEnd,
   }) async {
-    if (_uid == null || _deviceId == null) return;
+    if (_uid == null || _deviceId == null) return false;
     final docRef = _firestore.collection('users').doc(_uid);
 
     if (!isStudying) {
@@ -487,6 +487,7 @@ class SyncService extends ChangeNotifier {
         'lastActive': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
+    return true;
   }
 
   Future<void> _sendHeartbeat() async {
