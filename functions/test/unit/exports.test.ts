@@ -8,6 +8,7 @@ describe('exports', () => {
       'joinPrivateGroup',
       'onCourseWrite',
       'onGroupMemberDelete',
+      'onMailQueued',
       'onStudySessionWrite',
       'sendNudge',
     ]);
