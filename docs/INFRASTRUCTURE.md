@@ -74,6 +74,8 @@ a group; see `firestore.rules` for exact access):
 /users/{userId}                        profile (name, major, goals, prefs)
 /email_index/{emailId}                 email → uid lookup
 /mailQueue/{id}                        outgoing email, server only
+/groupIndex/{userId}                   server-written: groups the user belongs to
+/publicProfiles/{userId}               server-written: profile fields group peers may see
 /users/{userId}/
   fcmTokens, aggregates, sessions, studySessions, courses, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
@@ -90,6 +92,8 @@ a group; see `firestore.rules` for exact access):
 | Firestore trigger | `onGroupMemberDelete` | Clean up membership associations |
 | Firestore trigger | `deleteGroup` | Cascade group cleanup |
 | Firestore trigger | `onMailQueued` | Render and send a queued email |
+| Firestore trigger | `onGroupMemberWrite` | Maintain `groupIndex` from member create and delete |
+| Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles` |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
