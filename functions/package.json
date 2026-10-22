@@ -12,6 +12,7 @@
     "mail:test": "node scripts/send_test_email.js",
     "deploy": "firebase deploy --only functions",
     "start": "firebase emulators:start --only functions,firestore",
+    "roles:set": "tsc && node scripts/set_roles.js",
     "backfill": "node scripts/backfill.js",
     "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js",
     "backfill:group-index": "node scripts/backfill_group_index.js",
