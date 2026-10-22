@@ -11,6 +11,7 @@ describe('exports', () => {
       'onStudySessionWrite',
       'onUserProfileWrite',
       'sendNudge',
+      'setUserRoles',
     ]);
   });
 });
