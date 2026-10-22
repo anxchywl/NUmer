@@ -60,24 +60,23 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     super.initState();
     // Use widget.initialValue as fallback, but fetch fresh data immediately
     _initialValue = _clampValue(widget.initialValue ?? 0);
-    
+
     // Exactly: Pre-fill with target
     if (widget.habit.comparator == HabitComparator.exactly) {
       _currentValue = widget.habit.targetValue;
     } else {
       _currentValue = _initialValue;
     }
-    
+
     _numericController = TextEditingController(
-      text: widget.habit.type == HabitType.numeric 
-        ? _currentValue.toInt().toString() 
-        : ""
-    );
+        text: widget.habit.type == HabitType.numeric
+            ? _currentValue.toInt().toString()
+            : "");
     _numericController.addListener(_onNumericControllerChanged);
-    
+
     // Fetch fresh data from Storage (bypasses stale l7 cache)
     _fetchFreshTotal();
-    
+
     // Listen for history updates (e.g., session ended while popup is open)
     final habitService = context.read<HabitService>();
     _historySubscription = habitService.historyUpdates.listen((_) {
@@ -180,7 +179,8 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       final s = v % 60;
       return "${h.toInt().toString().padLeft(2, '0')}:${m.toInt().toString().padLeft(2, '0')}:${s.toInt().toString().padLeft(2, '0')}";
     }
-    final numberFormat = NumberFormat.decimalPattern(AppLocalizations.of(context)!.localeName);
+    final numberFormat =
+        NumberFormat.decimalPattern(AppLocalizations.of(context)!.localeName);
     if (v % 1 == 0) return numberFormat.format(v.toInt());
     return numberFormat.format(double.parse(v.toStringAsFixed(1)));
   }
@@ -207,7 +207,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     if (widget.habit.comparator == HabitComparator.lessThan) {
       if (finalValue > widget.habit.targetValue) {
         // Should be prevented by UI but safe guard
-        return; 
+        return;
       }
     }
 
@@ -226,7 +226,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
     );
     if (mounted) {
-       Navigator.pop(context);
+      Navigator.pop(context);
     }
   }
 
@@ -245,7 +245,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     final theme = Theme.of(context);
     final isNumeric = widget.habit.type == HabitType.numeric;
     final l10n = AppLocalizations.of(context)!;
-    
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -266,9 +266,9 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  IconData(widget.habit.iconCodePoint, 
-                    fontFamily: widget.habit.iconFamily, 
-                    fontPackage: widget.habit.iconPackage),
+                  IconData(widget.habit.iconCodePoint,
+                      fontFamily: widget.habit.iconFamily,
+                      fontPackage: widget.habit.iconPackage),
                   color: widget.habit.color,
                   size: 20,
                 ),
@@ -278,20 +278,27 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.habit.name, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(widget.habit.name,
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          
           SizedBox(
             width: double.infinity,
             child: SegmentedButton<LoggingMode>(
               segments: [
-                ButtonSegment(value: LoggingMode.set, label: Text(l10n.habitLogSetTotal), icon: const Icon(Icons.edit)),
-                ButtonSegment(value: LoggingMode.add, label: Text(l10n.habitLogAddMore), icon: const Icon(Icons.add)),
+                ButtonSegment(
+                    value: LoggingMode.set,
+                    label: Text(l10n.habitLogSetTotal),
+                    icon: const Icon(Icons.edit)),
+                ButtonSegment(
+                    value: LoggingMode.add,
+                    label: Text(l10n.habitLogAddMore),
+                    icon: const Icon(Icons.add)),
               ],
               selected: {_mode},
               onSelectionChanged: (val) {
@@ -316,26 +323,29 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
               ),
             ),
           ),
-          
           const SizedBox(height: 24),
-          
-          if (isNumeric) _buildNumericPicker(theme) else _buildTimePicker(theme, l10n),
-          
+          if (isNumeric)
+            _buildNumericPicker(theme)
+          else
+            _buildTimePicker(theme, l10n),
           const SizedBox(height: 24),
-          
           _buildProgressInfo(theme, l10n),
-          
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
             height: 56,
             child: FilledButton(
-              onPressed: (isNumeric && _numericController.text.isEmpty) ? null : _onConfirm,
+              onPressed: (isNumeric && _numericController.text.isEmpty)
+                  ? null
+                  : _onConfirm,
               style: FilledButton.styleFrom(
                 backgroundColor: widget.habit.color,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
               ),
-              child: Text(l10n.habitUpdateProgress, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(l10n.habitUpdateProgress,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
           const SizedBox(height: 16),
@@ -349,44 +359,45 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (widget.habit.comparator != HabitComparator.exactly)
-           _buildStepButton(Icons.remove, -1.0, theme),
+          _buildStepButton(Icons.remove, -1.0, theme),
         const SizedBox(width: 24),
         Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(
               width: 140,
-              child: widget.habit.comparator == HabitComparator.exactly 
-              ? Center(
-                  child: Text(
-                    _numericController.text,
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface.withAlpha(128), // Dimmed to show locked
-                      height: 1.1,
+              child: widget.habit.comparator == HabitComparator.exactly
+                  ? Center(
+                      child: Text(
+                        _numericController.text,
+                        style: theme.textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurface
+                              .withAlpha(128), // Dimmed to show locked
+                          height: 1.1,
+                        ),
+                      ),
+                    )
+                  : TextField(
+                      controller: _numericController,
+                      focusNode: _numericFocusNode,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: theme.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        height: 1.1,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        MaxValueFormatter(_maxValueForHabit()),
+                      ],
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
                     ),
-                  ),
-                )
-              : TextField(
-                controller: _numericController,
-                focusNode: _numericFocusNode,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                  height: 1.1,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  MaxValueFormatter(_maxValueForHabit()),
-                ],
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
             ),
             if (widget.habit.unit != null && widget.habit.unit!.isNotEmpty)
               Text(
@@ -425,6 +436,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         tick();
       });
     }
+
     tick();
   }
 
@@ -448,8 +460,6 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       }
     });
   }
-
-
 
   Widget _buildStepButton(IconData icon, double step, ThemeData theme) {
     return GestureDetector(
@@ -476,7 +486,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         ? _clampValue(_currentValue)
         : _clampValue(_initialValue + _currentValue);
     final isCompleted = total >= target;
-    
+
     final dateStr = DateFormat('MMM d', l10n.localeName).format(widget.date);
     final totalLabel = _formatValue(total);
     final targetLabel = _formatValue(target);
@@ -486,8 +496,12 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.habitProgressLabel(dateStr), style: theme.textTheme.labelMedium),
-            Text("$totalLabel / $targetLabel (${(total / target * 100).toInt()}%)", style: theme.textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold)),
+            Text(l10n.habitProgressLabel(dateStr),
+                style: theme.textTheme.labelMedium),
+            Text(
+                "$totalLabel / $targetLabel (${(total / target * 100).toInt()}%)",
+                style: theme.textTheme.labelMedium
+                    ?.copyWith(fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 8),
@@ -502,100 +516,103 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         ),
         const SizedBox(height: 8),
         Text(
-          _mode == LoggingMode.set 
-            ? l10n.habitLogSettingTotal(totalLabel)
-            : l10n.habitLogAdding(_formatValue(_currentValue), _formatValue(_initialValue)),
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          _mode == LoggingMode.set
+              ? l10n.habitLogSettingTotal(totalLabel)
+              : l10n.habitLogAdding(
+                  _formatValue(_currentValue), _formatValue(_initialValue)),
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
         ),
       ],
     );
   }
 
-  Widget _buildStackedProgressBar(ThemeData theme, double total, double target, bool isCompleted) {
-      if (total <= 0) {
-         return Container(color: theme.colorScheme.surfaceContainerHighest);
-      }
-      if (_courseContributions.isEmpty) {
-         // Standard bar
-         return LinearProgressIndicator(
-            value: (total / target).clamp(0.0, 1.0),
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation<Color>(isCompleted ? Colors.green : widget.habit.color),
-         );
-      }
-
-      // Stacked Bar
-      final courses = context.read<AppState>().courses;
-      
-      double accumulatedSeconds = 0;
-      
-      // 1. Course segments
-      for (final entry in _courseContributions.entries) {
-         final seconds = entry.value.toDouble();
-         if (seconds <= 0) continue;
-         
-         accumulatedSeconds += seconds;
-      }
-      
-      // Calculate "Manually Added" amount (Total - Sum(courses))
-      final manualSeconds = total - accumulatedSeconds;
-      
-      // If total > target, we need to handle overflow visually or just clamp full bar.
-      // We render the bar relative to 'target' (if total < target) OR relative to 'total' (if total > target)?
-      // Usually progress bar is relative to target (100%).
-      
-      
-      // Let's just use a Row with flex factors relative to `target`.
-      // Segments: [Course A][Course B][Manual][Remaining]
-      
-      List<Widget> children = [];
-      
-      for (final entry in _courseContributions.entries) {
-         final seconds = entry.value.toDouble();
-         if (seconds <= 0) continue;
-         final course = courses.firstWhere((c) => c.id == entry.key, orElse: () => const Course(id: 'unknown', name: '?', colorValue: 0xFF9E9E9E, day: '', start: '', end: ''));
-         
-         final pct = (seconds / target).clamp(0.0, 1.0);
-         if (pct > 0) {
-            children.add(
-              Flexible(
-                 flex: (pct * 1000).toInt(),
-                 child: Container(color: Color(course.colorValue)),
-              )
-            );
-         }
-      }
-      
-      if (manualSeconds > 0) {
-         final pct = (manualSeconds / target).clamp(0.0, 1.0);
-         if (pct > 0) {
-            children.add(
-              Flexible(
-                 flex: (pct * 1000).toInt(),
-                 child: Container(color: widget.habit.color),
-              )
-            );
-         }
-      }
-      
-      // Remaining space
-      final currentTotalPct = (total / target).clamp(0.0, 1.0);
-      if (currentTotalPct < 1.0) {
-         final remainingPct = 1.0 - currentTotalPct;
-         children.add(
-            Flexible(
-               flex: (remainingPct * 1000).toInt(),
-               child: Container(color: theme.colorScheme.surfaceContainerHighest),
-            )
-         );
-      }
-      
-      return Row(
-         crossAxisAlignment: CrossAxisAlignment.stretch,
-         children: children,
+  Widget _buildStackedProgressBar(
+      ThemeData theme, double total, double target, bool isCompleted) {
+    if (total <= 0) {
+      return Container(color: theme.colorScheme.surfaceContainerHighest);
+    }
+    if (_courseContributions.isEmpty) {
+      // Standard bar
+      return LinearProgressIndicator(
+        value: (total / target).clamp(0.0, 1.0),
+        backgroundColor: theme.colorScheme.surfaceContainerHighest,
+        valueColor: AlwaysStoppedAnimation<Color>(
+            isCompleted ? Colors.green : widget.habit.color),
       );
-  }
+    }
 
+    // Stacked Bar
+    final courses = context.read<AppState>().courses;
+
+    double accumulatedSeconds = 0;
+
+    // 1. Course segments
+    for (final entry in _courseContributions.entries) {
+      final seconds = entry.value.toDouble();
+      if (seconds <= 0) continue;
+
+      accumulatedSeconds += seconds;
+    }
+
+    // Calculate "Manually Added" amount (Total - Sum(courses))
+    final manualSeconds = total - accumulatedSeconds;
+
+    // If total > target, we need to handle overflow visually or just clamp full bar.
+    // We render the bar relative to 'target' (if total < target) OR relative to 'total' (if total > target)?
+    // Usually progress bar is relative to target (100%).
+
+    // Let's just use a Row with flex factors relative to `target`.
+    // Segments: [Course A][Course B][Manual][Remaining]
+
+    List<Widget> children = [];
+
+    for (final entry in _courseContributions.entries) {
+      final seconds = entry.value.toDouble();
+      if (seconds <= 0) continue;
+      final course = courses.firstWhere((c) => c.id == entry.key,
+          orElse: () => const Course(
+              id: 'unknown',
+              name: '?',
+              colorValue: 0xFF9E9E9E,
+              day: '',
+              start: '',
+              end: ''));
+
+      final pct = (seconds / target).clamp(0.0, 1.0);
+      if (pct > 0) {
+        children.add(Flexible(
+          flex: (pct * 1000).toInt(),
+          child: Container(color: Color(course.colorValue)),
+        ));
+      }
+    }
+
+    if (manualSeconds > 0) {
+      final pct = (manualSeconds / target).clamp(0.0, 1.0);
+      if (pct > 0) {
+        children.add(Flexible(
+          flex: (pct * 1000).toInt(),
+          child: Container(color: widget.habit.color),
+        ));
+      }
+    }
+
+    // Remaining space
+    final currentTotalPct = (total / target).clamp(0.0, 1.0);
+    if (currentTotalPct < 1.0) {
+      final remainingPct = 1.0 - currentTotalPct;
+      children.add(Flexible(
+        flex: (remainingPct * 1000).toInt(),
+        child: Container(color: theme.colorScheme.surfaceContainerHighest),
+      ));
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
 }
 
 class MaxValueFormatter extends TextInputFormatter {
@@ -603,14 +620,16 @@ class MaxValueFormatter extends TextInputFormatter {
   MaxValueFormatter(this.max);
 
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) return newValue;
     final val = double.tryParse(newValue.text);
     if (val == null) return oldValue;
     if (val > max) {
       return TextEditingValue(
         text: max.toInt().toString(),
-        selection: TextSelection.collapsed(offset: max.toInt().toString().length),
+        selection:
+            TextSelection.collapsed(offset: max.toInt().toString().length),
       );
     }
     return newValue;
