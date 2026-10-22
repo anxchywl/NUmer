@@ -9,7 +9,7 @@ import {
 } from '../groups/cleanup';
 
 export const deleteAccountCallable = functions.https.onCall(async (_data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'deleteAccountCallable');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
