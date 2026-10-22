@@ -28,6 +28,7 @@ const _fcmResaveAfter = Duration(days: 7);
 bool shouldSaveFcmToken(
     String token, String? savedToken, int? savedAtMs, int nowMs) {
   if (savedToken != token || savedAtMs == null) return true;
+  if (nowMs < savedAtMs) return true;
   return nowMs - savedAtMs >= _fcmResaveAfter.inMilliseconds;
 }
 
@@ -152,9 +153,12 @@ class AuthController extends ChangeNotifier {
 
     _requiresEmailVerification = false;
     _isSigningOut = false;
-    unawaited(_ensureProfileDocument(user));
+    // creating the profile writes fcmEnabled false, so the token must be saved after it
+    unawaited(_ensureProfileDocument(user).whenComplete(() async {
+      if (_currentUser?.uid != user.uid) return;
+      await _registerPushToken(user);
+    }));
     unawaited(_upsertEmailIndexIfChanged(user));
-    unawaited(_registerPushToken(user));
     _listenToProfile(user);
     _listenForPendingNudges(user.uid);
     lastPreparationError = null;
@@ -381,7 +385,6 @@ class AuthController extends ChangeNotifier {
     await prefs.remove('fcm_saved_token_$uid');
     await prefs.remove('fcm_saved_at_$uid');
     await prefs.remove('email_index_written_$uid');
-    await prefs.remove('active_session_sig_$uid');
 
     // Cancel notifications for this session
     await Notifs.cancelAll();

@@ -25,6 +25,12 @@ Executors never deploy, never push and never connect to the server. Wherever a s
 | O-7 | Add crash reporting (a new SDK and one line in the privacy policy)? | yes | P0-14 |
 | O-8 | Which Android device is the performance reference? | the oldest mid-range phone you own | P0-14 |
 
+**Answers (2026-11-27):** O-1 yes, the D-20 layout. O-4 yes, the Events bot runs in production.
+O-5 no: Gradus, Clavis and the Events bot hold no real user data yet. O-7 yes, add crash
+reporting. Sign-in stays email and password with 6-digit codes for verification and reset
+(Microsoft sign-in was considered and dropped: NU IT approval is uncertain). Still open: O-2,
+O-3, O-6, O-8.
+
 ### A-2 See the real Firebase numbers
 **Why:** the cost model rests on an assumed usage pattern. **Waits:** nothing blocks, but it
 tells you whether P0-08 worked.
@@ -114,16 +120,21 @@ The scripts need a service account key on your machine
 
 ### B-10 Create the staging Firebase project (P0-15)
 **Why:** auth, rules and email work must be tested somewhere that is not production.
-1. Firebase console, add project `numer-staging`. Upgrade it to the Blaze plan (functions
-   need it); set a 5 USD budget alert.
-2. Enable Authentication with Email and Password; create Firestore in the same location as
-   production.
-3. Register an Android app and an iOS app with the same package name and bundle id as
-   production.
+Done 2026-11-27 except step 4, the debug token in step 5 and the billing part of step 1. The project id is
+`lendings-killer` (display name "NUmer Staging"): the account was at its project limit, so an
+unused project was reused, and an id cannot be renamed.
+1. Firebase project `lendings-killer`. Upgrade it to the Blaze plan (functions need it); set a
+   5 USD budget alert.
+2. Authentication with Email and Password is on; Firestore is in `eur3`, as production.
+3. Android app `app.anx.numer` and iOS app `com.maxim.numer` are registered (the real bundle
+   id, not the placeholder production's Firebase iOS app still carries, see B-11).
 4. Give the executor of P0-15 the project id, the two app ids, the two API keys, the sender
    id and the storage bucket. These are not secrets, but pass them as build defines, not
    committed text.
-5. Enable App Check for both apps and register a debug token for your own device.
+5. Enable App Check for both apps and register a debug token for your own device. Done except
+   the debug token: Play Integrity (the local debug keystore's SHA-1 and SHA-256 are on the
+   Android app) and App Attest (team `4Y2RNJH629`) are registered, not enforced. Register the
+   token once a staging build with the debug provider prints one.
 
 ### B-11 Console checks that need no task
 **Why:** the security review could not see the console (`RESEARCH.md` 3.3 and 14).
@@ -154,7 +165,7 @@ The scripts need a service account key on your machine
    (CNAME or TXT), and a DMARC record `v=DMARC1; p=quarantine; rua=mailto:<your address>`.
 4. Wait until the provider shows the domain as verified.
 5. Store the API key as a function secret:
-   `firebase functions:secrets:set MAIL_API_KEY --project numer-staging`, then the same for
+   `firebase functions:secrets:set MAIL_API_KEY --project lendings-killer`, then the same for
    `numer-60744`.
 6. Decide the From name and address, for example `NUmer <no-reply@mail.<your domain>>`.
 
@@ -167,7 +178,7 @@ The scripts need a service account key on your machine
    do not release until it lands in the inbox.
 
 ### C-3 Secrets and TTL policies (P1-02)
-1. `openssl rand -base64 32 | firebase functions:secrets:set AUTH_CODE_SECRET --project numer-staging`
+1. `openssl rand -base64 32 | firebase functions:secrets:set AUTH_CODE_SECRET --project lendings-killer`
    and again for `numer-60744` with a different value.
 2. Firestore console, TTL: add policies on `authCodes.ttlAt` (not `expiresAt`: a code's
    reset ticket outlives its code), `authRateLimits.expiresAt`, `mailQueue.expiresAt`,

@@ -15,6 +15,10 @@ void main() {
       expect(shouldSaveFcmToken('a', 'a', savedAt, weekLater), isTrue);
     });
 
+    test('saves when the saved time is in the future', () {
+      expect(shouldSaveFcmToken('a', 'a', savedAt, savedAt - 1), isTrue);
+    });
+
     test('saves a new token', () {
       expect(shouldSaveFcmToken('b', 'a', savedAt, savedAt), isTrue);
     });

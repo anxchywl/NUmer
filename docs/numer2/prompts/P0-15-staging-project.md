@@ -18,8 +18,8 @@ against staging or the local emulators, with no way to hit production by acciden
 - `functions/.env.example`
 
 ## Context
-- Production is Firebase project `numer-60744`. The owner creates `numer-staging` and gives
-  its values in the task message. They are not secrets, but they are not committed.
+- Production is Firebase project `numer-60744`. Staging is project `lendings-killer`
+  (display name "NUmer Staging"); the owner gives its values in the task message. They are not secrets, but they are not committed.
 - `lib/core/firebase_options.dart` builds `FirebaseOptions` in Dart as `static const` values
   and takes the API keys from `--dart-define` (`FIREBASE_ANDROID_API_KEY`,
   `FIREBASE_IOS_API_KEY`). Firebase client API keys are not secrets; passing them by
