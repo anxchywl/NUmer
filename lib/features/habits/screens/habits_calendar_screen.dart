@@ -20,19 +20,19 @@ class HabitsCalendarScreen extends StatefulWidget {
 
 class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   DateTime _focusedMonth = DateTime.now();
-  
+
   // Local cache for progress: monthKey -> { dateKey -> { habitId -> value } }
   final Map<String, Map<String, Map<String, double>>> _progressCache = {};
-  
+
   // Current view's progress (populated from cache)
   Map<String, Map<String, double>> _progressByDate = {};
-  
+
   List<Habit> _allHabits = [];
   bool _isLoading = true;
   bool _isLoadingMonth = false; // For individual month loading indicator
   StreamSubscription<List<Habit>>? _habitsSub;
   String? _userId;
-  
+
   // Calendar navigation boundaries
   static final DateTime _minMonth = DateTime(2025, 1);
   DateTime get _maxMonth {
@@ -57,7 +57,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   void initState() {
     super.initState();
     _totalMonths = _getIndexFromMonth(_maxMonth) + 1;
-    _pageController = PageController(initialPage: _getIndexFromMonth(_focusedMonth));
+    _pageController =
+        PageController(initialPage: _getIndexFromMonth(_focusedMonth));
     _subscribeToHabits();
   }
 
@@ -72,12 +73,12 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
       });
       return;
     }
-    
+
     _userId = uid;
     final habitService = context.read<HabitService>();
-    
+
     setState(() => _isLoading = true);
-    
+
     _habitsSub = habitService.habitsStream(uid).listen((habits) {
       if (!mounted) return;
       setState(() {
@@ -95,7 +96,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   /// Load progress for a specific month. Uses LOCAL CACHE first, falls back to Firebase.
   Future<void> _loadMonthProgress(DateTime month) async {
     final monthKey = _monthKey(month);
-    
+
     // Check in-memory cache first - if we have it, use it immediately
     if (_progressCache.containsKey(monthKey)) {
       if (!mounted) return;
@@ -105,36 +106,37 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
       });
       return;
     }
-    
+
     // Not in in-memory cache - try local Hive storage first
     if (_userId == null || _allHabits.isEmpty) {
       setState(() => _isLoadingMonth = false);
       return;
     }
-    
+
     setState(() => _isLoadingMonth = true);
-    
+
     final start = DateTime(month.year, month.month, 1);
     final nextMonth = DateTime(month.year, month.month + 1, 1);
     final end = nextMonth.subtract(const Duration(days: 1));
-    
+
     final Map<String, Map<String, double>> newProgress = {};
-    
+
     try {
       // Load from local Hive cache ONLY (no Firebase reads)
       final historyByHabit = Storage.getAllHabitHistoryForDateRange(start, end);
-      
+
       for (final entry in historyByHabit.entries) {
         final habitId = entry.key;
         for (final historyEntry in entry.value) {
           if (historyEntry.deleted) continue;
-          newProgress.putIfAbsent(historyEntry.dateKey, () => {})[habitId] = historyEntry.value ?? 1.0;
+          newProgress.putIfAbsent(historyEntry.dateKey, () => {})[habitId] =
+              historyEntry.value ?? 1.0;
         }
       }
-      
+
       // Store in in-memory cache
       _progressCache[monthKey] = newProgress;
-      
+
       // Update UI if this is still the focused month
       if (mounted && _monthKey(_focusedMonth) == monthKey) {
         setState(() {
@@ -157,7 +159,6 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     });
     _loadMonthProgress(newMonth);
   }
-
 
   void _prevMonth() {
     if (_pageController.hasClients) {
@@ -186,7 +187,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
 
   void _showDaySheet(DateTime date) {
     if (_isLoading) return;
-    
+
     final dateKey = _dateKey(date);
     final progressMap = _progressByDate[dateKey] ?? {};
 
@@ -208,7 +209,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
@@ -231,15 +232,15 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
             child: IconButton(
               icon: Icon(Icons.today_rounded, color: theme.colorScheme.primary),
               onPressed: () {
-                 final today = DateTime.now();
-                 final targetPage = _getIndexFromMonth(today);
-                 if (_pageController.hasClients) {
-                   _pageController.animateToPage(
-                     targetPage,
-                     duration: const Duration(milliseconds: 400),
-                     curve: Curves.easeOutCubic,
-                   );
-                 }
+                final today = DateTime.now();
+                final targetPage = _getIndexFromMonth(today);
+                if (_pageController.hasClients) {
+                  _pageController.animateToPage(
+                    targetPage,
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOutCubic,
+                  );
+                }
               },
             ),
           ),
@@ -253,36 +254,40 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               onPageChanged: _onMonthChanged,
               itemCount: _totalMonths,
               itemBuilder: (context, index) {
-                 final month = _getMonthFromIndex(index);
-                 final monthKey = _monthKey(month);
-                 final isFocused = month.year == _focusedMonth.year && month.month == _focusedMonth.month;
-                 final hasCachedData = _progressCache.containsKey(monthKey);
-                 
-                 // Show loading only if focused AND loading AND no cache
-                 if (isFocused && (_isLoading || _isLoadingMonth) && !hasCachedData) {
-                   return Column(
-                     children: [
-                       _buildWeekdayHeader(theme, context),
-                       const SizedBox(height: 12),
-                       const Expanded(
-                         child: Center(
-                           child: CircularProgressIndicator(strokeWidth: 3),
-                         ),
-                       ),
-                     ],
-                   );
-                 }
-                 
-                 // Use cached data for this month if available
-                 final progressData = _progressCache[monthKey] ?? {};
-                 return _buildCalendarGrid(context, month, progressData);
+                final month = _getMonthFromIndex(index);
+                final monthKey = _monthKey(month);
+                final isFocused = month.year == _focusedMonth.year &&
+                    month.month == _focusedMonth.month;
+                final hasCachedData = _progressCache.containsKey(monthKey);
+
+                // Show loading only if focused AND loading AND no cache
+                if (isFocused &&
+                    (_isLoading || _isLoadingMonth) &&
+                    !hasCachedData) {
+                  return Column(
+                    children: [
+                      _buildWeekdayHeader(theme, context),
+                      const SizedBox(height: 12),
+                      const Expanded(
+                        child: Center(
+                          child: CircularProgressIndicator(strokeWidth: 3),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                // Use cached data for this month if available
+                final progressData = _progressCache[monthKey] ?? {};
+                return _buildCalendarGrid(context, month, progressData);
               },
             ),
           ),
-          
+
           // Month navigation at bottom
           Container(
-            padding: const EdgeInsets.only(left: 24, right: 24, bottom: 32, top: 8),
+            padding:
+                const EdgeInsets.only(left: 24, right: 24, bottom: 32, top: 8),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               boxShadow: [
@@ -298,12 +303,15 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               children: [
                 _buildNavButton(
                   icon: Icons.chevron_left_rounded,
-                  onPressed: _focusedMonth.isAfter(_minMonth) ? _prevMonth : null,
+                  onPressed:
+                      _focusedMonth.isAfter(_minMonth) ? _prevMonth : null,
                   theme: theme,
                 ),
                 Expanded(
                   child: Text(
-                    DateFormat.yMMMM(l10n.localeName).format(_focusedMonth).toUpperCase(),
+                    DateFormat.yMMMM(l10n.localeName)
+                        .format(_focusedMonth)
+                        .toUpperCase(),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
@@ -314,7 +322,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                 ),
                 _buildNavButton(
                   icon: Icons.chevron_right_rounded,
-                  onPressed: _focusedMonth.isBefore(_maxMonth) ? _nextMonth : null,
+                  onPressed:
+                      _focusedMonth.isBefore(_maxMonth) ? _nextMonth : null,
                   theme: theme,
                 ),
               ],
@@ -325,7 +334,10 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     );
   }
 
-  Widget _buildNavButton({required IconData icon, required VoidCallback? onPressed, required ThemeData theme}) {
+  Widget _buildNavButton(
+      {required IconData icon,
+      required VoidCallback? onPressed,
+      required ThemeData theme}) {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -334,14 +346,17 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
       child: IconButton(
         onPressed: onPressed,
         icon: Icon(icon, size: 20),
-        color: onPressed == null ? theme.colorScheme.outline.withValues(alpha: 0.5) : theme.colorScheme.primary,
+        color: onPressed == null
+            ? theme.colorScheme.outline.withValues(alpha: 0.5)
+            : theme.colorScheme.primary,
         padding: const EdgeInsets.all(8),
         constraints: const BoxConstraints(),
       ),
     );
   }
 
-  Widget _buildCalendarGrid(BuildContext context, DateTime month, Map<String, Map<String, double>> progressData) {
+  Widget _buildCalendarGrid(BuildContext context, DateTime month,
+      Map<String, Map<String, double>> progressData) {
     final theme = Theme.of(context);
     final weekStart = context.read<AppState>().weekStart;
     final firstDay = DateTime(month.year, month.month, 1);
@@ -350,109 +365,130 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
         : (firstDay.weekday % 7);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     return Column(
       children: [
-         _buildWeekdayHeader(theme, context),
-         const SizedBox(height: 12),
-         Expanded(
-           child: GridView.builder(
-             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-             physics: const BouncingScrollPhysics(),
-             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-               crossAxisCount: 7, 
-               childAspectRatio: 0.58, // Taller for hybrid indicators
-               crossAxisSpacing: 8,
-               mainAxisSpacing: 8,
-             ),
-             itemCount: 42, 
-             itemBuilder: (context, index) {
-                final int dayOffset = index - firstWeekdayOffset;
-                final date = firstDay.add(Duration(days: dayOffset));
-                
-                final isCurrentMonth = date.month == month.month;
-                if (!isCurrentMonth) return const SizedBox.shrink(); 
-                
-                final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
-                final isFuture = date.isAfter(today);
-                
-                final dateKey = _dateKey(date);
-                final progressMap = progressData[dateKey] ?? {};
-                
-                // Determine which habits completed
-                final completedHabits = _allHabits.where((h) => 
-                  progressMap.containsKey(h.id) && progressMap[h.id]! >= h.targetValue
-                ).toList();
+        _buildWeekdayHeader(theme, context),
+        const SizedBox(height: 12),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            physics: const BouncingScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              childAspectRatio: 0.58, // Taller for hybrid indicators
+              crossAxisSpacing: 8,
+              mainAxisSpacing: 8,
+            ),
+            itemCount: 42,
+            itemBuilder: (context, index) {
+              final int dayOffset = index - firstWeekdayOffset;
+              final date = firstDay.add(Duration(days: dayOffset));
 
-                return GestureDetector(
-                  onTap: isFuture ? null : () => _showDaySheet(date),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-                          : isFuture
-                              ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1)
-                              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(14),
-                      border: isToday
-                          ? Border.all(color: theme.colorScheme.primary, width: 2)
-                          : Border.all(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.2), width: 1),
-                      boxShadow: isToday ? [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        )
-                      ] : null,
-                    ),
-                    padding: const EdgeInsets.all(4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                         Text(
-                           "${date.day}", 
-                           style: theme.textTheme.titleSmall?.copyWith(
-                              fontSize: 12, 
-                              fontWeight: FontWeight.w900,
-                              color: isFuture
-                                  ? theme.colorScheme.onSurface.withValues(alpha: 0.3)
-                                  : (isToday ? theme.colorScheme.primary : theme.colorScheme.onSurface),
-                           ),
-                         ),
-                         const SizedBox(height: 4),
-                         // Dots-only indicators
-                         if (completedHabits.isNotEmpty)
-                           Padding(
-                             padding: const EdgeInsets.only(top: 2),
-                             child: Wrap(
-                               alignment: WrapAlignment.center,
-                               spacing: 3,
-                               runSpacing: 3,
-                               children: completedHabits.map((h) => Container(
-                                 width: 5,
-                                 height: 5,
-                                 decoration: BoxDecoration(
-                                   color: isFuture ? h.color.withValues(alpha: 0.3) : h.color,
-                                   shape: BoxShape.circle,
-                                   boxShadow: [
-                                     BoxShadow(
-                                       color: h.color.withValues(alpha: 0.3),
-                                       blurRadius: 2,
-                                     )
-                                   ],
-                                 ),
-                               )).toList(),
-                             ),
-                           ),
-                         const Spacer(),
-                      ],
-                    ),
+              final isCurrentMonth = date.month == month.month;
+              if (!isCurrentMonth) return const SizedBox.shrink();
+
+              final isToday = date.year == today.year &&
+                  date.month == today.month &&
+                  date.day == today.day;
+              final isFuture = date.isAfter(today);
+
+              final dateKey = _dateKey(date);
+              final progressMap = progressData[dateKey] ?? {};
+
+              // Determine which habits completed
+              final completedHabits = _allHabits
+                  .where((h) =>
+                      progressMap.containsKey(h.id) &&
+                      progressMap[h.id]! >= h.targetValue)
+                  .toList();
+
+              return GestureDetector(
+                onTap: isFuture ? null : () => _showDaySheet(date),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  decoration: BoxDecoration(
+                    color: isToday
+                        ? theme.colorScheme.primaryContainer
+                            .withValues(alpha: 0.4)
+                        : isFuture
+                            ? theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.1)
+                            : theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(14),
+                    border: isToday
+                        ? Border.all(color: theme.colorScheme.primary, width: 2)
+                        : Border.all(
+                            color: theme.colorScheme.outlineVariant
+                                .withValues(alpha: 0.2),
+                            width: 1),
+                    boxShadow: isToday
+                        ? [
+                            BoxShadow(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            )
+                          ]
+                        : null,
                   ),
-                );
-             },
-           ),
-         ),
+                  padding: const EdgeInsets.all(4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        "${date.day}",
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: isFuture
+                              ? theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.3)
+                              : (isToday
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Dots-only indicators
+                      if (completedHabits.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 3,
+                            runSpacing: 3,
+                            children: completedHabits
+                                .map((h) => Container(
+                                      width: 5,
+                                      height: 5,
+                                      decoration: BoxDecoration(
+                                        color: isFuture
+                                            ? h.color.withValues(alpha: 0.3)
+                                            : h.color,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                h.color.withValues(alpha: 0.3),
+                                            blurRadius: 2,
+                                          )
+                                        ],
+                                      ),
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                      const Spacer(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -467,23 +503,24 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
-        children: weekdayLabels.map((d) => 
-          Expanded(
-            child: Center(
-              child: Text(
-                d.toUpperCase(), 
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w900, 
-                  color: theme.colorScheme.outline,
-                  letterSpacing: 1.0,
-                ),
-              ),
-            ),
-          )
-        ).toList(),
+        children: weekdayLabels
+            .map((d) => Expanded(
+                  child: Center(
+                    child: Text(
+                      d.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: theme.colorScheme.outline,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ))
+            .toList(),
       ),
     );
   }
 
-  String _dateKey(DateTime d) => "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
+  String _dateKey(DateTime d) =>
+      "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 }
