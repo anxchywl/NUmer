@@ -104,24 +104,30 @@ class PersonCard extends StatelessWidget {
                   if (hasQuickActions) ...[
                     if (onCall != null)
                       IconButton(
-                        icon: Icon(Icons.phone_outlined,
-                            color: colorScheme.primary),
+                        icon: Icon(
+                          Icons.phone_outlined,
+                          color: colorScheme.primary,
+                        ),
                         onPressed: onCall,
                         tooltip: 'Call',
                         visualDensity: VisualDensity.compact,
                       ),
                     if (onMessage != null)
                       IconButton(
-                        icon: Icon(Icons.message_outlined,
-                            color: colorScheme.primary),
+                        icon: Icon(
+                          Icons.message_outlined,
+                          color: colorScheme.primary,
+                        ),
                         onPressed: onMessage,
                         tooltip: 'Message',
                         visualDensity: VisualDensity.compact,
                       ),
                     if (onEmail != null)
                       IconButton(
-                        icon: Icon(Icons.email_outlined,
-                            color: colorScheme.primary),
+                        icon: Icon(
+                          Icons.email_outlined,
+                          color: colorScheme.primary,
+                        ),
                         onPressed: onEmail,
                         tooltip: 'Email',
                         visualDensity: VisualDensity.compact,
@@ -136,8 +142,9 @@ class PersonCard extends StatelessWidget {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children:
-                      groups.map((group) => _GroupChip(group: group)).toList(),
+                  children: groups
+                      .map((group) => _GroupChip(group: group))
+                      .toList(),
                 ),
               ],
 
@@ -149,20 +156,24 @@ class PersonCard extends StatelessWidget {
                   runSpacing: 4,
                   children: person.tags
                       .take(5)
-                      .map((tag) => Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(8),
+                      .map(
+                        (tag) => Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '#$tag',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
-                            child: Text(
-                              '#$tag',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ))
+                          ),
+                        ),
+                      )
                       .toList(),
                 ),
               ],
@@ -172,11 +183,7 @@ class PersonCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
-                      Icons.schedule,
-                      size: 14,
-                      color: colorScheme.error,
-                    ),
+                    Icon(Icons.schedule, size: 14, color: colorScheme.error),
                     const SizedBox(width: 4),
                     Text(
                       "Haven't contacted in 30+ days",
@@ -225,19 +232,12 @@ class _GroupChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: group.color.withAlpha(26),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: group.color.withAlpha(77),
-          width: 1,
-        ),
+        border: Border.all(color: group.color.withAlpha(77), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            group.icon,
-            size: 12,
-            color: group.color,
-          ),
+          Icon(group.icon, size: 12, color: group.color),
           const SizedBox(width: 4),
           Text(
             group.name,
