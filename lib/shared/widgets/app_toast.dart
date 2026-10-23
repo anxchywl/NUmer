@@ -26,16 +26,16 @@ void showAppMessage(
           ? SnackBarAction(
               label: actionLabel,
               onPressed: onAction,
-              textColor:
-                  isError ? colorScheme.onErrorContainer : colorScheme.primary,
+              textColor: isError
+                  ? colorScheme.onErrorContainer
+                  : colorScheme.primary,
             )
           : null,
-      backgroundColor:
-          isError ? colorScheme.errorContainer : colorScheme.primaryContainer,
+      backgroundColor: isError
+          ? colorScheme.errorContainer
+          : colorScheme.primaryContainer,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       elevation: 4,
       duration: const Duration(seconds: 4),

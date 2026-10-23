@@ -34,8 +34,10 @@ class UserProfileTile extends StatelessWidget {
 
         final data = snapshot.data?.data();
         if (data == null) {
-          return _fallbackTile(context,
-              showSpinner: !snapshot.hasError && !snapshot.hasData);
+          return _fallbackTile(
+            context,
+            showSpinner: !snapshot.hasError && !snapshot.hasData,
+          );
         }
 
         final profileName = data['profileName'] as String?;
@@ -51,9 +53,9 @@ class UserProfileTile extends StatelessWidget {
           ),
           title: Text(
             profileName ?? displayName ?? 'Anonymous User',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
             softWrap: true,
           ),
           subtitle: _buildSubtitle(goal, major, subtitle, context),
@@ -66,11 +68,7 @@ class UserProfileTile extends StatelessWidget {
   // placeholder tile shown before the profile loads or when it is unavailable
   Widget _fallbackTile(BuildContext context, {required bool showSpinner}) {
     return ListTile(
-      leading: UniversalAvatar(
-        userId: userId,
-        name: userId,
-        size: 48,
-      ),
+      leading: UniversalAvatar(userId: userId, name: userId, size: 48),
       title: Row(
         children: [
           Expanded(
@@ -97,7 +95,11 @@ class UserProfileTile extends StatelessWidget {
 
   // composes major, goal and any custom subtitle, or null when there is nothing to show
   Widget? _buildSubtitle(
-      String? goal, String? major, Widget? subtitle, BuildContext context) {
+    String? goal,
+    String? major,
+    Widget? subtitle,
+    BuildContext context,
+  ) {
     final hasGoal = goal != null && goal.isNotEmpty;
     final hasMajor = major != null && major.isNotEmpty;
     final hasCustomSubtitle = subtitle != null;
