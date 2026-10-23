@@ -95,10 +95,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      l10n.preview,
-                      style: theme.textTheme.labelMedium,
-                    ),
+                    Text(l10n.preview, style: theme.textTheme.labelMedium),
                     const SizedBox(height: 16),
                     Row(
                       children: [
@@ -108,10 +105,11 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                             backgroundColor: widget.currentColor,
                             foregroundColor:
                                 ThemeData.estimateBrightnessForColor(
-                                            widget.currentColor) ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
+                                      widget.currentColor,
+                                    ) ==
+                                    Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
                           ),
                           child: Text(l10n.buttonPreview),
                         ),
@@ -133,8 +131,9 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                     LinearProgressIndicator(
                       value: 0.6,
                       color: widget.currentColor,
-                      backgroundColor:
-                          widget.currentColor.withValues(alpha: 0.2),
+                      backgroundColor: widget.currentColor.withValues(
+                        alpha: 0.2,
+                      ),
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
@@ -143,10 +142,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
               const SizedBox(height: 16),
 
               // Sliders
-              Text(
-                l10n.customColor,
-                style: theme.textTheme.titleSmall,
-              ),
+              Text(l10n.customColor, style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -161,8 +157,12 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                         final newColor = HSVColor.fromAHSV(1.0, v, 0.8, 0.9);
                         _updateColor(newColor);
                       },
-                      activeColor:
-                          HSVColor.fromAHSV(1, _hsvColor.hue, 1, 1).toColor(),
+                      activeColor: HSVColor.fromAHSV(
+                        1,
+                        _hsvColor.hue,
+                        1,
+                        1,
+                      ).toColor(),
                     ),
                   ),
                 ],
@@ -173,10 +173,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
         ),
 
         // Presets
-        Text(
-          l10n.presets,
-          style: theme.textTheme.titleSmall,
-        ),
+        Text(l10n.presets, style: theme.textTheme.titleSmall),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -194,7 +191,9 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                 onConfirm: () {
                   if (_formKey.currentState!.validate()) {
                     appState.addUserColorPreset(
-                        _nameController.text.trim(), widget.currentColor);
+                      _nameController.text.trim(),
+                      widget.currentColor,
+                    );
                     setState(() {
                       _namingMode = false;
                       _nameController.clear();
@@ -210,7 +209,8 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                 return FilterChip(
                   selected: isSelected,
                   label: Text(entry.$2),
-                  checkmarkColor: ThemeData.estimateBrightnessForColor(color) ==
+                  checkmarkColor:
+                      ThemeData.estimateBrightnessForColor(color) ==
                           Brightness.dark
                       ? Colors.white
                       : Colors.black,
@@ -220,9 +220,9 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                   labelStyle: TextStyle(
                     color: isSelected
                         ? (ThemeData.estimateBrightnessForColor(color) ==
-                                Brightness.dark
-                            ? Colors.white
-                            : Colors.black)
+                                  Brightness.dark
+                              ? Colors.white
+                              : Colors.black)
                         : theme.colorScheme.onSurface,
                   ),
                   side: BorderSide(
@@ -245,11 +245,12 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                   onDeleted: () => appState.removeUserColorPreset(idx),
                   deleteIconColor: isSelected
                       ? (ThemeData.estimateBrightnessForColor(color) ==
-                              Brightness.dark
-                          ? Colors.white70
-                          : Colors.black54)
+                                Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54)
                       : theme.colorScheme.onSurfaceVariant,
-                  checkmarkColor: ThemeData.estimateBrightnessForColor(color) ==
+                  checkmarkColor:
+                      ThemeData.estimateBrightnessForColor(color) ==
                           Brightness.dark
                       ? Colors.white
                       : Colors.black,
@@ -258,9 +259,9 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                   labelStyle: TextStyle(
                     color: isSelected
                         ? (ThemeData.estimateBrightnessForColor(color) ==
-                                Brightness.dark
-                            ? Colors.white
-                            : Colors.black)
+                                  Brightness.dark
+                              ? Colors.white
+                              : Colors.black)
                         : theme.colorScheme.onSurface,
                   ),
                   side: BorderSide(
@@ -281,8 +282,9 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
                     l10n.presetLimitReached,
-                    style: theme.textTheme.labelSmall
-                        ?.copyWith(color: theme.colorScheme.error),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
                   ),
                 ),
             ],
@@ -292,10 +294,7 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
         const SizedBox(height: 16),
 
         if (!_namingMode)
-          FilledButton(
-            onPressed: widget.onSave,
-            child: Text(l10n.save),
-          ),
+          FilledButton(onPressed: widget.onSave, child: Text(l10n.save)),
       ],
     );
   }
@@ -346,11 +345,13 @@ class _InlineNamingRow extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                 ),
                 maxLength: 16,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 inputFormatters: [
                   FilteringTextInputFormatter.allow(
-                      RegExp(r'[\p{L} ]', unicode: true)),
+                    RegExp(r'[\p{L} ]', unicode: true),
+                  ),
                   TextInputFormatter.withFunction((oldValue, newValue) {
                     if (newValue.text.startsWith(' ')) {
                       return oldValue;
