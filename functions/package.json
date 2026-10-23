@@ -13,7 +13,9 @@
     "deploy": "firebase deploy --only functions",
     "start": "firebase emulators:start --only functions,firestore",
     "backfill": "node scripts/backfill.js",
-    "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js"
+    "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js",
+    "backfill:group-index": "node scripts/backfill_group_index.js",
+    "backfill:public-profiles": "npm run build && node scripts/backfill_public_profiles.js"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0",
