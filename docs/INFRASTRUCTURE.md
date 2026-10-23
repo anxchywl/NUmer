@@ -77,6 +77,7 @@ a group; see `firestore.rules` for exact access):
 /groupIndex/{userId}                   server-written: groups the user belongs to
 /publicProfiles/{userId}               server-written: profile fields group peers may see
 /nudgeLimits, /joinAttempts            server-only rate limit counters
+/roleAudit/{entryId}                   role change log, server only
 /users/{userId}/
   fcmTokens, aggregates, sessions, studySessions, courses, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
@@ -98,6 +99,7 @@ a group; see `firestore.rules` for exact access):
 | Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
+| Callable | `setUserRoles` | Administrator sets a user's module roles (see below) |
 
 Callables enforce authentication. App Check is off by default and switched on per callable:
 list export names, comma-separated, in `APPCHECK_ENFORCED` in `functions/.env` (`*` means all;
@@ -108,6 +110,15 @@ Transactional email (`functions/src/mail/`) renders the `verify`, `reset` and
 `passwordChanged` templates in EN, RU and KK. Callers send through `MailSender`, or queue with
 `enqueueMail` when they must not wait for delivery. A delivered entry is deleted. A failed one
 is stripped of its address and code.
+
+Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
+reaches a client on its next token refresh. Allowed values are listed in
+`functions/src/roles/roles.ts`. The first administrator is created locally with
+`npm run roles:set -- --uid <uid> --roles <comma list> [--dry-run]` in `functions/` (needs
+`GOOGLE_APPLICATION_CREDENTIALS`); afterwards administrators call `setUserRoles`, which
+requires `numer:admin` in both the caller's token and their current claims. Removing a
+role revokes the user's refresh tokens. `setUserRoles` logs each call to `roleAudit`, which
+clients cannot access; the script does not.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
