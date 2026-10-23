@@ -146,11 +146,7 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: group.color.withAlpha(51),
-        child: Icon(
-          group.icon,
-          color: group.color,
-          size: 20,
-        ),
+        child: Icon(group.icon, color: group.color, size: 20),
       ),
       title: Text(group.name),
       subtitle: group.isDefault
@@ -182,8 +178,10 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                     children: [
                       Icon(Icons.delete_outline, color: Colors.red),
                       SizedBox(width: 8),
-                      Text(AppLocalizations.of(context)!.delete,
-                          style: TextStyle(color: Colors.red)),
+                      Text(
+                        AppLocalizations.of(context)!.delete,
+                        style: TextStyle(color: Colors.red),
+                      ),
                     ],
                   ),
                 ),
@@ -241,16 +239,16 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               ),
             ),
             autofocus: true,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(32),
-            ],
+            inputFormatters: [LengthLimitingTextInputFormatter(32)],
           ),
 
           const SizedBox(height: 16),
 
           // Color picker
-          Text(AppLocalizations.of(context)!.color,
-              style: theme.textTheme.labelMedium),
+          Text(
+            AppLocalizations.of(context)!.color,
+            style: theme.textTheme.labelMedium,
+          ),
           const SizedBox(height: 8),
           SizedBox(
             height: 40,
@@ -269,8 +267,11 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                       backgroundColor: color,
                       radius: 16,
                       child: isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 16)
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )
                           : null,
                     ),
                   ),
@@ -341,8 +342,9 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               ),
               const Spacer(),
               FilledButton(
-                onPressed:
-                    _nameController.text.trim().isEmpty ? null : _createGroup,
+                onPressed: _nameController.text.trim().isEmpty
+                    ? null
+                    : _createGroup,
                 child: Text(AppLocalizations.of(context)!.save),
               ),
             ],
@@ -387,16 +389,16 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               ),
             ),
             autofocus: true,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(32),
-            ],
+            inputFormatters: [LengthLimitingTextInputFormatter(32)],
           ),
 
           const SizedBox(height: 16),
 
           // Color picker
-          Text(AppLocalizations.of(context)!.color,
-              style: theme.textTheme.labelMedium),
+          Text(
+            AppLocalizations.of(context)!.color,
+            style: theme.textTheme.labelMedium,
+          ),
           const SizedBox(height: 8),
           SizedBox(
             height: 40,
@@ -415,8 +417,11 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
                       backgroundColor: color,
                       radius: 16,
                       child: isSelected
-                          ? const Icon(Icons.check,
-                              color: Colors.white, size: 16)
+                          ? const Icon(
+                              Icons.check,
+                              color: Colors.white,
+                              size: 16,
+                            )
                           : null,
                     ),
                   ),
@@ -428,8 +433,10 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
           const SizedBox(height: 16),
 
           // Icon picker
-          Text('Icon',
-              style: theme.textTheme.labelMedium), // TODO: add to arb if needed
+          Text(
+            'Icon',
+            style: theme.textTheme.labelMedium,
+          ), // TODO: add to arb if needed
           const SizedBox(height: 8),
           SizedBox(
             height: 48,
@@ -561,14 +568,17 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   }
 
   Future<void> _confirmDeleteGroup(
-      BuildContext context, ContactGroup group) async {
+    BuildContext context,
+    ContactGroup group,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteConnectionGroupTitle),
         content: Text(
-          AppLocalizations.of(context)!
-              .deleteConnectionGroupMessage(group.name),
+          AppLocalizations.of(
+            context,
+          )!.deleteConnectionGroupMessage(group.name),
         ),
         actions: [
           TextButton(

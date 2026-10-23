@@ -39,13 +39,18 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
   }
 
   Widget _buildHeatmapCalendar(
-      BuildContext context, ConnectionsService service) {
+    BuildContext context,
+    ConnectionsService service,
+  ) {
     // 1. Pre-calculate interaction counts per day
     final interactionsPerDay = <DateTime, int>{};
     for (final person in service.people) {
       for (final interaction in person.interactionLog) {
-        final dateKey = DateTime(interaction.date.year, interaction.date.month,
-            interaction.date.day);
+        final dateKey = DateTime(
+          interaction.date.year,
+          interaction.date.month,
+          interaction.date.day,
+        );
         interactionsPerDay[dateKey] = (interactionsPerDay[dateKey] ?? 0) + 1;
       }
     }
@@ -79,12 +84,20 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
               return _buildCalendarCell(context, day, interactionsPerDay);
             },
             todayBuilder: (context, day, focusedDay) {
-              return _buildCalendarCell(context, day, interactionsPerDay,
-                  isToday: true);
+              return _buildCalendarCell(
+                context,
+                day,
+                interactionsPerDay,
+                isToday: true,
+              );
             },
             selectedBuilder: (context, day, focusedDay) {
-              return _buildCalendarCell(context, day, interactionsPerDay,
-                  isSelected: true);
+              return _buildCalendarCell(
+                context,
+                day,
+                interactionsPerDay,
+                isSelected: true,
+              );
             },
           ),
         ),
@@ -93,8 +106,12 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
   }
 
   Widget _buildCalendarCell(
-      BuildContext context, DateTime day, Map<DateTime, int> interactions,
-      {bool isToday = false, bool isSelected = false}) {
+    BuildContext context,
+    DateTime day,
+    Map<DateTime, int> interactions, {
+    bool isToday = false,
+    bool isSelected = false,
+  }) {
     final dateKey = DateTime(day.year, day.month, day.day);
     final count = interactions[dateKey] ?? 0;
     final hasInteractions = count > 0;
@@ -117,8 +134,9 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
     TextStyle? textStyle = Theme.of(context).textTheme.bodyMedium;
     if (isSelected || (hasInteractions && count > 3)) {
       // Ensure contrast
-      textStyle =
-          textStyle?.copyWith(color: Theme.of(context).colorScheme.onPrimary);
+      textStyle = textStyle?.copyWith(
+        color: Theme.of(context).colorScheme.onPrimary,
+      );
     }
 
     return Center(
@@ -126,26 +144,23 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
         margin: const EdgeInsets.all(6.0),
         alignment: Alignment.center,
         decoration: decoration,
-        child: Text(
-          '${day.day}',
-          style: textStyle,
-        ),
+        child: Text('${day.day}', style: textStyle),
       ),
     );
   }
 
   Widget _buildDayDetails(
-      BuildContext context, ConnectionsService service, DateTime date) {
+    BuildContext context,
+    ConnectionsService service,
+    DateTime date,
+  ) {
     // Find interactions for this day
     final dailyInteractions = <Map<String, dynamic>>[];
 
     for (final person in service.people) {
       for (final interaction in person.interactionLog) {
         if (isSameDay(interaction.date, date)) {
-          dailyInteractions.add({
-            'person': person,
-            'interaction': interaction,
-          });
+          dailyInteractions.add({'person': person, 'interaction': interaction});
         }
       }
     }
@@ -158,8 +173,8 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
             child: Text(
               'No interactions on this day',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
@@ -169,34 +184,30 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
     return SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final item = dailyInteractions[index];
-            final person = item['person'] as Person;
-            final interaction = item['interaction'] as InteractionEntry;
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final item = dailyInteractions[index];
+          final person = item['person'] as Person;
+          final interaction = item['interaction'] as InteractionEntry;
 
-            return Card(
-              elevation: 0,
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                title: Text(
-                  person.name,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: Text(interaction.note.isNotEmpty
-                    ? interaction.note
-                    : 'Contacted'),
-                leading: CircleAvatar(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  child: Text(person.name.substring(0, 1).toUpperCase()),
-                ),
+          return Card(
+            elevation: 0,
+            color: Theme.of(context).colorScheme.surfaceContainer,
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              title: Text(
+                person.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            );
-          },
-          childCount: dailyInteractions.length,
-        ),
+              subtitle: Text(
+                interaction.note.isNotEmpty ? interaction.note : 'Contacted',
+              ),
+              leading: CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(person.name.substring(0, 1).toUpperCase()),
+              ),
+            ),
+          );
+        }, childCount: dailyInteractions.length),
       ),
     );
   }

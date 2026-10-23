@@ -43,10 +43,7 @@ class ConnectionsService extends ChangeNotifier {
   Future<void> initialize(String uid) async {
     if (_isLoaded) return;
 
-    await Future.wait([
-      _loadPeople(uid),
-      _loadGroups(uid),
-    ]);
+    await Future.wait([_loadPeople(uid), _loadGroups(uid)]);
 
     _isLoaded = true;
     notifyListeners();
@@ -55,14 +52,13 @@ class ConnectionsService extends ChangeNotifier {
   /// Load people from Firestore into cache
   Future<void> _loadPeople(String uid) async {
     try {
-      final snapshot = await _connectionsRef(uid)
-          .where('d', isNotEqualTo: true)
-          .orderBy('d')
-          .orderBy('so')
-          .get();
+      final snapshot = await _connectionsRef(
+        uid,
+      ).where('d', isNotEqualTo: true).orderBy('d').orderBy('so').get();
 
-      _peopleCache =
-          snapshot.docs.map((doc) => Person.fromFirestore(doc)).toList();
+      _peopleCache = snapshot.docs
+          .map((doc) => Person.fromFirestore(doc))
+          .toList();
 
       _peopleController.add(people);
     } catch (e) {
@@ -74,14 +70,13 @@ class ConnectionsService extends ChangeNotifier {
   /// Load groups from Firestore into cache
   Future<void> _loadGroups(String uid) async {
     try {
-      final snapshot = await _groupsRef(uid)
-          .where('d', isNotEqualTo: true)
-          .orderBy('d')
-          .orderBy('n')
-          .get();
+      final snapshot = await _groupsRef(
+        uid,
+      ).where('d', isNotEqualTo: true).orderBy('d').orderBy('n').get();
 
-      _groupsCache =
-          snapshot.docs.map((doc) => ContactGroup.fromFirestore(doc)).toList();
+      _groupsCache = snapshot.docs
+          .map((doc) => ContactGroup.fromFirestore(doc))
+          .toList();
 
       // Ensure default groups exist
       await _ensureDefaultGroups(uid);
@@ -103,9 +98,9 @@ class ConnectionsService extends ChangeNotifier {
     for (final defaultGroup in defaultGroups) {
       final exists = _groupsCache.any((g) => g.id == defaultGroup.id);
       if (!exists) {
-        await _groupsRef(uid)
-            .doc(defaultGroup.id)
-            .set(defaultGroup.toFirestore());
+        await _groupsRef(
+          uid,
+        ).doc(defaultGroup.id).set(defaultGroup.toFirestore());
         _groupsCache.add(defaultGroup);
         added = true;
       }
@@ -132,11 +127,11 @@ class ConnectionsService extends ChangeNotifier {
     // Set sort order if not specified
     final sortOrder = person.sortOrder == 0
         ? (_peopleCache.isEmpty
-            ? 0
-            : _peopleCache
-                    .map((p) => p.sortOrder)
-                    .reduce((a, b) => a > b ? a : b) +
-                1)
+              ? 0
+              : _peopleCache
+                        .map((p) => p.sortOrder)
+                        .reduce((a, b) => a > b ? a : b) +
+                    1)
         : person.sortOrder;
 
     final updatedPerson = person.copyWith(
@@ -241,8 +236,12 @@ class ConnectionsService extends ChangeNotifier {
   }
 
   /// Update a group's color and icon
-  Future<void> updateGroupAppearance(String uid, String groupId,
-      {int? colorValue, int? iconCodePoint}) async {
+  Future<void> updateGroupAppearance(
+    String uid,
+    String groupId, {
+    int? colorValue,
+    int? iconCodePoint,
+  }) async {
     final index = _groupsCache.indexWhere((g) => g.id == groupId);
     if (index < 0) return;
 
@@ -328,7 +327,10 @@ class ConnectionsService extends ChangeNotifier {
 
   /// Add an interaction log entry
   Future<void> addInteraction(
-      String uid, String personId, InteractionEntry entry) async {
+    String uid,
+    String personId,
+    InteractionEntry entry,
+  ) async {
     final index = _peopleCache.indexWhere((p) => p.id == personId);
     if (index < 0) return;
 
@@ -352,8 +354,11 @@ class ConnectionsService extends ChangeNotifier {
   }
 
   /// Mark a person as contacted today
-  Future<void> markContactedToday(String uid, String personId,
-      {String? note}) async {
+  Future<void> markContactedToday(
+    String uid,
+    String personId, {
+    String? note,
+  }) async {
     final index = _peopleCache.indexWhere((p) => p.id == personId);
     if (index < 0) return;
 
@@ -444,7 +449,8 @@ class ConnectionsService extends ChangeNotifier {
         break;
       case ConnectionsSortMode.name:
         sorted.sort(
-            (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case ConnectionsSortMode.priority:
         sorted.sort((a, b) {
@@ -494,8 +500,4 @@ class ConnectionsService extends ChangeNotifier {
 }
 
 /// Sort modes for connections list
-enum ConnectionsSortMode {
-  recent,
-  name,
-  priority,
-}
+enum ConnectionsSortMode { recent, name, priority }
