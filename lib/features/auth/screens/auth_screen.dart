@@ -15,18 +15,29 @@ import 'package:numer_app/shared/widgets/app_toast.dart';
 const int _emailMaxLength = 254;
 const int _passwordMaxLength = 64;
 // Allowed password chars: A-Z, a-z, 0-9, and specified symbols
-final _allowedPasswordCharsRegex =
-    RegExp(r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]*$');
+final _allowedPasswordCharsRegex = RegExp(
+  r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
+  "'"
+  r'",.<>/?\\|~]*$',
+);
 final _passwordInputFormatters = <TextInputFormatter>[
   LengthLimitingTextInputFormatter(_passwordMaxLength),
   FilteringTextInputFormatter.allow(
-    RegExp(r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]'),
+    RegExp(
+      r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
+      "'"
+      r'",.<>/?\\|~]',
+    ),
   ),
 ];
 final _emailInputFormatters = <TextInputFormatter>[
   LengthLimitingTextInputFormatter(_emailMaxLength),
   FilteringTextInputFormatter.allow(
-    RegExp(r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~@.]'),
+    RegExp(
+      r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
+      "'"
+      r'",.<>/?\\|~@.]',
+    ),
   ),
 ];
 final _displayNameInputFormatter = FilteringTextInputFormatter.allow(
@@ -69,8 +80,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             end: Alignment.bottomCenter,
             colors: [
               colors.primaryContainer.withAlpha(
-                  ((theme.brightness == Brightness.dark ? 0.2 : 0.9) * 255)
-                      .round()),
+                ((theme.brightness == Brightness.dark ? 0.2 : 0.9) * 255)
+                    .round(),
+              ),
               colors.surface,
             ],
           ),
@@ -80,8 +92,10 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: Column(
@@ -120,8 +134,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           child: Text(
                             _showLogin
                                 ? AppLocalizations.of(context)!.loginSubtitle
-                                : AppLocalizations.of(context)!
-                                    .registerSubtitle,
+                                : AppLocalizations.of(
+                                    context,
+                                  )!.registerSubtitle,
                             key: ValueKey<bool>(_showLogin),
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -138,11 +153,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             boxShadow: [
                               BoxShadow(
                                 color: colors.shadow.withAlpha(
-                                    ((theme.brightness == Brightness.dark
-                                                ? 0.5
-                                                : 0.08) *
-                                            255)
-                                        .round()),
+                                  ((theme.brightness == Brightness.dark
+                                              ? 0.5
+                                              : 0.08) *
+                                          255)
+                                      .round(),
+                                ),
                                 blurRadius: 40,
                                 offset: const Offset(0, 18),
                               ),
@@ -161,12 +177,13 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                   style: SegmentedButton.styleFrom(
                                     backgroundColor: colors
                                         .surfaceContainerHighest
-                                        .withAlpha(((theme.brightness ==
-                                                        Brightness.dark
-                                                    ? 0.25
-                                                    : 0.5) *
-                                                255)
-                                            .round()),
+                                        .withAlpha(
+                                          ((theme.brightness == Brightness.dark
+                                                      ? 0.25
+                                                      : 0.5) *
+                                                  255)
+                                              .round(),
+                                        ),
                                   ),
                                   segments: [
                                     ButtonSegment(
@@ -175,19 +192,22 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                       label: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                            AppLocalizations.of(context)!
-                                                .signIn),
+                                          AppLocalizations.of(context)!.signIn,
+                                        ),
                                       ),
                                     ),
                                     ButtonSegment(
                                       value: false,
                                       icon: const Icon(
-                                          Icons.person_add_alt_1_outlined),
+                                        Icons.person_add_alt_1_outlined,
+                                      ),
                                       label: FittedBox(
                                         fit: BoxFit.scaleDown,
                                         child: Text(
-                                            AppLocalizations.of(context)!
-                                                .register),
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.register,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -196,7 +216,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                     FocusManager.instance.primaryFocus
                                         ?.unfocus();
                                     setState(
-                                        () => _showLogin = selection.first);
+                                      () => _showLogin = selection.first,
+                                    );
                                   },
                                 ),
                                 const SizedBox(height: 28),
@@ -219,11 +240,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                             details.velocity.pixelsPerSecond.dx;
                                         final isSwipe =
                                             _horizontalDragDistance.abs() >=
-                                                    swipeThreshold ||
-                                                velocity.abs() > 800;
+                                                swipeThreshold ||
+                                            velocity.abs() > 800;
                                         if (!isSwipe) return;
 
-                                        final shouldShowLogin = velocity > 0 ||
+                                        final shouldShowLogin =
+                                            velocity > 0 ||
                                             _horizontalDragDistance > 0;
                                         if (shouldShowLogin == _showLogin) {
                                           return;
@@ -232,39 +254,52 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                         FocusManager.instance.primaryFocus
                                             ?.unfocus();
                                         setState(
-                                            () => _showLogin = shouldShowLogin);
+                                          () => _showLogin = shouldShowLogin,
+                                        );
                                       },
                                       onHorizontalDragCancel: () {
                                         _horizontalDragDistance = 0;
                                       },
                                       child: AnimatedSize(
-                                        duration:
-                                            const Duration(milliseconds: 260),
+                                        duration: const Duration(
+                                          milliseconds: 260,
+                                        ),
                                         curve: Curves.easeOutCubic,
                                         alignment: Alignment.topCenter,
                                         clipBehavior: Clip.none,
                                         child: AnimatedSwitcher(
-                                          duration:
-                                              const Duration(milliseconds: 220),
+                                          duration: const Duration(
+                                            milliseconds: 220,
+                                          ),
                                           switchInCurve: Curves.easeOutCubic,
                                           switchOutCurve: Curves.easeInCubic,
                                           transitionBuilder:
                                               (child, animation) {
-                                            final slideTween = Tween<Offset>(
-                                              begin: Offset(
-                                                  0, _showLogin ? 0.06 : -0.06),
-                                              end: Offset.zero,
-                                            ).chain(CurveTween(
-                                                curve: Curves.easeOutCubic));
-                                            return FadeTransition(
-                                              opacity: animation,
-                                              child: SlideTransition(
-                                                position:
-                                                    animation.drive(slideTween),
-                                                child: child,
-                                              ),
-                                            );
-                                          },
+                                                final slideTween =
+                                                    Tween<Offset>(
+                                                      begin: Offset(
+                                                        0,
+                                                        _showLogin
+                                                            ? 0.06
+                                                            : -0.06,
+                                                      ),
+                                                      end: Offset.zero,
+                                                    ).chain(
+                                                      CurveTween(
+                                                        curve:
+                                                            Curves.easeOutCubic,
+                                                      ),
+                                                    );
+                                                return FadeTransition(
+                                                  opacity: animation,
+                                                  child: SlideTransition(
+                                                    position: animation.drive(
+                                                      slideTween,
+                                                    ),
+                                                    child: child,
+                                                  ),
+                                                );
+                                              },
                                           child: _showLogin
                                               ? _LoginForm(
                                                   key: const ValueKey('login'),
@@ -272,7 +307,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                                 )
                                               : _RegisterForm(
                                                   key: const ValueKey(
-                                                      'register'),
+                                                    'register',
+                                                  ),
                                                   isBusy: auth.isBusy,
                                                 ),
                                         ),
@@ -297,21 +333,26 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                   children: [
                                     const SizedBox(height: 8),
                                     AnimatedSwitcher(
-                                      duration:
-                                          const Duration(milliseconds: 200),
+                                      duration: const Duration(
+                                        milliseconds: 200,
+                                      ),
                                       transitionBuilder: (child, animation) =>
                                           FadeTransition(
-                                              opacity: animation, child: child),
+                                            opacity: animation,
+                                            child: child,
+                                          ),
                                       child: Text(
-                                        AppLocalizations.of(context)!
-                                            .afterCreatingAccount,
+                                        AppLocalizations.of(
+                                          context,
+                                        )!.afterCreatingAccount,
                                         key: const ValueKey(
-                                            'afterCreatingAccount'),
-                                        textAlign: TextAlign.center,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: colors.onSurfaceVariant,
+                                          'afterCreatingAccount',
                                         ),
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: colors.onSurfaceVariant,
+                                            ),
                                       ),
                                     ),
                                   ],
@@ -326,16 +367,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             Positioned(
               top: 16,
               left: 16,
-              child: const SafeArea(
-                child: _ThemeToggle(),
-              ),
+              child: const SafeArea(child: _ThemeToggle()),
             ),
             Positioned(
               top: 16,
               right: 16,
-              child: const SafeArea(
-                child: _LanguageToggle(),
-              ),
+              child: const SafeArea(child: _LanguageToggle()),
             ),
           ],
         ),
@@ -345,10 +382,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 }
 
 class _LoginForm extends StatefulWidget {
-  const _LoginForm({
-    super.key,
-    required this.isBusy,
-  });
+  const _LoginForm({super.key, required this.isBusy});
 
   final bool isBusy;
 
@@ -386,9 +420,7 @@ class _LoginFormState extends State<_LoginForm> {
               textInputAction: TextInputAction.next,
               keyboardType: TextInputType.emailAddress,
               textAlignVertical: TextAlignVertical.center,
-              autofillHints: const [
-                AutofillHints.email,
-              ],
+              autofillHints: const [AutofillHints.email],
               inputFormatters: _emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
@@ -476,7 +508,9 @@ class _LoginFormState extends State<_LoginForm> {
     if (!mounted) return;
     if (error == null) {
       showAppMessage(
-          context, AppLocalizations.of(context)!.signedInSuccessfully);
+        context,
+        AppLocalizations.of(context)!.signedInSuccessfully,
+      );
       return;
     }
 
@@ -492,7 +526,9 @@ class _LoginFormState extends State<_LoginForm> {
 
           if (result == null) {
             showAppMessage(
-                context, AppLocalizations.of(context)!.verificationEmailSent);
+              context,
+              AppLocalizations.of(context)!.verificationEmailSent,
+            );
           } else {
             showAppMessage(context, result, isError: true);
           }
@@ -509,18 +545,14 @@ class _LoginFormState extends State<_LoginForm> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ResetPasswordSheet(
-        initialEmail: _loginController.text.trim(),
-      ),
+      builder: (context) =>
+          ResetPasswordSheet(initialEmail: _loginController.text.trim()),
     );
   }
 }
 
 class _RegisterForm extends StatefulWidget {
-  const _RegisterForm({
-    super.key,
-    required this.isBusy,
-  });
+  const _RegisterForm({super.key, required this.isBusy});
 
   final bool isBusy;
 
@@ -586,9 +618,7 @@ class _RegisterFormState extends State<_RegisterForm> {
               textInputAction: TextInputAction.next,
               keyboardType: TextInputType.emailAddress,
               textAlignVertical: TextAlignVertical.center,
-              autofillHints: const [
-                AutofillHints.email,
-              ],
+              autofillHints: const [AutofillHints.email],
               inputFormatters: _emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
@@ -743,7 +773,8 @@ InputDecoration _filledFieldDecoration(
     contentPadding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
     filled: true,
     fillColor: colors.surfaceContainerHighest.withAlpha(
-        ((theme.brightness == Brightness.dark ? 0.35 : 0.55) * 255).round()),
+      ((theme.brightness == Brightness.dark ? 0.35 : 0.55) * 255).round(),
+    ),
     border: baseBorder,
     enabledBorder: baseBorder,
     focusedBorder: baseBorder.copyWith(
@@ -793,7 +824,8 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
     FocusScope.of(context).unfocus();
     if (!_isValidEmail) {
       setState(
-          () => _errorText = AppLocalizations.of(context)!.invalidEmailFormat);
+        () => _errorText = AppLocalizations.of(context)!.invalidEmailFormat,
+      );
       return;
     }
     setState(() {
@@ -821,9 +853,7 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
       final msg = _verificationSent
           ? AppLocalizations.of(context)!.verifyEmailFirst
           : AppLocalizations.of(context)!.verifyEmailFirst;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(msg)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
 
@@ -848,12 +878,13 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
       setState(() => _verificationSent = true);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text(AppLocalizations.of(context)!.verificationEmailSent)),
+          content: Text(AppLocalizations.of(context)!.verificationEmailSent),
+        ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(result)));
     }
   }
 
@@ -912,14 +943,16 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
             children: [
               Text(
                 l10n.resetPasswordTitle,
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.resetPasswordSubtitle,
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: colors.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -987,8 +1020,9 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
               if (_verificationRequired) ...[
                 Text(
                   l10n.verifyEmailFirst,
-                  style:
-                      theme.textTheme.bodyMedium?.copyWith(color: colors.error),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: colors.error,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
@@ -1015,8 +1049,8 @@ class _LanguageToggle extends StatelessWidget {
     final label = languageCode == 'ru'
         ? 'РУ'
         : languageCode == 'kk'
-            ? 'ҚАЗ'
-            : 'EN';
+        ? 'ҚАЗ'
+        : 'EN';
 
     return GestureDetector(
       onTap: () {
@@ -1024,18 +1058,18 @@ class _LanguageToggle extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
         const languages = ['en', 'ru', 'kk'];
         final currentIndex = languages.indexOf(languageCode);
-        final nextIndex =
-            currentIndex == -1 ? 0 : (currentIndex + 1) % languages.length;
+        final nextIndex = currentIndex == -1
+            ? 0
+            : (currentIndex + 1) % languages.length;
         context.read<AppState>().setLocale(Locale(languages[nextIndex]));
       },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest
-              .withAlpha((0.6 * 255).round()),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withAlpha((0.6 * 255).round()),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(20),
@@ -1047,16 +1081,18 @@ class _LanguageToggle extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.language,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary.withAlpha(180)),
+            Icon(
+              Icons.language,
+              size: 16,
+              color: Theme.of(context).colorScheme.primary.withAlpha(180),
+            ),
             const SizedBox(width: 8),
             Text(
               label,
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
             ),
           ],
         ),
@@ -1104,10 +1140,9 @@ class _ThemeToggle extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Theme.of(context)
-              .colorScheme
-              .surfaceContainerHighest
-              .withAlpha((0.6 * 255).round()),
+          color: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest.withAlpha((0.6 * 255).round()),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(20),

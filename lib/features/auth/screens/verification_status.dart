@@ -59,14 +59,15 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
       if (error == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Email verified! Loading your account...')),
+            content: Text('Email verified! Loading your account...'),
+          ),
         );
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
     } finally {
       if (mounted) {
         setState(() => _checking = false);
@@ -83,15 +84,15 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
     if (!mounted) return;
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Verification email sent!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Verification email sent!')));
 
     _startTimer();
   }
