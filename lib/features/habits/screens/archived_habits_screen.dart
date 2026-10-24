@@ -54,8 +54,9 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
                 child: LinearProgressIndicator(
                   minHeight: 2,
                   backgroundColor: theme.colorScheme.surface,
-                  valueColor:
-                      AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    theme.colorScheme.primary,
+                  ),
                 ),
               )
             : null,
@@ -63,8 +64,9 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
       body: ValueListenableBuilder(
         valueListenable: Storage.getHabitsBox().listenable(),
         builder: (context, Box<LocalHabit> box, _) {
-          final archivedHabits =
-              box.values.where((h) => h.archived && !h.deleted).toList();
+          final archivedHabits = box.values
+              .where((h) => h.archived && !h.deleted)
+              .toList();
 
           archivedHabits.sort((a, b) => a.createdAtMs.compareTo(b.createdAtMs));
 
@@ -73,12 +75,18 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.archive_outlined,
-                      size: 64, color: theme.colorScheme.outline),
+                  Icon(
+                    Icons.archive_outlined,
+                    size: 64,
+                    color: theme.colorScheme.outline,
+                  ),
                   const SizedBox(height: 16),
-                  Text(l10n.archivedHabitsEmpty,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(color: theme.colorScheme.outline)),
+                  Text(
+                    l10n.archivedHabitsEmpty,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -92,32 +100,44 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   leading: Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color:
-                          Color(localHabit.colorValue).withValues(alpha: 0.15),
+                      color: Color(
+                        localHabit.colorValue,
+                      ).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      IconData(localHabit.iconCodePoint,
-                          fontFamily: localHabit.iconFamily,
-                          fontPackage: localHabit.iconPackage),
+                      IconData(
+                        localHabit.iconCodePoint,
+                        fontFamily: localHabit.iconFamily,
+                        fontPackage: localHabit.iconPackage,
+                      ),
                       color: Color(localHabit.colorValue),
                       size: 20,
                     ),
                   ),
-                  title: Text(localHabit.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(l10n.habitArchivedLabel,
-                      style: TextStyle(
-                          color: theme.colorScheme.outline, fontSize: 12)),
+                  title: Text(
+                    localHabit.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text(
+                    l10n.habitArchivedLabel,
+                    style: TextStyle(
+                      color: theme.colorScheme.outline,
+                      fontSize: 12,
+                    ),
+                  ),
                   trailing: TextButton(
                     onPressed: () => _unarchive(context, uid, localHabit),
                     child: Text(l10n.habitUnarchiveAction),
@@ -193,8 +213,9 @@ class _ArchivedHabitsScreenState extends State<ArchivedHabitsScreen> {
     try {
       final decoded = jsonDecode(json);
       if (decoded is Map) {
-        return decoded
-            .map((k, v) => MapEntry(k.toString(), (v as num).toDouble()));
+        return decoded.map(
+          (k, v) => MapEntry(k.toString(), (v as num).toDouble()),
+        );
       }
       return {};
     } catch (_) {
