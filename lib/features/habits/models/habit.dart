@@ -9,12 +9,7 @@ enum HabitType {
   time, // At least X duration
 }
 
-enum HabitComparator {
-  atLeast,
-  lessThan,
-  exactly,
-  any,
-}
+enum HabitComparator { atLeast, lessThan, exactly, any }
 
 enum HabitFrequencyType {
   daily,
@@ -23,11 +18,7 @@ enum HabitFrequencyType {
   repeatsInPeriod, // X times per period
 }
 
-enum HabitPeriod {
-  week,
-  month,
-  year,
-}
+enum HabitPeriod { week, month, year }
 
 class Habit {
   final String id;
@@ -198,8 +189,11 @@ class Habit {
           prevPeriodStart = periodStart.subtract(const Duration(days: 7));
           break;
         case HabitPeriod.month:
-          prevPeriodStart =
-              DateTime(periodStart.year, periodStart.month - 1, 1);
+          prevPeriodStart = DateTime(
+            periodStart.year,
+            periodStart.month - 1,
+            1,
+          );
           break;
         case HabitPeriod.year:
           prevPeriodStart = DateTime(periodStart.year - 1, 1, 1);
@@ -280,8 +274,9 @@ class Habit {
           .values[index.clamp(0, HabitFrequencyType.values.length - 1)];
     } else if (data['frequencyType'] != null) {
       freq = HabitFrequencyType.values.firstWhere(
-          (e) => e.name == data['frequencyType'],
-          orElse: () => HabitFrequencyType.specificDays);
+        (e) => e.name == data['frequencyType'],
+        orElse: () => HabitFrequencyType.specificDays,
+      );
     }
 
     // -- WeekDays --
@@ -305,8 +300,10 @@ class Habit {
       final index = data['t'] as int;
       type = HabitType.values[index.clamp(0, HabitType.values.length - 1)];
     } else if (data['type'] != null) {
-      type = HabitType.values.firstWhere((e) => e.name == data['type'],
-          orElse: () => HabitType.yesNo);
+      type = HabitType.values.firstWhere(
+        (e) => e.name == data['type'],
+        orElse: () => HabitType.yesNo,
+      );
     }
 
     // -- Comparator --
@@ -318,8 +315,9 @@ class Habit {
           .values[index.clamp(0, HabitComparator.values.length - 1)];
     } else if (data['comparator'] != null) {
       comparator = HabitComparator.values.firstWhere(
-          (e) => e.name == data['comparator'],
-          orElse: () => HabitComparator.atLeast);
+        (e) => e.name == data['comparator'],
+        orElse: () => HabitComparator.atLeast,
+      );
     }
 
     // -- Period --
@@ -331,8 +329,9 @@ class Habit {
           HabitPeriod.values[index.clamp(0, HabitPeriod.values.length - 1)];
     } else if (data['frequencyPeriod'] != null) {
       period = HabitPeriod.values.firstWhere(
-          (e) => e.name == data['frequencyPeriod'],
-          orElse: () => HabitPeriod.week);
+        (e) => e.name == data['frequencyPeriod'],
+        orElse: () => HabitPeriod.week,
+      );
     }
 
     DateTime? parseDate(dynamic d) {
@@ -378,12 +377,14 @@ class Habit {
       sortOrder: (get('so', 'sortOrder') as num?)?.toInt() ?? 0,
 
       // last7: Compact 'l7', Legacy 'last7'
-      last7: (get('l7', 'last7') as Map<String, dynamic>? ?? {})
-          .map((k, v) => MapEntry(k, (v as num).toDouble())),
+      last7: (get('l7', 'last7') as Map<String, dynamic>? ?? {}).map(
+        (k, v) => MapEntry(k, (v as num).toDouble()),
+      ),
 
       archived: get('ar', 'archived') ?? false,
       createdAt: parseDate(get('cr', 'createdAt')) ?? DateTime.now(),
-      connectedCourseIds: (get('cc', 'connectedCourseIds') as List<dynamic>?)
+      connectedCourseIds:
+          (get('cc', 'connectedCourseIds') as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           [],
@@ -406,11 +407,7 @@ class Habit {
       'iv': intervalDays,
       'sd': Timestamp.fromDate(startDate),
 
-      'st': {
-        'tc': totalCompletions,
-        'cs': currentStreak,
-        'ls': longestStreak,
-      },
+      'st': {'tc': totalCompletions, 'cs': currentStreak, 'ls': longestStreak},
       'so': sortOrder,
       'l7': last7,
       'cr': Timestamp.fromDate(createdAt),
@@ -466,8 +463,11 @@ class Habit {
   }
 
   /// Returns true if this habit should be hidden because the period goal has been met.
-  bool isGoalMetForPeriod(Map<String, double> completionMap, DateTime forDate,
-      {bool mondayFirst = true}) {
+  bool isGoalMetForPeriod(
+    Map<String, double> completionMap,
+    DateTime forDate, {
+    bool mondayFirst = true,
+  }) {
     if (frequencyType != HabitFrequencyType.repeatsInPeriod) return false;
     if (frequencyGoal == null || frequencyGoal! <= 0) return false;
 
@@ -479,8 +479,11 @@ class Habit {
       case HabitPeriod.week:
         final weekday = forDate.weekday; // 1=Mon, 7=Sun
         final offset = mondayFirst ? (weekday - 1) : (weekday % 7);
-        periodStart =
-            DateTime(forDate.year, forDate.month, forDate.day - offset);
+        periodStart = DateTime(
+          forDate.year,
+          forDate.month,
+          forDate.day - offset,
+        );
         periodEnd = periodStart.add(const Duration(days: 6));
         break;
       case HabitPeriod.month:
@@ -581,9 +584,10 @@ class Habit {
   HabitRule getRuleForDate(DateTime date) {
     if (previousRules.isEmpty) {
       return HabitRule(
-          endDate: DateTime(2100),
-          targetValue: targetValue,
-          comparator: comparator);
+        endDate: DateTime(2100),
+        targetValue: targetValue,
+        comparator: comparator,
+      );
     }
 
     // Sort rules by endDate ascending just in case
@@ -605,9 +609,10 @@ class Habit {
 
     // Fallback to current
     return HabitRule(
-        endDate: DateTime(2100),
-        targetValue: targetValue,
-        comparator: comparator);
+      endDate: DateTime(2100),
+      targetValue: targetValue,
+      comparator: comparator,
+    );
   }
 }
 

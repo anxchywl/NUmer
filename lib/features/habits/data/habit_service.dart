@@ -118,8 +118,10 @@ class HabitService {
   DateTime? _archivedHabitsCacheTime;
 
   /// Fetches archived habits with caching (one-time read, not a live stream)
-  Future<List<Habit>> getArchivedHabits(String userId,
-      {bool forceRefresh = false}) async {
+  Future<List<Habit>> getArchivedHabits(
+    String userId, {
+    bool forceRefresh = false,
+  }) async {
     // Return cache if less than 5 minutes old
     if (!forceRefresh &&
         _archivedHabitsCache != null &&
@@ -135,8 +137,9 @@ class HabitService {
         .where('ar', isEqualTo: true) // Server-side filter
         .get();
 
-    final habits =
-        snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
+    final habits = snapshot.docs
+        .map((doc) => Habit.fromFirestore(doc))
+        .toList();
     habits.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     _archivedHabitsCache = habits;
@@ -159,11 +162,12 @@ class HabitService {
         .where('ar', isEqualTo: true) // Server-side filter
         .snapshots()
         .map((snapshot) {
-      final habits =
-          snapshot.docs.map((doc) => Habit.fromFirestore(doc)).toList();
-      habits.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-      return habits;
-    });
+          final habits = snapshot.docs
+              .map((doc) => Habit.fromFirestore(doc))
+              .toList();
+          habits.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return habits;
+        });
   }
 
   Future<void> unarchiveHabit(String userId, String habitId) async {
@@ -183,8 +187,10 @@ class HabitService {
 
   Habit _localHabitToHabit(LocalHabit lh) {
     // Rebuild last7 from local history to keep UI/state consistent with recent edits
-    final Map<String, double> last7 = _decodeJsonMap(lh.last7Json)
-            ?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
+    final Map<String, double> last7 =
+        _decodeJsonMap(
+          lh.last7Json,
+        )?.map((k, v) => MapEntry(k, (v as num).toDouble())) ??
         {};
     // Ensure history overrides last7 (e.g., when toggling rapidly or setting to 0)
     final resetAtMs = lh.resetAtMs ?? 0;
@@ -245,7 +251,10 @@ class HabitService {
       // Prevent toggling for dates before start date
       final d = DateTime(date.year, date.month, date.day);
       final s = DateTime(
-          habit.startDate.year, habit.startDate.month, habit.startDate.day);
+        habit.startDate.year,
+        habit.startDate.month,
+        habit.startDate.day,
+      );
       if (d.isBefore(s)) return;
 
       // NOTE: Removed restrictive Period Goal Met check.
@@ -259,8 +268,10 @@ class HabitService {
       if (completed && habit.type == HabitType.time) {
         final dayStart = DateTime(date.year, date.month, date.day);
         final dayEnd = dayStart.add(const Duration(days: 1));
-        final secondsMap =
-            await Storage.secondsByCourseBetween(dayStart, dayEnd);
+        final secondsMap = await Storage.secondsByCourseBetween(
+          dayStart,
+          dayEnd,
+        );
 
         double autoSeconds = 0.0;
         for (var cid in habit.connectedCourseIds) {
@@ -296,9 +307,9 @@ class HabitService {
         );
         await Storage.putHabitHistory(localEntry);
       } else {
-        final existing = Storage.getHabitHistoryFromCache(habit.id)
-            .where((e) => e.dateKey == dateKey)
-            .firstOrNull;
+        final existing = Storage.getHabitHistoryFromCache(
+          habit.id,
+        ).where((e) => e.dateKey == dateKey).firstOrNull;
         if (existing != null) {
           existing.deleted = true;
           existing.dirty = true;
@@ -437,7 +448,11 @@ class HabitService {
 
   /// Load history for a month/range
   Future<List<HabitHistoryEntry>> getHistory(
-      String userId, String habitId, DateTime start, DateTime end) async {
+    String userId,
+    String habitId,
+    DateTime start,
+    DateTime end,
+  ) async {
     // Query by ID range (IDs are YYYY-MM-DD strings)
     final startKey = _dateKey(start);
     final endKey = _dateKey(end);
@@ -483,10 +498,9 @@ class HabitService {
   }
 
   Future<void> reorderHabits(String userId, int oldIndex, int newIndex) async {
-    final habits = Storage.getHabitsFromCache(includeDeleted: false)
-        .where((h) => !h.archived)
-        .map(_localHabitToHabit)
-        .toList();
+    final habits = Storage.getHabitsFromCache(
+      includeDeleted: false,
+    ).where((h) => !h.archived).map(_localHabitToHabit).toList();
 
     // CRITICAL FIX: Sort the list to match the UI's order BEFORE applying the index move.
     // Otherwise, we are applying indices from a sorted list to an unsorted list.
@@ -547,8 +561,11 @@ class HabitService {
     _historyUpdateController.add(null);
   }
 
-  Future<void> recalculateStreak(String userId, Habit habit,
-      {bool mondayFirst = true}) async {
+  Future<void> recalculateStreak(
+    String userId,
+    Habit habit, {
+    bool mondayFirst = true,
+  }) async {
     // LOCAL-ONLY calculation. No Firestore reads.
     final localHistory = Storage.getHabitHistoryFromCache(habit.id);
 
@@ -560,7 +577,10 @@ class HabitService {
       final parts = entry.dateKey.split('-');
       if (parts.length != 3) continue;
       final d = DateTime(
-          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
 
       // Retroactive Check: Get rule for THIS date
       final rule = habit.getRuleForDate(d);
@@ -572,7 +592,8 @@ class HabitService {
         // If val <= target, it is "Done".
         // Note: Logic for "Less Than" usually implies "Better to be low".
         // e.g. "Smoke < 5 cigs". 4 is Done. 6 is Fail.
-        isMet = val <= rule.targetValue &&
+        isMet =
+            val <= rule.targetValue &&
             val > 0; // Assuming 0 is "undone" or "neutral"?
         // Wait, user spec: "status: value == 0 -> undone, 0 < value <= X -> done"
         if (val > 0 && val <= rule.targetValue) isMet = true;
@@ -607,7 +628,10 @@ class HabitService {
     // This fixes the issue where backfilled data/started-earlier data wasn't counting towards streaks
     // because the loop strictly stopped at 'startDate'.
     DateTime start = DateTime(
-        habit.startDate.year, habit.startDate.month, habit.startDate.day);
+      habit.startDate.year,
+      habit.startDate.month,
+      habit.startDate.day,
+    );
     if (fullCompletionMap.isNotEmpty) {
       final sortedKeys = fullCompletionMap.keys.toList()..sort();
       if (sortedKeys.isNotEmpty) {
@@ -615,7 +639,10 @@ class HabitService {
         final parts = firstKey.split('-');
         if (parts.length == 3) {
           final firstDate = DateTime(
-              int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
           if (firstDate.isBefore(start)) {
             start = firstDate;
           }
@@ -629,8 +656,11 @@ class HabitService {
       // A streak is defined as consecutive periods where the goal count was met.
 
       // 1. Current Streak (Backwards)
-      DateTime pStart =
-          _getPeriodStart(habit, checkDate, mondayFirst: mondayFirst);
+      DateTime pStart = _getPeriodStart(
+        habit,
+        checkDate,
+        mondayFirst: mondayFirst,
+      );
 
       // Fix: Ensure we check periods that CONTAIN the effective start date.
       // (pStart of 'Jan 1' is Before 'Jan 5', but the period includes Jan 5, so we must process it).
@@ -645,7 +675,10 @@ class HabitService {
           if (parts.length != 3) continue;
           // Using effective start date logic implicitly by just checking pStart/pEnd bounds
           final d = DateTime(
-              int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
 
           if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
             // Determine if this specific day met its rule (already filtered in fullCompletionMap construction?)
@@ -676,8 +709,11 @@ class HabitService {
       // 2. Longest Streak (Forward)
       // Iterate periods forward from start
       int tempStreak = 0;
-      pStart = _getPeriodStart(habit, start,
-          mondayFirst: mondayFirst); // Start from effective start's period
+      pStart = _getPeriodStart(
+        habit,
+        start,
+        mondayFirst: mondayFirst,
+      ); // Start from effective start's period
 
       // We need to iterate until checkDate (Current Period)
       while (!pStart.isAfter(checkDate)) {
@@ -688,7 +724,10 @@ class HabitService {
           final parts = dateKey.split('-');
           if (parts.length != 3) continue;
           final d = DateTime(
-              int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
           if (!d.isBefore(pStart) && !d.isAfter(pEnd)) {
             // Already filtered
             completions++;
@@ -718,7 +757,8 @@ class HabitService {
             currentStreakValue++;
           } else {
             // Not done
-            final isToday = walker.year == checkDate.year &&
+            final isToday =
+                walker.year == checkDate.year &&
                 walker.month == checkDate.month &&
                 walker.day == checkDate.day;
             if (isToday) {
@@ -753,11 +793,18 @@ class HabitService {
     }
 
     await _updateStreaks(
-        userId, habit.id, currentStreakValue, longestStreakValue);
+      userId,
+      habit.id,
+      currentStreakValue,
+      longestStreakValue,
+    );
   }
 
-  DateTime _getPeriodStart(Habit habit, DateTime date,
-      {bool mondayFirst = true}) {
+  DateTime _getPeriodStart(
+    Habit habit,
+    DateTime date, {
+    bool mondayFirst = true,
+  }) {
     switch (habit.frequencyPeriod) {
       case HabitPeriod.week:
         final offset = mondayFirst ? (date.weekday - 1) : (date.weekday % 7);
@@ -771,8 +818,11 @@ class HabitService {
     }
   }
 
-  DateTime _getPeriodEnd(Habit habit, DateTime date,
-      {bool mondayFirst = true}) {
+  DateTime _getPeriodEnd(
+    Habit habit,
+    DateTime date, {
+    bool mondayFirst = true,
+  }) {
     final start = _getPeriodStart(habit, date, mondayFirst: mondayFirst);
     switch (habit.frequencyPeriod) {
       case HabitPeriod.week:
@@ -813,7 +863,11 @@ class HabitService {
   }
 
   Future<void> _updateStreaks(
-      String userId, String habitId, int current, int longest) async {
+    String userId,
+    String habitId,
+    int current,
+    int longest,
+  ) async {
     // LOCAL-FIRST: Update Hive immediately for instant UI feedback
     final local = Storage.getHabitById(habitId);
     if (local != null) {
@@ -832,7 +886,11 @@ class HabitService {
   }
 
   Future<void> _syncStreaksToFirebase(
-      String userId, String habitId, int current, int longest) async {
+    String userId,
+    String habitId,
+    int current,
+    int longest,
+  ) async {
     // DISABLING direct remote overwrite.
     // SyncService will handle syncing the 'Habit' which contains these stats.
     // This function previously risked overwriting local with partial data or causing race conditions.
@@ -840,7 +898,11 @@ class HabitService {
   }
 
   Future<void> updateHistory(
-      String userId, String habitId, DateTime date, double value) async {
+    String userId,
+    String habitId,
+    DateTime date,
+    double value,
+  ) async {
     final dateKey = _dateKey(date);
 
     // LOCAL-FIRST: Update local cache immediately
@@ -850,9 +912,9 @@ class HabitService {
 
     if (value > 0) {
       // Get existing entry to increment version
-      final existing = Storage.getHabitHistoryFromCache(habitId)
-          .where((e) => e.dateKey == dateKey)
-          .firstOrNull;
+      final existing = Storage.getHabitHistoryFromCache(
+        habitId,
+      ).where((e) => e.dateKey == dateKey).firstOrNull;
       final newVersion = (existing?.version ?? 0) + 1;
 
       final localEntry = LocalHabitHistory(
@@ -870,9 +932,9 @@ class HabitService {
       await Storage.putHabitHistory(localEntry);
     } else {
       // Mark as deleted in local cache
-      final existing = Storage.getHabitHistoryFromCache(habitId)
-          .where((e) => e.dateKey == dateKey)
-          .firstOrNull;
+      final existing = Storage.getHabitHistoryFromCache(
+        habitId,
+      ).where((e) => e.dateKey == dateKey).firstOrNull;
       if (existing != null) {
         existing.deleted = true;
         existing.dirty = true;
@@ -893,11 +955,12 @@ class HabitService {
     _historyUpdateController.add(null);
   }
 
-  Future<void> updateHabitProgressFromCourse(
-      {required String userId,
-      required String courseId,
-      required DateTime date,
-      required int deltaSeconds}) async {
+  Future<void> updateHabitProgressFromCourse({
+    required String userId,
+    required String courseId,
+    required DateTime date,
+    required int deltaSeconds,
+  }) async {
     if (deltaSeconds == 0) return;
 
     final allHabits = Storage.getHabitsFromCache(includeDeleted: false)
@@ -910,11 +973,17 @@ class HabitService {
       // 1. Check start date
       final targetDate = DateTime(date.year, date.month, date.day);
       final start = DateTime(
-          habit.startDate.year, habit.startDate.month, habit.startDate.day);
+        habit.startDate.year,
+        habit.startDate.month,
+        habit.startDate.day,
+      );
       if (targetDate.isBefore(start)) continue;
       if (habit.endDate != null) {
         final end = DateTime(
-            habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
+          habit.endDate!.year,
+          habit.endDate!.month,
+          habit.endDate!.day,
+        );
         if (targetDate.isAfter(end)) continue;
       }
 
@@ -928,10 +997,12 @@ class HabitService {
 
       final dateKey = _dateKey(targetDate);
       final historyEntries = Storage.getHabitHistoryFromCache(habit.id);
-      final existing =
-          historyEntries.where((e) => e.dateKey == dateKey).firstOrNull;
-      final currentVal =
-          existing != null && !existing.deleted ? (existing.value ?? 0.0) : 0.0;
+      final existing = historyEntries
+          .where((e) => e.dateKey == dateKey)
+          .firstOrNull;
+      final currentVal = existing != null && !existing.deleted
+          ? (existing.value ?? 0.0)
+          : 0.0;
 
       // For YesNo, any session means "Done" (1.0).
       // If already done, skip.
@@ -941,7 +1012,8 @@ class HabitService {
       final newVal = habit.targetValue; // Mark as done
 
       final nowMs = DateTime.now().millisecondsSinceEpoch;
-      final entry = existing ??
+      final entry =
+          existing ??
           LocalHabitHistory(
             id: '${habit.id}_$dateKey',
             uid: userId,
@@ -967,8 +1039,9 @@ class HabitService {
         if (!wasMet && newVal >= habit.targetValue) {
           lh.totalCompletions = lh.totalCompletions + 1;
         }
-        final last7 =
-            lh.last7Json.isNotEmpty ? _decodeJsonMap(lh.last7Json) ?? {} : {};
+        final last7 = lh.last7Json.isNotEmpty
+            ? _decodeJsonMap(lh.last7Json) ?? {}
+            : {};
         last7[dateKey] = newVal;
         lh.last7Json = jsonEncode(last7);
         lh.updatedAtMs = nowMs;
@@ -987,20 +1060,26 @@ class HabitService {
   }
 
   Future<void> checkAndRevertHabitCompletion(
-      String userId, String courseId, DateTime date) async {
+    String userId,
+    String courseId,
+    DateTime date,
+  ) async {
     // 1. Get all relevant habits
     final habits = await getHabits(userId);
-    final relevant = habits.where((h) =>
-        !h.archived &&
-        h.type == HabitType.yesNo &&
-        h.connectedCourseIds.contains(courseId));
+    final relevant = habits.where(
+      (h) =>
+          !h.archived &&
+          h.type == HabitType.yesNo &&
+          h.connectedCourseIds.contains(courseId),
+    );
 
     for (var habit in relevant) {
       final dateKey = _dateKey(date);
       // 2. Check if currently completed in local cache
       final history = Storage.getHabitHistoryFromCache(habit.id)
           .where(
-              (e) => e.dateKey == dateKey && !e.deleted && (e.value ?? 0) > 0)
+            (e) => e.dateKey == dateKey && !e.deleted && (e.value ?? 0) > 0,
+          )
           .firstOrNull;
       if (history == null) continue; // Not completed, nothing to revert
 
@@ -1022,30 +1101,47 @@ class HabitService {
       if (!hasActivity) {
         // 4. Revert completion
         await toggleCompletion(
-            userId: userId, habit: habit, date: date, completed: false);
+          userId: userId,
+          habit: habit,
+          date: date,
+          completed: false,
+        );
       }
     }
   }
 
   Future<void> syncTimeHabitsForCourse(
-      String userId, String courseId, DateTime date,
-      {double? knownDelta}) async {
+    String userId,
+    String courseId,
+    DateTime date, {
+    double? knownDelta,
+  }) async {
     final habits = await getHabits(userId);
-    final connected = habits.where((h) =>
-        !h.archived &&
-        h.type == HabitType.time &&
-        h.connectedCourseIds.contains(courseId));
+    final connected = habits.where(
+      (h) =>
+          !h.archived &&
+          h.type == HabitType.time &&
+          h.connectedCourseIds.contains(courseId),
+    );
 
     for (var habit in connected) {
       if (habit.isScheduledFor(date)) {
-        await syncTimeHabitProgress(userId, habit, date,
-            knownDelta: knownDelta);
+        await syncTimeHabitProgress(
+          userId,
+          habit,
+          date,
+          knownDelta: knownDelta,
+        );
       }
     }
   }
 
-  Future<void> syncTimeHabitProgress(String userId, Habit habit, DateTime date,
-      {double? knownDelta}) async {
+  Future<void> syncTimeHabitProgress(
+    String userId,
+    Habit habit,
+    DateTime date, {
+    double? knownDelta,
+  }) async {
     if (habit.type != HabitType.time) return;
 
     final dateKey = _dateKey(date);
@@ -1053,8 +1149,9 @@ class HabitService {
 
     // v = Total, m = Manual
     final historyEntries = Storage.getHabitHistoryFromCache(habit.id);
-    final existing =
-        historyEntries.where((e) => e.dateKey == dateKey).firstOrNull;
+    final existing = historyEntries
+        .where((e) => e.dateKey == dateKey)
+        .firstOrNull;
     double v = existing?.value ?? 0.0;
     double? m = existing?.manualValue;
 
@@ -1089,7 +1186,8 @@ class HabitService {
 
     // 5. Update local history
     if (newTotal > 0) {
-      final entry = existing ??
+      final entry =
+          existing ??
           LocalHabitHistory(
             id: '${habit.id}_$dateKey',
             uid: userId,
@@ -1125,11 +1223,13 @@ class HabitService {
       if (isNowMet && !isCompletedBefore) {
         lh.totalCompletions = lh.totalCompletions + 1;
       } else if (!isNowMet && isCompletedBefore) {
-        lh.totalCompletions =
-            lh.totalCompletions > 0 ? lh.totalCompletions - 1 : 0;
+        lh.totalCompletions = lh.totalCompletions > 0
+            ? lh.totalCompletions - 1
+            : 0;
       }
-      final last7 =
-          lh.last7Json.isNotEmpty ? _decodeJsonMap(lh.last7Json) ?? {} : {};
+      final last7 = lh.last7Json.isNotEmpty
+          ? _decodeJsonMap(lh.last7Json) ?? {}
+          : {};
       if (newTotal > 0) {
         last7[dateKey] = newTotal;
       } else {
