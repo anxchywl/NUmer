@@ -159,8 +159,9 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
       final String? selectedCourseId = selectedItem?.id;
 
       final count = allSessions.where((s) {
-        if (selectedCourseId != null && s['courseId'] != selectedCourseId)
+        if (selectedCourseId != null && s['courseId'] != selectedCourseId) {
           return false;
+        }
         final start = s['startUtc'] as DateTime;
         return (start.isAtSameMomentAs(startOfMonth) ||
                 start.isAfter(startOfMonth)) &&
