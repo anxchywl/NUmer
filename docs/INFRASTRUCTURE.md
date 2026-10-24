@@ -79,7 +79,7 @@ a group; see `firestore.rules` for exact access):
 /nudgeLimits, /joinAttempts            server-only rate limit counters
 /roleAudit/{entryId}                   role change log, server only
 /users/{userId}/
-  fcmTokens, aggregates, sessions, studySessions, courses, studyTimes,
+  fcmTokens, aggregates, aggState (server only), sessions, studySessions, courses, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
   stats, meta, groupMemberships, nudgeCooldowns,
   habits (+ /history), habit_categories, connections, connectionGroups
@@ -119,6 +119,13 @@ reaches a client on its next token refresh. Allowed values are listed in
 requires `numer:admin` in both the caller's token and their current claims. Removing a
 role revokes the user's refresh tokens. `setUserRoles` logs each call to `roleAudit`, which
 clients cannot access; the script does not.
+
+`AGG_INCREMENTAL` (`on` or `off`, default `off`) switches the two aggregate triggers from the
+full recompute to a per-user ledger in the private `users/{uid}/aggState/v1`, which costs about
+3 reads per event instead of about 111. With the switch `off`, `AGG_SHADOW_PERCENT` (0 to 100,
+default 0) also runs that share of users through the ledger without publishing and logs
+`aggregate_shadow_mismatch` when its payload differs; both are set in `functions/.env`
+(see `functions/.env.example`).
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.

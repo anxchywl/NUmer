@@ -12,7 +12,7 @@ function assertUid(value: unknown): string {
 }
 
 export const setUserRoles = functions.https.onCall(async (data, context) => {
-  requireAppCheck(context);
+  requireAppCheck(context, 'setUserRoles');
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
