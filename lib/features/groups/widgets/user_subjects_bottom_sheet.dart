@@ -169,8 +169,9 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                               final contact =
                                   data?['profileContact'] as String?;
 
-                              if (data == null && _isUpdating)
+                              if (data == null && _isUpdating) {
                                 return const SizedBox.shrink();
+                              }
 
                               final hasMajor =
                                   major != null && major.isNotEmpty;
@@ -178,8 +179,9 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                               final hasContact =
                                   contact != null && contact.isNotEmpty;
 
-                              if (!hasMajor && !hasGoal && !hasContact)
+                              if (!hasMajor && !hasGoal && !hasContact) {
                                 return const SizedBox.shrink();
+                              }
 
                               return Padding(
                                 padding: const EdgeInsets.only(top: 4),
