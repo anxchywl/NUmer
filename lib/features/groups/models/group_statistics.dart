@@ -27,14 +27,16 @@ class GroupStatistics {
 
   MemberStudyData? get bestPerformer {
     if (members.isEmpty) return null;
-    return members
-        .reduce((a, b) => a.studyTimeSeconds > b.studyTimeSeconds ? a : b);
+    return members.reduce(
+      (a, b) => a.studyTimeSeconds > b.studyTimeSeconds ? a : b,
+    );
   }
 
   MemberStudyData? get lowestPerformer {
     if (members.isEmpty) return null;
-    return members
-        .reduce((a, b) => a.studyTimeSeconds < b.studyTimeSeconds ? a : b);
+    return members.reduce(
+      (a, b) => a.studyTimeSeconds < b.studyTimeSeconds ? a : b,
+    );
   }
 
   MemberStudyData? getMember(String userId) {
@@ -179,10 +181,7 @@ class DailyStudyEntry {
   final DateTime date;
   final int studyTimeSeconds;
 
-  DailyStudyEntry({
-    required this.date,
-    required this.studyTimeSeconds,
-  });
+  DailyStudyEntry({required this.date, required this.studyTimeSeconds});
 
   String getFormattedTime() {
     final hours = studyTimeSeconds ~/ 3600;
@@ -207,10 +206,10 @@ class SubjectStat {
     required this.seconds,
   });
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'colorValue': colorValue,
-        'seconds': seconds,
-      };
+    'name': name,
+    'colorValue': colorValue,
+    'seconds': seconds,
+  };
 
   factory SubjectStat.fromJson(Map<dynamic, dynamic> json) {
     return SubjectStat(
@@ -231,9 +230,9 @@ class MemberSubjectStats {
   });
 
   Map<String, dynamic> toJson() => {
-        'totalSeconds': totalSeconds,
-        'subjectStats': subjectStats.map((k, v) => MapEntry(k, v.toJson())),
-      };
+    'totalSeconds': totalSeconds,
+    'subjectStats': subjectStats.map((k, v) => MapEntry(k, v.toJson())),
+  };
 
   factory MemberSubjectStats.fromJson(Map<String, dynamic> json) {
     final rawStatsMap = json['subjectStats'] as Map?;
@@ -258,30 +257,30 @@ enum StatisticsPeriod { today, last7Days, lastMonth }
 
 extension StatisticsPeriodX on StatisticsPeriod {
   String get label => switch (this) {
-        StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => 'This week',
-        StatisticsPeriod.lastMonth => 'This month',
-      };
+    StatisticsPeriod.today => 'Today',
+    StatisticsPeriod.last7Days => 'This week',
+    StatisticsPeriod.lastMonth => 'This month',
+  };
 
   String get shortLabel => switch (this) {
-        StatisticsPeriod.today => 'Today',
-        StatisticsPeriod.last7Days => 'Week',
-        StatisticsPeriod.lastMonth => 'Month',
-      };
+    StatisticsPeriod.today => 'Today',
+    StatisticsPeriod.last7Days => 'Week',
+    StatisticsPeriod.lastMonth => 'Month',
+  };
 
   (DateTime start, DateTime end) getDateRange() {
     final now = DateTime.now();
 
     return switch (this) {
       StatisticsPeriod.today => (
-          DateTime(now.year, now.month, now.day, 0, 0, 0),
-          now,
-        ),
+        DateTime(now.year, now.month, now.day, 0, 0, 0),
+        now,
+      ),
       StatisticsPeriod.last7Days => _getCurrentWeekRange(now),
       StatisticsPeriod.lastMonth => (
-          DateTime(now.year, now.month, 1, 0, 0, 0),
-          now,
-        ),
+        DateTime(now.year, now.month, 1, 0, 0, 0),
+        now,
+      ),
     };
   }
 

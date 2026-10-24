@@ -4,9 +4,9 @@ enum GroupVisibility { public, private }
 
 extension GroupVisibilityX on GroupVisibility {
   String get label => switch (this) {
-        GroupVisibility.public => 'public',
-        GroupVisibility.private => 'private',
-      };
+    GroupVisibility.public => 'public',
+    GroupVisibility.private => 'private',
+  };
 
   static GroupVisibility fromRaw(String? value) {
     if (value == GroupVisibility.private.label) {
@@ -20,9 +20,9 @@ enum GroupRole { member, admin }
 
 extension GroupRoleX on GroupRole {
   String get label => switch (this) {
-        GroupRole.member => 'member',
-        GroupRole.admin => 'admin',
-      };
+    GroupRole.member => 'member',
+    GroupRole.admin => 'admin',
+  };
 
   static GroupRole fromRaw(String? value) {
     if (value == GroupRole.admin.label) {

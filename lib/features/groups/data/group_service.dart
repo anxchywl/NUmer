@@ -11,11 +11,9 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/entities.dart';
 
 class GroupService {
-  GroupService({
-    FirebaseFirestore? firestore,
-    FirebaseAuth? auth,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  GroupService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
@@ -66,21 +64,23 @@ class GroupService {
         .orderBy('joinedAt', descending: true)
         .snapshots()
         .map((snap) {
-      final memberships =
-          snap.docs.map(GroupMembership.fromDoc).toList(growable: false);
-      final groupIds = memberships.map((m) => m.groupId).toList();
-      unawaited(
-        _userDoc(userId).set(
-          {'groupIds': groupIds},
-          SetOptions(merge: true),
-        ),
-      );
-      return memberships;
-    });
+          final memberships = snap.docs
+              .map(GroupMembership.fromDoc)
+              .toList(growable: false);
+          final groupIds = memberships.map((m) => m.groupId).toList();
+          unawaited(
+            _userDoc(
+              userId,
+            ).set({'groupIds': groupIds}, SetOptions(merge: true)),
+          );
+          return memberships;
+        });
   }
 
   Stream<GroupMembership?> watchMembershipForUser(
-      String userId, String groupId) {
+    String userId,
+    String groupId,
+  ) {
     return _userMembershipRef(userId, groupId).snapshots().map((snap) {
       if (!snap.exists) return null;
       return GroupMembership.fromDoc(snap);
@@ -150,8 +150,9 @@ class GroupService {
       if (closed) return;
       Object normalizedError = error;
       if (error is FirebaseException && error.code == 'permission-denied') {
-        normalizedError =
-            StateError('You do not have permission to view this group.');
+        normalizedError = StateError(
+          'You do not have permission to view this group.',
+        );
       }
       if (!controller.isClosed) {
         controller.addError(normalizedError, stackTrace);
@@ -160,7 +161,9 @@ class GroupService {
     }
 
     void updatePresence(
-        String userId, DocumentSnapshot<Map<String, dynamic>> snap) {
+      String userId,
+      DocumentSnapshot<Map<String, dynamic>> snap,
+    ) {
       if (lastStats == null || !snap.exists) return;
       final data = snap.data();
       if (data == null) return;
@@ -173,11 +176,13 @@ class GroupService {
         name: data['profileName'] as String? ?? oldMember.name,
         avatarIndex:
             (data['profileAvatarIndex'] ?? data['avatarIndex']) as int? ??
-                oldMember.avatarIndex,
-        avatarBase64: data['profileAvatarImageBase64'] as String? ??
+            oldMember.avatarIndex,
+        avatarBase64:
+            data['profileAvatarImageBase64'] as String? ??
             oldMember.avatarBase64,
-        avatarColorValue: (data['avatarColorValue'] ??
-                data['profileAvatarColorValue']) as int? ??
+        avatarColorValue:
+            (data['avatarColorValue'] ?? data['profileAvatarColorValue'])
+                as int? ??
             oldMember.avatarColorValue,
         isStudying: data['isStudying'] as bool? ?? false,
         activeSession: data['activeSession'] as Map<String, dynamic>?,
@@ -186,7 +191,8 @@ class GroupService {
       );
 
       // Check for profile changes to persist to cache
-      final profileChanged = updatedMember.name != oldMember.name ||
+      final profileChanged =
+          updatedMember.name != oldMember.name ||
           updatedMember.avatarIndex != oldMember.avatarIndex ||
           updatedMember.avatarBase64 != oldMember.avatarBase64 ||
           updatedMember.avatarColorValue != oldMember.avatarColorValue;
@@ -203,8 +209,10 @@ class GroupService {
         // We need groupId for the cache key. context.read passed it to watchGroupStatistics,
         // but updatePresence is a closure. The closure captures 'groupId' from watchGroupStatistics scope!
         final key = _profileCacheKey(groupId, userId);
-        _memberProfileCache[key] =
-            (data: profileData, timestamp: DateTime.now());
+        _memberProfileCache[key] = (
+          data: profileData,
+          timestamp: DateTime.now(),
+        );
         unawaited(_persistProfileCache());
       }
 
@@ -220,16 +228,20 @@ class GroupService {
       updatedMembers[index] = updatedMember;
 
       // Sort by seconds to ensure exact ranking
-      updatedMembers
-          .sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
+      updatedMembers.sort(
+        (a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds),
+      );
 
-      final leaderId =
-          updatedMembers.isNotEmpty ? updatedMembers.first.userId : null;
+      final leaderId = updatedMembers.isNotEmpty
+          ? updatedMembers.first.userId
+          : null;
       final normalized = updatedMembers
-          .map((m) => m.copyWith(
-                isLeader: leaderId != null && m.userId == leaderId,
-                isCurrentUser: m.userId == uid,
-              ))
+          .map(
+            (m) => m.copyWith(
+              isLeader: leaderId != null && m.userId == leaderId,
+              isCurrentUser: m.userId == uid,
+            ),
+          )
           .toList();
       final newStats = lastStats!.copyWith(members: normalized);
       lastStats = newStats;
@@ -253,9 +265,12 @@ class GroupService {
               .collection('users')
               .doc(id)
               .snapshots()
-              .listen((snap) => updatePresence(id, snap), onError: (e, st) {
-            debugPrint('Error watching member presence for $id: $e');
-          });
+              .listen(
+                (snap) => updatePresence(id, snap),
+                onError: (e, st) {
+                  debugPrint('Error watching member presence for $id: $e');
+                },
+              );
         }
       }
     }
@@ -271,56 +286,65 @@ class GroupService {
         memberIds = snapshot.docs.map((d) => d.id).toSet();
         updateMemberListeners(memberIds);
 
-        final members = await Future.wait(snapshot.docs.map((doc) async {
-          final data = doc.data();
-          var member = aggregationService.memberFromAggregateData(
-            data: data,
-            period: period,
-            userId: doc.id,
-            currentUserId: uid,
-          );
-
-          // Name Flicker Fix:
-          // Try to load cached profile data to ensure we have the latest name/avatar.
-          // This prevents the UI from showing stale aggregate names then jumping.
-          // We use getCachedMemberProfile which checks memory first, then invalidates via TTL if needed.
-          // Note: We avoid fetchAndCache here to prevent read-spam, relying on what's available or the aggregate fallback.
-          // Typically, the cache is populated by other views or presence updates.
-          Map<String, dynamic>? profileData =
-              await getCachedMemberProfile(groupId: groupId, userId: doc.id);
-
-          // If not in cache but we suspect it's stale (e.g. valid TTL logic), we could fetch,
-          // but for list performance, we accept cache or aggregate.
-          // Presence updates (updateMemberListeners) will fix it shortly anyway.
-
-          if (profileData != null) {
-            member = member.copyWith(
-              name: (profileData['profileName'] as String?) ?? member.name,
-              avatarIndex: (profileData['profileAvatarIndex'] as int?) ??
-                  (profileData['avatarIndex'] as int?) ??
-                  member.avatarIndex,
-              avatarBase64:
-                  (profileData['profileAvatarImageBase64'] as String?) ??
-                      member.avatarBase64,
-              avatarColorValue: (profileData['avatarColorValue'] as int?) ??
-                  (profileData['profileAvatarColorValue'] as int?) ??
-                  member.avatarColorValue,
+        final members = await Future.wait(
+          snapshot.docs.map((doc) async {
+            final data = doc.data();
+            var member = aggregationService.memberFromAggregateData(
+              data: data,
+              period: period,
+              userId: doc.id,
+              currentUserId: uid,
             );
-          }
 
-          return member;
-        }));
+            // Name Flicker Fix:
+            // Try to load cached profile data to ensure we have the latest name/avatar.
+            // This prevents the UI from showing stale aggregate names then jumping.
+            // We use getCachedMemberProfile which checks memory first, then invalidates via TTL if needed.
+            // Note: We avoid fetchAndCache here to prevent read-spam, relying on what's available or the aggregate fallback.
+            // Typically, the cache is populated by other views or presence updates.
+            Map<String, dynamic>? profileData = await getCachedMemberProfile(
+              groupId: groupId,
+              userId: doc.id,
+            );
+
+            // If not in cache but we suspect it's stale (e.g. valid TTL logic), we could fetch,
+            // but for list performance, we accept cache or aggregate.
+            // Presence updates (updateMemberListeners) will fix it shortly anyway.
+
+            if (profileData != null) {
+              member = member.copyWith(
+                name: (profileData['profileName'] as String?) ?? member.name,
+                avatarIndex:
+                    (profileData['profileAvatarIndex'] as int?) ??
+                    (profileData['avatarIndex'] as int?) ??
+                    member.avatarIndex,
+                avatarBase64:
+                    (profileData['profileAvatarImageBase64'] as String?) ??
+                    member.avatarBase64,
+                avatarColorValue:
+                    (profileData['avatarColorValue'] as int?) ??
+                    (profileData['profileAvatarColorValue'] as int?) ??
+                    member.avatarColorValue,
+              );
+            }
+
+            return member;
+          }),
+        );
 
         // Sort by seconds to ensure exact ranking
-        members
-            .sort((a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds));
+        members.sort(
+          (a, b) => b.studyTimeSeconds.compareTo(a.studyTimeSeconds),
+        );
 
         final leaderId = members.isNotEmpty ? members.first.userId : null;
         final normalized = members
-            .map((m) => m.copyWith(
-                  isLeader: leaderId != null && m.userId == leaderId,
-                  isCurrentUser: m.userId == uid,
-                ))
+            .map(
+              (m) => m.copyWith(
+                isLeader: leaderId != null && m.userId == leaderId,
+                isCurrentUser: m.userId == uid,
+              ),
+            )
             .toList();
 
         final stats = GroupStatistics(
@@ -358,7 +382,7 @@ class GroupService {
   }
 
   final Map<String, ({MemberSubjectStats stats, DateTime timestamp})>
-      _subjectStatsCache = {};
+  _subjectStatsCache = {};
   bool _cacheLoaded = false;
   final Set<String> _staleSubjectStatsKeys = {};
 
@@ -367,7 +391,7 @@ class GroupService {
 
   // Member profile cache (name, major, goal, contact, avatar)
   final Map<String, ({Map<String, dynamic> data, DateTime timestamp})>
-      _memberProfileCache = {};
+  _memberProfileCache = {};
   bool _profileCacheLoaded = false;
 
   String _cacheKey(String groupId, String userId, StatisticsPeriod period) =>
@@ -494,10 +518,7 @@ class GroupService {
   }
 
   /// Check if profile cache is stale (older than TTL)
-  bool isMemberProfileStale({
-    required String groupId,
-    required String userId,
-  }) {
+  bool isMemberProfileStale({required String groupId, required String userId}) {
     final key = _profileCacheKey(groupId, userId);
     final cached = _memberProfileCache[key];
     if (cached == null) return true;
@@ -505,7 +526,7 @@ class GroupService {
   }
 
   Future<({MemberSubjectStats stats, DateTime timestamp})?>
-      getCachedMemberSubjectStats({
+  getCachedMemberSubjectStats({
     required String groupId,
     required String userId,
     required StatisticsPeriod period,
@@ -578,7 +599,8 @@ class GroupService {
           ? periodStartUtc
           : effectiveSessionSince;
 
-      final needsSync = forceRefresh ||
+      final needsSync =
+          forceRefresh ||
           isStale ||
           lastSessionsSync == 0 ||
           lastCoursesSync == 0;
@@ -681,8 +703,8 @@ class GroupService {
           expLevel: (data['expLevel'] as num?)?.toInt() ?? 1,
           goalHours: (data['goalHours'] as num?)?.toDouble(),
           totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
-          pomodoroLongBreakMinutes:
-              (data['pomodoroLongBreakMinutes'] as num?)?.toInt(),
+          pomodoroLongBreakMinutes: (data['pomodoroLongBreakMinutes'] as num?)
+              ?.toInt(),
           sortOrder: (data['sortOrder'] as num?)?.toInt(),
           hiddenFromLeaderboard: data['hiddenFromLeaderboard'] == true,
           dirty: false,
@@ -717,7 +739,8 @@ class GroupService {
       final currentSessions = await Storage.getPeerSessions(targetUserId);
       if (currentSessions.any((s) => s.endUtcMs == 0 && !s.deleted)) {
         debugPrint(
-            'Detected corrupted peer sessions for $targetUserId. Forcing full re-sync.');
+          'Detected corrupted peer sessions for $targetUserId. Forcing full re-sync.',
+        );
         await Storage.setLastPeerSync(targetUserId, 0);
       }
 
@@ -755,13 +778,15 @@ class GroupService {
           id: doc.id,
           uid: targetUserId, // Owner is the target user
           courseId: data['courseId'] as String? ?? 'unknown',
-          startUtcMs: startUtc?.millisecondsSinceEpoch ??
+          startUtcMs:
+              startUtc?.millisecondsSinceEpoch ??
               ((data['start'] ?? data['startUtc']) as Timestamp?)
                   ?.toDate()
                   .toUtc()
                   .millisecondsSinceEpoch ??
               0,
-          endUtcMs: ((data['end'] ?? data['endUtc']) as Timestamp?)
+          endUtcMs:
+              ((data['end'] ?? data['endUtc']) as Timestamp?)
                   ?.toDate()
                   .toUtc()
                   .millisecondsSinceEpoch ??
@@ -785,8 +810,11 @@ class GroupService {
     }
   }
 
-  MemberSubjectStats _calculateStatsFromSessions(List<LocalSession> sessions,
-      List<LocalCourse> courses, StatisticsPeriod period) {
+  MemberSubjectStats _calculateStatsFromSessions(
+    List<LocalSession> sessions,
+    List<LocalCourse> courses,
+    StatisticsPeriod period,
+  ) {
     // Index courses for fast lookup
     final courseMap = {for (final c in courses) c.id: c};
 
@@ -800,8 +828,10 @@ class GroupService {
     for (final s in sessions) {
       if (s.deleted) continue;
 
-      final date = DateTime.fromMillisecondsSinceEpoch(s.endUtcMs, isUtc: true)
-          .toLocal();
+      final date = DateTime.fromMillisecondsSinceEpoch(
+        s.endUtcMs,
+        isUtc: true,
+      ).toLocal();
       if (date.isBefore(start)) continue;
 
       final courseId = s.courseId;
@@ -813,7 +843,10 @@ class GroupService {
 
       if (!subjectMap.containsKey(courseId)) {
         subjectMap[courseId] = SubjectStat(
-            name: course.name, colorValue: course.colorValue, seconds: 0);
+          name: course.name,
+          colorValue: course.colorValue,
+          seconds: 0,
+        );
       }
       final current = subjectMap[courseId]!;
       subjectMap[courseId] = SubjectStat(
@@ -854,9 +887,9 @@ class GroupService {
     required StatisticsPeriod period,
   }) async {
     // ... existing implementation ...
-    return Future.value(MemberSubjectStats(
-        totalSeconds: 0,
-        subjectStats: {})); // Stub to avoid error in replacement
+    return Future.value(
+      MemberSubjectStats(totalSeconds: 0, subjectStats: {}),
+    ); // Stub to avoid error in replacement
   }
 
   Future<void> sendNudge({
@@ -885,17 +918,15 @@ class GroupService {
           final remaining = cooldownEnd.difference(now);
           final minutes = remaining.inMinutes;
           throw StateError(
-              'Please wait $minutes more minute${minutes != 1 ? 's' : ''} before nudging this member again');
+            'Please wait $minutes more minute${minutes != 1 ? 's' : ''} before nudging this member again',
+          );
         }
       }
     }
 
     final callable = FirebaseFunctions.instance.httpsCallable('sendNudge');
     try {
-      await callable.call({
-        'groupId': groupId,
-        'targetUserId': targetUserId,
-      });
+      await callable.call({'groupId': groupId, 'targetUserId': targetUserId});
 
       // Record cooldown timestamp after successful send
       await _firestore
@@ -904,10 +935,10 @@ class GroupService {
           .collection('nudgeCooldowns')
           .doc('$groupId-$targetUserId')
           .set({
-        'lastNudgeAt': FieldValue.serverTimestamp(),
-        'groupId': groupId,
-        'targetUserId': targetUserId,
-      });
+            'lastNudgeAt': FieldValue.serverTimestamp(),
+            'groupId': groupId,
+            'targetUserId': targetUserId,
+          });
     } on FirebaseFunctionsException catch (e) {
       throw StateError(e.message ?? 'Failed to send nudge');
     } catch (_) {
@@ -931,10 +962,10 @@ class GroupService {
         .doc('$groupId-$targetUserId')
         .snapshots()
         .map((doc) {
-      if (!doc.exists) return null;
-      final timestamp = doc.data()?['lastNudgeAt'] as Timestamp?;
-      return timestamp?.toDate();
-    });
+          if (!doc.exists) return null;
+          final timestamp = doc.data()?['lastNudgeAt'] as Timestamp?;
+          return timestamp?.toDate();
+        });
   }
 
   Future<void> createGroup({
@@ -978,31 +1009,22 @@ class GroupService {
       'role': GroupRole.admin.label,
       'joinedAt': joinedAt,
     });
-    batch.set(
-      _userMembershipRef(uid, groupRef.id),
-      {
-        'role': GroupRole.admin.label,
-        'joinedAt': joinedAt,
-      },
-    );
-    batch.set(
-      _userDoc(uid),
-      {
-        'groupIds': FieldValue.arrayUnion([groupRef.id]),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_userMembershipRef(uid, groupRef.id), {
+      'role': GroupRole.admin.label,
+      'joinedAt': joinedAt,
+    });
+    batch.set(_userDoc(uid), {
+      'groupIds': FieldValue.arrayUnion([groupRef.id]),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 
   Future<void> joinPrivateGroup(String groupId, String joinCode) async {
     try {
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('joinPrivateGroup');
-      await callable.call({
-        'groupId': groupId,
-        'joinCode': joinCode,
-      });
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'joinPrivateGroup',
+      );
+      await callable.call({'groupId': groupId, 'joinCode': joinCode});
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'failed-precondition' ||
           (e.message?.contains('not private') ?? false)) {
@@ -1023,7 +1045,8 @@ class GroupService {
       if (!groupSnap.exists) {
         throw StateError('Group not found');
       }
-      final visibility = groupSnap.data()?['visibility'] as String? ??
+      final visibility =
+          groupSnap.data()?['visibility'] as String? ??
           GroupVisibility.public.label;
       if (visibility != GroupVisibility.public.label) {
         throw StateError('Unable to join a private group without an invite');
@@ -1042,13 +1065,9 @@ class GroupService {
         'role': GroupRole.member.label,
         'joinedAt': FieldValue.serverTimestamp(),
       });
-      txn.set(
-        _userDoc(uid),
-        {
-          'groupIds': FieldValue.arrayUnion([groupId]),
-        },
-        SetOptions(merge: true),
-      );
+      txn.set(_userDoc(uid), {
+        'groupIds': FieldValue.arrayUnion([groupId]),
+      }, SetOptions(merge: true));
 
       final currentCount =
           (groupSnap.data()?['memberCount'] as num?)?.toInt() ?? 0;
@@ -1131,7 +1150,10 @@ class GroupService {
     final uid = _requireUserId();
     await _ensureIsCreator(uid: uid, groupId: groupId);
     return _changeMemberRole(
-        groupId: groupId, memberId: memberId, newRole: GroupRole.admin);
+      groupId: groupId,
+      memberId: memberId,
+      newRole: GroupRole.admin,
+    );
   }
 
   Future<void> demoteToMember({
@@ -1141,7 +1163,10 @@ class GroupService {
     final uid = _requireUserId();
     await _ensureIsCreator(uid: uid, groupId: groupId);
     return _changeMemberRole(
-        groupId: groupId, memberId: memberId, newRole: GroupRole.member);
+      groupId: groupId,
+      memberId: memberId,
+      newRole: GroupRole.member,
+    );
   }
 
   Future<void> _changeMemberRole({
@@ -1188,8 +1213,9 @@ class GroupService {
     }
 
     try {
-      final callable =
-          FirebaseFunctions.instance.httpsCallable('deleteGroupCallable');
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'deleteGroupCallable',
+      );
       await callable.call({'groupId': groupId});
     } catch (e) {
       if (e is FirebaseFunctionsException) {
@@ -1234,13 +1260,9 @@ class GroupService {
           txn.delete(groupRef.collection('members').doc(memberId));
           txn.delete(groupRef.collection('aggregates').doc(memberId));
 
-          txn.set(
-            _userDoc(memberId),
-            {
-              'groupIds': FieldValue.arrayRemove([groupId]),
-            },
-            SetOptions(merge: true),
-          );
+          txn.set(_userDoc(memberId), {
+            'groupIds': FieldValue.arrayRemove([groupId]),
+          }, SetOptions(merge: true));
           return;
         } else {
           throw StateError('Group not found');
@@ -1254,13 +1276,9 @@ class GroupService {
         final membershipSnap = await txn.get(userMembershipRef);
         if (membershipSnap.exists) {
           txn.delete(userMembershipRef);
-          txn.set(
-            _userDoc(memberId),
-            {
-              'groupIds': FieldValue.arrayRemove([groupId]),
-            },
-            SetOptions(merge: true),
-          );
+          txn.set(_userDoc(memberId), {
+            'groupIds': FieldValue.arrayRemove([groupId]),
+          }, SetOptions(merge: true));
         }
         return;
       }
@@ -1269,13 +1287,9 @@ class GroupService {
       txn.delete(userMembershipRef);
       txn.delete(groupRef.collection('aggregates').doc(memberId));
       if (memberId == uid) {
-        txn.set(
-          _userDoc(memberId),
-          {
-            'groupIds': FieldValue.arrayRemove([groupId]),
-          },
-          SetOptions(merge: true),
-        );
+        txn.set(_userDoc(memberId), {
+          'groupIds': FieldValue.arrayRemove([groupId]),
+        }, SetOptions(merge: true));
       }
       final currentCount =
           (groupSnap.data()?['memberCount'] as num?)?.toInt() ?? 1;
