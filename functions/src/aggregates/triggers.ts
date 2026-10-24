@@ -1,30 +1,21 @@
 import * as functions from 'firebase-functions/v1';
-import { updateUserAggregates } from './update_user_aggregates';
+import { createAggregateHandlers } from './handlers';
+
+function shadowPercentOf(value: string | undefined): number {
+  const percent = Number(value);
+  if (!Number.isFinite(percent)) return 0;
+  return Math.min(100, Math.max(0, percent));
+}
+
+const handlers = createAggregateHandlers({
+  mode: process.env.AGG_INCREMENTAL === 'on' ? 'on' : 'off',
+  shadowPercent: shadowPercentOf(process.env.AGG_SHADOW_PERCENT),
+});
 
 export const onStudySessionWrite = functions.firestore
   .document('users/{userId}/sessions/{sessionId}')
-  .onWrite(async (change, context) => {
-    const { userId } = context.params;
-    console.log(`[onStudySessionWrite] userId=${userId}`);
-    await updateUserAggregates(userId);
-  });
+  .onWrite(handlers.onSession);
 
 export const onCourseWrite = functions.firestore
   .document('users/{userId}/courses/{courseId}')
-  .onWrite(async (change, context) => {
-    const { userId } = context.params;
-
-    // Check if hiddenFromLeaderboard changed
-    const before = change.before.data();
-    const after = change.after.data();
-
-    // If it's a delete or create, we might need to update.
-    // If update, check if hidden status changed.
-    const hiddenBefore = before?.hiddenFromLeaderboard === true;
-    const hiddenAfter = after?.hiddenFromLeaderboard === true;
-
-    if (hiddenBefore !== hiddenAfter || !before || !after) {
-      console.log(`[onCourseWrite] userId=${userId} courseId=${context.params.courseId} hidden=${hiddenAfter}`);
-      await updateUserAggregates(userId);
-    }
-  });
+  .onWrite(handlers.onCourse);
