@@ -35,7 +35,9 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
     if (_index == -1) _index = 0;
 
     _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
   }
 
@@ -83,14 +85,17 @@ class _SwipeSelectorState<T> extends State<SwipeSelector<T>>
         width: double.infinity,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          color: widget.backgroundColor ??
+          color:
+              widget.backgroundColor ??
               theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         ),
         child: SlideTransition(
-          position: _slide.drive(Tween<Offset>(
-            begin: Offset.zero,
-            end: Offset(0.15 * -_slideDir, 0),
-          )),
+          position: _slide.drive(
+            Tween<Offset>(
+              begin: Offset.zero,
+              end: Offset(0.15 * -_slideDir, 0),
+            ),
+          ),
           child: widget.builder(context, widget.items[_index]),
         ),
       ),

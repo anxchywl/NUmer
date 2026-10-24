@@ -69,9 +69,10 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     }
 
     _numericController = TextEditingController(
-        text: widget.habit.type == HabitType.numeric
-            ? _currentValue.toInt().toString()
-            : "");
+      text: widget.habit.type == HabitType.numeric
+          ? _currentValue.toInt().toString()
+          : "",
+    );
     _numericController.addListener(_onNumericControllerChanged);
 
     // Fetch fresh data from Storage (bypasses stale l7 cache)
@@ -125,13 +126,18 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       // Only recalc from sessions for time habits with connected courses
       if (widget.habit.type == HabitType.time &&
           widget.habit.connectedCourseIds.isNotEmpty) {
-        final start =
-            DateTime(widget.date.year, widget.date.month, widget.date.day);
+        final start = DateTime(
+          widget.date.year,
+          widget.date.month,
+          widget.date.day,
+        );
         final end = start.add(const Duration(days: 1));
 
         // 1. Get session contributions from Storage
-        final allContributions =
-            await Storage.secondsByCourseBetween(start, end);
+        final allContributions = await Storage.secondsByCourseBetween(
+          start,
+          end,
+        );
 
         double sessionTotal = 0.0;
         for (final id in widget.habit.connectedCourseIds) {
@@ -179,8 +185,9 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       final s = v % 60;
       return "${h.toInt().toString().padLeft(2, '0')}:${m.toInt().toString().padLeft(2, '0')}:${s.toInt().toString().padLeft(2, '0')}";
     }
-    final numberFormat =
-        NumberFormat.decimalPattern(AppLocalizations.of(context)!.localeName);
+    final numberFormat = NumberFormat.decimalPattern(
+      AppLocalizations.of(context)!.localeName,
+    );
     if (v % 1 == 0) return numberFormat.format(v.toInt());
     return numberFormat.format(double.parse(v.toStringAsFixed(1)));
   }
@@ -266,9 +273,11 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  IconData(widget.habit.iconCodePoint,
-                      fontFamily: widget.habit.iconFamily,
-                      fontPackage: widget.habit.iconPackage),
+                  IconData(
+                    widget.habit.iconCodePoint,
+                    fontFamily: widget.habit.iconFamily,
+                    fontPackage: widget.habit.iconPackage,
+                  ),
                   color: widget.habit.color,
                   size: 20,
                 ),
@@ -278,9 +287,12 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.habit.name,
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      widget.habit.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -292,13 +304,15 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
             child: SegmentedButton<LoggingMode>(
               segments: [
                 ButtonSegment(
-                    value: LoggingMode.set,
-                    label: Text(l10n.habitLogSetTotal),
-                    icon: const Icon(Icons.edit)),
+                  value: LoggingMode.set,
+                  label: Text(l10n.habitLogSetTotal),
+                  icon: const Icon(Icons.edit),
+                ),
                 ButtonSegment(
-                    value: LoggingMode.add,
-                    label: Text(l10n.habitLogAddMore),
-                    icon: const Icon(Icons.add)),
+                  value: LoggingMode.add,
+                  label: Text(l10n.habitLogAddMore),
+                  icon: const Icon(Icons.add),
+                ),
               ],
               selected: {_mode},
               onSelectionChanged: (val) {
@@ -341,11 +355,16 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
               style: FilledButton.styleFrom(
                 backgroundColor: widget.habit.color,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
-              child: Text(l10n.habitUpdateProgress,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text(
+                l10n.habitUpdateProgress,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -372,8 +391,9 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
                         _numericController.text,
                         style: theme.textTheme.displayMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface
-                              .withAlpha(128), // Dimmed to show locked
+                          color: theme.colorScheme.onSurface.withAlpha(
+                            128,
+                          ), // Dimmed to show locked
                           height: 1.1,
                         ),
                       ),
@@ -496,12 +516,16 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.habitProgressLabel(dateStr),
-                style: theme.textTheme.labelMedium),
             Text(
-                "$totalLabel / $targetLabel (${(total / target * 100).toInt()}%)",
-                style: theme.textTheme.labelMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+              l10n.habitProgressLabel(dateStr),
+              style: theme.textTheme.labelMedium,
+            ),
+            Text(
+              "$totalLabel / $targetLabel (${(total / target * 100).toInt()}%)",
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -519,16 +543,23 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
           _mode == LoggingMode.set
               ? l10n.habitLogSettingTotal(totalLabel)
               : l10n.habitLogAdding(
-                  _formatValue(_currentValue), _formatValue(_initialValue)),
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  _formatValue(_currentValue),
+                  _formatValue(_initialValue),
+                ),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
   }
 
   Widget _buildStackedProgressBar(
-      ThemeData theme, double total, double target, bool isCompleted) {
+    ThemeData theme,
+    double total,
+    double target,
+    bool isCompleted,
+  ) {
     if (total <= 0) {
       return Container(color: theme.colorScheme.surfaceContainerHighest);
     }
@@ -538,7 +569,8 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         value: (total / target).clamp(0.0, 1.0),
         backgroundColor: theme.colorScheme.surfaceContainerHighest,
         valueColor: AlwaysStoppedAnimation<Color>(
-            isCompleted ? Colors.green : widget.habit.color),
+          isCompleted ? Colors.green : widget.habit.color,
+        ),
       );
     }
 
@@ -570,31 +602,38 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     for (final entry in _courseContributions.entries) {
       final seconds = entry.value.toDouble();
       if (seconds <= 0) continue;
-      final course = courses.firstWhere((c) => c.id == entry.key,
-          orElse: () => const Course(
-              id: 'unknown',
-              name: '?',
-              colorValue: 0xFF9E9E9E,
-              day: '',
-              start: '',
-              end: ''));
+      final course = courses.firstWhere(
+        (c) => c.id == entry.key,
+        orElse: () => const Course(
+          id: 'unknown',
+          name: '?',
+          colorValue: 0xFF9E9E9E,
+          day: '',
+          start: '',
+          end: '',
+        ),
+      );
 
       final pct = (seconds / target).clamp(0.0, 1.0);
       if (pct > 0) {
-        children.add(Flexible(
-          flex: (pct * 1000).toInt(),
-          child: Container(color: Color(course.colorValue)),
-        ));
+        children.add(
+          Flexible(
+            flex: (pct * 1000).toInt(),
+            child: Container(color: Color(course.colorValue)),
+          ),
+        );
       }
     }
 
     if (manualSeconds > 0) {
       final pct = (manualSeconds / target).clamp(0.0, 1.0);
       if (pct > 0) {
-        children.add(Flexible(
-          flex: (pct * 1000).toInt(),
-          child: Container(color: widget.habit.color),
-        ));
+        children.add(
+          Flexible(
+            flex: (pct * 1000).toInt(),
+            child: Container(color: widget.habit.color),
+          ),
+        );
       }
     }
 
@@ -602,10 +641,12 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     final currentTotalPct = (total / target).clamp(0.0, 1.0);
     if (currentTotalPct < 1.0) {
       final remainingPct = 1.0 - currentTotalPct;
-      children.add(Flexible(
-        flex: (remainingPct * 1000).toInt(),
-        child: Container(color: theme.colorScheme.surfaceContainerHighest),
-      ));
+      children.add(
+        Flexible(
+          flex: (remainingPct * 1000).toInt(),
+          child: Container(color: theme.colorScheme.surfaceContainerHighest),
+        ),
+      );
     }
 
     return Row(
@@ -621,15 +662,18 @@ class MaxValueFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     if (newValue.text.isEmpty) return newValue;
     final val = double.tryParse(newValue.text);
     if (val == null) return oldValue;
     if (val > max) {
       return TextEditingValue(
         text: max.toInt().toString(),
-        selection:
-            TextSelection.collapsed(offset: max.toInt().toString().length),
+        selection: TextSelection.collapsed(
+          offset: max.toInt().toString().length,
+        ),
       );
     }
     return newValue;

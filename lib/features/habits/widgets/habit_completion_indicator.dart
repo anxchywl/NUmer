@@ -42,8 +42,9 @@ class HabitCompletionIndicator extends StatelessWidget {
       );
     } else {
       // Numeric / Time
-      final progress =
-          habit.targetValue > 0 ? currentValue / habit.targetValue : 0.0;
+      final progress = habit.targetValue > 0
+          ? currentValue / habit.targetValue
+          : 0.0;
 
       // Calculate milestone-based stroke width
       double dynamicStrokeWidth = 2.0;
