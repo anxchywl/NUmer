@@ -13,11 +13,7 @@ class ProfileSetupScreen extends StatelessWidget {
     final auth = context.watch<AuthController>();
 
     if (auth.currentUser == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final theme = Theme.of(context);
@@ -46,7 +42,8 @@ class ProfileSetupScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     ProfileForm(
-                      initialName: (auth.profile?['profileName'] as String?) ??
+                      initialName:
+                          (auth.profile?['profileName'] as String?) ??
                           (auth.profile?['displayName'] as String?) ??
                           (auth.currentUser?.displayName ?? ''),
                       initialContact:

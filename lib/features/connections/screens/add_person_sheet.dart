@@ -42,8 +42,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
     _phoneController = TextEditingController(text: person?.phone ?? '');
     _emailController = TextEditingController(text: person?.email ?? '');
     _notesController = TextEditingController(text: person?.notes ?? '');
-    _tagsController =
-        TextEditingController(text: person?.tags.join(', ') ?? '');
+    _tagsController = TextEditingController(
+      text: person?.tags.join(', ') ?? '',
+    );
     _selectedGroupIds = person?.groupIds.toSet() ?? {};
     _lastContactedAt = person?.lastContactedAt;
     _remindToReachOut = person?.remindToReachOut ?? false;
@@ -126,9 +127,7 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           }
                           return null;
                         },
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(64),
-                        ],
+                        inputFormatters: [LengthLimitingTextInputFormatter(64)],
                         textCapitalization: TextCapitalization.words,
                       ),
 
@@ -152,8 +151,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           spacing: 8,
                           runSpacing: 8,
                           children: groups.map((group) {
-                            final isSelected =
-                                _selectedGroupIds.contains(group.id);
+                            final isSelected = _selectedGroupIds.contains(
+                              group.id,
+                            );
                             return FilterChip(
                               label: Text(group.name),
                               selected: isSelected,
@@ -161,8 +161,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                               avatar: isSelected
                                   ? null
                                   : CircleAvatar(
-                                      backgroundColor:
-                                          group.color.withAlpha(51),
+                                      backgroundColor: group.color.withAlpha(
+                                        51,
+                                      ),
                                       child: Icon(
                                         group.icon,
                                         size: 14,
@@ -219,7 +220,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(20),
                           FilteringTextInputFormatter.allow(
-                              RegExp(r'[\d\s\-+().]')),
+                            RegExp(r'[\d\s\-+().]'),
+                          ),
                         ],
                       ),
 
@@ -267,7 +269,8 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                           color: colorScheme.primary,
                         ),
                         title: Text(
-                            AppLocalizations.of(context)!.lastContactedLabel),
+                          AppLocalizations.of(context)!.lastContactedLabel,
+                        ),
                         subtitle: Text(
                           _lastContactedAt != null
                               ? DateFormat.yMMMd().format(_lastContactedAt!)
@@ -301,8 +304,9 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                       // Remind me toggle
                       SwitchListTile(
                         contentPadding: EdgeInsets.zero,
-                        title:
-                            Text(AppLocalizations.of(context)!.remindMeLabel),
+                        title: Text(
+                          AppLocalizations.of(context)!.remindMeLabel,
+                        ),
                         subtitle: Text(
                           'Coming soon',
                           style: TextStyle(color: colorScheme.onSurfaceVariant),
@@ -339,9 +343,11 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(_isEditing
-                        ? AppLocalizations.of(context)!.saveChanges
-                        : AppLocalizations.of(context)!.addPersonTitle),
+                    : Text(
+                        _isEditing
+                            ? AppLocalizations.of(context)!.saveChanges
+                            : AppLocalizations.of(context)!.addPersonTitle,
+                      ),
               ),
             ),
           ],
@@ -416,10 +422,10 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
       final tagsText = _tagsController.text.trim();
       final tags = tagsText.isNotEmpty
           ? tagsText
-              .split(',')
-              .map((t) => t.trim())
-              .where((t) => t.isNotEmpty)
-              .toList()
+                .split(',')
+                .map((t) => t.trim())
+                .where((t) => t.isNotEmpty)
+                .toList()
           : <String>[];
 
       if (_isEditing) {
@@ -475,8 +481,10 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  AppLocalizations.of(context)!.errorSaving(e.toString()))),
+            content: Text(
+              AppLocalizations.of(context)!.errorSaving(e.toString()),
+            ),
+          ),
         );
       }
     } finally {

@@ -41,9 +41,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       return Scaffold(
         body: CustomScrollView(
           slivers: [
-            SliverAppBar(
-              title: Text(AppLocalizations.of(context)!.groups),
-            ),
+            SliverAppBar(title: Text(AppLocalizations.of(context)!.groups)),
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
@@ -63,8 +61,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
         builder: (context, membershipSnap) {
           if (membershipSnap.hasError) {
             return Center(
-              child: Text(AppLocalizations.of(context)!
-                  .errorLoadingMemberships(membershipSnap.error.toString())),
+              child: Text(
+                AppLocalizations.of(
+                  context,
+                )!.errorLoadingMemberships(membershipSnap.error.toString()),
+              ),
             );
           }
 
@@ -78,8 +79,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
           final showSearchSection = !hasMemberships;
           final groupsStream = showSearchSection
               ? (_searchQuery.isEmpty
-                  ? groupService.watchPublicGroups()
-                  : groupService.searchGroups(_searchQuery))
+                    ? groupService.watchPublicGroups()
+                    : groupService.searchGroups(_searchQuery))
               : null;
 
           return CustomScrollView(
@@ -90,16 +91,17 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       ? AppLocalizations.of(context)!.yourGroup
                       : AppLocalizations.of(context)!.groups,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
                 actions: [
                   if (hasMemberships)
                     TipIcon(
                       title: AppLocalizations.of(context)!.tip,
-                      message:
-                          AppLocalizations.of(context)!.leaderboardHintMessage,
+                      message: AppLocalizations.of(
+                        context,
+                      )!.leaderboardHintMessage,
                     ),
                 ],
               ),
@@ -119,8 +121,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       controller: _searchController,
                       focusNode: _searchFocusNode,
                       decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)!.findPublicGroupHint,
+                        hintText: AppLocalizations.of(
+                          context,
+                        )!.findPublicGroupHint,
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
                         fillColor: Theme.of(context)
@@ -132,7 +135,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                       ),
                       onChanged: (val) {
                         setState(() {
@@ -149,10 +154,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       _searchQuery.isEmpty
                           ? AppLocalizations.of(context)!.publicGroups
                           : AppLocalizations.of(context)!.searchResults,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -165,9 +169,13 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Center(
-                              child: Text(AppLocalizations.of(context)!
-                                  .errorLoadingGroups(
-                                      groupSnap.error.toString())),
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.errorLoadingGroups(
+                                  groupSnap.error.toString(),
+                                ),
+                              ),
                             ),
                           ),
                         );
@@ -181,13 +189,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             child: Center(
                               child: Text(
                                 AppLocalizations.of(context)!.noSearchResults,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyLarge
+                                style: Theme.of(context).textTheme.bodyLarge
                                     ?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                     ),
                                 textAlign: TextAlign.center,
                               ),
@@ -197,35 +203,34 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       }
 
                       return SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final group = groups[index];
-                            final isJoined =
-                                memberships.any((m) => m.groupId == group.id);
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final group = groups[index];
+                          final isJoined = memberships.any(
+                            (m) => m.groupId == group.id,
+                          );
 
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: _GroupCard(
-                                group: group,
-                                isJoining: _joining.contains(group.id),
-                                onJoin: isJoined
-                                    ? null
-                                    : () => _handleJoinGroup(group),
-                              ),
-                            );
-                          },
-                          childCount: groups.length,
-                        ),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: _GroupCard(
+                              group: group,
+                              isJoining: _joining.contains(group.id),
+                              onJoin: isJoined
+                                  ? null
+                                  : () => _handleJoinGroup(group),
+                            ),
+                          );
+                        }, childCount: groups.length),
                       );
                     },
                   ),
               ],
               SliverPadding(
                 padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).padding.bottom + 24),
+                  bottom: MediaQuery.of(context).padding.bottom + 24,
+                ),
               ),
             ],
           );
@@ -253,7 +258,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
         await context.read<GroupService>().joinGroup(group.id);
         if (!mounted) return;
         showAppMessage(
-            context, AppLocalizations.of(context)!.joinedSuccessfully);
+          context,
+          AppLocalizations.of(context)!.joinedSuccessfully,
+        );
       } catch (error) {
         if (!mounted) return;
         showAppMessage(
@@ -283,7 +290,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
       await context.read<GroupService>().joinPrivateGroup(groupId, code);
       if (!mounted) return;
       showAppMessage(
-          context, AppLocalizations.of(context)!.joinedPrivateSuccessfully);
+        context,
+        AppLocalizations.of(context)!.joinedPrivateSuccessfully,
+      );
     } catch (error) {
       if (!mounted) return;
       showAppMessage(
@@ -299,18 +308,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
   }
 
   void _openCreateGroup(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const CreateGroupScreen()));
   }
 }
 
 class _GroupCard extends StatelessWidget {
-  const _GroupCard({
-    required this.group,
-    this.isJoining = false,
-    this.onJoin,
-  });
+  const _GroupCard({required this.group, this.isJoining = false, this.onJoin});
 
   final Group group;
   final bool isJoining;
@@ -348,8 +353,9 @@ class _GroupCard extends StatelessWidget {
               group.description.isEmpty
                   ? AppLocalizations.of(context)!.noDescription
                   : group.description,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -365,8 +371,9 @@ class _GroupCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          AppLocalizations.of(context)!
-                              .membersCount(group.memberCount),
+                          AppLocalizations.of(
+                            context,
+                          )!.membersCount(group.memberCount),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -562,8 +569,8 @@ class _MembershipCard extends StatelessWidget {
               group.createdBy == currentUserId
                   ? AppLocalizations.of(context)!.owner
                   : (membership.isAdmin
-                      ? AppLocalizations.of(context)!.administrator
-                      : AppLocalizations.of(context)!.memberLabel),
+                        ? AppLocalizations.of(context)!.administrator
+                        : AppLocalizations.of(context)!.memberLabel),
             ),
             trailing: IconButton(
               icon: const Icon(Icons.settings_outlined),
@@ -619,7 +626,8 @@ class _JoinPrivateGroupDialogState extends State<_JoinPrivateGroupDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-          AppLocalizations.of(context)!.joinGroupDialogTitle(widget.groupName)),
+        AppLocalizations.of(context)!.joinGroupDialogTitle(widget.groupName),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

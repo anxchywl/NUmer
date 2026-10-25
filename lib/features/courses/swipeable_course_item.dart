@@ -92,9 +92,10 @@ class _SwipeableCourseItemState extends State<SwipeableCourseItem>
   }
 
   void _runAnimationTo(double target) {
-    _animation = Tween<double>(begin: _dragOffset, end: target).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _animation = Tween<double>(
+      begin: _dragOffset,
+      end: target,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward(from: 0);
   }
@@ -105,8 +106,10 @@ class _SwipeableCourseItemState extends State<SwipeableCourseItem>
 
     // Opacity
     final maxDist = screenWidth * _kTriggerThreshold;
-    final double opacity =
-        (_dragOffset.abs() / (maxDist * 0.2)).clamp(0.0, 1.0);
+    final double opacity = (_dragOffset.abs() / (maxDist * 0.2)).clamp(
+      0.0,
+      1.0,
+    );
 
     Widget binIcon = Opacity(
       opacity: opacity,
@@ -133,16 +136,19 @@ class _SwipeableCourseItemState extends State<SwipeableCourseItem>
               children: [
                 if (_dragOffset > 0) // Swiping right, icon on the left
                   Positioned(
-                    left: (_dragOffset / 2) -
+                    left:
+                        (_dragOffset / 2) -
                         24, // Parallax center: width/2 - iconHalf
-                    top: 0, bottom: 0,
+                    top: 0,
+                    bottom: 0,
                     width: 48,
                     child: Center(child: binIcon),
                   ),
                 if (_dragOffset < 0) // Swiping left, icon on the right
                   Positioned(
                     right: (_dragOffset.abs() / 2) - 24, // Parallax center
-                    top: 0, bottom: 0,
+                    top: 0,
+                    bottom: 0,
                     width: 48,
                     child: Center(child: binIcon),
                   ),
@@ -153,10 +159,7 @@ class _SwipeableCourseItemState extends State<SwipeableCourseItem>
           // Foreground
           Transform.translate(
             offset: Offset(_dragOffset, 0),
-            child: Material(
-              color: Colors.transparent,
-              child: widget.child,
-            ),
+            child: Material(color: Colors.transparent, child: widget.child),
           ),
         ],
       ),

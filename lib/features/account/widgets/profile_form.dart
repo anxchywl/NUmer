@@ -91,14 +91,17 @@ class _ProfileFormState extends State<ProfileForm> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_scrollController == null) {
-      final viewportWidth = MediaQuery.of(context).size.width -
+      final viewportWidth =
+          MediaQuery.of(context).size.width -
           72; // Padding: 16(screen) + 20(card) * 2
       final itemWidth = 68.0;
-      final offset = ((_avatarIndex ?? 0) * itemWidth) -
+      final offset =
+          ((_avatarIndex ?? 0) * itemWidth) -
           (viewportWidth / 2) +
           (itemWidth / 2);
-      _scrollController =
-          ScrollController(initialScrollOffset: offset < 0 ? 0 : offset);
+      _scrollController = ScrollController(
+        initialScrollOffset: offset < 0 ? 0 : offset,
+      );
     }
   }
 
@@ -189,8 +192,9 @@ class _ProfileFormState extends State<ProfileForm> {
     final data = ProfileFormData(
       name: _nameCtrl.text.trim(),
       major: _majorCtrl.text.trim().isEmpty ? null : _majorCtrl.text.trim(),
-      contact:
-          _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
+      contact: _contactCtrl.text.trim().isEmpty
+          ? null
+          : _contactCtrl.text.trim(),
       goal: _goalCtrl.text.trim().isEmpty ? null : _goalCtrl.text.trim(),
       avatarIndex: _avatarIndex,
       avatarColorValue: _avatarColorValue,
@@ -228,12 +232,13 @@ class _ProfileFormState extends State<ProfileForm> {
     final theme = Theme.of(context);
     final option =
         (_avatarIndex != null && _avatarIndex! < profileAvatarOptions.length)
-            ? profileAvatarOptions[_avatarIndex!]
-            : null;
+        ? profileAvatarOptions[_avatarIndex!]
+        : null;
     final effectiveBgColor = (_avatarColorValue != null)
         ? Color(_avatarColorValue!)
         : (option?.background ?? theme.colorScheme.primaryContainer);
-    final isDark = ThemeData.estimateBrightnessForColor(effectiveBgColor) ==
+    final isDark =
+        ThemeData.estimateBrightnessForColor(effectiveBgColor) ==
         Brightness.dark;
     final optionIconColor = isDark ? Colors.white : Colors.black87;
 
@@ -250,20 +255,21 @@ class _ProfileFormState extends State<ProfileForm> {
                 backgroundColor: option == null
                     ? Colors.transparent
                     : (_avatarColorValue != null
-                        ? Color(_avatarColorValue!)
-                        : option.background),
+                          ? Color(_avatarColorValue!)
+                          : option.background),
                 child: Icon(
                   option?.icon ?? Icons.person,
                   size: option == null ? 48 : 32,
                   color: option == null
                       ? theme.colorScheme.onSurfaceVariant
                       : (_avatarColorValue != null
-                          ? (ThemeData.estimateBrightnessForColor(
-                                      Color(_avatarColorValue!)) ==
-                                  Brightness.dark
-                              ? Colors.white
-                              : Colors.black87)
-                          : optionIconColor),
+                            ? (ThemeData.estimateBrightnessForColor(
+                                        Color(_avatarColorValue!),
+                                      ) ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black87)
+                            : optionIconColor),
                 ),
               ),
             ),
@@ -329,10 +335,13 @@ class _ProfileFormState extends State<ProfileForm> {
                   if (trimmed.length < 2) {
                     return AppLocalizations.of(context)!.displayNameLength;
                   }
-                  if (!RegExp(r'^[\p{L}\p{N} ]+$', unicode: true)
-                      .hasMatch(trimmed)) {
-                    return AppLocalizations.of(context)!
-                        .displayNameInvalidChars;
+                  if (!RegExp(
+                    r'^[\p{L}\p{N} ]+$',
+                    unicode: true,
+                  ).hasMatch(trimmed)) {
+                    return AppLocalizations.of(
+                      context,
+                    )!.displayNameInvalidChars;
                   }
                   return null;
                 },
@@ -424,10 +433,7 @@ class _ProfileFormState extends State<ProfileForm> {
             return SizeTransition(
               sizeFactor: animation,
               axisAlignment: -1.0,
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
+              child: FadeTransition(opacity: animation, child: child),
             );
           },
           child: _showColorPicker && _avatarIndex != null
@@ -475,10 +481,7 @@ class _ProfileFormState extends State<ProfileForm> {
         ],
       );
     }
-    return Text(
-      widget.primaryButtonLabel,
-      key: const ValueKey('label'),
-    );
+    return Text(widget.primaryButtonLabel, key: const ValueKey('label'));
   }
 }
 
@@ -497,7 +500,8 @@ class _AvatarChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ThemeData.estimateBrightnessForColor(backgroundColor) ==
+    final isDark =
+        ThemeData.estimateBrightnessForColor(backgroundColor) ==
         Brightness.dark;
     final iconColor = isDark ? Colors.white : Colors.black87;
     final borderColor = selected
@@ -514,8 +518,9 @@ class _AvatarChip extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color:
-                backgroundColor.withAlpha(((selected ? 1 : 0.7) * 255).round()),
+            color: backgroundColor.withAlpha(
+              ((selected ? 1 : 0.7) * 255).round(),
+            ),
             shape: BoxShape.circle,
             border: Border.all(color: borderColor, width: selected ? 3 : 1),
           ),

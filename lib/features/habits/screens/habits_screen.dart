@@ -50,8 +50,11 @@ class _HabitsScreenState extends State<HabitsScreen>
     super.initState();
     _updateWeekDates(WeekStart.monday);
     _selectedDate = DateTime.now();
-    _selectedDate =
-        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    _selectedDate = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
     _dateScrollController = ScrollController();
 
     // Scroll to today (middle of the list)
@@ -74,8 +77,9 @@ class _HabitsScreenState extends State<HabitsScreen>
     if (_dateScrollController.hasClients) {
       final screenWidth = MediaQuery.of(context).size.width;
       if (screenWidth == 0) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _scrollToToday(animate: animate));
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToToday(animate: animate),
+        );
         return;
       }
       final itemWidth = (screenWidth - 24) / 7;
@@ -187,363 +191,387 @@ class _HabitsScreenState extends State<HabitsScreen>
           }
           return false;
         },
-        child: CustomScrollView(slivers: [
-          SliverAppBar(
-            systemOverlayStyle: theme.brightness == Brightness.dark
-                ? SystemUiOverlayStyle.light
-                : SystemUiOverlayStyle.dark,
-            floating: true,
-            snap: true,
-            pinned: false,
-            elevation: 0,
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            title: Container(
-              height: 40,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  _buildTabItem(0, l10n.habitsTabProgress),
-                  _buildTabItem(1, l10n.habitsTabList),
-                ],
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.archive_outlined),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const ArchivedHabitsScreen(),
-                    ),
-                  );
-                  if (mounted && _selectedDate.day == DateTime.now().day) {
-                    _scrollToToday(animate: true);
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.calendar_month),
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const HabitsCalendarScreen(),
-                    ),
-                  );
-                  if (mounted && _selectedDate.day == DateTime.now().day) {
-                    _scrollToToday(animate: true);
-                  }
-                },
-              ),
-            ],
-          ),
-          if (_selectedTabIndex == 0) ...[
-            if (_isIos(context))
-              SliverToBoxAdapter(
-                child: SizedBox(height: _iosTopContentClearance(context)),
-              ),
-            // Today View: Check if Eisenhower Matrix is enabled
-            StreamBuilder<List<Habit>>(
-              stream: habitService.habitsStream(uid),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const SliverToBoxAdapter(child: SizedBox());
-                }
-                final allHabits = snapshot.data!;
-                final appState = context.watch<AppState>();
-
-                // If Eisenhower Matrix is enabled, show matrix UI
-                if (appState.eisenhowerMatrixEnabled) {
-                  final placements = Storage.getHabitQuadrantPlacements();
-
-                  // Filter: Hide habits if period goal is met AND not done today
-                  final filteredHabits = allHabits.where((h) {
-                    if (!h.isScheduledFor(_selectedDate)) return false;
-                    // Check completion status for the selected date
-                    final dateKey = _dateKey(_selectedDate);
-                    final currentValue = h.last7[dateKey] ?? 0.0;
-                    final isCompletedOnDate = currentValue >= h.targetValue;
-
-                    // Show if completed on this date OR period goal NOT met.
-                    if (isCompletedOnDate) return true;
-                    return !h.isGoalMetForPeriod(h.last7, _selectedDate,
-                        mondayFirst: appState.weekStart == WeekStart.monday);
-                  }).toList();
-
-                  final unsortedHabits = filteredHabits
-                      .where((h) => !placements.containsKey(h.id))
-                      .toList();
-
-                  // Full-screen matrix layout
-                  final screenHeight = MediaQuery.of(context).size.height;
-                  final topPadding = MediaQuery.of(context).padding.top;
-                  final bottomPadding = MediaQuery.of(context).padding.bottom;
-                  final availableHeight = screenHeight -
-                      topPadding -
-                      kToolbarHeight -
-                      bottomPadding -
-                      20;
-
-                  return SliverToBoxAdapter(
-                    child: SizedBox(
-                      height:
-                          availableHeight - _progressBottomClearance(context),
-                      child: Column(
-                        children: [
-                          // Top Area: Sorter OR Calendar Strip
-                          unsortedHabits.isNotEmpty
-                              ? HabitSorterCard(
-                                  key: ValueKey(unsortedHabits.first.id),
-                                  habit: unsortedHabits.first,
-                                  onPlaced: () {
-                                    setState(() {});
-                                    // After placing, check if all sorted - scroll to today
-                                    if (unsortedHabits.length == 1) {
-                                      Future.delayed(
-                                          const Duration(milliseconds: 100),
-                                          () => _scrollToToday(animate: true));
-                                    }
-                                  },
-                                )
-                              : KeyedSubtree(
-                                  key: _calendarKey,
-                                  child: _buildHorizontalDatePicker(theme),
-                                ),
-
-                          // Matrix grid
-                          Expanded(
-                            child: EisenhowerMatrixWidget(
-                              habits: filteredHabits
-                                  .where((h) => placements.containsKey(h.id))
-                                  .toList(),
-                              selectedDate: _selectedDate,
-                              onHabitTap: (habit) =>
-                                  _toggleHabit(habit, _selectedDate),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                // Regular view - render date picker first
-                return const SliverToBoxAdapter(child: SizedBox());
-              },
-            ),
-            // Regular Today View components (only when matrix is disabled)
-            Builder(
-              builder: (context) {
-                final appState = context.watch<AppState>();
-                if (appState.eisenhowerMatrixEnabled) {
-                  return const SliverToBoxAdapter(child: SizedBox());
-                }
-                return SliverToBoxAdapter(
-                  child: KeyedSubtree(
-                    key: _calendarKey,
-                    child: _buildHorizontalDatePicker(theme),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              systemOverlayStyle: theme.brightness == Brightness.dark
+                  ? SystemUiOverlayStyle.light
+                  : SystemUiOverlayStyle.dark,
+              floating: true,
+              snap: true,
+              pinned: false,
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              title: Container(
+                height: 40,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
                   ),
-                );
-              },
-            ),
-            // Today View: Habit List (only when matrix is disabled)
-            Builder(
-              builder: (context) {
-                final appState = context.watch<AppState>();
-                if (appState.eisenhowerMatrixEnabled) {
-                  return const SliverToBoxAdapter(child: SizedBox());
-                }
-                return StreamBuilder<List<Habit>>(
-                  stream: habitService.habitsStream(uid),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const SliverToBoxAdapter(child: SizedBox());
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    _buildTabItem(0, l10n.habitsTabProgress),
+                    _buildTabItem(1, l10n.habitsTabList),
+                  ],
+                ),
+              ),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.archive_outlined),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ArchivedHabitsScreen(),
+                      ),
+                    );
+                    if (mounted && _selectedDate.day == DateTime.now().day) {
+                      _scrollToToday(animate: true);
                     }
-                    final habits = snapshot.data!.where((h) {
-                      if (!h.isScheduledFor(_selectedDate)) return false;
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_month),
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const HabitsCalendarScreen(),
+                      ),
+                    );
+                    if (mounted && _selectedDate.day == DateTime.now().day) {
+                      _scrollToToday(animate: true);
+                    }
+                  },
+                ),
+              ],
+            ),
+            if (_selectedTabIndex == 0) ...[
+              if (_isIos(context))
+                SliverToBoxAdapter(
+                  child: SizedBox(height: _iosTopContentClearance(context)),
+                ),
+              // Today View: Check if Eisenhower Matrix is enabled
+              StreamBuilder<List<Habit>>(
+                stream: habitService.habitsStream(uid),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const SliverToBoxAdapter(child: SizedBox());
+                  }
+                  final allHabits = snapshot.data!;
+                  final appState = context.watch<AppState>();
 
+                  // If Eisenhower Matrix is enabled, show matrix UI
+                  if (appState.eisenhowerMatrixEnabled) {
+                    final placements = Storage.getHabitQuadrantPlacements();
+
+                    // Filter: Hide habits if period goal is met AND not done today
+                    final filteredHabits = allHabits.where((h) {
+                      if (!h.isScheduledFor(_selectedDate)) return false;
                       // Check completion status for the selected date
                       final dateKey = _dateKey(_selectedDate);
                       final currentValue = h.last7[dateKey] ?? 0.0;
                       final isCompletedOnDate = currentValue >= h.targetValue;
 
-                      // RULE: Show if completed on this date OR period goal NOT met.
-                      // This allows users to see/edit their progress today even if the goal was just met,
-                      // and ensures the habit reappears if progress drops below the threshold.
+                      // Show if completed on this date OR period goal NOT met.
                       if (isCompletedOnDate) return true;
-                      return !h.isGoalMetForPeriod(h.last7, _selectedDate,
-                          mondayFirst: appState.weekStart == WeekStart.monday);
+                      return !h.isGoalMetForPeriod(
+                        h.last7,
+                        _selectedDate,
+                        mondayFirst: appState.weekStart == WeekStart.monday,
+                      );
                     }).toList();
 
-                    // Unified Order: Use valid habits stream order directly.
-                    // This ensures consistency with "My Habits" and Statistics.
+                    final unsortedHabits = filteredHabits
+                        .where((h) => !placements.containsKey(h.id))
+                        .toList();
 
-                    if (habits.isEmpty) {
-                      return SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              bottom: _progressBottomClearance(context),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.done_all,
-                                    size: 48, color: theme.colorScheme.outline),
-                                const SizedBox(height: 16),
-                                Text(l10n.habitsEmptyToday,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                            color: theme.colorScheme.outline)),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }
+                    // Full-screen matrix layout
+                    final screenHeight = MediaQuery.of(context).size.height;
+                    final topPadding = MediaQuery.of(context).padding.top;
+                    final bottomPadding = MediaQuery.of(context).padding.bottom;
+                    final availableHeight =
+                        screenHeight -
+                        topPadding -
+                        kToolbarHeight -
+                        bottomPadding -
+                        20;
 
-                    return SliverPadding(
-                      padding: EdgeInsets.only(
-                        bottom: _progressBottomClearance(context),
-                      ),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final habit = habits[index];
-                            return _buildTodayHabitItem(habit, theme, l10n);
-                          },
-                          childCount: habits.length,
+                    return SliverToBoxAdapter(
+                      child: SizedBox(
+                        height:
+                            availableHeight - _progressBottomClearance(context),
+                        child: Column(
+                          children: [
+                            // Top Area: Sorter OR Calendar Strip
+                            unsortedHabits.isNotEmpty
+                                ? HabitSorterCard(
+                                    key: ValueKey(unsortedHabits.first.id),
+                                    habit: unsortedHabits.first,
+                                    onPlaced: () {
+                                      setState(() {});
+                                      // After placing, check if all sorted - scroll to today
+                                      if (unsortedHabits.length == 1) {
+                                        Future.delayed(
+                                          const Duration(milliseconds: 100),
+                                          () => _scrollToToday(animate: true),
+                                        );
+                                      }
+                                    },
+                                  )
+                                : KeyedSubtree(
+                                    key: _calendarKey,
+                                    child: _buildHorizontalDatePicker(theme),
+                                  ),
+
+                            // Matrix grid
+                            Expanded(
+                              child: EisenhowerMatrixWidget(
+                                habits: filteredHabits
+                                    .where((h) => placements.containsKey(h.id))
+                                    .toList(),
+                                selectedDate: _selectedDate,
+                                onHabitTap: (habit) =>
+                                    _toggleHabit(habit, _selectedDate),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
-                  },
-                );
-              },
-            ),
-          ] else
-            // Stream Builder for Habits (Overiew)
-            StreamBuilder<List<Habit>>(
-              stream: habitService.habitsStream(uid),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return SliverFillRemaining(
-                    child: Center(
-                        child: Text(
-                            l10n.habitsListError(snapshot.error.toString()))),
-                  );
-                }
+                  }
 
-                // Use existing data even during loading - prevents flicker
-                final habits = snapshot.data ?? [];
-
-                if (habits.isEmpty) {
-                  return SliverFillRemaining(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(l10n.habitsEmptyListTitle,
-                              style: const TextStyle(
-                                  fontSize: 18, color: Colors.grey)),
-                          const SizedBox(height: 8),
-                          FilledButton(
-                            onPressed: _showAddHabitSheet,
-                            child: const Text(_createNewLabel),
-                          ),
-                        ],
-                      ),
+                  // Regular view - render date picker first
+                  return const SliverToBoxAdapter(child: SizedBox());
+                },
+              ),
+              // Regular Today View components (only when matrix is disabled)
+              Builder(
+                builder: (context) {
+                  final appState = context.watch<AppState>();
+                  if (appState.eisenhowerMatrixEnabled) {
+                    return const SliverToBoxAdapter(child: SizedBox());
+                  }
+                  return SliverToBoxAdapter(
+                    child: KeyedSubtree(
+                      key: _calendarKey,
+                      child: _buildHorizontalDatePicker(theme),
                     ),
                   );
-                }
-
-                // Apply optimistic reordering if active
-                List<Habit> displayHabits = List.from(habits);
-                if (_optimisticHabitOrder != null) {
-                  final orderMap = _optimisticHabitOrder!
-                      .asMap()
-                      .map((k, v) => MapEntry(v, k));
-
-                  // Check if server data has caught up (same order as optimistic)
-                  bool synced = true;
-                  if (displayHabits.length == _optimisticHabitOrder!.length) {
-                    for (int i = 0; i < displayHabits.length; i++) {
-                      if (displayHabits[i].id != _optimisticHabitOrder![i]) {
-                        synced = false;
-                        break;
-                      }
-                    }
-                  } else {
-                    synced = false;
+                },
+              ),
+              // Today View: Habit List (only when matrix is disabled)
+              Builder(
+                builder: (context) {
+                  final appState = context.watch<AppState>();
+                  if (appState.eisenhowerMatrixEnabled) {
+                    return const SliverToBoxAdapter(child: SizedBox());
                   }
-
-                  if (synced) {
-                    // Server caught up, clear optimistic state
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted && _optimisticHabitOrder != null) {
-                        setState(() => _optimisticHabitOrder = null);
+                  return StreamBuilder<List<Habit>>(
+                    stream: habitService.habitsStream(uid),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SliverToBoxAdapter(child: SizedBox());
                       }
-                    });
-                  } else {
-                    // Apply optimistic sort
-                    displayHabits.sort((a, b) {
-                      final idxA = orderMap[a.id] ?? 9999;
-                      final idxB = orderMap[b.id] ?? 9999;
-                      return idxA.compareTo(idxB);
-                    });
-                  }
-                }
+                      final habits = snapshot.data!.where((h) {
+                        if (!h.isScheduledFor(_selectedDate)) return false;
 
-                return SliverPadding(
-                  padding: EdgeInsets.only(
-                    bottom: _isIos(context)
-                        ? _iosBottomNavClearance(context)
-                        : MediaQuery.of(context).padding.bottom + 80,
-                  ),
-                  sliver: SliverReorderableList(
-                    itemCount: displayHabits.length,
-                    onReorder: (oldIndex, newIndex) {
-                      if (oldIndex < newIndex) newIndex -= 1;
-                      final item = displayHabits.removeAt(oldIndex);
-                      displayHabits.insert(newIndex, item);
+                        // Check completion status for the selected date
+                        final dateKey = _dateKey(_selectedDate);
+                        final currentValue = h.last7[dateKey] ?? 0.0;
+                        final isCompletedOnDate = currentValue >= h.targetValue;
 
-                      // Optimistic update
-                      setState(() {
-                        _optimisticHabitOrder =
-                            displayHabits.map((h) => h.id).toList();
-                      });
+                        // RULE: Show if completed on this date OR period goal NOT met.
+                        // This allows users to see/edit their progress today even if the goal was just met,
+                        // and ensures the habit reappears if progress drops below the threshold.
+                        if (isCompletedOnDate) return true;
+                        return !h.isGoalMetForPeriod(
+                          h.last7,
+                          _selectedDate,
+                          mondayFirst: appState.weekStart == WeekStart.monday,
+                        );
+                      }).toList();
 
-                      // Actual background sync
-                      habitService.reorderHabits(uid, oldIndex, newIndex);
-                    },
-                    itemBuilder: (context, index) {
-                      final habit = displayHabits[index];
-                      return ReorderableDelayedDragStartListener(
-                        key: ValueKey(habit.id),
-                        index: index,
-                        child: _HabitItem(
-                          habit: habit,
-                          weekDates: _weekDates,
-                          onToggle: (date) => _toggleHabit(habit, date),
-                          onReturn: () {
-                            if (_selectedDate.day == DateTime.now().day) {
-                              _scrollToToday(animate: true);
-                            }
-                          },
+                      // Unified Order: Use valid habits stream order directly.
+                      // This ensures consistency with "My Habits" and Statistics.
+
+                      if (habits.isEmpty) {
+                        return SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                bottom: _progressBottomClearance(context),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.done_all,
+                                    size: 48,
+                                    color: theme.colorScheme.outline,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    l10n.habitsEmptyToday,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.outline,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return SliverPadding(
+                        padding: EdgeInsets.only(
+                          bottom: _progressBottomClearance(context),
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            final habit = habits[index];
+                            return _buildTodayHabitItem(habit, theme, l10n);
+                          }, childCount: habits.length),
                         ),
                       );
                     },
-                  ),
-                );
-              },
-            ),
-        ]),
+                  );
+                },
+              ),
+            ] else
+              // Stream Builder for Habits (Overiew)
+              StreamBuilder<List<Habit>>(
+                stream: habitService.habitsStream(uid),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Text(
+                          l10n.habitsListError(snapshot.error.toString()),
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Use existing data even during loading - prevents flicker
+                  final habits = snapshot.data ?? [];
+
+                  if (habits.isEmpty) {
+                    return SliverFillRemaining(
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              l10n.habitsEmptyListTitle,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            FilledButton(
+                              onPressed: _showAddHabitSheet,
+                              child: const Text(_createNewLabel),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Apply optimistic reordering if active
+                  List<Habit> displayHabits = List.from(habits);
+                  if (_optimisticHabitOrder != null) {
+                    final orderMap = _optimisticHabitOrder!.asMap().map(
+                      (k, v) => MapEntry(v, k),
+                    );
+
+                    // Check if server data has caught up (same order as optimistic)
+                    bool synced = true;
+                    if (displayHabits.length == _optimisticHabitOrder!.length) {
+                      for (int i = 0; i < displayHabits.length; i++) {
+                        if (displayHabits[i].id != _optimisticHabitOrder![i]) {
+                          synced = false;
+                          break;
+                        }
+                      }
+                    } else {
+                      synced = false;
+                    }
+
+                    if (synced) {
+                      // Server caught up, clear optimistic state
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted && _optimisticHabitOrder != null) {
+                          setState(() => _optimisticHabitOrder = null);
+                        }
+                      });
+                    } else {
+                      // Apply optimistic sort
+                      displayHabits.sort((a, b) {
+                        final idxA = orderMap[a.id] ?? 9999;
+                        final idxB = orderMap[b.id] ?? 9999;
+                        return idxA.compareTo(idxB);
+                      });
+                    }
+                  }
+
+                  return SliverPadding(
+                    padding: EdgeInsets.only(
+                      bottom: _isIos(context)
+                          ? _iosBottomNavClearance(context)
+                          : MediaQuery.of(context).padding.bottom + 80,
+                    ),
+                    sliver: SliverReorderableList(
+                      itemCount: displayHabits.length,
+                      onReorder: (oldIndex, newIndex) {
+                        if (oldIndex < newIndex) newIndex -= 1;
+                        final item = displayHabits.removeAt(oldIndex);
+                        displayHabits.insert(newIndex, item);
+
+                        // Optimistic update
+                        setState(() {
+                          _optimisticHabitOrder = displayHabits
+                              .map((h) => h.id)
+                              .toList();
+                        });
+
+                        // Actual background sync
+                        habitService.reorderHabits(uid, oldIndex, newIndex);
+                      },
+                      itemBuilder: (context, index) {
+                        final habit = displayHabits[index];
+                        return ReorderableDelayedDragStartListener(
+                          key: ValueKey(habit.id),
+                          index: index,
+                          child: _HabitItem(
+                            habit: habit,
+                            weekDates: _weekDates,
+                            onToggle: (date) => _toggleHabit(habit, date),
+                            onReturn: () {
+                              if (_selectedDate.day == DateTime.now().day) {
+                                _scrollToToday(animate: true);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+          ],
+        ),
       ),
       floatingActionButton: Visibility(
         visible: _selectedTabIndex == 1,
@@ -562,8 +590,9 @@ class _HabitsScreenState extends State<HabitsScreen>
                   child: IgnorePointer(
                     ignoring: !_fabVisible,
                     child: Padding(
-                      padding:
-                          EdgeInsets.only(bottom: _iosFabBottomLift(context)),
+                      padding: EdgeInsets.only(
+                        bottom: _iosFabBottomLift(context),
+                      ),
                       child: _IosLiquidActionPill(
                         icon: Icons.add,
                         label: _createNewLabel,
@@ -605,11 +634,11 @@ class _HabitsScreenState extends State<HabitsScreen>
       final dateKey = _dateKey(date);
       final isCompleted = habit.last7[dateKey] != null;
       await context.read<HabitService>().toggleCompletion(
-            userId: uid,
-            habit: habit,
-            date: date,
-            completed: !isCompleted,
-          );
+        userId: uid,
+        habit: habit,
+        date: date,
+        completed: !isCompleted,
+      );
     } else {
       // Show numeric/time input bottom sheet
       final dateKey = _dateKey(date);
@@ -639,8 +668,10 @@ class _HabitsScreenState extends State<HabitsScreen>
           if (_selectedTabIndex != index) {
             setState(() => _selectedTabIndex = index);
             if (index == 0) {
-              Future.delayed(const Duration(milliseconds: 50),
-                  () => _scrollToToday(animate: true));
+              Future.delayed(
+                const Duration(milliseconds: 50),
+                () => _scrollToToday(animate: true),
+              );
             }
           }
         },
@@ -658,7 +689,7 @@ class _HabitsScreenState extends State<HabitsScreen>
                       color: theme.colorScheme.primary.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -708,10 +739,12 @@ class _HabitsScreenState extends State<HabitsScreen>
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemBuilder: (context, index) {
           final date = today.add(Duration(days: index - 30));
-          final isSelected = date.year == _selectedDate.year &&
+          final isSelected =
+              date.year == _selectedDate.year &&
               date.month == _selectedDate.month &&
               date.day == _selectedDate.day;
-          final isToday = date.year == today.year &&
+          final isToday =
+              date.year == today.year &&
               date.month == today.month &&
               date.day == today.day;
 
@@ -725,8 +758,8 @@ class _HabitsScreenState extends State<HabitsScreen>
                 color: isSelected
                     ? theme.colorScheme.primary
                     : (isToday
-                        ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                        : Colors.transparent),
+                          ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                          : Colors.transparent),
                 borderRadius: BorderRadius.circular(16),
                 border: isToday && !isSelected
                     ? Border.all(color: theme.colorScheme.primary, width: 1)
@@ -766,7 +799,10 @@ class _HabitsScreenState extends State<HabitsScreen>
   }
 
   Widget _buildTodayHabitItem(
-      Habit habit, ThemeData theme, AppLocalizations l10n) {
+    Habit habit,
+    ThemeData theme,
+    AppLocalizations l10n,
+  ) {
     final dateKey = _dateKey(_selectedDate);
     final currentValue = habit.last7[dateKey] ?? 0.0;
     final isFuture = _isFutureDate(_selectedDate);
@@ -774,7 +810,8 @@ class _HabitsScreenState extends State<HabitsScreen>
     final localeName = l10n.localeName;
     final numberFormat = NumberFormat.decimalPattern(localeName);
     final appState = context.read<AppState>();
-    final useLightTitle = appState.homeSummaryRange == HomeSummaryRange.off &&
+    final useLightTitle =
+        appState.homeSummaryRange == HomeSummaryRange.off &&
         habit.connectedCourseIds.isEmpty;
 
     String requirementText;
@@ -801,7 +838,8 @@ class _HabitsScreenState extends State<HabitsScreen>
         borderRadius: BorderRadius.circular(20),
         border: isDark
             ? Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4))
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+              )
             : null,
         boxShadow: [
           BoxShadow(
@@ -821,8 +859,11 @@ class _HabitsScreenState extends State<HabitsScreen>
               shape: BoxShape.circle,
             ),
             child: Icon(
-              IconData(habit.iconCodePoint,
-                  fontFamily: habit.iconFamily, fontPackage: habit.iconPackage),
+              IconData(
+                habit.iconCodePoint,
+                fontFamily: habit.iconFamily,
+                fontPackage: habit.iconPackage,
+              ),
               color: habit.color,
               size: 24,
             ),
@@ -835,16 +876,18 @@ class _HabitsScreenState extends State<HabitsScreen>
                 Text(
                   habit.name,
                   style: TextStyle(
-                    fontWeight:
-                        useLightTitle ? FontWeight.w500 : FontWeight.bold,
+                    fontWeight: useLightTitle
+                        ? FontWeight.w500
+                        : FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   requirementText,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -930,8 +973,10 @@ class _IosLiquidActionPill extends StatelessWidget {
             child: InkWell(
               onTap: onPressed,
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -985,15 +1030,20 @@ class _HabitItemState extends State<_HabitItem> {
     final weekStart = context.read<AppState>().weekStart;
     final today = DateTime(now.year, now.month, now.day);
     final currentWeekStartOffset = _weekStartOffset(today, weekStart);
-    final currentWeekStart =
-        today.subtract(Duration(days: currentWeekStartOffset));
+    final currentWeekStart = today.subtract(
+      Duration(days: currentWeekStartOffset),
+    );
 
     // Find start of the week containing start date
-    final startDate = DateTime(widget.habit.startDate.year,
-        widget.habit.startDate.month, widget.habit.startDate.day);
+    final startDate = DateTime(
+      widget.habit.startDate.year,
+      widget.habit.startDate.month,
+      widget.habit.startDate.day,
+    );
     final startWeekStartOffset = _weekStartOffset(startDate, weekStart);
-    final startWeekStart =
-        startDate.subtract(Duration(days: startWeekStartOffset));
+    final startWeekStart = startDate.subtract(
+      Duration(days: startWeekStartOffset),
+    );
 
     // Calculate weeks between these two boundaries
     final daysDiff = currentWeekStart.difference(startWeekStart).inDays;
@@ -1082,9 +1132,10 @@ class _HabitItemState extends State<_HabitItem> {
         final rest = widget.habit.frequencyGoal ?? 0;
         return '$work x $rest';
       case HabitFrequencyType.repeatsInPeriod:
-        final period =
-            _periodLabel(widget.habit.frequencyPeriod ?? HabitPeriod.week, l10n)
-                .toLowerCase();
+        final period = _periodLabel(
+          widget.habit.frequencyPeriod ?? HabitPeriod.week,
+          l10n,
+        ).toLowerCase();
         final count = widget.habit.frequencyGoal ?? 1;
         return l10n.habitFrequencyTimesPerPeriod(count, period);
     }
@@ -1116,8 +1167,11 @@ class _HabitItemState extends State<_HabitItem> {
 
   bool _isBeforeStartDate(DateTime date) {
     final dateMidnight = DateTime(date.year, date.month, date.day);
-    final startMidnight = DateTime(widget.habit.startDate.year,
-        widget.habit.startDate.month, widget.habit.startDate.day);
+    final startMidnight = DateTime(
+      widget.habit.startDate.year,
+      widget.habit.startDate.month,
+      widget.habit.startDate.day,
+    );
     return dateMidnight.isBefore(startMidnight);
   }
 
@@ -1154,7 +1208,8 @@ class _HabitItemState extends State<_HabitItem> {
     final frequencyText = _getFrequencyText(l10n, localeName);
     final weekDates = _currentWeekDates;
     final appState = context.read<AppState>();
-    final useLightTitle = appState.homeSummaryRange == HomeSummaryRange.off &&
+    final useLightTitle =
+        appState.homeSummaryRange == HomeSummaryRange.off &&
         widget.habit.connectedCourseIds.isEmpty;
 
     return Container(
@@ -1164,7 +1219,8 @@ class _HabitItemState extends State<_HabitItem> {
         borderRadius: BorderRadius.circular(20),
         border: isDark
             ? Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4))
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
+              )
             : null,
         boxShadow: [
           BoxShadow(
@@ -1196,9 +1252,11 @@ class _HabitItemState extends State<_HabitItem> {
                       ),
                       alignment: Alignment.center,
                       child: Icon(
-                        IconData(widget.habit.iconCodePoint,
-                            fontFamily: widget.habit.iconFamily,
-                            fontPackage: widget.habit.iconPackage),
+                        IconData(
+                          widget.habit.iconCodePoint,
+                          fontFamily: widget.habit.iconFamily,
+                          fontPackage: widget.habit.iconPackage,
+                        ),
                         color: widget.habit.color,
                         size: 20,
                       ),
@@ -1227,7 +1285,9 @@ class _HabitItemState extends State<_HabitItem> {
                                 const SizedBox(width: 8),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.orange.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(6),
@@ -1235,17 +1295,20 @@ class _HabitItemState extends State<_HabitItem> {
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Icon(Icons.local_fire_department,
-                                          size: 12, color: Colors.orange),
+                                      const Icon(
+                                        Icons.local_fire_department,
+                                        size: 12,
+                                        color: Colors.orange,
+                                      ),
                                       const SizedBox(width: 4),
                                       Text(
                                         "${widget.habit.liveCurrentStreak}",
                                         style: theme.textTheme.labelSmall
                                             ?.copyWith(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.orange,
-                                        ),
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.orange,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -1267,14 +1330,18 @@ class _HabitItemState extends State<_HabitItem> {
                       ),
                     ),
                     IconButton(
-                      icon: Icon(Icons.more_vert,
-                          size: 20, color: theme.colorScheme.onSurfaceVariant),
+                      icon: Icon(
+                        Icons.more_vert,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                       onPressed: () async {
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) =>
-                                  HabitDetailsScreen(habit: widget.habit)),
+                            builder: (_) =>
+                                HabitDetailsScreen(habit: widget.habit),
+                          ),
                         );
                         // Re-center on return if today is selected
                         widget.onReturn?.call();
@@ -1285,8 +1352,9 @@ class _HabitItemState extends State<_HabitItem> {
                 Divider(
                   height: 32,
                   thickness: 1,
-                  color:
-                      theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
                 // Week navigation row with arrows and date range
                 Row(
@@ -1302,10 +1370,11 @@ class _HabitItemState extends State<_HabitItem> {
                         height: 28,
                         decoration: BoxDecoration(
                           color: _weekOffset > _minWeekOffset
-                              ? theme.colorScheme.primaryContainer
-                                  .withValues(alpha: 0.5)
+                              ? theme.colorScheme.primaryContainer.withValues(
+                                  alpha: 0.5,
+                                )
                               : theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
+                                    .withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -1313,8 +1382,9 @@ class _HabitItemState extends State<_HabitItem> {
                           size: 18,
                           color: _weekOffset > _minWeekOffset
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.3),
+                              : theme.colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.3,
+                                ),
                         ),
                       ),
                     ),
@@ -1324,17 +1394,21 @@ class _HabitItemState extends State<_HabitItem> {
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: _weekOffset == 0
-                                ? theme.colorScheme.primary
-                                    .withValues(alpha: 0.08)
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.08,
+                                  )
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: _weekOffset == 0
-                                  ? theme.colorScheme.primary
-                                      .withValues(alpha: 0.15)
+                                  ? theme.colorScheme.primary.withValues(
+                                      alpha: 0.15,
+                                    )
                                   : Colors.transparent,
                               width: 1,
                             ),
@@ -1345,7 +1419,7 @@ class _HabitItemState extends State<_HabitItem> {
                               color: _weekOffset == 0
                                   ? theme.colorScheme.primary
                                   : theme.colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
+                                        .withValues(alpha: 0.7),
                               fontWeight: _weekOffset == 0
                                   ? FontWeight.bold
                                   : FontWeight.w600,
@@ -1365,10 +1439,11 @@ class _HabitItemState extends State<_HabitItem> {
                         height: 28,
                         decoration: BoxDecoration(
                           color: _weekOffset < _maxWeekOffset
-                              ? theme.colorScheme.primaryContainer
-                                  .withValues(alpha: 0.5)
+                              ? theme.colorScheme.primaryContainer.withValues(
+                                  alpha: 0.5,
+                                )
                               : theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
+                                    .withValues(alpha: 0.3),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -1376,8 +1451,9 @@ class _HabitItemState extends State<_HabitItem> {
                           size: 18,
                           color: _weekOffset < _maxWeekOffset
                               ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.3),
+                              : theme.colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.3,
+                                ),
                         ),
                       ),
                     ),
@@ -1399,10 +1475,11 @@ class _HabitItemState extends State<_HabitItem> {
                             currentVal >= widget.habit.targetValue;
                         final isPartialProgress =
                             widget.habit.type != HabitType.yesNo &&
-                                currentVal > 0 &&
-                                currentVal < widget.habit.targetValue;
+                            currentVal > 0 &&
+                            currentVal < widget.habit.targetValue;
 
-                        final isToday = date.day == DateTime.now().day &&
+                        final isToday =
+                            date.day == DateTime.now().day &&
                             date.month == DateTime.now().month &&
                             date.year == DateTime.now().year;
 
@@ -1413,7 +1490,8 @@ class _HabitItemState extends State<_HabitItem> {
                         final isGoalMet = widget.habit.isGoalMetForPeriod(
                           widget.habit.last7,
                           date,
-                          mondayFirst: context.read<AppState>().weekStart ==
+                          mondayFirst:
+                              context.read<AppState>().weekStart ==
                               WeekStart.monday,
                         );
                         final isLocked = !isCompleted && isGoalMet;
@@ -1439,8 +1517,9 @@ class _HabitItemState extends State<_HabitItem> {
                           // Active
                           textColor = isToday
                               ? widget.habit.color
-                              : theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.7);
+                              : theme.colorScheme.onSurfaceVariant.withValues(
+                                  alpha: 0.7,
+                                );
                         }
 
                         // Determine Circle Decoration and Child
@@ -1449,8 +1528,9 @@ class _HabitItemState extends State<_HabitItem> {
 
                         if (isPreStart || !isScheduled) {
                           // Hidden (transparent)
-                          circleDeco =
-                              const BoxDecoration(color: Colors.transparent);
+                          circleDeco = const BoxDecoration(
+                            color: Colors.transparent,
+                          );
                         } else if (isFuture || isLocked) {
                           // Visible but disabled (muted background)
                           circleDeco = BoxDecoration(
@@ -1464,21 +1544,28 @@ class _HabitItemState extends State<_HabitItem> {
                             color: isCompleted
                                 ? widget.habit.color
                                 : (isPartialProgress
-                                    ? widget.habit.color.withValues(alpha: 0.15)
-                                    : (isScheduled
-                                        ? theme
-                                            .colorScheme.surfaceContainerHighest
-                                        : Colors.transparent)),
+                                      ? widget.habit.color.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : (isScheduled
+                                            ? theme
+                                                  .colorScheme
+                                                  .surfaceContainerHighest
+                                            : Colors.transparent)),
                             shape: BoxShape.circle,
                             border: (isToday || isPartialProgress)
                                 ? Border.all(
                                     color: widget.habit.color,
-                                    width: isPartialProgress ? 2 : 2)
+                                    width: isPartialProgress ? 2 : 2,
+                                  )
                                 : null,
                           );
                           if (isCompleted) {
-                            circleChild = const Icon(Icons.check,
-                                size: 18, color: Colors.white);
+                            circleChild = const Icon(
+                              Icons.check,
+                              size: 18,
+                              color: Colors.white,
+                            );
                           }
                         }
 

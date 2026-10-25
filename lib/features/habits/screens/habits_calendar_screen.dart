@@ -57,8 +57,9 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
   void initState() {
     super.initState();
     _totalMonths = _getIndexFromMonth(_maxMonth) + 1;
-    _pageController =
-        PageController(initialPage: _getIndexFromMonth(_focusedMonth));
+    _pageController = PageController(
+      initialPage: _getIndexFromMonth(_focusedMonth),
+    );
     _subscribeToHabits();
   }
 
@@ -79,18 +80,23 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
 
     setState(() => _isLoading = true);
 
-    _habitsSub = habitService.habitsStream(uid).listen((habits) {
-      if (!mounted) return;
-      setState(() {
-        _allHabits = habits;
-        _isLoading = false;
-      });
-      // Load progress for current month after habits are loaded
-      _loadMonthProgress(_focusedMonth);
-    }, onError: (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-    });
+    _habitsSub = habitService
+        .habitsStream(uid)
+        .listen(
+          (habits) {
+            if (!mounted) return;
+            setState(() {
+              _allHabits = habits;
+              _isLoading = false;
+            });
+            // Load progress for current month after habits are loaded
+            _loadMonthProgress(_focusedMonth);
+          },
+          onError: (_) {
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+          },
+        );
   }
 
   /// Load progress for a specific month. Uses LOCAL CACHE first, falls back to Firebase.
@@ -256,7 +262,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               itemBuilder: (context, index) {
                 final month = _getMonthFromIndex(index);
                 final monthKey = _monthKey(month);
-                final isFocused = month.year == _focusedMonth.year &&
+                final isFocused =
+                    month.year == _focusedMonth.year &&
                     month.month == _focusedMonth.month;
                 final hasCachedData = _progressCache.containsKey(monthKey);
 
@@ -286,8 +293,12 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
 
           // Month navigation at bottom
           Container(
-            padding:
-                const EdgeInsets.only(left: 24, right: 24, bottom: 32, top: 8),
+            padding: const EdgeInsets.only(
+              left: 24,
+              right: 24,
+              bottom: 32,
+              top: 8,
+            ),
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               boxShadow: [
@@ -295,7 +306,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                   color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -4),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -303,15 +314,16 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               children: [
                 _buildNavButton(
                   icon: Icons.chevron_left_rounded,
-                  onPressed:
-                      _focusedMonth.isAfter(_minMonth) ? _prevMonth : null,
+                  onPressed: _focusedMonth.isAfter(_minMonth)
+                      ? _prevMonth
+                      : null,
                   theme: theme,
                 ),
                 Expanded(
                   child: Text(
-                    DateFormat.yMMMM(l10n.localeName)
-                        .format(_focusedMonth)
-                        .toUpperCase(),
+                    DateFormat.yMMMM(
+                      l10n.localeName,
+                    ).format(_focusedMonth).toUpperCase(),
                     textAlign: TextAlign.center,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
@@ -322,8 +334,9 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                 ),
                 _buildNavButton(
                   icon: Icons.chevron_right_rounded,
-                  onPressed:
-                      _focusedMonth.isBefore(_maxMonth) ? _nextMonth : null,
+                  onPressed: _focusedMonth.isBefore(_maxMonth)
+                      ? _nextMonth
+                      : null,
                   theme: theme,
                 ),
               ],
@@ -334,10 +347,11 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     );
   }
 
-  Widget _buildNavButton(
-      {required IconData icon,
-      required VoidCallback? onPressed,
-      required ThemeData theme}) {
+  Widget _buildNavButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required ThemeData theme,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
@@ -355,8 +369,11 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
     );
   }
 
-  Widget _buildCalendarGrid(BuildContext context, DateTime month,
-      Map<String, Map<String, double>> progressData) {
+  Widget _buildCalendarGrid(
+    BuildContext context,
+    DateTime month,
+    Map<String, Map<String, double>> progressData,
+  ) {
     final theme = Theme.of(context);
     final weekStart = context.read<AppState>().weekStart;
     final firstDay = DateTime(month.year, month.month, 1);
@@ -388,7 +405,8 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
               final isCurrentMonth = date.month == month.month;
               if (!isCurrentMonth) return const SizedBox.shrink();
 
-              final isToday = date.year == today.year &&
+              final isToday =
+                  date.year == today.year &&
                   date.month == today.month &&
                   date.day == today.day;
               final isFuture = date.isAfter(today);
@@ -398,9 +416,11 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
 
               // Determine which habits completed
               final completedHabits = _allHabits
-                  .where((h) =>
-                      progressMap.containsKey(h.id) &&
-                      progressMap[h.id]! >= h.targetValue)
+                  .where(
+                    (h) =>
+                        progressMap.containsKey(h.id) &&
+                        progressMap[h.id]! >= h.targetValue,
+                  )
                   .toList();
 
               return GestureDetector(
@@ -409,28 +429,34 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: isToday
-                        ? theme.colorScheme.primaryContainer
-                            .withValues(alpha: 0.4)
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.4,
+                          )
                         : isFuture
-                            ? theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.1)
-                            : theme.colorScheme.surfaceContainerHighest
-                                .withValues(alpha: 0.3),
+                        ? theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.1,
+                          )
+                        : theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          ),
                     borderRadius: BorderRadius.circular(14),
                     border: isToday
                         ? Border.all(color: theme.colorScheme.primary, width: 2)
                         : Border.all(
-                            color: theme.colorScheme.outlineVariant
-                                .withValues(alpha: 0.2),
-                            width: 1),
+                            color: theme.colorScheme.outlineVariant.withValues(
+                              alpha: 0.2,
+                            ),
+                            width: 1,
+                          ),
                     boxShadow: isToday
                         ? [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.2),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.2,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
-                            )
+                            ),
                           ]
                         : null,
                   ),
@@ -444,11 +470,12 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                           fontSize: 12,
                           fontWeight: FontWeight.w900,
                           color: isFuture
-                              ? theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.3)
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.3,
+                                )
                               : (isToday
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurface),
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -461,23 +488,24 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                             spacing: 3,
                             runSpacing: 3,
                             children: completedHabits
-                                .map((h) => Container(
-                                      width: 5,
-                                      height: 5,
-                                      decoration: BoxDecoration(
-                                        color: isFuture
-                                            ? h.color.withValues(alpha: 0.3)
-                                            : h.color,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                h.color.withValues(alpha: 0.3),
-                                            blurRadius: 2,
-                                          )
-                                        ],
-                                      ),
-                                    ))
+                                .map(
+                                  (h) => Container(
+                                    width: 5,
+                                    height: 5,
+                                    decoration: BoxDecoration(
+                                      color: isFuture
+                                          ? h.color.withValues(alpha: 0.3)
+                                          : h.color,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: h.color.withValues(alpha: 0.3),
+                                          blurRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
                                 .toList(),
                           ),
                         ),
@@ -504,18 +532,20 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: weekdayLabels
-            .map((d) => Expanded(
-                  child: Center(
-                    child: Text(
-                      d.toUpperCase(),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: theme.colorScheme.outline,
-                        letterSpacing: 1.0,
-                      ),
+            .map(
+              (d) => Expanded(
+                child: Center(
+                  child: Text(
+                    d.toUpperCase(),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: theme.colorScheme.outline,
+                      letterSpacing: 1.0,
                     ),
                   ),
-                ))
+                ),
+              ),
+            )
             .toList(),
       ),
     );

@@ -26,7 +26,11 @@ class AuthFailure implements Exception {
 const _fcmResaveAfter = Duration(days: 7);
 
 bool shouldSaveFcmToken(
-    String token, String? savedToken, int? savedAtMs, int nowMs) {
+  String token,
+  String? savedToken,
+  int? savedAtMs,
+  int nowMs,
+) {
   if (savedToken != token || savedAtMs == null) return true;
   if (nowMs < savedAtMs) return true;
   return nowMs - savedAtMs >= _fcmResaveAfter.inMilliseconds;
@@ -36,11 +40,9 @@ bool shouldUpsertEmailIndex(String normalizedEmail, String? written) =>
     normalizedEmail != written;
 
 class AuthController extends ChangeNotifier {
-  AuthController({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance {
+  AuthController({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance {
     _subscription = _auth.authStateChanges().listen(_handleAuthState);
   }
 
@@ -154,10 +156,12 @@ class AuthController extends ChangeNotifier {
     _requiresEmailVerification = false;
     _isSigningOut = false;
     // creating the profile writes fcmEnabled false, so the token must be saved after it
-    unawaited(_ensureProfileDocument(user).whenComplete(() async {
-      if (_currentUser?.uid != user.uid) return;
-      await _registerPushToken(user);
-    }));
+    unawaited(
+      _ensureProfileDocument(user).whenComplete(() async {
+        if (_currentUser?.uid != user.uid) return;
+        await _registerPushToken(user);
+      }),
+    );
     unawaited(_upsertEmailIndexIfChanged(user));
     _listenToProfile(user);
     _listenForPendingNudges(user.uid);
@@ -168,19 +172,23 @@ class AuthController extends ChangeNotifier {
 
     final future = _prepareUser(user);
     _initializingUser = future;
-    unawaited(future.then((_) {
-      if (identical(_initializingUser, future)) {
-        _syncReady = true;
-        _initializingUser = null;
-        notifyListeners();
-      }
-    }).catchError((error, stack) {
-      if (kDebugMode) {
-        print('Failed to prepare user data: $error\n$stack');
-      }
-      lastPreparationError = error.toString();
-      notifyListeners();
-    }));
+    unawaited(
+      future
+          .then((_) {
+            if (identical(_initializingUser, future)) {
+              _syncReady = true;
+              _initializingUser = null;
+              notifyListeners();
+            }
+          })
+          .catchError((error, stack) {
+            if (kDebugMode) {
+              print('Failed to prepare user data: $error\n$stack');
+            }
+            lastPreparationError = error.toString();
+            notifyListeners();
+          }),
+    );
     notifyListeners();
   }
 
@@ -262,7 +270,8 @@ class AuthController extends ChangeNotifier {
       await Future.delayed(const Duration(milliseconds: 150));
     }
     if (sync.lastPull == null && !sync.hasPulledUser) {
-      final message = sync.lastError ??
+      final message =
+          sync.lastError ??
           'Unable to download your data. Please check your connection and try again.';
       throw AuthFailure(message);
     }
@@ -312,31 +321,30 @@ class AuthController extends ChangeNotifier {
     final savedAtKey = 'fcm_saved_at_$uid';
     final nowMs = DateTime.now().millisecondsSinceEpoch;
     if (!shouldSaveFcmToken(
-        token, prefs.getString(tokenKey), prefs.getInt(savedAtKey), nowMs)) {
+      token,
+      prefs.getString(tokenKey),
+      prefs.getInt(savedAtKey),
+      nowMs,
+    )) {
       return;
     }
-    final platform =
-        kIsWeb ? 'web' : defaultTargetPlatform.toString().split('.').last;
+    final platform = kIsWeb
+        ? 'web'
+        : defaultTargetPlatform.toString().split('.').last;
     final tokenRef = _firestore
         .collection('users')
         .doc(uid)
         .collection('fcmTokens')
         .doc(token);
-    await tokenRef.set(
-      {
-        'token': token,
-        'platform': platform,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-    await _firestore.collection('users').doc(uid).set(
-      {
-        'fcmEnabled': true,
-        'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await tokenRef.set({
+      'token': token,
+      'platform': platform,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await _firestore.collection('users').doc(uid).set({
+      'fcmEnabled': true,
+      'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await prefs.setString(tokenKey, token);
     await prefs.setInt(savedAtKey, nowMs);
   }
@@ -394,12 +402,14 @@ class AuthController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final keysToRemove = prefs
         .getKeys()
-        .where((key) =>
-            key.startsWith('timer_planned_') ||
-            key.startsWith('progress_') ||
-            key == 'onboarded_credits_v1' ||
-            key == 'themeMode' ||
-            key == 'device_id')
+        .where(
+          (key) =>
+              key.startsWith('timer_planned_') ||
+              key.startsWith('progress_') ||
+              key == 'onboarded_credits_v1' ||
+              key == 'themeMode' ||
+              key == 'device_id',
+        )
         .toList();
     for (final key in keysToRemove) {
       await prefs.remove(key);
@@ -581,8 +591,9 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> _deleteAccountRemote(User user) async {
-    final callable =
-        FirebaseFunctions.instance.httpsCallable('deleteAccountCallable');
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'deleteAccountCallable',
+    );
     try {
       await callable.call();
     } on FirebaseFunctionsException catch (e) {
@@ -609,9 +620,7 @@ class AuthController extends ChangeNotifier {
         .where('createdBy', isEqualTo: userId)
         .get();
 
-    await Future.wait(
-      groupsSnapshot.docs.map(_deleteOwnedGroupCascade),
-    );
+    await Future.wait(groupsSnapshot.docs.map(_deleteOwnedGroupCascade));
   }
 
   Future<void> _deleteOwnedGroupCascade(
@@ -628,17 +637,21 @@ class AuthController extends ChangeNotifier {
     final membersSnapshot = results[0];
     final invitesSnapshot = results[1];
 
-    final memberRefs =
-        membersSnapshot.docs.map((doc) => doc.reference).toList();
-    final inviteRefs =
-        invitesSnapshot.docs.map((doc) => doc.reference).toList();
+    final memberRefs = membersSnapshot.docs
+        .map((doc) => doc.reference)
+        .toList();
+    final inviteRefs = invitesSnapshot.docs
+        .map((doc) => doc.reference)
+        .toList();
 
     final membershipRefs = membersSnapshot.docs
-        .map((doc) => _firestore
-            .collection('users')
-            .doc(doc.id)
-            .collection('groupMemberships')
-            .doc(groupId))
+        .map(
+          (doc) => _firestore
+              .collection('users')
+              .doc(doc.id)
+              .collection('groupMemberships')
+              .doc(groupId),
+        )
         .toList();
 
     await Future.wait([
@@ -680,14 +693,10 @@ class AuthController extends ChangeNotifier {
         batch.delete(membership.reference);
 
         if (groupSnap.exists) {
-          batch.set(
-            groupRef,
-            {
-              'memberCount': FieldValue.increment(-1),
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+          batch.set(groupRef, {
+            'memberCount': FieldValue.increment(-1),
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
         }
       }
       await batch.commit();
@@ -713,7 +722,7 @@ class AuthController extends ChangeNotifier {
 
     await Future.wait([
       for (final name in subcollections)
-        _deleteQueryBatch(userDoc.collection(name))
+        _deleteQueryBatch(userDoc.collection(name)),
     ]);
   }
 
@@ -820,18 +829,21 @@ class AuthController extends ChangeNotifier {
         .collection('users')
         .doc(user.uid)
         .snapshots()
-        .listen((snapshot) {
-      _profileData = snapshot.data();
-      _profileReady = true;
-      notifyListeners();
-    }, onError: (error, stack) {
-      if (kDebugMode) {
-        print('Profile listener error: $error');
-      }
-      _profileData = null;
-      _profileReady = true;
-      notifyListeners();
-    });
+        .listen(
+          (snapshot) {
+            _profileData = snapshot.data();
+            _profileReady = true;
+            notifyListeners();
+          },
+          onError: (error, stack) {
+            if (kDebugMode) {
+              print('Profile listener error: $error');
+            }
+            _profileData = null;
+            _profileReady = true;
+            notifyListeners();
+          },
+        );
     _listenForPendingNudges(user.uid); // Added this line
   }
 
@@ -842,26 +854,31 @@ class AuthController extends ChangeNotifier {
         .where('receiverId', isEqualTo: uid)
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .listen((snapshot) {
-      for (var change in snapshot.docChanges) {
-        if (change.type == DocumentChangeType.added) {
-          final data = change.doc.data();
-          if (data == null) continue;
+        .listen(
+          (snapshot) {
+            for (var change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.added) {
+                final data = change.doc.data();
+                if (data == null) continue;
 
-          final title = data['title'] as String? ?? 'Nudge';
-          final body = data['body'] as String? ?? '';
+                final title = data['title'] as String? ?? 'Nudge';
+                final body = data['body'] as String? ?? '';
 
-          if (body.isNotEmpty) {
-            final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
-            Notifs.showImmediate(id: id, title: title, body: body);
-          }
+                if (body.isNotEmpty) {
+                  final id = DateTime.now().millisecondsSinceEpoch.remainder(
+                    100000,
+                  );
+                  Notifs.showImmediate(id: id, title: title, body: body);
+                }
 
-          change.doc.reference.update({'status': 'delivered'});
-        }
-      }
-    }, onError: (e) {
-      if (kDebugMode) print('Nudges listener error: $e');
-    });
+                change.doc.reference.update({'status': 'delivered'});
+              }
+            }
+          },
+          onError: (e) {
+            if (kDebugMode) print('Nudges listener error: $e');
+          },
+        );
   }
 
   String _messageForAuthCode(String code) {
@@ -890,14 +907,11 @@ class AuthController extends ChangeNotifier {
     if (email == null || email.isEmpty) return;
     final normalized = _normalizeEmail(email);
     final ref = _firestore.collection('email_index').doc(normalized);
-    await ref.set(
-      {
-        'uid': uid,
-        'email': normalized,
-        'updatedAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await ref.set({
+      'uid': uid,
+      'email': normalized,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> _upsertEmailIndexIfChanged(User user) async {
@@ -938,8 +952,10 @@ class AuthController extends ChangeNotifier {
     bool verificationSent = false;
 
     try {
-      final idxSnap =
-          await _firestore.collection('email_index').doc(trimmed).get();
+      final idxSnap = await _firestore
+          .collection('email_index')
+          .doc(trimmed)
+          .get();
       final uid = idxSnap.data()?['uid'] as String?;
       if (uid != null && uid.isNotEmpty) {
         final profileSnap = await _firestore.collection('users').doc(uid).get();

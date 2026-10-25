@@ -31,31 +31,32 @@ class Course {
   bool get hasCredits => credits != null && credits! > 0 && expLevel != null;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'day': day,
-        'start': start,
-        'end': end,
-        'colorValue': colorValue,
-        'credits': credits,
-        'expLevel': expLevel,
-        'sortOrder': sortOrder,
-        'hiddenFromLeaderboard': hiddenFromLeaderboard,
-      };
+    'id': id,
+    'name': name,
+    'day': day,
+    'start': start,
+    'end': end,
+    'colorValue': colorValue,
+    'credits': credits,
+    'expLevel': expLevel,
+    'sortOrder': sortOrder,
+    'hiddenFromLeaderboard': hiddenFromLeaderboard,
+  };
 
   static Course fromJson(Map<String, dynamic> j) => Course(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        day: j['day'] as String,
-        start: j['start'] as String,
-        end: j['end'] as String,
-        colorValue: (j['colorValue'] as num?)?.toInt() ??
-            const Color(0xFF3B82F6).toARGB32(),
-        credits: (j['credits'] as num?)?.toDouble(),
-        expLevel: j['expLevel'] as int?,
-        sortOrder: (j['sortOrder'] as num?)?.toInt(),
-        hiddenFromLeaderboard: j['hiddenFromLeaderboard'] as bool? ?? false,
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    day: j['day'] as String,
+    start: j['start'] as String,
+    end: j['end'] as String,
+    colorValue:
+        (j['colorValue'] as num?)?.toInt() ??
+        const Color(0xFF3B82F6).toARGB32(),
+    credits: (j['credits'] as num?)?.toDouble(),
+    expLevel: j['expLevel'] as int?,
+    sortOrder: (j['sortOrder'] as num?)?.toInt(),
+    hiddenFromLeaderboard: j['hiddenFromLeaderboard'] as bool? ?? false,
+  );
 
   Course copyWith({
     String? id,

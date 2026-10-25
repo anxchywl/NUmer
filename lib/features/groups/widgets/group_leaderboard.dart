@@ -66,7 +66,8 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
     final cachedStats = cachedRecord?.stats;
 
     // Refresh if no cache, or if total seconds mismatch (content changed)
-    final shouldRefresh = cachedStats == null ||
+    final shouldRefresh =
+        cachedStats == null ||
         cachedStats.totalSeconds != member.studyTimeSeconds;
 
     if (!mounted) return;
@@ -125,8 +126,9 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
                 selectedPeriod: _selectedPeriod,
                 onPeriodChanged: (period) {
                   if (_selectedPeriod != period) {
-                    final nextDirection =
-                        period.index > _selectedPeriod.index ? 1 : -1;
+                    final nextDirection = period.index > _selectedPeriod.index
+                        ? 1
+                        : -1;
                     setState(() {
                       _periodDirection = nextDirection;
                       _selectedPeriod = period;
@@ -171,8 +173,11 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
-                child: Text(AppLocalizations.of(context)!
-                    .errorLoadingLeaderboard(snapshot.error.toString())),
+                child: Text(
+                  AppLocalizations.of(
+                    context,
+                  )!.errorLoadingLeaderboard(snapshot.error.toString()),
+                ),
               );
             }
 
@@ -241,10 +246,7 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
               layoutBuilder: (currentChild, previousChildren) {
                 return Stack(
                   alignment: Alignment.topCenter,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
+                  children: [...previousChildren, ?currentChild],
                 );
               },
               transitionBuilder: (child, animation) {
@@ -481,7 +483,8 @@ class _PodiumMemberState extends State<_PodiumMember>
 
     // Check locally if session has expired
     final expiration = member.sessionRunUntil;
-    final isLocallyActive = member.isStudying &&
+    final isLocallyActive =
+        member.isStudying &&
         (expiration == null || DateTime.now().isBefore(expiration));
     final isStudying = isLocallyActive;
 
@@ -491,11 +494,7 @@ class _PodiumMemberState extends State<_PodiumMember>
         if (isFirst)
           Padding(
             padding: const EdgeInsets.only(bottom: 8.0),
-            child: Icon(
-              Icons.emoji_events_rounded,
-              color: ringColor,
-              size: 32,
-            ),
+            child: Icon(Icons.emoji_events_rounded, color: ringColor, size: 32),
           ),
         Stack(
           clipBehavior: Clip.none,
@@ -509,8 +508,9 @@ class _PodiumMemberState extends State<_PodiumMember>
                 final blur = isFirst ? (20 + 6 * t) : (14 + 4 * t);
                 final spread = isFirst ? (2 + 1.0 * t) : (1.2 + 0.8 * t);
 
-                final gapColor =
-                    isStudying ? const Color(0xFF4CAF50) : Colors.white;
+                final gapColor = isStudying
+                    ? const Color(0xFF4CAF50)
+                    : Colors.white;
                 final shadowColor = isStudying
                     ? const Color(0xFF4CAF50).withValues(alpha: 0.4 + 0.2 * t)
                     : ringColor.withValues(alpha: glowOpacity);
@@ -539,26 +539,28 @@ class _PodiumMemberState extends State<_PodiumMember>
                   ),
                 );
               },
-              child: Builder(builder: (context) {
-                // Rebuild when session expires
-                final expiration = member.sessionRunUntil;
-                if (expiration != null) {
-                  final now = DateTime.now();
-                  if (expiration.isAfter(now)) {
-                    // Note: AnimatedBuilder rebuilds every frame, so we don't need a separate timer here.
+              child: Builder(
+                builder: (context) {
+                  // Rebuild when session expires
+                  final expiration = member.sessionRunUntil;
+                  if (expiration != null) {
+                    final now = DateTime.now();
+                    if (expiration.isAfter(now)) {
+                      // Note: AnimatedBuilder rebuilds every frame, so we don't need a separate timer here.
+                    }
                   }
-                }
 
-                return UniversalAvatar(
-                  userId: member.userId,
-                  name: member.name,
-                  initialAvatarIndex: member.avatarIndex,
-                  initialAvatarColorValue: member.avatarColorValue,
-                  initialAvatarBase64: member.avatarBase64,
-                  size: size,
-                  fontSize: isFirst ? 40 : 32,
-                );
-              }),
+                  return UniversalAvatar(
+                    userId: member.userId,
+                    name: member.name,
+                    initialAvatarIndex: member.avatarIndex,
+                    initialAvatarColorValue: member.avatarColorValue,
+                    initialAvatarBase64: member.avatarBase64,
+                    size: size,
+                    fontSize: isFirst ? 40 : 32,
+                  );
+                },
+              ),
             ),
             Positioned(
               bottom: -10,
@@ -896,7 +898,9 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
   }
 
   Future<void> _handleTap(
-      bool isOnCooldown, Duration? remainingCooldown) async {
+    bool isOnCooldown,
+    Duration? remainingCooldown,
+  ) async {
     if (_sending) return;
     final l10n = AppLocalizations.of(context)!;
 
@@ -928,8 +932,11 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
       }
     } catch (e) {
       if (mounted) {
-        showAppMessage(context, l10n.failedToSendNudge(e.toString()),
-            isError: true);
+        showAppMessage(
+          context,
+          l10n.failedToSendNudge(e.toString()),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -986,37 +993,32 @@ class _NudgeHandButtonState extends State<_NudgeHandButton> {
                       child: const CircularProgressIndicator(strokeWidth: 2),
                     )
                   : isOnCooldown
-                      ? Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: widget.size * 0.75,
-                              height: widget.size * 0.75,
-                              child: CircularProgressIndicator(
-                                value: remaining.inSeconds / 3600.0,
-                                strokeWidth: 2,
-                                backgroundColor: Colors.grey.shade200,
-                                color: Colors.grey.shade400,
-                              ),
-                            ),
-                            Text(
-                              remaining.inMinutes > 0
-                                  ? '${remaining.inMinutes}m'
-                                  : '${remaining.inSeconds}s',
-                              style: TextStyle(
-                                fontSize: widget.size * 0.28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        )
-                      : Text(
-                          '👋',
-                          style: TextStyle(
-                            fontSize: widget.size * 0.6,
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: widget.size * 0.75,
+                          height: widget.size * 0.75,
+                          child: CircularProgressIndicator(
+                            value: remaining.inSeconds / 3600.0,
+                            strokeWidth: 2,
+                            backgroundColor: Colors.grey.shade200,
+                            color: Colors.grey.shade400,
                           ),
                         ),
+                        Text(
+                          remaining.inMinutes > 0
+                              ? '${remaining.inMinutes}m'
+                              : '${remaining.inSeconds}s',
+                          style: TextStyle(
+                            fontSize: widget.size * 0.28,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Text('👋', style: TextStyle(fontSize: widget.size * 0.6)),
             ),
           ),
         );

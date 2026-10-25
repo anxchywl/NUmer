@@ -113,13 +113,17 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     // otherwise keep inputs empty as requested.
     final isEditing = widget.habit != null;
     _frequencyGoalCtrl = TextEditingController(
-        text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
+      text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "",
+    );
     _workDaysCtrl = TextEditingController(
-        text: isEditing && _interval > 0 ? "$_interval" : "");
+      text: isEditing && _interval > 0 ? "$_interval" : "",
+    );
     _restDaysCtrl = TextEditingController(
-        text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "");
-    _targetCtrl =
-        TextEditingController(text: isEditing && _target > 0 ? "$_target" : "");
+      text: isEditing && _frequencyGoal > 0 ? "$_frequencyGoal" : "",
+    );
+    _targetCtrl = TextEditingController(
+      text: isEditing && _target > 0 ? "$_target" : "",
+    );
     _unitCtrl = TextEditingController(text: _unit);
 
     // Focus Listeners
@@ -199,8 +203,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
       HabitFrequencyType.specificDays => _weekDays.isNotEmpty,
       HabitFrequencyType.repeatsInPeriod =>
         _frequencyGoalCtrl.text.trim().isNotEmpty,
-      HabitFrequencyType.interval => _workDaysCtrl.text.trim().isNotEmpty &&
-          _restDaysCtrl.text.trim().isNotEmpty,
+      HabitFrequencyType.interval =>
+        _workDaysCtrl.text.trim().isNotEmpty &&
+            _restDaysCtrl.text.trim().isNotEmpty,
     };
   }
 
@@ -253,20 +258,23 @@ class _AddHabitSheetState extends State<AddHabitSheet>
   Map<String, dynamic> get _currentCatData {
     // Check custom
     try {
-      final custom =
-          _customCategories.firstWhere((c) => c.name == _categoryName);
+      final custom = _customCategories.firstWhere(
+        (c) => c.name == _categoryName,
+      );
       return {
         'name': custom.name,
         'icon': custom.icon,
         'color': custom.color,
         'isCustom': true,
-        'id': custom.id
+        'id': custom.id,
       };
     } catch (_) {}
 
     // Check default
-    return _defaultCategories.firstWhere((c) => c['name'] == _categoryName,
-        orElse: () => _defaultCategories.last);
+    return _defaultCategories.firstWhere(
+      (c) => c['name'] == _categoryName,
+      orElse: () => _defaultCategories.last,
+    );
   }
 
   String _localizedCategoryName(String name, AppLocalizations l10n) {
@@ -313,8 +321,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
         }
       },
       child: Padding(
-        padding:
-            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: AnimatedSize(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOutCubic,
@@ -336,20 +345,25 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              Text(l10n.habitExplainHabit,
-                                  style: theme.textTheme.titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold)),
+                              Text(
+                                l10n.habitExplainHabit,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               const SizedBox(height: 16),
                               TextFormField(
                                 focusNode: _habitNameFocus,
-                                initialValue:
-                                    _habitName.isNotEmpty ? _habitName : null,
+                                initialValue: _habitName.isNotEmpty
+                                    ? _habitName
+                                    : null,
                                 decoration: InputDecoration(
                                   labelText: l10n.habitNameLabel,
                                   hintText: l10n.habitNameHint,
                                   filled: true,
                                   fillColor: theme
-                                      .colorScheme.surfaceContainerHighest
+                                      .colorScheme
+                                      .surfaceContainerHighest
                                       .withAlpha(80),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -362,16 +376,17 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(16),
                                     borderSide: BorderSide(
-                                        color: theme.colorScheme.primary,
-                                        width: 2),
+                                      color: theme.colorScheme.primary,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                                 onChanged: (v) => _habitName = v,
                                 inputFormatters: [
                                   LengthLimitingTextInputFormatter(32),
-                                  FilteringTextInputFormatter.allow(RegExp(
-                                      r"[\p{L}\p{N}\s'\-]",
-                                      unicode: true)),
+                                  FilteringTextInputFormatter.allow(
+                                    RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 32),
@@ -388,10 +403,11 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                  _isCreatingCategory
-                                      ? l10n.habitCategoryNew
-                                      : l10n.habitCategoryLabel,
-                                  style: theme.textTheme.labelLarge),
+                                _isCreatingCategory
+                                    ? l10n.habitCategoryNew
+                                    : l10n.habitCategoryLabel,
+                                style: theme.textTheme.labelLarge,
+                              ),
                               const SizedBox(height: 12),
                               IgnorePointer(
                                 ignoring: _isEditingHabit,
@@ -403,11 +419,15 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                     switchOutCurve: Curves.easeInOutCubic,
                                     transitionBuilder: (child, animation) {
                                       final offsetAnimation = animation.drive(
-                                          Tween<Offset>(
-                                        begin: const Offset(0.0, 0.05),
-                                        end: Offset.zero,
-                                      ).chain(CurveTween(
-                                              curve: Curves.easeOutCubic)));
+                                        Tween<Offset>(
+                                          begin: const Offset(0.0, 0.05),
+                                          end: Offset.zero,
+                                        ).chain(
+                                          CurveTween(
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        ),
+                                      );
 
                                       return FadeTransition(
                                         opacity: animation,
@@ -423,27 +443,32 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                     },
                                     child: _isCreatingCategory
                                         ? Column(
-                                            key:
-                                                const ValueKey('creation_form'),
+                                            key: const ValueKey(
+                                              'creation_form',
+                                            ),
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.stretch,
                                             children: [
                                               TextField(
                                                 decoration: InputDecoration(
-                                                    labelText: l10n
-                                                        .habitCategoryNameLabel,
-                                                    hintText: l10n
-                                                        .habitCategoryNameHint),
+                                                  labelText: l10n
+                                                      .habitCategoryNameLabel,
+                                                  hintText: l10n
+                                                      .habitCategoryNameHint,
+                                                ),
                                                 onChanged: (v) =>
                                                     _newCatName = v,
                                                 autofocus: true,
                                                 inputFormatters: [
                                                   LengthLimitingTextInputFormatter(
-                                                      32),
-                                                  FilteringTextInputFormatter
-                                                      .allow(RegExp(
-                                                          r"[\p{L}\p{N}\s'\-]",
-                                                          unicode: true)),
+                                                    32,
+                                                  ),
+                                                  FilteringTextInputFormatter.allow(
+                                                    RegExp(
+                                                      r"[\p{L}\p{N}\s'\-]",
+                                                      unicode: true,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                               const SizedBox(height: 12),
@@ -454,56 +479,66 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                   scrollDirection:
                                                       Axis.horizontal,
                                                   children: Colors.primaries
-                                                      .map((color) => Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .only(
-                                                                    right: 12),
-                                                            child:
-                                                                GestureDetector(
-                                                              onTap: () =>
-                                                                  setState(() =>
-                                                                      _newCatColor =
-                                                                          color),
-                                                              child: Container(
-                                                                width: 34,
-                                                                height: 34,
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  color: color,
-                                                                  shape: BoxShape
-                                                                      .circle,
-                                                                  border: Border
-                                                                      .all(
-                                                                    color: _newCatColor ==
-                                                                            color
-                                                                        ? Colors
-                                                                            .black87
-                                                                        : Colors
-                                                                            .transparent,
-                                                                    width: 2.5,
-                                                                  ),
-                                                                  boxShadow:
+                                                      .map(
+                                                        (color) => Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                right: 12,
+                                                              ),
+                                                          child: GestureDetector(
+                                                            onTap: () => setState(
+                                                              () =>
+                                                                  _newCatColor =
+                                                                      color,
+                                                            ),
+                                                            child: Container(
+                                                              width: 34,
+                                                              height: 34,
+                                                              decoration: BoxDecoration(
+                                                                color: color,
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                border: Border.all(
+                                                                  color:
                                                                       _newCatColor ==
-                                                                              color
-                                                                          ? [
-                                                                              BoxShadow(color: color.withAlpha(100), blurRadius: 8, spreadRadius: 1)
-                                                                            ]
-                                                                          : null,
+                                                                          color
+                                                                      ? Colors
+                                                                            .black87
+                                                                      : Colors
+                                                                            .transparent,
+                                                                  width: 2.5,
                                                                 ),
-                                                                child: _newCatColor ==
+                                                                boxShadow:
+                                                                    _newCatColor ==
                                                                         color
-                                                                    ? const Icon(
-                                                                        Icons
-                                                                            .check,
-                                                                        color: Colors
-                                                                            .white,
-                                                                        size:
-                                                                            16)
+                                                                    ? [
+                                                                        BoxShadow(
+                                                                          color: color.withAlpha(
+                                                                            100,
+                                                                          ),
+                                                                          blurRadius:
+                                                                              8,
+                                                                          spreadRadius:
+                                                                              1,
+                                                                        ),
+                                                                      ]
                                                                     : null,
                                                               ),
+                                                              child:
+                                                                  _newCatColor ==
+                                                                      color
+                                                                  ? const Icon(
+                                                                      Icons
+                                                                          .check,
+                                                                      color: Colors
+                                                                          .white,
+                                                                      size: 16,
+                                                                    )
+                                                                  : null,
                                                             ),
-                                                          ))
+                                                          ),
+                                                        ),
+                                                      )
                                                       .toList(),
                                                 ),
                                               ),
@@ -513,146 +548,161 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                 child: ListView(
                                                   scrollDirection:
                                                       Axis.horizontal,
-                                                  children: [
-                                                    Icons.local_fire_department,
-                                                    Icons.check_circle,
-                                                    Icons.calendar_today,
-                                                    Icons.access_time,
-                                                    Icons.track_changes,
-                                                    Icons.star,
-                                                    Icons.bolt,
-                                                    Icons.favorite_border,
-                                                    Icons.psychology,
-                                                    Icons.fitness_center,
-                                                    Icons.menu_book,
-                                                    Icons.eco,
-                                                    Icons.water_drop,
-                                                    Icons.nightlight_round,
-                                                    Icons.wb_sunny,
-                                                    Icons.directions_walk,
-                                                    Icons.emoji_events,
-                                                    Icons.notifications,
-                                                    Icons.edit,
-                                                    Icons.trending_up,
-                                                    Icons.shield,
-                                                    Icons.battery_charging_full,
-                                                    Icons.sentiment_satisfied,
-                                                    Icons.rocket_launch,
-                                                    Icons.coffee,
-                                                    Icons.apple,
-                                                    Icons.lunch_dining,
-                                                    Icons.bakery_dining,
-                                                    Icons.wine_bar,
-                                                    Icons.medication,
-                                                    Icons.medical_services,
-                                                    Icons.health_and_safety,
-                                                    Icons.self_improvement,
-                                                    Icons.directions_bike,
-                                                    Icons.pool,
-                                                    Icons.accessibility_new,
-                                                    Icons.spa,
-                                                    Icons.music_note,
-                                                    Icons.headphones,
-                                                    Icons.palette,
-                                                    Icons.camera_alt,
-                                                    Icons.code,
-                                                    Icons.laptop,
-                                                    Icons
-                                                        .account_balance_wallet,
-                                                    Icons.savings,
-                                                    Icons.shopping_cart,
-                                                    Icons.bed,
-                                                  ].map((icon) {
-                                                    final selected =
-                                                        _newCatIcon == icon;
-                                                    return Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                              right: 12),
-                                                      child: GestureDetector(
-                                                        onTap: () => setState(
-                                                            () => _newCatIcon =
-                                                                icon),
-                                                        child: Container(
-                                                          width: 34,
-                                                          height: 34,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: selected
-                                                                ? _newCatColor
-                                                                    .withAlpha((0.15 *
-                                                                            255)
-                                                                        .round())
-                                                                : theme
-                                                                    .colorScheme
-                                                                    .surfaceContainerHighest
-                                                                    .withAlpha(
-                                                                        80),
-                                                            shape:
-                                                                BoxShape.circle,
-                                                            border: Border.all(
-                                                              color: selected
-                                                                  ? _newCatColor
-                                                                  : Colors
-                                                                      .transparent,
-                                                              width: 2.5,
+                                                  children:
+                                                      [
+                                                        Icons
+                                                            .local_fire_department,
+                                                        Icons.check_circle,
+                                                        Icons.calendar_today,
+                                                        Icons.access_time,
+                                                        Icons.track_changes,
+                                                        Icons.star,
+                                                        Icons.bolt,
+                                                        Icons.favorite_border,
+                                                        Icons.psychology,
+                                                        Icons.fitness_center,
+                                                        Icons.menu_book,
+                                                        Icons.eco,
+                                                        Icons.water_drop,
+                                                        Icons.nightlight_round,
+                                                        Icons.wb_sunny,
+                                                        Icons.directions_walk,
+                                                        Icons.emoji_events,
+                                                        Icons.notifications,
+                                                        Icons.edit,
+                                                        Icons.trending_up,
+                                                        Icons.shield,
+                                                        Icons
+                                                            .battery_charging_full,
+                                                        Icons
+                                                            .sentiment_satisfied,
+                                                        Icons.rocket_launch,
+                                                        Icons.coffee,
+                                                        Icons.apple,
+                                                        Icons.lunch_dining,
+                                                        Icons.bakery_dining,
+                                                        Icons.wine_bar,
+                                                        Icons.medication,
+                                                        Icons.medical_services,
+                                                        Icons.health_and_safety,
+                                                        Icons.self_improvement,
+                                                        Icons.directions_bike,
+                                                        Icons.pool,
+                                                        Icons.accessibility_new,
+                                                        Icons.spa,
+                                                        Icons.music_note,
+                                                        Icons.headphones,
+                                                        Icons.palette,
+                                                        Icons.camera_alt,
+                                                        Icons.code,
+                                                        Icons.laptop,
+                                                        Icons
+                                                            .account_balance_wallet,
+                                                        Icons.savings,
+                                                        Icons.shopping_cart,
+                                                        Icons.bed,
+                                                      ].map((icon) {
+                                                        final selected =
+                                                            _newCatIcon == icon;
+                                                        return Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                right: 12,
+                                                              ),
+                                                          child: GestureDetector(
+                                                            onTap: () => setState(
+                                                              () =>
+                                                                  _newCatIcon =
+                                                                      icon,
                                                             ),
-                                                            boxShadow: selected
-                                                                ? [
-                                                                    BoxShadow(
-                                                                        color: _newCatColor.withAlpha(
-                                                                            80),
-                                                                        blurRadius:
-                                                                            6,
-                                                                        spreadRadius:
-                                                                            0)
-                                                                  ]
-                                                                : null,
+                                                            child: Container(
+                                                              width: 34,
+                                                              height: 34,
+                                                              decoration: BoxDecoration(
+                                                                color: selected
+                                                                    ? _newCatColor.withAlpha(
+                                                                        (0.15 *
+                                                                                255)
+                                                                            .round(),
+                                                                      )
+                                                                    : theme
+                                                                          .colorScheme
+                                                                          .surfaceContainerHighest
+                                                                          .withAlpha(
+                                                                            80,
+                                                                          ),
+                                                                shape: BoxShape
+                                                                    .circle,
+                                                                border: Border.all(
+                                                                  color:
+                                                                      selected
+                                                                      ? _newCatColor
+                                                                      : Colors
+                                                                            .transparent,
+                                                                  width: 2.5,
+                                                                ),
+                                                                boxShadow:
+                                                                    selected
+                                                                    ? [
+                                                                        BoxShadow(
+                                                                          color: _newCatColor.withAlpha(
+                                                                            80,
+                                                                          ),
+                                                                          blurRadius:
+                                                                              6,
+                                                                          spreadRadius:
+                                                                              0,
+                                                                        ),
+                                                                      ]
+                                                                    : null,
+                                                              ),
+                                                              child: Icon(
+                                                                icon,
+                                                                color: selected
+                                                                    ? _newCatColor
+                                                                    : theme
+                                                                          .colorScheme
+                                                                          .onSurfaceVariant,
+                                                                size: 18,
+                                                              ),
+                                                            ),
                                                           ),
-                                                          child: Icon(
-                                                            icon,
-                                                            color: selected
-                                                                ? _newCatColor
-                                                                : theme
-                                                                    .colorScheme
-                                                                    .onSurfaceVariant,
-                                                            size: 18,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
+                                                        );
+                                                      }).toList(),
                                                 ),
                                               ),
                                               const SizedBox(height: 24),
                                               Row(
                                                 children: [
                                                   TextButton(
-                                                      onPressed: () => setState(
-                                                          () =>
-                                                              _isCreatingCategory =
-                                                                  false),
-                                                      child:
-                                                          Text(l10n.habitBack)),
+                                                    onPressed: () => setState(
+                                                      () =>
+                                                          _isCreatingCategory =
+                                                              false,
+                                                    ),
+                                                    child: Text(l10n.habitBack),
+                                                  ),
                                                   const Spacer(),
                                                   FilledButton(
-                                                      onPressed:
-                                                          _saveNewCategory,
-                                                      child: Text(l10n.save)),
+                                                    onPressed: _saveNewCategory,
+                                                    child: Text(l10n.save),
+                                                  ),
                                                 ],
-                                              )
+                                              ),
                                             ],
                                           )
                                         : Column(
-                                            key:
-                                                const ValueKey('selector_view'),
+                                            key: const ValueKey(
+                                              'selector_view',
+                                            ),
                                             children: [
                                               SwipeSelector<String>(
                                                 items: _allCategories
-                                                    .map((c) => c
-                                                            is HabitCategory
-                                                        ? c.name
-                                                        : c['name'] as String)
+                                                    .map(
+                                                      (c) => c is HabitCategory
+                                                          ? c.name
+                                                          : c['name'] as String,
+                                                    )
                                                     .toList(),
                                                 selectedValue: _categoryName,
                                                 onChanged: (val) {
@@ -664,17 +714,18 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                   dynamic cat;
                                                   try {
                                                     cat = _customCategories
-                                                        .firstWhere((c) =>
-                                                            c.name == item);
+                                                        .firstWhere(
+                                                          (c) => c.name == item,
+                                                        );
                                                   } catch (_) {
                                                     cat = _defaultCategories
                                                         .firstWhere(
-                                                            (c) =>
-                                                                c['name'] ==
-                                                                item,
-                                                            orElse: () =>
-                                                                _defaultCategories
-                                                                    .first);
+                                                          (c) =>
+                                                              c['name'] == item,
+                                                          orElse: () =>
+                                                              _defaultCategories
+                                                                  .first,
+                                                        );
                                                   }
 
                                                   final isCustom =
@@ -695,20 +746,27 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                                 .center,
                                                         children: [
                                                           Text(
-                                                              _localizedCategoryName(
-                                                                  item, l10n),
-                                                              style: theme
-                                                                  .textTheme
-                                                                  .titleMedium
-                                                                  ?.copyWith(
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .w600)),
+                                                            _localizedCategoryName(
+                                                              item,
+                                                              l10n,
+                                                            ),
+                                                            style: theme
+                                                                .textTheme
+                                                                .titleMedium
+                                                                ?.copyWith(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
                                                           const SizedBox(
-                                                              width: 8),
-                                                          Icon(icon,
-                                                              color: color,
-                                                              size: 20),
+                                                            width: 8,
+                                                          ),
+                                                          Icon(
+                                                            icon,
+                                                            color: color,
+                                                            size: 20,
+                                                          ),
                                                         ],
                                                       ),
                                                       if (isCustom)
@@ -716,14 +774,16 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                           right: 0,
                                                           child: IconButton(
                                                             icon: const Icon(
-                                                                Icons
-                                                                    .delete_outline,
-                                                                size: 20,
-                                                                color: Colors
-                                                                    .grey),
+                                                              Icons
+                                                                  .delete_outline,
+                                                              size: 20,
+                                                              color:
+                                                                  Colors.grey,
+                                                            ),
                                                             onPressed: () =>
                                                                 _confirmDeleteCategory(
-                                                                    cat),
+                                                                  cat,
+                                                                ),
                                                             tooltip: l10n
                                                                 .habitCategoryDeleteTitle,
                                                           ),
@@ -736,19 +796,25 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                               Center(
                                                 child: TextButton.icon(
                                                   onPressed: () {
-                                                    setState(() =>
-                                                        _isCreatingCategory =
-                                                            true);
+                                                    setState(
+                                                      () =>
+                                                          _isCreatingCategory =
+                                                              true,
+                                                    );
                                                   },
-                                                  icon: const Icon(Icons.add,
-                                                      size: 16),
-                                                  label: Text(l10n
-                                                      .habitCategoryCreateAction),
+                                                  icon: const Icon(
+                                                    Icons.add,
+                                                    size: 16,
+                                                  ),
+                                                  label: Text(
+                                                    l10n.habitCategoryCreateAction,
+                                                  ),
                                                   style: TextButton.styleFrom(
                                                     visualDensity:
                                                         VisualDensity.compact,
                                                     foregroundColor: theme
-                                                        .colorScheme.primary,
+                                                        .colorScheme
+                                                        .primary,
                                                   ),
                                                 ),
                                               ),
@@ -783,9 +849,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                       transitionBuilder: (child, animation) {
                         final offsetAnimation = animation.drive(
                           Tween<Offset>(
-                                  begin: const Offset(0.0, 0.05),
-                                  end: Offset.zero)
-                              .chain(CurveTween(curve: Curves.easeOutCubic)),
+                            begin: const Offset(0.0, 0.05),
+                            end: Offset.zero,
+                          ).chain(CurveTween(curve: Curves.easeOutCubic)),
                         );
                         return FadeTransition(
                           opacity: animation,
@@ -801,7 +867,8 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                       },
                       child: _isTrackingInputFocused
                           ? const SizedBox.shrink(
-                              key: ValueKey('tracking_hidden'))
+                              key: ValueKey('tracking_hidden'),
+                            )
                           : Column(
                               key: const ValueKey('tracking_visible'),
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -813,93 +880,115 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                     runSpacing: 8,
                                     children: [
                                       ChoiceChip(
-                                        label: Text(l10n.habitYesNo,
-                                            style: TextStyle(
-                                                color: _type == HabitType.yesNo
-                                                    ? theme.colorScheme
-                                                        .onSecondaryContainer
-                                                    : (widget.habit != null &&
-                                                            _type !=
-                                                                HabitType.yesNo
-                                                        ? theme.colorScheme
+                                        label: Text(
+                                          l10n.habitYesNo,
+                                          style: TextStyle(
+                                            color: _type == HabitType.yesNo
+                                                ? theme
+                                                      .colorScheme
+                                                      .onSecondaryContainer
+                                                : (widget.habit != null &&
+                                                          _type !=
+                                                              HabitType.yesNo
+                                                      ? theme
+                                                            .colorScheme
                                                             .onSurface
                                                             .withValues(
-                                                                alpha: 0.38)
-                                                        : null))),
+                                                              alpha: 0.38,
+                                                            )
+                                                      : null),
+                                          ),
+                                        ),
                                         selected: _type == HabitType.yesNo,
                                         disabledColor: theme
-                                            .colorScheme.surfaceContainerHighest
+                                            .colorScheme
+                                            .surfaceContainerHighest
                                             .withValues(alpha: 0.3),
                                         selectedColor: theme
-                                            .colorScheme.secondaryContainer,
+                                            .colorScheme
+                                            .secondaryContainer,
                                         onSelected: widget.habit != null
                                             ? null
                                             : (b) => setState(() {
-                                                  _type = HabitType.yesNo;
-                                                  if (_target == 0.0) {
-                                                    _target = 1.0;
-                                                  }
-                                                }),
+                                                _type = HabitType.yesNo;
+                                                if (_target == 0.0) {
+                                                  _target = 1.0;
+                                                }
+                                              }),
                                       ),
                                       ChoiceChip(
-                                        label: Text(l10n.habitNumeric,
-                                            style: TextStyle(
-                                                color: _type ==
-                                                        HabitType.numeric
-                                                    ? theme.colorScheme
-                                                        .onSecondaryContainer
-                                                    : (widget.habit != null &&
-                                                            _type !=
-                                                                HabitType
-                                                                    .numeric
-                                                        ? theme.colorScheme
+                                        label: Text(
+                                          l10n.habitNumeric,
+                                          style: TextStyle(
+                                            color: _type == HabitType.numeric
+                                                ? theme
+                                                      .colorScheme
+                                                      .onSecondaryContainer
+                                                : (widget.habit != null &&
+                                                          _type !=
+                                                              HabitType.numeric
+                                                      ? theme
+                                                            .colorScheme
                                                             .onSurface
                                                             .withValues(
-                                                                alpha: 0.38)
-                                                        : null))),
+                                                              alpha: 0.38,
+                                                            )
+                                                      : null),
+                                          ),
+                                        ),
                                         selected: _type == HabitType.numeric,
                                         disabledColor: theme
-                                            .colorScheme.surfaceContainerHighest
+                                            .colorScheme
+                                            .surfaceContainerHighest
                                             .withValues(alpha: 0.3),
                                         selectedColor: theme
-                                            .colorScheme.secondaryContainer,
+                                            .colorScheme
+                                            .secondaryContainer,
                                         onSelected: widget.habit != null
                                             ? null
                                             : (b) => setState(() {
-                                                  _type = HabitType.numeric;
-                                                  if (_target == 1.0) {
-                                                    _target = 0.0;
-                                                  }
-                                                }),
+                                                _type = HabitType.numeric;
+                                                if (_target == 1.0) {
+                                                  _target = 0.0;
+                                                }
+                                              }),
                                       ),
                                       ChoiceChip(
-                                        label: Text(l10n.habitTime,
-                                            style: TextStyle(
-                                                color: _type == HabitType.time
-                                                    ? theme.colorScheme
-                                                        .onSecondaryContainer
-                                                    : (widget.habit != null &&
-                                                            _type !=
-                                                                HabitType.time
-                                                        ? theme.colorScheme
+                                        label: Text(
+                                          l10n.habitTime,
+                                          style: TextStyle(
+                                            color: _type == HabitType.time
+                                                ? theme
+                                                      .colorScheme
+                                                      .onSecondaryContainer
+                                                : (widget.habit != null &&
+                                                          _type !=
+                                                              HabitType.time
+                                                      ? theme
+                                                            .colorScheme
                                                             .onSurface
                                                             .withValues(
-                                                                alpha: 0.38)
-                                                        : null))),
+                                                              alpha: 0.38,
+                                                            )
+                                                      : null),
+                                          ),
+                                        ),
                                         selected: _type == HabitType.time,
                                         disabledColor: theme
-                                            .colorScheme.surfaceContainerHighest
+                                            .colorScheme
+                                            .surfaceContainerHighest
                                             .withValues(alpha: 0.3),
                                         selectedColor: theme
-                                            .colorScheme.secondaryContainer,
+                                            .colorScheme
+                                            .secondaryContainer,
                                         onSelected: widget.habit != null
                                             ? null
                                             : (b) => setState(() {
-                                                  _type = HabitType.time;
-                                                  if (_target == 1.0) {
-                                                    _target = 0.0;
-                                                  }
-                                                }),
+                                                _type = HabitType.time;
+                                                if (_target == 1.0) {
+                                                  _target = 0.0;
+                                                }
+                                              }),
                                       ),
                                     ],
                                   ),
@@ -915,8 +1004,8 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                       l10n.habitTrackingTimeDescription,
                                   },
                                   style: theme.textTheme.bodyMedium?.copyWith(
-                                      color:
-                                          theme.colorScheme.onSurfaceVariant),
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                               ],
@@ -942,15 +1031,16 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                               l10n.habitComparatorLessThan,
                             HabitComparator.exactly =>
                               l10n.habitComparatorExactly,
-                            HabitComparator.any => l10n
-                                .habitComparatorAny, // Should not happen with filter
+                            HabitComparator.any =>
+                              l10n.habitComparatorAny, // Should not happen with filter
                           };
                           return Center(
                             child: Text(
                               label,
                               textAlign: TextAlign.center,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           );
                         },
@@ -958,91 +1048,110 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                     ),
                     const SizedBox(height: 20),
                     if (_type == HabitType.numeric) ...[
-                      Row(children: [
-                        Expanded(
-                          child: TextFormField(
-                            focusNode: _targetFocus,
-                            controller: _targetCtrl,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: l10n.habitValueLabel,
-                              filled: true,
-                              fillColor: theme
-                                  .colorScheme.surfaceContainerHighest
-                                  .withAlpha(80),
-                              border: OutlineInputBorder(
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              focusNode: _targetFocus,
+                              controller: _targetCtrl,
+                              keyboardType: TextInputType.number,
+                              decoration: InputDecoration(
+                                labelText: l10n.habitValueLabel,
+                                filled: true,
+                                fillColor: theme
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withAlpha(80),
+                                border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
-                              enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                      color: theme.colorScheme.primary,
-                                      width: 2)),
-                            ),
-                            onChanged: (v) {
-                              final trimmed = v.trim();
-                              if (trimmed.isEmpty) {
-                                setState(() => _target = 0.0);
-                                return;
-                              }
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (v) {
+                                final trimmed = v.trim();
+                                if (trimmed.isEmpty) {
+                                  setState(() => _target = 0.0);
+                                  return;
+                                }
 
-                              double val = double.tryParse(trimmed) ?? 0.0;
-                              if (val > 10000) {
-                                val = 10000;
-                                _targetCtrl.value = TextEditingValue(
-                                  text: "10000",
-                                  selection: TextSelection.collapsed(offset: 5),
-                                );
-                              }
-                              setState(() => _target = val);
-                            },
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(5),
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
+                                double val = double.tryParse(trimmed) ?? 0.0;
+                                if (val > 10000) {
+                                  val = 10000;
+                                  _targetCtrl.value = TextEditingValue(
+                                    text: "10000",
+                                    selection: TextSelection.collapsed(
+                                      offset: 5,
+                                    ),
+                                  );
+                                }
+                                setState(() => _target = val);
+                              },
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(5),
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextFormField(
-                            focusNode: _unitFocus,
-                            controller: _unitCtrl,
-                            decoration: InputDecoration(
-                              labelText: l10n.habitUnitLabel,
-                              hintText: l10n.habitUnitHint,
-                              filled: true,
-                              fillColor: theme
-                                  .colorScheme.surfaceContainerHighest
-                                  .withAlpha(80),
-                              border: OutlineInputBorder(
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              focusNode: _unitFocus,
+                              controller: _unitCtrl,
+                              decoration: InputDecoration(
+                                labelText: l10n.habitUnitLabel,
+                                hintText: l10n.habitUnitHint,
+                                filled: true,
+                                fillColor: theme
+                                    .colorScheme
+                                    .surfaceContainerHighest
+                                    .withAlpha(80),
+                                border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
-                              enabledBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                ),
+                                enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
-                                  borderSide: BorderSide.none),
-                              focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide.none,
+                                ),
+                                focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(16),
                                   borderSide: BorderSide(
-                                      color: theme.colorScheme.primary,
-                                      width: 2)),
+                                    color: theme.colorScheme.primary,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              onChanged: (v) => setState(() => _unit = v),
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(16),
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true),
+                                ),
+                              ],
                             ),
-                            onChanged: (v) => setState(() => _unit = v),
-                            inputFormatters: [
-                              LengthLimitingTextInputFormatter(16),
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
-                            ],
                           ),
-                        ),
-                      ]),
+                        ],
+                      ),
                       const SizedBox(height: 16),
                       Center(
-                          child: Text(l10n.habitPerDay,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline))),
+                        child: Text(
+                          l10n.habitPerDay,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ),
                     ] else if (_type == HabitType.time) ...[
                       HabitTimePicker(
                         value: _target,
@@ -1051,9 +1160,13 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                       ),
                       const SizedBox(height: 16),
                       Center(
-                          child: Text(l10n.habitPerDay,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.outline))),
+                        child: Text(
+                          l10n.habitPerDay,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.outline,
+                          ),
+                        ),
+                      ),
                     ],
                   ],
 
@@ -1065,8 +1178,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   Row(
                     children: [
                       TextButton(
-                          onPressed: () => _navigateToStep(0),
-                          child: Text(l10n.habitBack)),
+                        onPressed: () => _navigateToStep(0),
+                        child: Text(l10n.habitBack),
+                      ),
                       const Spacer(),
                       FilledButton(
                         style: _nextButtonStyle(theme),
@@ -1080,8 +1194,10 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                 ] else if (_screen == 2) ...[
                   // -- Step 3: Frequency --
                   // -- Step 3: Frequency --
-                  Text(l10n.habitFrequencyPrompt,
-                      style: theme.textTheme.labelLarge),
+                  Text(
+                    l10n.habitFrequencyPrompt,
+                    style: theme.textTheme.labelLarge,
+                  ),
                   const SizedBox(height: 12),
 
                   IgnorePointer(
@@ -1102,11 +1218,14 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                         type: HabitFrequencyType.daily,
                                         title: l10n.habitFrequencyEveryDay,
                                         child: Text(
-                                            l10n.habitFrequencyDailyDescription,
-                                            style: theme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onSurfaceVariant)),
+                                          l10n.habitFrequencyDailyDescription,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
                                       ),
                                       const SizedBox(height: 12),
                                       _buildFreqOption(
@@ -1118,19 +1237,21 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                                l10n
-                                                    .habitFrequencySpecificDescription,
-                                                style: theme
-                                                    .textTheme.bodyMedium
-                                                    ?.copyWith(
-                                                        color: theme.colorScheme
-                                                            .onSurfaceVariant)),
+                                              l10n.habitFrequencySpecificDescription,
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
                                             const SizedBox(height: 12),
                                             // Sub-selector
                                             Container(
                                               width: double.infinity,
                                               decoration: BoxDecoration(
-                                                color: theme.colorScheme
+                                                color: theme
+                                                    .colorScheme
                                                     .surfaceContainerHighest
                                                     .withAlpha(80),
                                                 borderRadius:
@@ -1140,17 +1261,20 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                               child: Row(
                                                 children: [
                                                   _buildPeriodTab(
-                                                      theme,
-                                                      l10n.habitFrequencyPeriodWeekLabel,
-                                                      HabitPeriod.week),
+                                                    theme,
+                                                    l10n.habitFrequencyPeriodWeekLabel,
+                                                    HabitPeriod.week,
+                                                  ),
                                                   _buildPeriodTab(
-                                                      theme,
-                                                      l10n.habitFrequencyPeriodMonthLabel,
-                                                      HabitPeriod.month),
+                                                    theme,
+                                                    l10n.habitFrequencyPeriodMonthLabel,
+                                                    HabitPeriod.month,
+                                                  ),
                                                   _buildPeriodTab(
-                                                      theme,
-                                                      l10n.habitFrequencyPeriodYearLabel,
-                                                      HabitPeriod.year),
+                                                    theme,
+                                                    l10n.habitFrequencyPeriodYearLabel,
+                                                    HabitPeriod.year,
+                                                  ),
                                                 ],
                                               ),
                                             ),
@@ -1160,11 +1284,13 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                             else if (_period ==
                                                 HabitPeriod.month)
                                               _buildMonthDaySelector(
-                                                  theme) // New method
+                                                theme,
+                                              ) // New method
                                             else if (_period ==
                                                 HabitPeriod.year)
                                               _buildYearSelector(
-                                                  theme), // New method
+                                                theme,
+                                              ), // New method
                                           ],
                                         ),
                                       ),
@@ -1190,25 +1316,27 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                                l10n
-                                                    .habitFrequencyTimesPerPeriodDescription,
-                                                style: theme
-                                                    .textTheme.bodyMedium
-                                                    ?.copyWith(
-                                                        color: theme.colorScheme
-                                                            .onSurfaceVariant)),
+                                              l10n.habitFrequencyTimesPerPeriodDescription,
+                                              style: theme.textTheme.bodyMedium
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
                                             const SizedBox(height: 12),
                                             Row(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.start,
                                               children: [
                                                 SizedBox(
-                                                    width: 80,
-                                                    child: Builder(
-                                                        builder: (context) {
+                                                  width: 80,
+                                                  child: Builder(
+                                                    builder: (context) {
                                                       return TextFormField(
                                                         key: const ValueKey(
-                                                            'frequency_goal_input'),
+                                                          'frequency_goal_input',
+                                                        ),
                                                         focusNode:
                                                             _freqGoalFocus,
                                                         controller:
@@ -1221,14 +1349,14 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                         inputFormatters: [
                                                           FilteringTextInputFormatter
                                                               .digitsOnly,
-                                                          FilteringTextInputFormatter
-                                                              .deny(RegExp(
-                                                                  r'^0')),
+                                                          FilteringTextInputFormatter.deny(
+                                                            RegExp(r'^0'),
+                                                          ),
                                                           LengthLimitingTextInputFormatter(
-                                                              3),
+                                                            3,
+                                                          ),
                                                         ],
-                                                        decoration:
-                                                            InputDecoration(
+                                                        decoration: InputDecoration(
                                                           isDense: true,
                                                           filled: true,
                                                           fillColor: theme
@@ -1236,83 +1364,103 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                               .surfaceContainerHighest
                                                               .withAlpha(80),
                                                           border: OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide.none,
+                                                          ),
                                                           enabledBorder:
                                                               OutlineInputBorder(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              12),
-                                                                  borderSide:
-                                                                      BorderSide
-                                                                          .none),
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      12,
+                                                                    ),
+                                                                borderSide:
+                                                                    BorderSide
+                                                                        .none,
+                                                              ),
                                                           focusedBorder: OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide: BorderSide(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide(
                                                                   color: theme
                                                                       .colorScheme
                                                                       .primary,
-                                                                  width: 2)),
+                                                                  width: 2,
+                                                                ),
+                                                          ),
                                                         ),
                                                         onChanged: (v) {
-                                                          final trimmed =
-                                                              v.trim();
+                                                          final trimmed = v
+                                                              .trim();
                                                           if (trimmed.isEmpty) {
-                                                            setState(() =>
-                                                                _frequencyGoal =
-                                                                    1);
+                                                            setState(
+                                                              () =>
+                                                                  _frequencyGoal =
+                                                                      1,
+                                                            );
                                                             return;
                                                           }
-                                                          int val = int.tryParse(
-                                                                  trimmed) ??
+                                                          int val =
+                                                              int.tryParse(
+                                                                trimmed,
+                                                              ) ??
                                                               1;
                                                           if (val < 1) {
                                                             val = 1;
                                                             _frequencyGoalCtrl
-                                                                .text = "$val";
+                                                                    .text =
+                                                                "$val";
                                                             _frequencyGoalCtrl
                                                                     .selection =
                                                                 TextSelection.fromPosition(
-                                                                    TextPosition(
-                                                                        offset:
-                                                                            1));
+                                                                  TextPosition(
+                                                                    offset: 1,
+                                                                  ),
+                                                                );
                                                           }
                                                           final maxVal =
                                                               switch (_period) {
-                                                            HabitPeriod.week =>
-                                                              7,
-                                                            HabitPeriod.month =>
-                                                              31,
-                                                            HabitPeriod.year =>
-                                                              365,
-                                                          };
+                                                                HabitPeriod
+                                                                    .week =>
+                                                                  7,
+                                                                HabitPeriod
+                                                                    .month =>
+                                                                  31,
+                                                                HabitPeriod
+                                                                    .year =>
+                                                                  365,
+                                                              };
                                                           if (val > maxVal) {
                                                             val = maxVal;
                                                             _frequencyGoalCtrl
-                                                                .text = "$val";
+                                                                    .text =
+                                                                "$val";
                                                             _frequencyGoalCtrl
                                                                     .selection =
                                                                 TextSelection.fromPosition(
-                                                                    TextPosition(
-                                                                        offset: _frequencyGoalCtrl
-                                                                            .text
-                                                                            .length));
+                                                                  TextPosition(
+                                                                    offset: _frequencyGoalCtrl
+                                                                        .text
+                                                                        .length,
+                                                                  ),
+                                                                );
                                                           }
-                                                          setState(() =>
-                                                              _frequencyGoal =
-                                                                  val);
+                                                          setState(
+                                                            () =>
+                                                                _frequencyGoal =
+                                                                    val,
+                                                          );
                                                         },
                                                       );
-                                                    })),
+                                                    },
+                                                  ),
+                                                ),
                                                 const SizedBox(width: 12),
                                                 Text(l10n.habitTimesPerLabel),
                                                 const SizedBox(width: 12),
@@ -1323,17 +1471,21 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                     setState(() {
                                                       final nextIndex =
                                                           (_period.index + 1) %
-                                                              HabitPeriod.values
-                                                                  .length;
+                                                          HabitPeriod
+                                                              .values
+                                                              .length;
                                                       _period = HabitPeriod
                                                           .values[nextIndex];
                                                       // Clamp
                                                       final maxVal =
                                                           switch (_period) {
-                                                        HabitPeriod.week => 7,
-                                                        HabitPeriod.month => 31,
-                                                        HabitPeriod.year => 365,
-                                                      };
+                                                            HabitPeriod.week =>
+                                                              7,
+                                                            HabitPeriod.month =>
+                                                              31,
+                                                            HabitPeriod.year =>
+                                                              365,
+                                                          };
                                                       if (_frequencyGoal >
                                                           maxVal) {
                                                         _frequencyGoal = maxVal;
@@ -1341,7 +1493,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                     });
                                                   },
                                                   child: _buildPeriodToggle(
-                                                      theme, _period),
+                                                    theme,
+                                                    _period,
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -1366,12 +1520,14 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                            l10n
-                                                .habitFrequencyWorkRestDescription,
-                                            style: theme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                                    color: theme.colorScheme
-                                                        .onSurfaceVariant)),
+                                          l10n.habitFrequencyWorkRestDescription,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                        ),
                                         const SizedBox(height: 12),
                                         Row(
                                           mainAxisAlignment:
@@ -1379,12 +1535,13 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                           children: [
                                             Text("${l10n.habitWorkLabel} "),
                                             SizedBox(
-                                                width: 60,
-                                                child:
-                                                    Builder(builder: (context) {
+                                              width: 60,
+                                              child: Builder(
+                                                builder: (context) {
                                                   return TextFormField(
                                                     key: const ValueKey(
-                                                        'work_days_input'),
+                                                      'work_days_input',
+                                                    ),
                                                     focusNode: _workDaysFocus,
                                                     controller: _workDaysCtrl,
                                                     keyboardType:
@@ -1393,10 +1550,12 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                     inputFormatters: [
                                                       FilteringTextInputFormatter
                                                           .digitsOnly,
-                                                      FilteringTextInputFormatter
-                                                          .deny(RegExp(r'^0')),
+                                                      FilteringTextInputFormatter.deny(
+                                                        RegExp(r'^0'),
+                                                      ),
                                                       LengthLimitingTextInputFormatter(
-                                                          3),
+                                                        3,
+                                                      ),
                                                     ],
                                                     decoration: InputDecoration(
                                                       isDense: true,
@@ -1405,46 +1564,51 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                           .colorScheme
                                                           .surfaceContainerHighest
                                                           .withAlpha(80),
-                                                      border:
-                                                          OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                        borderSide:
+                                                            BorderSide.none,
+                                                      ),
                                                       enabledBorder:
                                                           OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide.none,
+                                                          ),
                                                       focusedBorder:
                                                           OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide: BorderSide(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide(
                                                                   color: theme
                                                                       .colorScheme
                                                                       .primary,
-                                                                  width: 2)),
+                                                                  width: 2,
+                                                                ),
+                                                          ),
                                                       hintText: "0",
                                                     ),
                                                     onChanged: (v) {
                                                       final trimmed = v.trim();
                                                       if (trimmed.isEmpty) {
-                                                        setState(() =>
-                                                            _interval = 1);
+                                                        setState(
+                                                          () => _interval = 1,
+                                                        );
                                                         return;
                                                       }
-                                                      int val = int.tryParse(
-                                                              trimmed) ??
+                                                      int val =
+                                                          int.tryParse(
+                                                            trimmed,
+                                                          ) ??
                                                           1;
                                                       if (val < 1) {
                                                         val = 1;
@@ -1452,11 +1616,11 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                             "$val";
                                                         _workDaysCtrl
                                                                 .selection =
-                                                            TextSelection
-                                                                .fromPosition(
-                                                                    TextPosition(
-                                                                        offset:
-                                                                            1));
+                                                            TextSelection.fromPosition(
+                                                              TextPosition(
+                                                                offset: 1,
+                                                              ),
+                                                            );
                                                       }
                                                       if (val > 365) {
                                                         val = 365;
@@ -1465,26 +1629,33 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                         _workDaysCtrl
                                                                 .selection =
                                                             TextSelection.fromPosition(
-                                                                TextPosition(
-                                                                    offset: _workDaysCtrl
+                                                              TextPosition(
+                                                                offset:
+                                                                    _workDaysCtrl
                                                                         .text
-                                                                        .length));
+                                                                        .length,
+                                                              ),
+                                                            );
                                                       }
-                                                      setState(() =>
-                                                          _interval = val);
+                                                      setState(
+                                                        () => _interval = val,
+                                                      );
                                                     },
                                                   );
-                                                })),
+                                                },
+                                              ),
+                                            ),
                                             const SizedBox(width: 12),
                                             const Text("×"),
                                             const SizedBox(width: 12),
                                             SizedBox(
-                                                width: 60,
-                                                child:
-                                                    Builder(builder: (context) {
+                                              width: 60,
+                                              child: Builder(
+                                                builder: (context) {
                                                   return TextFormField(
                                                     key: const ValueKey(
-                                                        'rest_days_input'),
+                                                      'rest_days_input',
+                                                    ),
                                                     focusNode: _restDaysFocus,
                                                     controller: _restDaysCtrl,
                                                     keyboardType:
@@ -1493,10 +1664,12 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                     inputFormatters: [
                                                       FilteringTextInputFormatter
                                                           .digitsOnly,
-                                                      FilteringTextInputFormatter
-                                                          .deny(RegExp(r'^0')),
+                                                      FilteringTextInputFormatter.deny(
+                                                        RegExp(r'^0'),
+                                                      ),
                                                       LengthLimitingTextInputFormatter(
-                                                          3),
+                                                        3,
+                                                      ),
                                                     ],
                                                     decoration: InputDecoration(
                                                       isDense: true,
@@ -1505,46 +1678,52 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                           .colorScheme
                                                           .surfaceContainerHighest
                                                           .withAlpha(80),
-                                                      border:
-                                                          OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none),
+                                                      border: OutlineInputBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              12,
+                                                            ),
+                                                        borderSide:
+                                                            BorderSide.none,
+                                                      ),
                                                       enabledBorder:
                                                           OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide:
-                                                                  BorderSide
-                                                                      .none),
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide.none,
+                                                          ),
                                                       focusedBorder:
                                                           OutlineInputBorder(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          12),
-                                                              borderSide: BorderSide(
+                                                            borderRadius:
+                                                                BorderRadius.circular(
+                                                                  12,
+                                                                ),
+                                                            borderSide:
+                                                                BorderSide(
                                                                   color: theme
                                                                       .colorScheme
                                                                       .primary,
-                                                                  width: 2)),
+                                                                  width: 2,
+                                                                ),
+                                                          ),
                                                       hintText: "0",
                                                     ),
                                                     onChanged: (v) {
                                                       final trimmed = v.trim();
                                                       if (trimmed.isEmpty) {
-                                                        setState(() =>
-                                                            _frequencyGoal = 1);
+                                                        setState(
+                                                          () => _frequencyGoal =
+                                                              1,
+                                                        );
                                                         return;
                                                       }
-                                                      int val = int.tryParse(
-                                                              trimmed) ??
+                                                      int val =
+                                                          int.tryParse(
+                                                            trimmed,
+                                                          ) ??
                                                           1;
                                                       if (val < 1) {
                                                         val = 1;
@@ -1552,11 +1731,11 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                             "$val";
                                                         _restDaysCtrl
                                                                 .selection =
-                                                            TextSelection
-                                                                .fromPosition(
-                                                                    TextPosition(
-                                                                        offset:
-                                                                            1));
+                                                            TextSelection.fromPosition(
+                                                              TextPosition(
+                                                                offset: 1,
+                                                              ),
+                                                            );
                                                       }
                                                       if (val > 365) {
                                                         val = 365;
@@ -1565,16 +1744,23 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                         _restDaysCtrl
                                                                 .selection =
                                                             TextSelection.fromPosition(
-                                                                TextPosition(
-                                                                    offset: _restDaysCtrl
+                                                              TextPosition(
+                                                                offset:
+                                                                    _restDaysCtrl
                                                                         .text
-                                                                        .length));
+                                                                        .length,
+                                                              ),
+                                                            );
                                                       }
-                                                      setState(() =>
-                                                          _frequencyGoal = val);
+                                                      setState(
+                                                        () => _frequencyGoal =
+                                                            val,
+                                                      );
                                                     },
                                                   );
-                                                })),
+                                                },
+                                              ),
+                                            ),
                                             Text(" ${l10n.habitRestLabel}"),
                                           ],
                                         ),
@@ -1593,8 +1779,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   Row(
                     children: [
                       TextButton(
-                          onPressed: () => _navigateToStep(1),
-                          child: Text(l10n.habitBack)),
+                        onPressed: () => _navigateToStep(1),
+                        child: Text(l10n.habitBack),
+                      ),
                       const Spacer(),
                       FilledButton(
                         style: _nextButtonStyle(theme),
@@ -1607,14 +1794,17 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   ),
                 ] else if (_screen == 3) ...[
                   // -- Step 4: When? --
-                  Text(l10n.habitChooseTimeRangeTitle,
-                      style: theme.textTheme.labelLarge),
+                  Text(
+                    l10n.habitChooseTimeRangeTitle,
+                    style: theme.textTheme.labelLarge,
+                  ),
                   const SizedBox(height: 16),
 
                   ListTile(
                     title: Text(l10n.habitStartDateLabel),
-                    subtitle:
-                        Text(DateFormat.yMMMd(localeName).format(_startDate)),
+                    subtitle: Text(
+                      DateFormat.yMMMd(localeName).format(_startDate),
+                    ),
                     trailing: const Icon(Icons.calendar_today),
                     onTap: _isEditingHabit
                         ? null
@@ -1637,9 +1827,11 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   const Divider(),
                   ListTile(
                     title: Text(l10n.habitEndDateLabel),
-                    subtitle: Text(_endDate == null
-                        ? l10n.habitNoEndDate
-                        : DateFormat.yMMMd(localeName).format(_endDate!)),
+                    subtitle: Text(
+                      _endDate == null
+                          ? l10n.habitNoEndDate
+                          : DateFormat.yMMMd(localeName).format(_endDate!),
+                    ),
                     trailing: _endDate == null
                         ? const Icon(Icons.add)
                         : const Icon(Icons.close),
@@ -1652,8 +1844,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                             }
                             final now = DateTime.now();
                             final maxDate = DateTime(now.year + 5, 12, 31);
-                            final initialEnd =
-                                _startDate.add(const Duration(days: 30));
+                            final initialEnd = _startDate.add(
+                              const Duration(days: 30),
+                            );
                             final picked = await showDatePicker(
                               context: context,
                               initialDate: initialEnd.isAfter(maxDate)
@@ -1661,8 +1854,8 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                   : initialEnd,
                               firstDate:
                                   _startDate.isAfter(DateTime(2025, 1, 1))
-                                      ? _startDate
-                                      : DateTime(2025, 1, 1),
+                                  ? _startDate
+                                  : DateTime(2025, 1, 1),
                               lastDate: maxDate,
                             );
                             if (picked != null) {
@@ -1677,20 +1870,25 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   Row(
                     children: [
                       TextButton(
-                          onPressed: () => _navigateToStep(2),
-                          child: Text(l10n.habitBack)),
+                        onPressed: () => _navigateToStep(2),
+                        child: Text(l10n.habitBack),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
-                          child: FilledButton(
-                        onPressed: _isSaving ? null : _submit,
-                        child: _isSaving
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : Text(l10n.habitCreateAction),
-                      )),
+                        child: FilledButton(
+                          onPressed: _isSaving ? null : _submit,
+                          child: _isSaving
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : Text(l10n.habitCreateAction),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1702,10 +1900,12 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     );
   }
 
-  Widget _buildFreqOption(ThemeData theme,
-      {required HabitFrequencyType type,
-      required String title,
-      required Widget child}) {
+  Widget _buildFreqOption(
+    ThemeData theme, {
+    required HabitFrequencyType type,
+    required String title,
+    required Widget child,
+  }) {
     final selected = _freq == type;
     // If editing, disable switching to other types
     final disabled = widget.habit != null && !selected;
@@ -1723,13 +1923,17 @@ class _AddHabitSheetState extends State<AddHabitSheet>
               color: selected
                   ? theme.colorScheme.secondaryContainer
                   : (disabled
-                      ? theme.colorScheme.surfaceContainerHighest.withAlpha(20)
-                      : theme.colorScheme.surfaceContainerHighest
-                          .withAlpha(50)),
+                        ? theme.colorScheme.surfaceContainerHighest.withAlpha(
+                            20,
+                          )
+                        : theme.colorScheme.surfaceContainerHighest.withAlpha(
+                            50,
+                          )),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color:
-                    selected ? theme.colorScheme.primary : Colors.transparent,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : Colors.transparent,
                 width: 1,
               ),
             ),
@@ -1744,13 +1948,15 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                       : theme.colorScheme.outline,
                 ),
                 const SizedBox(width: 12),
-                Text(title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: selected
-                          ? theme.colorScheme.onSecondaryContainer
-                          : theme.colorScheme.onSurface,
-                    )),
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? theme.colorScheme.onSecondaryContainer
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
               ],
             ),
           ),
@@ -1762,7 +1968,10 @@ class _AddHabitSheetState extends State<AddHabitSheet>
           child: selected
               ? Padding(
                   padding: const EdgeInsets.only(
-                      top: 12, left: 16, bottom: 8), // Indent content below
+                    top: 12,
+                    left: 16,
+                    bottom: 8,
+                  ), // Indent content below
                   child: child,
                 )
               : const SizedBox.shrink(),
@@ -1819,13 +2028,16 @@ class _AddHabitSheetState extends State<AddHabitSheet>
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim, child: ScaleTransition(scale: anim, child: child)),
+          opacity: anim,
+          child: ScaleTransition(scale: anim, child: child),
+        ),
         child: Text(
           label.toUpperCase(),
           key: ValueKey(p),
           style: TextStyle(
-              color: theme.colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.bold),
+            color: theme.colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
@@ -1858,23 +2070,24 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                     : theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
-              child: Text("$day",
-                  style: TextStyle(
-                    color: selected
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  )),
+              child: Text(
+                "$day",
+                style: TextStyle(
+                  color: selected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
         );
         if (day < rowEnd) rowDays.add(const SizedBox(width: 8));
       }
-      rows.add(Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: rowDays,
-      ));
+      rows.add(
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: rowDays),
+      );
       if (rowEnd < 31) rows.add(const SizedBox(height: 8));
     }
 
@@ -1887,7 +2100,9 @@ class _AddHabitSheetState extends State<AddHabitSheet>
   Widget _buildYearSelector(ThemeData theme) {
     final localeName = AppLocalizations.of(context)!.localeName;
     final months = List.generate(
-        12, (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)));
+      12,
+      (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1895,19 +2110,22 @@ class _AddHabitSheetState extends State<AddHabitSheet>
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _weekDays.where((encoded) {
-            // Validate: month should be 1-12, day should be 1-31
-            final m = encoded ~/ 100;
-            final d = encoded % 100;
-            return m >= 1 && m <= 12 && d >= 1 && d <= 31;
-          }).map((encoded) {
-            final m = encoded ~/ 100;
-            final d = encoded % 100;
-            return Chip(
-              label: Text("${months[m - 1]} $d"),
-              onDeleted: () => setState(() => _weekDays.remove(encoded)),
-            );
-          }).toList(),
+          children: _weekDays
+              .where((encoded) {
+                // Validate: month should be 1-12, day should be 1-31
+                final m = encoded ~/ 100;
+                final d = encoded % 100;
+                return m >= 1 && m <= 12 && d >= 1 && d <= 31;
+              })
+              .map((encoded) {
+                final m = encoded ~/ 100;
+                final d = encoded % 100;
+                return Chip(
+                  label: Text("${months[m - 1]} $d"),
+                  onDeleted: () => setState(() => _weekDays.remove(encoded)),
+                );
+              })
+              .toList(),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
@@ -1915,10 +2133,11 @@ class _AddHabitSheetState extends State<AddHabitSheet>
             // Custom picker or standard? Standard supports one date.
             final now = DateTime.now();
             final picked = await showDatePicker(
-                context: context,
-                initialDate: now,
-                firstDate: DateTime(now.year, 1, 1),
-                lastDate: DateTime(now.year, 12, 31));
+              context: context,
+              initialDate: now,
+              firstDate: DateTime(now.year, 1, 1),
+              lastDate: DateTime(now.year, 12, 31),
+            );
             if (picked != null) {
               final encoded = picked.month * 100 + picked.day;
               setState(() => _weekDays.add(encoded));
@@ -1982,9 +2201,10 @@ class _AddHabitSheetState extends State<AddHabitSheet>
             foregroundColor: active
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurface,
-            child: Text(days[index],
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            child: Text(
+              days[index],
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
           ),
         );
       }),
@@ -2020,11 +2240,13 @@ class _AddHabitSheetState extends State<AddHabitSheet>
         // Tracking Type change IS comparator change usually.
 
         if (targetChanged || comparatorChanged) {
-          rules.add(HabitRule(
-            endDate: DateTime.now(), // Rules ends NOW
-            targetValue: old.targetValue,
-            comparator: old.comparator,
-          ));
+          rules.add(
+            HabitRule(
+              endDate: DateTime.now(), // Rules ends NOW
+              targetValue: old.targetValue,
+              comparator: old.comparator,
+            ),
+          );
         }
 
         habit = widget.habit!.copyWith(
@@ -2094,7 +2316,8 @@ class _AddHabitSheetState extends State<AddHabitSheet>
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.habitsListError(e.toString()))));
+          SnackBar(content: Text(l10n.habitsListError(e.toString()))),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -2129,20 +2352,23 @@ class _AddHabitSheetState extends State<AddHabitSheet>
   Future<void> _confirmDeleteCategory(HabitCategory cat) async {
     final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-              title: Text(l10n.habitCategoryDeleteTitle),
-              content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(l10n.cancel)),
-                FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                    child: Text(l10n.delete)),
-              ],
-            ));
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.habitCategoryDeleteTitle),
+        content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
 
     if (ok == true && mounted) {
       final auth = context.read<AuthController>();
@@ -2170,14 +2396,19 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)!.habitConnectCourse,
-            style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(
+          AppLocalizations.of(context)!.habitConnectCourse,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context)!.habitCourseSyncHint,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -2185,7 +2416,7 @@ class _AddHabitSheetState extends State<AddHabitSheet>
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: courses.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final c = courses[index];
               final isSelected = _connectedCourseIds.contains(c.id);
@@ -2201,10 +2432,7 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                     }
                   });
                 },
-                avatar: CircleAvatar(
-                  backgroundColor: c.color,
-                  radius: 8,
-                ),
+                avatar: CircleAvatar(backgroundColor: c.color, radius: 8),
                 showCheckmark: false,
                 labelStyle: TextStyle(
                   color: isSelected
@@ -2213,14 +2441,16 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
                 selectedColor: theme.colorScheme.primary,
-                backgroundColor:
-                    theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest
+                    .withAlpha(80),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                        color: isSelected
-                            ? Colors.transparent
-                            : theme.colorScheme.outlineVariant)),
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: isSelected
+                        ? Colors.transparent
+                        : theme.colorScheme.outlineVariant,
+                  ),
+                ),
                 padding: const EdgeInsets.symmetric(horizontal: 4),
               );
             },

@@ -35,10 +35,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create a Group'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Create a Group'), centerTitle: true),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -204,7 +201,9 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     : const Text(
                         'Create Community',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ),
@@ -219,10 +218,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     return Text(
       text.toUpperCase(),
       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
-            letterSpacing: 1.2,
-          ),
+        fontWeight: FontWeight.bold,
+        color: Theme.of(context).colorScheme.primary,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
@@ -255,11 +254,7 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
       Navigator.of(context).pop();
     } catch (error) {
       if (!mounted) return;
-      showAppMessage(
-        context,
-        'Failed to create group: $error',
-        isError: true,
-      );
+      showAppMessage(context, 'Failed to create group: $error', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isSaving = false);
@@ -286,13 +281,15 @@ class _VisibilityCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final borderColor =
-        isSelected ? colorScheme.primary : colorScheme.outlineVariant;
+    final borderColor = isSelected
+        ? colorScheme.primary
+        : colorScheme.outlineVariant;
     final backgroundColor = isSelected
         ? colorScheme.primaryContainer.withValues(alpha: 0.3)
         : Colors.transparent;
-    final iconColor =
-        isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final iconColor = isSelected
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
     final textColor = isSelected ? colorScheme.primary : colorScheme.onSurface;
 
     return InkWell(

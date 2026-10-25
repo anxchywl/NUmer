@@ -11,12 +11,14 @@ void main() {
 
   for (final MapEntry(key: language, value: (title, body)) in copy.entries) {
     testWidgets('shows the coming soon state in $language', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        locale: Locale(language),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: const AiAnalysisScreen(),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: Locale(language),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AiAnalysisScreen(),
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text(title), findsOneWidget);
