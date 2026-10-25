@@ -140,6 +140,24 @@ NUmer is fully localized into English (`en`), Russian (`ru`), and Kazakh (`kk`).
 
 ---
 
+## Verify before reporting
+
+Run `./scripts/verify.sh` and report its real output. A task is not done until it passes.
+The script does not run device builds, emulator tests or deploys.
+
+## Code conventions
+
+- **Comments**: see [Comment style](#comment-style)
+- **Language**: English for code, comments, docs and commits
+- **Commits**: conventional prefix (`feat`, `fix`, `refactor`, `docs`, `chore`, `test`), lowercase, imperative, no period, subject line only, no trailers
+- **Shape**: follow the file's existing patterns; early returns; small single-purpose functions; short descriptive names; `lower_snake_case.dart` with `*_screen.dart`, `*_service.dart`, `*_sheet.dart` suffixes
+- **Leftovers**: no debug prints, commented-out code, temporary variables or emoji
+- **Errors**: catch the specific failure you handle; never catch broadly or swallow
+- **Scope**: no unrequested features, abstractions, dependencies or error handling; edit existing files where possible
+- **Tests**: `flutter_test` with hand-written fakes, no mocking package; tests mirror the source tree; functions and rules are tested against the emulator
+- **Coverage**: NUmer: the floor is the baseline measured in P0-02, rounded down, and may only rise. Module repos keep their own floors
+- **Docs**: each doc owns its subject once; a change that makes `AGENTS.md`, `README.md` or `docs/*` wrong fixes them in the same commit
+
 ## Agent Gotchas
 
 - **Hive adapters are hand-written** — this project does **not** run `build_runner`

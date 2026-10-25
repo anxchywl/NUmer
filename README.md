@@ -72,17 +72,16 @@ in [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md).
 ## Testing & quality
 
 ```bash
-flutter analyze
-flutter test
+./scripts/verify.sh
 ```
 
-Both must pass before opening a PR.
+It must pass before opening a PR. The script header lists what it does not run.
 
 ## Contributing
 
 1. Branch from `main` (`git checkout -b feature/your-change`).
 2. Keep each change scoped to a single feature folder under `lib/features/` where possible.
-3. Ensure `flutter analyze` and `flutter test` are clean.
+3. Ensure `./scripts/verify.sh` passes.
 4. Open a pull request.
 
 AI assistants working in this repo should read [AGENTS.md](AGENTS.md) first.

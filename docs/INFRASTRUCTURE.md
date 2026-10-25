@@ -120,9 +120,8 @@ flutter pub get
 # run the app (simulator/emulator running)
 flutter run
 
-# quality gates
-flutter analyze
-flutter test
+# quality gates, the script header lists what it does not run
+./scripts/verify.sh
 
 # release builds
 flutter build ios
