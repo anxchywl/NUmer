@@ -35,8 +35,9 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
   @override
   void initState() {
     super.initState();
-    _pageCtrl =
-        PageController(viewportFraction: 0.6); // Adjusted for visibility
+    _pageCtrl = PageController(
+      viewportFraction: 0.6,
+    ); // Adjusted for visibility
     final state = context.read<AppState>();
     final now = DateTime.now();
     _selectedMonth =
@@ -102,8 +103,10 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
       final l10n = AppLocalizations.of(context)!;
       final state = context.read<AppState>();
       final startOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month);
-      final endOfMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+      final endOfMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + 1,
+      );
 
       // Prepare course names map
       final courseNames = {for (var c in state.courses) c.id: c.name};
@@ -134,11 +137,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         final err = e.toString().replaceAll("Exception: ", "");
-        showAppMessage(
-          context,
-          l10n.exportFailedMessage(err),
-          isError: true,
-        );
+        showAppMessage(context, l10n.exportFailedMessage(err), isError: true);
       }
     } finally {
       if (mounted) {
@@ -153,8 +152,10 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
     try {
       final allSessions = await Storage.getSessions();
       final startOfMonth = DateTime(_selectedMonth.year, _selectedMonth.month);
-      final endOfMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+      final endOfMonth = DateTime(
+        _selectedMonth.year,
+        _selectedMonth.month + 1,
+      );
       final selectedItem = _carouselItems[_index];
       final String? selectedCourseId = selectedItem?.id;
 
@@ -223,10 +224,7 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                 layoutBuilder: (currentChild, previousChildren) {
                   return Stack(
                     alignment: Alignment.topCenter,
-                    children: <Widget>[
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
+                    children: <Widget>[...previousChildren, ?currentChild],
                   );
                 },
                 transitionBuilder: (child, animation) {
@@ -234,20 +232,27 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
 
                   final offset = isIncoming
                       ? Tween<Offset>(
-                              begin: const Offset(0, 0.2), end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: animation, curve: Curves.easeOutCubic))
+                          begin: const Offset(0, 0.2),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                          ),
+                        )
                       : Tween<Offset>(
-                              begin: const Offset(0, -0.2), end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: animation, curve: Curves.easeInCubic));
+                          begin: const Offset(0, -0.2),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeInCubic,
+                          ),
+                        );
 
                   return FadeTransition(
                     opacity: animation,
-                    child: SlideTransition(
-                      position: offset,
-                      child: child,
-                    ),
+                    child: SlideTransition(position: offset, child: child),
                   );
                 },
                 child: _isSuccess
@@ -264,12 +269,13 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                   onPressed: _isSuccess
                       ? () => Navigator.pop(context)
                       : (_isExporting
-                          ? (_countdown > 0 ? _cancelCountdown : null)
-                          : _startCountdown),
+                            ? (_countdown > 0 ? _cancelCountdown : null)
+                            : _startCountdown),
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -279,10 +285,13 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                           const Icon(Icons.close, color: Colors.white)
                         else
                           const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2.5, color: Colors.white)),
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          ),
                         const SizedBox(width: 8),
                       ] else if (!_isSuccess) ...[
                         const Icon(Icons.download_rounded),
@@ -302,8 +311,9 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                   padding: const EdgeInsets.only(top: 12),
                   child: Text(
                     l10n.exportWillStartIn(_countdown),
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: scheme.primary),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.primary,
+                    ),
                   ),
                 ),
             ],
@@ -314,15 +324,15 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
   }
 
   Widget _buildSelectors(
-      AppLocalizations l10n, ThemeData theme, ColorScheme scheme) {
+    AppLocalizations l10n,
+    ThemeData theme,
+    ColorScheme scheme,
+  ) {
     return Column(
       key: const ValueKey(false),
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          l10n.selectCourse,
-          style: theme.textTheme.titleSmall,
-        ),
+        Text(l10n.selectCourse, style: theme.textTheme.titleSmall),
         const SizedBox(height: 12),
         SizedBox(
           height: 80,
@@ -346,8 +356,10 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                   duration: const Duration(milliseconds: 200),
                   opacity: selected ? 1.0 : 0.5,
                   child: Container(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 4,
+                    ),
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHigh,
@@ -365,8 +377,11 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                           radius: 12,
                           backgroundColor: isAll ? scheme.primary : item.color,
                           child: isAll
-                              ? const Icon(Icons.all_inclusive,
-                                  size: 14, color: Colors.white)
+                              ? const Icon(
+                                  Icons.all_inclusive,
+                                  size: 14,
+                                  color: Colors.white,
+                                )
                               : null,
                         ),
                         const SizedBox(width: 12),
@@ -386,8 +401,11 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                           ),
                         ),
                         if (selected)
-                          Icon(Icons.check_circle,
-                              size: 18, color: scheme.primary),
+                          Icon(
+                            Icons.check_circle,
+                            size: 18,
+                            color: scheme.primary,
+                          ),
                       ],
                     ),
                   ),
@@ -409,13 +427,17 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
   }
 
   Widget _buildMonthPicker(
-      ThemeData theme, ColorScheme scheme, AppLocalizations l10n) {
+    ThemeData theme,
+    ColorScheme scheme,
+    AppLocalizations l10n,
+  ) {
     final now = DateTime.now();
     final earliest = DateTime(2025, 1);
     final latest = DateTime(now.year, now.month + 1);
 
-    final monthYearStr =
-        DateFormat.yMMMM(l10n.localeName).format(_selectedMonth);
+    final monthYearStr = DateFormat.yMMMM(
+      l10n.localeName,
+    ).format(_selectedMonth);
 
     return Column(
       children: [
@@ -423,13 +445,16 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              onPressed: _selectedMonth.year <= earliest.year &&
+              onPressed:
+                  _selectedMonth.year <= earliest.year &&
                       _selectedMonth.month <= earliest.month
                   ? null
                   : () {
                       setState(() {
                         _selectedMonth = DateTime(
-                            _selectedMonth.year, _selectedMonth.month - 1);
+                          _selectedMonth.year,
+                          _selectedMonth.month - 1,
+                        );
                         Storage.setLastExportMonth(_selectedMonth);
                         _loadSessionCount();
                       });
@@ -442,19 +467,23 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
               child: Text(
                 monthYearStr,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(width: 8),
             IconButton(
-              onPressed: _selectedMonth.year >= latest.year &&
+              onPressed:
+                  _selectedMonth.year >= latest.year &&
                       _selectedMonth.month >= latest.month
                   ? null
                   : () {
                       setState(() {
                         _selectedMonth = DateTime(
-                            _selectedMonth.year, _selectedMonth.month + 1);
+                          _selectedMonth.year,
+                          _selectedMonth.month + 1,
+                        );
                         Storage.setLastExportMonth(_selectedMonth);
                         _loadSessionCount();
                       });
@@ -470,7 +499,8 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
               ? const SizedBox(
                   width: 20,
                   height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2))
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : Text(
                   l10n.sessionsFound(_sessionCount),
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -484,7 +514,10 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
   }
 
   Widget _buildInstructions(
-      AppLocalizations l10n, ThemeData theme, ColorScheme scheme) {
+    AppLocalizations l10n,
+    ThemeData theme,
+    ColorScheme scheme,
+  ) {
     return Column(
       key: const ValueKey(true),
       mainAxisSize: MainAxisSize.min,
@@ -517,8 +550,9 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     if (_filePath != null) {
-                      await SharePlus.instance
-                          .share(ShareParams(files: [XFile(_filePath!)]));
+                      await SharePlus.instance.share(
+                        ShareParams(files: [XFile(_filePath!)]),
+                      );
                     }
                   },
                   icon: const Icon(Icons.share),
@@ -531,8 +565,9 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
         const SizedBox(height: 24),
         Text(
           l10n.nextSteps,
-          style:
-              theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         const SizedBox(height: 8),
         Text(

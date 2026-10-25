@@ -48,7 +48,8 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
     return;
   }
 
-  final enableAppCheck = kReleaseMode ||
+  final enableAppCheck =
+      kReleaseMode ||
       const bool.fromEnvironment('ENABLE_APPCHECK', defaultValue: false);
   if (!enableAppCheck) {
     return;
@@ -98,14 +99,13 @@ Future<void> main() async {
   final initialTheme = _parseThemeMode(storedTheme);
   AppState.setInitialThemeMode(initialTheme);
 
-  const useEmulator =
-      bool.fromEnvironment('USE_FIRESTORE_EMULATOR', defaultValue: false);
+  const useEmulator = bool.fromEnvironment(
+    'USE_FIRESTORE_EMULATOR',
+    defaultValue: false,
+  );
   final initFuture = _initializeApp(useEmulator: useEmulator);
 
-  runApp(NumerBootstrapApp(
-    initFuture: initFuture,
-    initialTheme: initialTheme,
-  ));
+  runApp(NumerBootstrapApp(initFuture: initFuture, initialTheme: initialTheme));
 }
 
 // converts a stored preference string into a thememode
@@ -122,13 +122,12 @@ ThemeMode _parseThemeMode(String? value) {
 
 // one-time firebase and hive bootstrap that runs before the app is usable
 Future<void> _initializeApp({required bool useEmulator}) async {
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!kIsWeb) {
-    FirebaseFirestore.instance.settings =
-        const Settings(persistenceEnabled: true);
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+    );
   }
 
   // Ensure local storage is scoped as early as possible for restored sessions.
@@ -169,15 +168,9 @@ class NumerBootstrapApp extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return MultiProvider(
             providers: [
-              ChangeNotifierProvider<SyncService>(
-                create: (_) => SyncService(),
-              ),
-              Provider<GroupService>(
-                create: (_) => GroupService(),
-              ),
-              Provider<HabitService>(
-                create: (_) => HabitService(),
-              ),
+              ChangeNotifierProvider<SyncService>(create: (_) => SyncService()),
+              Provider<GroupService>(create: (_) => GroupService()),
+              Provider<HabitService>(create: (_) => HabitService()),
               ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
                 create: (_) => AppState(),
                 update: (_, syncService, habitService, appState) {
@@ -201,12 +194,14 @@ class NumerBootstrapApp extends StatelessWidget {
         // Use exact native splash colors for seamless transition.
         final systemBrightness =
             WidgetsBinding.instance.platformDispatcher.platformBrightness;
-        final isDark = initialTheme == ThemeMode.dark ||
+        final isDark =
+            initialTheme == ThemeMode.dark ||
             (initialTheme == ThemeMode.system &&
                 systemBrightness == Brightness.dark);
         // Match native splash colors exactly: #FFFFFF (light) / #121212 (dark)
-        final bgColor =
-            isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
+        final bgColor = isDark
+            ? const Color(0xFF121212)
+            : const Color(0xFFFFFFFF);
         final fgColor = isDark ? Colors.white70 : Colors.black87;
 
         return MaterialApp(
@@ -223,7 +218,8 @@ class NumerBootstrapApp extends StatelessWidget {
           supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
-              final message = AppLocalizations.of(context)?.loadingProfile ??
+              final message =
+                  AppLocalizations.of(context)?.loadingProfile ??
                   'Loading your profile';
               return LoadingScreen(
                 message: message,
@@ -304,11 +300,8 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Selector<AppState, (ThemeMode, Locale?, Color)>(
-      selector: (_, state) => (
-        state.effectiveThemeMode,
-        state.locale,
-        state.accentColor,
-      ),
+      selector: (_, state) =>
+          (state.effectiveThemeMode, state.locale, state.accentColor),
       builder: (context, data, _) {
         final themeMode = data.$1;
         final locale = data.$2;
@@ -394,14 +387,16 @@ class _AuthGateState extends State<AuthGate> {
     final appState = context.read<AppState>();
     final mode = appState.effectiveThemeMode;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
-    final isDark = mode == ThemeMode.dark ||
+    final isDark =
+        mode == ThemeMode.dark ||
         (mode == ThemeMode.system && systemBrightness == Brightness.dark);
 
     // Match native splash colors exactly
     final bgColor = isDark ? const Color(0xFF121212) : const Color(0xFFFFFFFF);
     final fgColor = isDark ? Colors.white70 : Colors.black87;
 
-    final resolvedMessage = message ??
+    final resolvedMessage =
+        message ??
         AppLocalizations.of(context)?.loadingProfile ??
         'Loading your profile';
     return LoadingScreen(
@@ -447,10 +442,7 @@ class _AuthGateState extends State<AuthGate> {
       if (auth.consumeAccountDeletedMessage()) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
-          showAppMessage(
-            context,
-            AppLocalizations.of(context)!.accountDeleted,
-          );
+          showAppMessage(context, AppLocalizations.of(context)!.accountDeleted);
         });
       }
       final appState = context.read<AppState>();
@@ -478,7 +470,8 @@ class _AuthGateState extends State<AuthGate> {
       if (auth.isSigningOut) {
         return _buildLoader(
           context,
-          message: AppLocalizations.of(context)?.loggingOut ??
+          message:
+              AppLocalizations.of(context)?.loggingOut ??
               'Logging out of account...',
         );
       }
@@ -493,10 +486,7 @@ class _AuthGateState extends State<AuthGate> {
             children: [
               Text(AppLocalizations.of(context)!.failedToPrepareData),
               const SizedBox(height: 12),
-              Text(
-                auth.lastPreparationError!,
-                textAlign: TextAlign.center,
-              ),
+              Text(auth.lastPreparationError!, textAlign: TextAlign.center),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
@@ -514,10 +504,12 @@ class _AuthGateState extends State<AuthGate> {
     if (profileData == null) {
       return _buildLoader(context);
     }
-    final remoteName = (profileData['profileName'] as String?)?.trim() ??
+    final remoteName =
+        (profileData['profileName'] as String?)?.trim() ??
         (profileData['displayName'] as String?)?.trim() ??
         '';
-    final onboardingDone = profileData['onboardingCompleted'] == true ||
+    final onboardingDone =
+        profileData['onboardingCompleted'] == true ||
         profileData['profileComplete'] == true ||
         remoteName.isNotEmpty;
     if (onboardingDone && remoteName.isEmpty) {
@@ -704,8 +696,9 @@ class _ShellState extends State<_Shell> {
             ),
         ],
       ),
-      bottomNavigationBar:
-          isIOS ? null : _buildDefaultNavigationBar(context, destinations),
+      bottomNavigationBar: isIOS
+          ? null
+          : _buildDefaultNavigationBar(context, destinations),
     );
   }
 
@@ -777,13 +770,13 @@ class _ShellState extends State<_Shell> {
     return NavigationBarTheme(
       data: NavigationBarThemeData(
         height: 64,
-        backgroundColor:
-            Theme.of(context).colorScheme.surface.withValues(alpha: 0.94),
+        backgroundColor: Theme.of(
+          context,
+        ).colorScheme.surface.withValues(alpha: 0.94),
         surfaceTintColor: Colors.transparent,
-        indicatorColor: Theme.of(context)
-            .colorScheme
-            .primaryContainer
-            .withValues(alpha: 0.4),
+        indicatorColor: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.4),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final theme = Theme.of(context);
           if (states.contains(WidgetState.selected)) {
@@ -801,10 +794,7 @@ class _ShellState extends State<_Shell> {
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final theme = Theme.of(context);
           if (states.contains(WidgetState.selected)) {
-            return IconThemeData(
-              color: theme.colorScheme.primary,
-              size: 26,
-            );
+            return IconThemeData(color: theme.colorScheme.primary, size: 26);
           }
           return IconThemeData(
             color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
@@ -850,7 +840,8 @@ class _ShellState extends State<_Shell> {
                 final slotWidth =
                     (constraints.maxWidth - innerPadding * 2) / items.length;
                 final activeWidth = slotWidth + 12;
-                final activeLeft = innerPadding +
+                final activeLeft =
+                    innerPadding +
                     _index * slotWidth +
                     ((slotWidth - activeWidth) / 2);
 
@@ -905,8 +896,9 @@ class _ShellState extends State<_Shell> {
                                     height: barHeight,
                                     child: AnimatedScale(
                                       scale: selected ? 1.08 : 1.0,
-                                      duration:
-                                          const Duration(milliseconds: 180),
+                                      duration: const Duration(
+                                        milliseconds: 180,
+                                      ),
                                       curve: Curves.easeOutCubic,
                                       child: Column(
                                         mainAxisAlignment:
@@ -919,8 +911,9 @@ class _ShellState extends State<_Shell> {
                                             size: selected ? 24 : 20,
                                             color: selected
                                                 ? scheme.primary
-                                                : scheme.onSurface
-                                                    .withValues(alpha: 0.72),
+                                                : scheme.onSurface.withValues(
+                                                    alpha: 0.72,
+                                                  ),
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
@@ -929,15 +922,19 @@ class _ShellState extends State<_Shell> {
                                             overflow: TextOverflow.ellipsis,
                                             style: theme.textTheme.labelSmall
                                                 ?.copyWith(
-                                              fontSize: selected ? 12.0 : 11.0,
-                                              color: selected
-                                                  ? scheme.primary
-                                                  : scheme.onSurface
-                                                      .withValues(alpha: 0.74),
-                                              fontWeight: selected
-                                                  ? FontWeight.w700
-                                                  : FontWeight.w500,
-                                            ),
+                                                  fontSize: selected
+                                                      ? 12.0
+                                                      : 11.0,
+                                                  color: selected
+                                                      ? scheme.primary
+                                                      : scheme.onSurface
+                                                            .withValues(
+                                                              alpha: 0.74,
+                                                            ),
+                                                  fontWeight: selected
+                                                      ? FontWeight.w700
+                                                      : FontWeight.w500,
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -990,13 +987,15 @@ class _ShellState extends State<_Shell> {
         barrierLabel: 'Profile setup',
         barrierColor: colorScheme.scrim.withAlpha((0.7 * 255).round()),
         transitionDuration: const Duration(milliseconds: 300),
-        pageBuilder: (dialogContext, _, __) {
+        pageBuilder: (dialogContext, _, _) {
           return PopScope(
             canPop: false,
             child: Center(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 24,
+                ),
                 child: Material(
                   color: colorScheme.surfaceContainerHigh,
                   elevation: 8,
@@ -1019,23 +1018,23 @@ class _ShellState extends State<_Shell> {
                           ProfileForm(
                             initialName:
                                 appState.profileName?.isNotEmpty == true
-                                    ? appState.profileName!
-                                    : remoteName,
+                                ? appState.profileName!
+                                : remoteName,
                             initialMajor: appState.major?.isNotEmpty == true
                                 ? appState.major
                                 : remoteMajor,
                             initialContact:
                                 appState.profileContact?.isNotEmpty == true
-                                    ? appState.profileContact
-                                    : remoteContact,
+                                ? appState.profileContact
+                                : remoteContact,
                             initialGoal: appState.profileGoal,
                             initialAvatarIndex: appState.profileAvatarIndex,
                             primaryButtonLabel: 'Save profile',
                             autofocusName: true,
                             onSubmit: (data) async {
                               final state = rootContext.read<AppState>();
-                              final authController =
-                                  rootContext.read<AuthController>();
+                              final authController = rootContext
+                                  .read<AuthController>();
                               final uid = authController.currentUser?.uid;
 
                               await state.saveProfile(
@@ -1062,7 +1061,7 @@ class _ShellState extends State<_Shell> {
             ),
           );
         },
-        transitionBuilder: (_, animation, __, child) {
+        transitionBuilder: (_, animation, _, child) {
           final curved = CurvedAnimation(
             parent: animation,
             curve: Curves.easeOutBack,

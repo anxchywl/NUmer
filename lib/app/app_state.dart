@@ -174,10 +174,10 @@ class AppState extends ChangeNotifier {
   Future<void> loadUserColorPresets() async {
     final list = Storage.getUserColorPresets();
     _userColorPresets = list
-        .map((m) => (
-              name: m['name'] as String,
-              colorValue: m['colorValue'] as int,
-            ))
+        .map(
+          (m) =>
+              (name: m['name'] as String, colorValue: m['colorValue'] as int),
+        )
         .toList();
     notifyListeners();
   }
@@ -198,10 +198,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _saveUserColorPresets() async {
     final list = _userColorPresets
-        .map((p) => {
-              'name': p.name,
-              'colorValue': p.colorValue,
-            })
+        .map((p) => {'name': p.name, 'colorValue': p.colorValue})
         .toList();
     await Storage.saveUserColorPresets(list);
   }
@@ -252,8 +249,9 @@ class AppState extends ChangeNotifier {
 
   // stops and persists every running timer, stopwatch and pomodoro, used on sign-out and shutdown
   Future<void> stopAndSaveAllActiveSessions() async {
-    final timerIds =
-        timerRunning.keys.where((id) => timerRunning[id] == true).toList();
+    final timerIds = timerRunning.keys
+        .where((id) => timerRunning[id] == true)
+        .toList();
     for (final id in timerIds) {
       await stopTimer(id);
     }
@@ -267,7 +265,8 @@ class AppState extends ChangeNotifier {
 
     final pomodoroIds = pomodoroRunning.keys
         .where(
-            (id) => pomodoroRunning[id] == true || pomodoroPaused[id] == true)
+          (id) => pomodoroRunning[id] == true || pomodoroPaused[id] == true,
+        )
         .toList();
     for (final id in pomodoroIds) {
       await resetPomodoroAndSave(id);
@@ -417,8 +416,9 @@ class AppState extends ChangeNotifier {
 
     profileComplete = Storage.getProfileComplete();
 
-    _courseGoalHours
-        .removeWhere((id, _) => courses.every((Course c) => c.id != id));
+    _courseGoalHours.removeWhere(
+      (id, _) => courses.every((Course c) => c.id != id),
+    );
 
     final storedLongBreaks = results[20] as Map<String, int>;
 
@@ -497,10 +497,12 @@ class AppState extends ChangeNotifier {
             );
           }
           final startStr = m['phaseStart'] as String?;
-          pomodoroPhaseStart[id] =
-              startStr != null ? DateTime.tryParse(startStr) : null;
-          pomodoroPhaseElapsed[id] =
-              Duration(seconds: (m['phaseElapsed'] ?? 0) as int);
+          pomodoroPhaseStart[id] = startStr != null
+              ? DateTime.tryParse(startStr)
+              : null;
+          pomodoroPhaseElapsed[id] = Duration(
+            seconds: (m['phaseElapsed'] ?? 0) as int,
+          );
           pomodoroCompletedWork[id] = (m['completedWork'] ?? 0) as int;
         }
 
@@ -584,9 +586,9 @@ class AppState extends ChangeNotifier {
   Future<void> setProgressView(ProgressView v) async {
     _progressView = v;
     notifyListeners();
-    await Storage.setProgressView(v == ProgressView.week
-        ? 'week'
-        : (v == ProgressView.off ? 'off' : 'day'));
+    await Storage.setProgressView(
+      v == ProgressView.week ? 'week' : (v == ProgressView.off ? 'off' : 'day'),
+    );
   }
 
   Future<void> loadQuickNotesEnabled() async {
@@ -749,8 +751,11 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  Future<void> setCourseGoalHours(String id, double? hours,
-      {bool notify = true}) async {
+  Future<void> setCourseGoalHours(
+    String id,
+    double? hours, {
+    bool notify = true,
+  }) async {
     if (hours == null || hours <= 0) {
       _courseGoalHours.remove(id);
     } else {
@@ -843,8 +848,11 @@ class AppState extends ChangeNotifier {
   void _scheduleMidnightReset() {
     _midnightTimer?.cancel();
     final now = DateTime.now();
-    final nextMidnight =
-        DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final nextMidnight = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).add(const Duration(days: 1));
     final duration = nextMidnight.difference(now);
     _midnightTimer = Timer(duration, () {
       _ensureTodayKeyUpToDate();
@@ -874,12 +882,14 @@ class AppState extends ChangeNotifier {
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: courseId,
-          date: DateTime.now(),
-          deltaSeconds: seconds,
-        ));
+        unawaited(
+          _habitService!.updateHabitProgressFromCourse(
+            userId: user.uid,
+            courseId: courseId,
+            date: DateTime.now(),
+            deltaSeconds: seconds,
+          ),
+        );
       }
     }
   }
@@ -991,8 +1001,9 @@ class AppState extends ChangeNotifier {
     pomodoroPhaseStart[c.id] = null;
     pomodoroPhaseElapsed[c.id] = Duration.zero;
     pomodoroCompletedWork[c.id] = 0;
-    _pomodoroLongBreakMinutes[c.id] =
-        _clampLongBreakMinutes(_pomodoroLongBreakMinutes[c.id]);
+    _pomodoroLongBreakMinutes[c.id] = _clampLongBreakMinutes(
+      _pomodoroLongBreakMinutes[c.id],
+    );
 
     _todayByCourseSeconds.putIfAbsent(c.id, () => 0);
     await Storage.saveCourseMinutes(courseMinutes);
@@ -1215,8 +1226,11 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
-  Future<int> stopTimer(String id,
-      {DateTime? forcedEnd, bool suppressReflection = false}) async {
+  Future<int> stopTimer(
+    String id, {
+    DateTime? forcedEnd,
+    bool suppressReflection = false,
+  }) async {
     if (timerRunning[id] != true || timerStart[id] == null) return 0;
 
     final start = timerStart[id]!;
@@ -1292,18 +1306,22 @@ class AppState extends ChangeNotifier {
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        unawaited(_habitService!.syncTimeHabitsForCourse(
-          user.uid,
-          id,
-          start,
-          knownDelta: totalSecs.toDouble(),
-        ));
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: id,
-          date: start,
-          deltaSeconds: totalSecs,
-        ));
+        unawaited(
+          _habitService!.syncTimeHabitsForCourse(
+            user.uid,
+            id,
+            start,
+            knownDelta: totalSecs.toDouble(),
+          ),
+        );
+        unawaited(
+          _habitService!.updateHabitProgressFromCourse(
+            userId: user.uid,
+            courseId: id,
+            date: start,
+            deltaSeconds: totalSecs,
+          ),
+        );
       }
     }
 
@@ -1335,8 +1353,11 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
-  Future<int> stopStopwatch(String id,
-      {DateTime? forcedEnd, bool suppressReflection = false}) async {
+  Future<int> stopStopwatch(
+    String id, {
+    DateTime? forcedEnd,
+    bool suppressReflection = false,
+  }) async {
     if (stopwatchRunning[id] != true || stopwatchStart[id] == null) return 0;
     final start = stopwatchStart[id]!;
     var now = forcedEnd ?? DateTime.now();
@@ -1411,19 +1432,23 @@ class AppState extends ChangeNotifier {
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        unawaited(_habitService!.syncTimeHabitsForCourse(
-          user.uid,
-          id,
-          start,
-          knownDelta: totalSecs.toDouble(),
-        ));
+        unawaited(
+          _habitService!.syncTimeHabitsForCourse(
+            user.uid,
+            id,
+            start,
+            knownDelta: totalSecs.toDouble(),
+          ),
+        );
         // also push a yes/no habit completion update
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: id,
-          date: start,
-          deltaSeconds: totalSecs,
-        ));
+        unawaited(
+          _habitService!.updateHabitProgressFromCourse(
+            userId: user.uid,
+            courseId: id,
+            date: start,
+            deltaSeconds: totalSecs,
+          ),
+        );
       }
     }
 
@@ -1466,8 +1491,11 @@ class AppState extends ChangeNotifier {
       if (plannedSecs != null && plannedSecs > 0) {
         final plannedEnd = start.add(Duration(seconds: plannedSecs));
         if (!now.isBefore(plannedEnd)) {
-          await stopTimer(id,
-              forcedEnd: plannedEnd, suppressReflection: duringLoad);
+          await stopTimer(
+            id,
+            forcedEnd: plannedEnd,
+            suppressReflection: duringLoad,
+          );
           await prefs?.remove('timer_planned_$id');
           continue;
         }
@@ -1475,8 +1503,11 @@ class AppState extends ChangeNotifier {
 
       final hardCapEnd = start.add(const Duration(seconds: kMaxSecs));
       if (!now.isBefore(hardCapEnd)) {
-        await stopTimer(id,
-            forcedEnd: hardCapEnd, suppressReflection: duringLoad);
+        await stopTimer(
+          id,
+          forcedEnd: hardCapEnd,
+          suppressReflection: duringLoad,
+        );
       }
     }
 
@@ -1487,8 +1518,11 @@ class AppState extends ChangeNotifier {
       }
       final hardCapEnd = start.add(const Duration(seconds: kMaxSecs));
       if (!now.isBefore(hardCapEnd)) {
-        await stopStopwatch(id,
-            forcedEnd: hardCapEnd, suppressReflection: duringLoad);
+        await stopStopwatch(
+          id,
+          forcedEnd: hardCapEnd,
+          suppressReflection: duringLoad,
+        );
       }
     }
 
@@ -1702,8 +1736,9 @@ class AppState extends ChangeNotifier {
       final completed = (pomodoroCompletedWork[id] ?? 0) + 1;
       final needsLongBreak = completed >= _pomodoroLongBreakEvery;
       pomodoroCompletedWork[id] = needsLongBreak ? 0 : completed;
-      final nextPhase =
-          needsLongBreak ? PomodoroPhase.longBreak : PomodoroPhase.shortBreak;
+      final nextPhase = needsLongBreak
+          ? PomodoroPhase.longBreak
+          : PomodoroPhase.shortBreak;
       _beginPomodoroPhase(id, nextPhase, startAt: end);
     } else {
       _beginPomodoroPhase(id, PomodoroPhase.work, startAt: end);
@@ -1717,8 +1752,11 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _beginPomodoroPhase(String id, PomodoroPhase phase,
-      {DateTime? startAt}) {
+  void _beginPomodoroPhase(
+    String id,
+    PomodoroPhase phase, {
+    DateTime? startAt,
+  }) {
     pomodoroPhase[id] = phase;
     pomodoroPhaseElapsed[id] = Duration.zero;
     pomodoroPhaseStart[id] = startAt ?? DateTime.now();
@@ -1728,7 +1766,10 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _persistPomodoroWork(
-      String id, Duration elapsed, DateTime end) async {
+    String id,
+    Duration elapsed,
+    DateTime end,
+  ) async {
     var secs = elapsed.inSeconds;
     if (secs <= 0) return;
     if (secs > kMaxSecs) secs = kMaxSecs;
@@ -1749,18 +1790,22 @@ class AppState extends ChangeNotifier {
     if (_habitService != null) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        unawaited(_habitService!.syncTimeHabitsForCourse(
-          user.uid,
-          id,
-          start,
-          knownDelta: secs.toDouble(),
-        ));
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: id,
-          date: start,
-          deltaSeconds: secs,
-        ));
+        unawaited(
+          _habitService!.syncTimeHabitsForCourse(
+            user.uid,
+            id,
+            start,
+            knownDelta: secs.toDouble(),
+          ),
+        );
+        unawaited(
+          _habitService!.updateHabitProgressFromCourse(
+            userId: user.uid,
+            courseId: id,
+            date: start,
+            deltaSeconds: secs,
+          ),
+        );
       }
     }
   }
@@ -1778,7 +1823,9 @@ class AppState extends ChangeNotifier {
   void _ensurePomodoroTicker() {
     if (_pomodoroTicker != null) return;
     _pomodoroTicker = Timer.periodic(
-        const Duration(seconds: 1), (_) => unawaited(_tickPomodoros()));
+      const Duration(seconds: 1),
+      (_) => unawaited(_tickPomodoros()),
+    );
   }
 
   void _stopPomodoroTickerIfIdle() {
@@ -1984,7 +2031,10 @@ class AppState extends ChangeNotifier {
   }
 
   Future<bool> _markProgressCelebrated(
-      String scope, String courseId, String token) async {
+    String scope,
+    String courseId,
+    String token,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'progress_${scope}_$courseId';
     if (prefs.getString(key) == token) return false;
@@ -2127,12 +2177,12 @@ class AppState extends ChangeNotifier {
     DateTime? expectedEnd,
   }) async {
     Future<bool> send() => sync.updateActiveSession(
-          isStudying: isStudying,
-          courseId: courseId,
-          kind: kind,
-          start: start,
-          expectedEnd: expectedEnd,
-        );
+      isStudying: isStudying,
+      courseId: courseId,
+      kind: kind,
+      start: start,
+      expectedEnd: expectedEnd,
+    );
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
@@ -2223,14 +2273,11 @@ class AppState extends ChangeNotifier {
           await FirebaseFirestore.instance
               .collection('users')
               .doc(user.uid)
-              .set(
-            {
-              'displayName': syncedProfileName,
-              'profileName': syncedProfileName,
-              'updatedAt': FieldValue.serverTimestamp(),
-            },
-            SetOptions(merge: true),
-          );
+              .set({
+                'displayName': syncedProfileName,
+                'profileName': syncedProfileName,
+                'updatedAt': FieldValue.serverTimestamp(),
+              }, SetOptions(merge: true));
         } catch (_) {}
       }
     }
@@ -2257,9 +2304,11 @@ class AppState extends ChangeNotifier {
     );
 
     final localDirty = LocalDatabase.instance.userDocOrNull?.dirty == true;
-    final remoteAvatarIndex = (data['profileAvatarIndex'] as num?)?.toInt() ??
+    final remoteAvatarIndex =
+        (data['profileAvatarIndex'] as num?)?.toInt() ??
         (data['avatarIndex'] as num?)?.toInt();
-    final remoteAvatarBase64 = data['profileAvatarImageBase64'] as String? ??
+    final remoteAvatarBase64 =
+        data['profileAvatarImageBase64'] as String? ??
         data['avatarImageBase64'] as String?;
     Uint8List? remoteAvatarBytes;
     if (remoteAvatarBase64 != null && remoteAvatarBase64.isNotEmpty) {
@@ -2271,7 +2320,7 @@ class AppState extends ChangeNotifier {
     }
     final localHasAvatar =
         (profileAvatarImage != null && profileAvatarImage!.isNotEmpty) ||
-            profileAvatarIndex != null;
+        profileAvatarIndex != null;
     final canApplyAvatar = !localDirty || !localHasAvatar;
     if (canApplyAvatar &&
         remoteAvatarBytes != null &&
@@ -2318,7 +2367,7 @@ class AppState extends ChangeNotifier {
 
     final remoteAvatarColorValue =
         (data['avatarColorValue'] as num?)?.toInt() ??
-            (data['profileAvatarColorValue'] as num?)?.toInt();
+        (data['profileAvatarColorValue'] as num?)?.toInt();
     if ((!localDirty || profileAvatarColorValue == null) &&
         remoteAvatarColorValue != null &&
         remoteAvatarColorValue != profileAvatarColorValue) {
@@ -2409,8 +2458,9 @@ class AppState extends ChangeNotifier {
     final i = courses.indexWhere((Course c) => c.id == updated.id);
     if (i == -1) return;
     final existing = courses[i];
-    courses[i] =
-        updated.copyWith(sortOrder: updated.sortOrder ?? existing.sortOrder);
+    courses[i] = updated.copyWith(
+      sortOrder: updated.sortOrder ?? existing.sortOrder,
+    );
     await Storage.saveCourses(courses);
     _triggerSync();
     notifyListeners();
@@ -2529,8 +2579,9 @@ class AppState extends ChangeNotifier {
       case HomeSummaryRange.week:
         final midnight = DateTime(now.year, now.month, now.day);
         final wd = midnight.weekday;
-        final offset =
-            (weekStart == WeekStart.monday) ? (wd - DateTime.monday) : (wd % 7);
+        final offset = (weekStart == WeekStart.monday)
+            ? (wd - DateTime.monday)
+            : (wd % 7);
         final s = midnight.subtract(Duration(days: offset));
         return (s, now);
       case HomeSummaryRange.month:
@@ -2546,15 +2597,13 @@ class AppState extends ChangeNotifier {
   }
 
   String homeSummaryLabel(BuildContext context) => switch (_homeSummaryRange) {
-        HomeSummaryRange.off => AppLocalizations.of(context)!.off,
-        HomeSummaryRange.today => AppLocalizations.of(context)!.studiedToday,
-        HomeSummaryRange.week => AppLocalizations.of(context)!.studiedThisWeek,
-        HomeSummaryRange.month =>
-          AppLocalizations.of(context)!.studiedThisMonth,
-        HomeSummaryRange.year => AppLocalizations.of(context)!.studiedThisYear,
-        HomeSummaryRange.allTime =>
-          AppLocalizations.of(context)!.studiedOverall,
-      };
+    HomeSummaryRange.off => AppLocalizations.of(context)!.off,
+    HomeSummaryRange.today => AppLocalizations.of(context)!.studiedToday,
+    HomeSummaryRange.week => AppLocalizations.of(context)!.studiedThisWeek,
+    HomeSummaryRange.month => AppLocalizations.of(context)!.studiedThisMonth,
+    HomeSummaryRange.year => AppLocalizations.of(context)!.studiedThisYear,
+    HomeSummaryRange.allTime => AppLocalizations.of(context)!.studiedOverall,
+  };
 
   String localizeSessionType(BuildContext context, String? sessionType) {
     if (sessionType == null) return AppLocalizations.of(context)!.session;
@@ -2577,7 +2626,8 @@ class AppState extends ChangeNotifier {
   }) async {
     if (await Storage.hasSessionOverlap(start, end)) {
       throw SessionOverlapException(
-          'You already studied during this time period.');
+        'You already studied during this time period.',
+      );
     }
     if (!end.isAfter(start)) return;
     await _addSessionSplitAcrossMidnight(
@@ -2613,20 +2663,24 @@ class AppState extends ChangeNotifier {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         // recalculate time habits
-        unawaited(_habitService!.syncTimeHabitsForCourse(
-          user.uid,
-          courseId,
-          start,
-          knownDelta: totalSecs.toDouble(),
-        ));
+        unawaited(
+          _habitService!.syncTimeHabitsForCourse(
+            user.uid,
+            courseId,
+            start,
+            knownDelta: totalSecs.toDouble(),
+          ),
+        );
 
         // legacy update for yes/no completion
-        unawaited(_habitService!.updateHabitProgressFromCourse(
-          userId: user.uid,
-          courseId: courseId,
-          date: start,
-          deltaSeconds: totalSecs,
-        ));
+        unawaited(
+          _habitService!.updateHabitProgressFromCourse(
+            userId: user.uid,
+            courseId: courseId,
+            date: start,
+            deltaSeconds: totalSecs,
+          ),
+        );
       }
     }
   }
@@ -2665,15 +2719,22 @@ class AppState extends ChangeNotifier {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null && _habitService != null) {
       // time habits, recalculate from remaining sessions
-      unawaited(_habitService!.syncTimeHabitsForCourse(
-        user.uid,
-        courseId,
-        startLocal,
-        knownDelta: -duration.toDouble(),
-      ));
+      unawaited(
+        _habitService!.syncTimeHabitsForCourse(
+          user.uid,
+          courseId,
+          startLocal,
+          knownDelta: -duration.toDouble(),
+        ),
+      );
       // yes/no habits, revert auto-completion if needed
-      unawaited(_habitService!
-          .checkAndRevertHabitCompletion(user.uid, courseId, startLocal));
+      unawaited(
+        _habitService!.checkAndRevertHabitCompletion(
+          user.uid,
+          courseId,
+          startLocal,
+        ),
+      );
     }
 
     _updateStreak();

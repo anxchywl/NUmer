@@ -6,15 +6,16 @@ const _allowlistPath = 'test/boundaries/allowlist.txt';
 const _packagePrefix = 'package:numer_app/';
 const _appState = 'lib/app/app_state.dart';
 
-final _importPattern =
-    RegExp(r'''^\s*import\s+['"]([^'"]+)['"]''', multiLine: true);
+final _importPattern = RegExp(
+  r'''^\s*import\s+['"]([^'"]+)['"]''',
+  multiLine: true,
+);
 
 void main() {
   final violations = _findViolations();
-  final allowed = File(_allowlistPath)
-      .readAsLinesSync()
-      .where((line) => line.isNotEmpty)
-      .toSet();
+  final allowed = File(
+    _allowlistPath,
+  ).readAsLinesSync().where((line) => line.isNotEmpty).toSet();
 
   test('no new layer violations', () {
     final added = violations.difference(allowed).toList()..sort();
@@ -23,8 +24,11 @@ void main() {
 
   test('allowlist has no stale lines', () {
     final stale = allowed.difference(violations).toList()..sort();
-    expect(stale, isEmpty,
-        reason: 'remove from $_allowlistPath:\n${stale.join('\n')}');
+    expect(
+      stale,
+      isEmpty,
+      reason: 'remove from $_allowlistPath:\n${stale.join('\n')}',
+    );
   });
 }
 
@@ -38,8 +42,9 @@ Set<String> _findViolations() {
 
   return {
     for (final importer in files)
-      for (final match
-          in _importPattern.allMatches(File(importer).readAsStringSync()))
+      for (final match in _importPattern.allMatches(
+        File(importer).readAsStringSync(),
+      ))
         if (_resolve(importer, match.group(1)!) case final imported?)
           if (_isViolation(importer, imported)) '$importer -> $imported',
   };

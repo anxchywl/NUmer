@@ -134,8 +134,9 @@ class ExportService {
     final directory = await _getTargetDirectory();
 
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final safeName =
-        exportTitle.replaceAll(RegExp(r'[^\w\s]+'), '').replaceAll(' ', '_');
+    final safeName = exportTitle
+        .replaceAll(RegExp(r'[^\w\s]+'), '')
+        .replaceAll(' ', '_');
     final fileName = 'numer_sessions_${safeName}_$timestamp.ics';
     final path = '${directory.path}/$fileName';
     final file = File(path);
@@ -153,14 +154,20 @@ class ExportService {
     final buffer = StringBuffer();
 
     for (final row in rows) {
-      buffer.writeln(row.map((e) {
-        final cell = e.toString();
-        // Escape quotes
-        if (cell.contains(',') || cell.contains('"') || cell.contains('\n')) {
-          return '"${cell.replaceAll('"', '""')}"';
-        }
-        return cell;
-      }).join(','));
+      buffer.writeln(
+        row
+            .map((e) {
+              final cell = e.toString();
+              // Escape quotes
+              if (cell.contains(',') ||
+                  cell.contains('"') ||
+                  cell.contains('\n')) {
+                return '"${cell.replaceAll('"', '""')}"';
+              }
+              return cell;
+            })
+            .join(','),
+      );
     }
 
     final targetDir = await _getTargetDirectory();
@@ -185,8 +192,9 @@ class ExportService {
       final row = rows[rowIndex];
       for (int colIndex = 0; colIndex < row.length; colIndex++) {
         final cellValue = row[colIndex];
-        final cell = sheet.cell(CellIndex.indexByColumnRow(
-            columnIndex: colIndex, rowIndex: rowIndex));
+        final cell = sheet.cell(
+          CellIndex.indexByColumnRow(columnIndex: colIndex, rowIndex: rowIndex),
+        );
 
         // Set cell value
         if (cellValue is int) {

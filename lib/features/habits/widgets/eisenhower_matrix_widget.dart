@@ -57,10 +57,12 @@ class _QuadrantPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: colorAccent?.withAlpha(30) ??
+                  color:
+                      colorAccent?.withAlpha(30) ??
                       theme.colorScheme.surfaceContainerHighest,
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(15)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(15),
+                  ),
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -150,8 +152,9 @@ class _MatrixHabitChip extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 habit.name,
-                style:
-                    theme.textTheme.labelMedium?.copyWith(color: Colors.white),
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: Colors.white,
+                ),
               ),
             ],
           ),
@@ -172,8 +175,12 @@ class _MatrixHabitChip extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildChipContent(BuildContext context, ThemeData theme,
-      Color habitColor, bool isComplete) {
+  Widget _buildChipContent(
+    BuildContext context,
+    ThemeData theme,
+    Color habitColor,
+    bool isComplete,
+  ) {
     // isComplete param deprecated by new logic but keeping for signature compat if needed, will recalculate
     final dateKeyStr = _dateKey(selectedDate);
     final currentValue = habit.last7[dateKeyStr] ?? 0.0;
