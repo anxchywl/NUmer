@@ -29,8 +29,9 @@ class RecordingNotifService {
   static const String _channelId = 'recording_channel';
   static const String _channelName = 'Study Session';
   static const String _channelDesc = 'Live status for active study sessions.';
-  static const MethodChannel _liveActivityChannel =
-      MethodChannel('numer/live_activity_session');
+  static const MethodChannel _liveActivityChannel = MethodChannel(
+    'numer/live_activity_session',
+  );
   static const Duration _maxSessionDuration = Duration(hours: 3);
 
   // state ────────────────────────────────────────────────────────────────
@@ -70,8 +71,10 @@ class RecordingNotifService {
 
     // dedicated low-importance channel, no sound or vibration on updates
     if (Platform.isAndroid) {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
       await androidPlugin?.createNotificationChannel(
         const AndroidNotificationChannel(
           _channelId,
@@ -199,8 +202,10 @@ class RecordingNotifService {
       return;
     }
     _ticker?.cancel();
-    _ticker =
-        Timer.periodic(const Duration(seconds: 1), (_) => _requestRefresh());
+    _ticker = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => _requestRefresh(),
+    );
   }
 
   void _requestRefresh() {
@@ -250,40 +255,40 @@ class RecordingNotifService {
   }) async {
     final kind = _kind;
     if (kind == null) return;
-    final data =
-        _buildLiveActivityPayload(title: title, body: body, kind: kind);
+    final data = _buildLiveActivityPayload(
+      title: title,
+      body: body,
+      kind: kind,
+    );
     try {
       if (!_liveActivityStarted) {
-        final started = await _liveActivityChannel.invokeMethod<bool>(
-              'start',
-              data,
-            ) ??
+        final started =
+            await _liveActivityChannel.invokeMethod<bool>('start', data) ??
             false;
         _liveActivityStarted = started;
         if (!started && kDebugMode) {
           debugPrint(
-              'RecordingNotifService: Live Activity start was rejected.');
+            'RecordingNotifService: Live Activity start was rejected.',
+          );
         }
       } else {
-        final updated = await _liveActivityChannel.invokeMethod<bool>(
-              'update',
-              data,
-            ) ??
+        final updated =
+            await _liveActivityChannel.invokeMethod<bool>('update', data) ??
             false;
         if (!updated) {
           if (kDebugMode) {
             debugPrint(
-                'RecordingNotifService: Live Activity update failed, retrying start.');
+              'RecordingNotifService: Live Activity update failed, retrying start.',
+            );
           }
-          final restarted = await _liveActivityChannel.invokeMethod<bool>(
-                'start',
-                data,
-              ) ??
+          final restarted =
+              await _liveActivityChannel.invokeMethod<bool>('start', data) ??
               false;
           _liveActivityStarted = restarted;
           if (!restarted && kDebugMode) {
             debugPrint(
-                'RecordingNotifService: Live Activity restart was rejected.');
+              'RecordingNotifService: Live Activity restart was rejected.',
+            );
           }
         }
       }
@@ -446,8 +451,9 @@ class RecordingNotifService {
         if (_paused) return;
         final info = _pomodoroReader?.call();
         if (info == null) return;
-        final remaining =
-            info.remaining.isNegative ? Duration.zero : info.remaining;
+        final remaining = info.remaining.isNegative
+            ? Duration.zero
+            : info.remaining;
         _startedAt = now;
         _expectedEndAt = now.add(remaining);
         _countsDown = true;
@@ -475,8 +481,9 @@ class RecordingNotifService {
     int? whenMs,
     bool usesChronometer,
     bool countsDown,
-    int? timeoutAfterMs
-  }) _androidChronometerSpec() {
+    int? timeoutAfterMs,
+  })
+  _androidChronometerSpec() {
     if (!_shouldUseSystemChronometer()) {
       return (
         showWhen: false,

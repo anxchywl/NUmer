@@ -92,72 +92,74 @@ class _CustomColorPickerState extends State<CustomColorPicker> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        LayoutBuilder(builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          const height = 150.0;
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+            const height = 150.0;
 
-          return GestureDetector(
-            onPanUpdate: (details) {
-              setState(() {
-                _sat = (details.localPosition.dx / width).clamp(0, 1);
-                _val = (1 - details.localPosition.dy / height).clamp(0, 1);
-              });
-              widget.onChanged(_currentColor);
-            },
-            onPanDown: (details) {
-              setState(() {
-                _sat = (details.localPosition.dx / width).clamp(0, 1);
-                _val = (1 - details.localPosition.dy / height).clamp(0, 1);
-              });
-              widget.onChanged(_currentColor);
-            },
-            child: SizedBox(
-              width: width,
-              height: height,
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: LinearGradient(
-                          colors: [Colors.white, pureHue],
+            return GestureDetector(
+              onPanUpdate: (details) {
+                setState(() {
+                  _sat = (details.localPosition.dx / width).clamp(0, 1);
+                  _val = (1 - details.localPosition.dy / height).clamp(0, 1);
+                });
+                widget.onChanged(_currentColor);
+              },
+              onPanDown: (details) {
+                setState(() {
+                  _sat = (details.localPosition.dx / width).clamp(0, 1);
+                  _val = (1 - details.localPosition.dy / height).clamp(0, 1);
+                });
+                widget.onChanged(_currentColor);
+              },
+              child: SizedBox(
+                width: width,
+                height: height,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [Colors.white, pureHue],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        gradient: const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black],
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Colors.transparent, Colors.black],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  Positioned(
-                    left: _sat * width - 10,
-                    top: (1 - _val) * height - 10,
-                    child: Container(
-                      width: 20,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                        boxShadow: const [
-                          BoxShadow(blurRadius: 2, color: Colors.black26)
-                        ],
+                    Positioned(
+                      left: _sat * width - 10,
+                      top: (1 - _val) * height - 10,
+                      child: Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                          boxShadow: const [
+                            BoxShadow(blurRadius: 2, color: Colors.black26),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
+            );
+          },
+        ),
         const SizedBox(height: 12),
         Slider(
           value: _hue,

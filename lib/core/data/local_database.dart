@@ -107,11 +107,7 @@ class LocalDatabase {
       return existing;
     }
     final now = _now();
-    final created = LocalUserDoc(
-      id: uid,
-      uid: uid,
-      updatedAtMs: now,
-    );
+    final created = LocalUserDoc(id: uid, uid: uid, updatedAtMs: now);
     box.put(uid, created);
     return created;
   }
@@ -362,10 +358,13 @@ class LocalDatabase {
     return values.where((h) => !h.deleted);
   }
 
-  Iterable<LocalHabitHistory> habitHistoryForHabit(String habitId,
-      {bool includeDeleted = false}) {
-    return habitHistory(includeDeleted: includeDeleted)
-        .where((h) => h.habitId == habitId);
+  Iterable<LocalHabitHistory> habitHistoryForHabit(
+    String habitId, {
+    bool includeDeleted = false,
+  }) {
+    return habitHistory(
+      includeDeleted: includeDeleted,
+    ).where((h) => h.habitId == habitId);
   }
 
   List<LocalHabitHistory> dirtyHabitHistory() =>
@@ -384,7 +383,8 @@ class LocalDatabase {
       _habitHistoryBox ?? (throw StateError('Habit History box not opened'));
 
   bool hasBootstrapCache() {
-    final hasCoreBoxes = (_userBox?.isNotEmpty ?? false) ||
+    final hasCoreBoxes =
+        (_userBox?.isNotEmpty ?? false) ||
         (_coursesBox?.isNotEmpty ?? false) ||
         (_sessionsBox?.isNotEmpty ?? false) ||
         (_habitsBox?.isNotEmpty ?? false);

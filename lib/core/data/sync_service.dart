@@ -20,9 +20,9 @@ class SyncService extends ChangeNotifier {
     FirebaseFirestore? firestore,
     Connectivity? connectivity,
     LocalDatabase? database,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _connectivity = connectivity ?? Connectivity(),
-        _db = database ?? LocalDatabase.instance;
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _connectivity = connectivity ?? Connectivity(),
+       _db = database ?? LocalDatabase.instance;
 
   final FirebaseFirestore _firestore;
   final Connectivity _connectivity;
@@ -97,8 +97,9 @@ class SyncService extends ChangeNotifier {
       _setStatus(SyncStatus.offline);
     }
 
-    _connectivitySub = _connectivity.onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
+    _connectivitySub = _connectivity.onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
       final nowOnline = _computeOnlineStatus(results);
       final becameOnline = !_online && nowOnline;
       _online = nowOnline;
@@ -107,7 +108,8 @@ class SyncService extends ChangeNotifier {
             (_bootstrapping || !_hasPulledUser) &&
             !_isSyncing) {
           unawaited(
-              syncNow(full: true, startup: _bootstrapping || !_hasPulledUser));
+            syncNow(full: true, startup: _bootstrapping || !_hasPulledUser),
+          );
         } else if (_status == SyncStatus.offline && !_isSyncing) {
           _setStatus(SyncStatus.upToDate);
         }
@@ -281,10 +283,7 @@ class SyncService extends ChangeNotifier {
 
       Future<void> pushChunk<T extends HiveObject>(
         List<T> items,
-        Future<void> Function(
-          WriteBatch batch,
-          T item,
-        ) writer,
+        Future<void> Function(WriteBatch batch, T item) writer,
       ) async {
         if (items.isEmpty) return;
         var offset = 0;
@@ -370,9 +369,7 @@ class SyncService extends ChangeNotifier {
         habit.updatedAtMs = _now();
       });
 
-      await Future.wait([
-        for (final h in dirtyHabits) _db.putHabit(h),
-      ]);
+      await Future.wait([for (final h in dirtyHabits) _db.putHabit(h)]);
 
       // push dirty habit history entries
       final dirtyHistory = _db.dirtyHabitHistory();
@@ -399,9 +396,7 @@ class SyncService extends ChangeNotifier {
         history.updatedAtMs = _now();
       });
 
-      await Future.wait([
-        for (final h in dirtyHistory) _db.putHabitHistory(h),
-      ]);
+      await Future.wait([for (final h in dirtyHistory) _db.putHabitHistory(h)]);
 
       final historyState = _db.syncStateForKey(_habitHistoryStateKey);
       historyState.lastPushMs = _now();
@@ -543,18 +538,18 @@ class SyncService extends ChangeNotifier {
         .doc(_uid)
         .snapshots()
         .listen((snapshot) async {
-      final data = snapshot.data();
-      if (data == null) return;
-      final active = data['activeSession'];
-      if (active is Map && active['deviceId'] is String) {
-        final currentDevice = active['deviceId'] as String;
-        if (currentDevice.isNotEmpty && currentDevice != _deviceId) {
-          if (_onForcedLogout != null) {
-            await _onForcedLogout!.call();
+          final data = snapshot.data();
+          if (data == null) return;
+          final active = data['activeSession'];
+          if (active is Map && active['deviceId'] is String) {
+            final currentDevice = active['deviceId'] as String;
+            if (currentDevice.isNotEmpty && currentDevice != _deviceId) {
+              if (_onForcedLogout != null) {
+                await _onForcedLogout!.call();
+              }
+            }
           }
-        }
-      }
-    });
+        });
   }
 
   Future<void> _pushUser(LocalUserDoc doc) async {
@@ -665,9 +660,11 @@ class SyncService extends ChangeNotifier {
       data['eisenhowerMatrixEnabled'] as bool?,
     );
 
-    final remoteAvatarIndex = (data['avatarIndex'] as num?)?.toInt() ??
+    final remoteAvatarIndex =
+        (data['avatarIndex'] as num?)?.toInt() ??
         (data['profileAvatarIndex'] as num?)?.toInt();
-    final remoteAvatarBase64 = data['avatarImageBase64'] as String? ??
+    final remoteAvatarBase64 =
+        data['avatarImageBase64'] as String? ??
         data['profileAvatarImageBase64'] as String?;
     local
       ..profileName = data['profileName'] as String?
@@ -683,17 +680,20 @@ class SyncService extends ChangeNotifier {
           (data['homeSummaryRange'] as String?) ?? local.homeSummaryRange
       ..pendingCoursePrompt =
           (data['pendingCoursePrompt'] as bool?) ?? local.pendingCoursePrompt
-      ..avatarColorValue = (data['avatarColorValue'] as num?)?.toInt() ??
+      ..avatarColorValue =
+          (data['avatarColorValue'] as num?)?.toInt() ??
           (data['profileAvatarColorValue'] as num?)?.toInt()
       ..profileComplete =
           (data['profileComplete'] as bool?) ?? local.profileComplete
-      ..onboardingCompleted = data['onboardingCompleted'] == true ||
+      ..onboardingCompleted =
+          data['onboardingCompleted'] == true ||
           data['profileComplete'] == true ||
           local.onboardingCompleted
       ..allowNudges = (data['allowNudges'] as bool?) ?? local.allowNudges
       ..quickNotesEnabled =
           (data['quickNotesEnabled'] as bool?) ?? local.quickNotesEnabled
-      ..eisenhowerMatrixEnabled = (data['eisenhowerMatrixEnabled'] as bool?) ??
+      ..eisenhowerMatrixEnabled =
+          (data['eisenhowerMatrixEnabled'] as bool?) ??
           local.eisenhowerMatrixEnabled
       ..dirty = false
       ..updatedAtMs = resolvedUpdatedAt;
@@ -717,7 +717,8 @@ class SyncService extends ChangeNotifier {
     required String stateKey,
     required Future<void> Function(
       QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
-    ) mapper,
+    )
+    mapper,
     required bool full,
     int limit = 200,
   }) async {
@@ -725,8 +726,10 @@ class SyncService extends ChangeNotifier {
     final state = _db.syncStateForKey(stateKey);
     var cursor = full ? 0 : state.lastPullMs;
 
-    Query<Map<String, dynamic>> baseQuery =
-        _firestore.collection('users').doc(_uid).collection(collection);
+    Query<Map<String, dynamic>> baseQuery = _firestore
+        .collection('users')
+        .doc(_uid)
+        .collection(collection);
 
     if (cursor > 0) {
       baseQuery = baseQuery.where(
@@ -741,8 +744,9 @@ class SyncService extends ChangeNotifier {
     var readCount = 0;
 
     while (true) {
-      final snapshot =
-          await pageQuery.limit(limit).get(GetOptions(source: Source.server));
+      final snapshot = await pageQuery
+          .limit(limit)
+          .get(GetOptions(source: Source.server));
       if (snapshot.docs.isEmpty) {
         break;
       }
@@ -764,7 +768,8 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _applyRemoteCourse(
-      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) async {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
     var course = _db.getCourseById(snapshot.id);
@@ -781,8 +786,8 @@ class SyncService extends ChangeNotifier {
         expLevel: (data['expLevel'] as num?)?.toInt(),
         goalHours: (data['goalHours'] as num?)?.toDouble(),
         totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
-        pomodoroLongBreakMinutes:
-            (data['pomodoroLongBreakMinutes'] as num?)?.toInt(),
+        pomodoroLongBreakMinutes: (data['pomodoroLongBreakMinutes'] as num?)
+            ?.toInt(),
         sortOrder: (data['sortOrder'] as num?)?.toInt(),
         hiddenFromLeaderboard: data['hiddenFromLeaderboard'] == true,
         updatedAtMs: updatedAt,
@@ -826,7 +831,8 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _applyRemoteSession(
-      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) async {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
     var session = _db.getSessionById(snapshot.id);
@@ -890,7 +896,8 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _applyRemoteGoal(
-      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) async {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
     var goal = _db.getGoalById(snapshot.id);
@@ -933,7 +940,8 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _applyRemoteHabit(
-      QueryDocumentSnapshot<Map<String, dynamic>> snapshot) async {
+    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
+  ) async {
     final data = snapshot.data();
     final updatedAt = _timestampToMs(data['updatedAt']);
     var habit = _db.getHabitById(snapshot.id);
@@ -945,7 +953,7 @@ class SyncService extends ChangeNotifier {
         (data['st'] ?? data['stats'] ?? {}) as Map<String, dynamic>;
     final totalCompletions =
         ((statsMap['tc'] ?? statsMap['totalCompletions']) as num?)?.toInt() ??
-            0;
+        0;
     final currentStreak =
         ((statsMap['cs'] ?? statsMap['currentStreak']) as num?)?.toInt() ?? 0;
     final longestStreak =
@@ -960,35 +968,40 @@ class SyncService extends ChangeNotifier {
     if (data['sd'] is Timestamp) {
       startDateMs = (data['sd'] as Timestamp).toDate().millisecondsSinceEpoch;
     } else if (data['startDate'] is Timestamp) {
-      startDateMs =
-          (data['startDate'] as Timestamp).toDate().millisecondsSinceEpoch;
+      startDateMs = (data['startDate'] as Timestamp)
+          .toDate()
+          .millisecondsSinceEpoch;
     }
 
     int? endDateMs;
     if (data['ed'] is Timestamp) {
       endDateMs = (data['ed'] as Timestamp).toDate().millisecondsSinceEpoch;
     } else if (data['endDate'] is Timestamp) {
-      endDateMs =
-          (data['endDate'] as Timestamp).toDate().millisecondsSinceEpoch;
+      endDateMs = (data['endDate'] as Timestamp)
+          .toDate()
+          .millisecondsSinceEpoch;
     }
 
     int createdAtMs = DateTime.now().millisecondsSinceEpoch;
     if (data['cr'] is Timestamp) {
       createdAtMs = (data['cr'] as Timestamp).toDate().millisecondsSinceEpoch;
     } else if (data['createdAt'] is Timestamp) {
-      createdAtMs =
-          (data['createdAt'] as Timestamp).toDate().millisecondsSinceEpoch;
+      createdAtMs = (data['createdAt'] as Timestamp)
+          .toDate()
+          .millisecondsSinceEpoch;
     }
 
     // parse week days
     final weekDaysRaw = data['wd'] ?? data['weekDays'] ?? [];
-    final weekDays =
-        (weekDaysRaw as List).map((e) => (e as num).toInt()).toList();
+    final weekDays = (weekDaysRaw as List)
+        .map((e) => (e as num).toInt())
+        .toList();
 
     // parse connected course ids
     final ccRaw = data['cc'] ?? data['connectedCourseIds'] ?? [];
-    final connectedCourseIds =
-        (ccRaw as List).map((e) => e.toString()).toList();
+    final connectedCourseIds = (ccRaw as List)
+        .map((e) => e.toString())
+        .toList();
 
     if (habit == null) {
       habit = LocalHabit(
@@ -1045,7 +1058,7 @@ class SyncService extends ChangeNotifier {
           ((data['cl'] ?? data['color']) as num?)?.toInt() ?? habit.colorValue
       ..iconCodePoint =
           ((data['ic'] ?? data['iconCodePoint']) as num?)?.toInt() ??
-              habit.iconCodePoint
+          habit.iconCodePoint
       ..iconFamily = data['if'] as String? ?? data['iconFamily'] as String?
       ..iconPackage = data['ip'] as String? ?? data['iconPackage'] as String?
       ..category = (data['ca'] ?? data['category'] ?? habit.category) as String
@@ -1169,8 +1182,9 @@ class SyncService extends ChangeNotifier {
     LocalHabit habit,
     int resetAtMs,
   ) async {
-    final entries =
-        _db.habitHistoryForHabit(habit.id, includeDeleted: true).toList();
+    final entries = _db
+        .habitHistoryForHabit(habit.id, includeDeleted: true)
+        .toList();
     for (final entry in entries) {
       await _db.habitHistoryBox.delete(entry.id);
     }
@@ -1211,8 +1225,8 @@ class SyncService extends ChangeNotifier {
   Map<String, dynamic> _userToRemote(LocalUserDoc doc) {
     final avatarBase64 =
         (doc.avatarImage != null && doc.avatarImage!.isNotEmpty)
-            ? base64Encode(doc.avatarImage!)
-            : null;
+        ? base64Encode(doc.avatarImage!)
+        : null;
     final hasCustomAvatar = avatarBase64 != null;
     final avatarIndex = hasCustomAvatar ? null : doc.avatarIndex;
     final payload = <String, dynamic>{
@@ -1379,8 +1393,9 @@ class SyncService extends ChangeNotifier {
   }
 
   Future<void> _notifyAfterPullListeners() async {
-    for (final listener
-        in List<Future<void> Function()>.from(_afterPullListeners)) {
+    for (final listener in List<Future<void> Function()>.from(
+      _afterPullListeners,
+    )) {
       try {
         await listener();
       } catch (_) {}

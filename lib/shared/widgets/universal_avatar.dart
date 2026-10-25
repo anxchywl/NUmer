@@ -98,7 +98,8 @@ class UniversalAvatar extends StatelessWidget {
     if (avatarBase64 != null && avatarBase64.isNotEmpty) {
       try {
         return _wrapImage(
-            Image.memory(base64Decode(avatarBase64), fit: BoxFit.cover));
+          Image.memory(base64Decode(avatarBase64), fit: BoxFit.cover),
+        );
       } catch (_) {}
     }
 
@@ -111,18 +112,15 @@ class UniversalAvatar extends StatelessWidget {
       return Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: bgColor,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
         child: Icon(
           option.icon,
           size: size * 0.6,
           color: avatarColorValue != null
               ? (ThemeData.estimateBrightnessForColor(bgColor) ==
-                      Brightness.dark
-                  ? Colors.white
-                  : Colors.black87)
+                        Brightness.dark
+                    ? Colors.white
+                    : Colors.black87)
               : profileAvatarForeground(option),
         ),
       );
@@ -135,9 +133,7 @@ class UniversalAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-      ),
+      decoration: const BoxDecoration(shape: BoxShape.circle),
       child: Center(
         child: Icon(
           Icons.person,
