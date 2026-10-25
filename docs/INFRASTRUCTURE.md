@@ -37,7 +37,7 @@ Data flow, end to end:
 
 | Area | Choice |
 |------|--------|
-| Framework | Flutter (Dart SDK ≥ 3.4.0) |
+| Framework | Flutter (Dart SDK ≥ 3.10) |
 | State management | `provider` + `ChangeNotifier` (`app/app_state.dart`) |
 | Local persistence | `hive` / `hive_flutter` + `shared_preferences` |
 | Charts / calendar | `fl_chart`, `table_calendar` |

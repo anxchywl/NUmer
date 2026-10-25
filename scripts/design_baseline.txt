@@ -82,7 +82,7 @@ spinner	lib/features/groups/widgets/user_subjects_bottom_sheet.dart	2
 text_literal	lib/features/habits/models/habit_category.dart	1
 shadow	lib/features/habits/screens/add_habit_sheet.dart	2
 chip	lib/features/habits/screens/add_habit_sheet.dart	5
-color_literal	lib/features/habits/screens/add_habit_sheet.dart	10
+color_literal	lib/features/habits/screens/add_habit_sheet.dart	11
 text_literal	lib/features/habits/screens/add_habit_sheet.dart	10
 weight	lib/features/habits/screens/add_habit_sheet.dart	3
 spinner	lib/features/habits/screens/add_habit_sheet.dart	1
