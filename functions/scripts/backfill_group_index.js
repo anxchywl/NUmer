@@ -1,4 +1,4 @@
-// reads every membership document, add --dry-run to count without writing
+// reads every membership document and needs npm run build first, add --dry-run to count without writing
 
 const admin = require('firebase-admin');
 
@@ -16,47 +16,25 @@ if (!projectId) {
 const emulator = process.env.FIRESTORE_EMULATOR_HOST;
 console.log(emulator ? `target=emulator ${emulator}` : `target=project ${projectId}`);
 
-admin.initializeApp({ projectId });
-const db = admin.firestore();
-db.settings({ projectId });
+// the built module initialises the default app on require
+const { collectMemberships, syncGroupIndex } = require('../lib/groups/membership_index');
+admin.firestore().settings({ projectId });
 
-const BATCH_SIZE = 400;
+const CONCURRENCY = 20;
 const dryRun = process.argv.includes('--dry-run');
 
-function isGroupMember(ref) {
-  const parent = ref.parent.parent;
-  return parent !== null && parent.parent.id === 'groups' && parent.parent.parent === null;
-}
-
-async function readMemberships() {
-  const snap = await db.collectionGroup('members').get();
-  const index = new Map();
-  for (const doc of snap.docs) {
-    if (!isGroupMember(doc.ref)) continue;
-    const groupIds = index.get(doc.id) || [];
-    groupIds.push(doc.ref.parent.parent.id);
-    index.set(doc.id, groupIds);
-  }
-  return index;
-}
-
 async function writeIndex(entries) {
-  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
-    const batch = db.batch();
-    for (const [uid, groupIds] of entries.slice(i, i + BATCH_SIZE)) {
-      batch.set(db.collection('groupIndex').doc(uid), {
-        groupIds,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-    await batch.commit();
+  for (let i = 0; i < entries.length; i += CONCURRENCY) {
+    const chunk = entries.slice(i, i + CONCURRENCY);
+    await Promise.all(chunk.map(([uid, groupIds]) => syncGroupIndex(uid, groupIds)));
   }
 }
 
 (async function main() {
-  const entries = [...(await readMemberships())];
+  const entries = [...(await collectMemberships())];
   if (!dryRun) await writeIndex(entries);
-  const memberships = entries.reduce((total, [, groupIds]) => total + groupIds.length, 0);
-  console.log(`users=${entries.length} memberships=${memberships}`);
+  const joined = entries.filter(([, groupIds]) => groupIds.length > 0);
+  const memberships = joined.reduce((total, [, groupIds]) => total + groupIds.length, 0);
+  console.log(`users=${joined.length} memberships=${memberships}`);
   process.exit(0);
 })();
