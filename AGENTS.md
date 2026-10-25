@@ -64,24 +64,18 @@ tests mirror the tree under `test/features/<name>/`, with app-level smoke tests 
 
 ### Comment style
 
-Keep comments short, lowercase, and free of trailing punctuation (`.` `!` `?`). Put one before
-each important class or function saying what it is for, not how it works line by line. Explain
-the *why* the code cannot; don't restate the signature, and don't leave commented-out code or
-stream-of-consciousness notes.
+Write a comment only where the *why* is not obvious from the code. Never explain what the
+code does; names and structure do that.
 
 ```dart
-// picks which screen to show based on auth, verification and profile state
-class AuthGate extends StatefulWidget { ... }
-
-// records study time for a course today, updates the streak and feeds linked habits
-Future<void> addStudySeconds(String courseId, int seconds) async { ... }
+// good: host may not register our delegate, so the feature scopes its own
+// bad:  This method loads the listings from the repository.
 ```
 
-- lowercase, including tech names in prose (`firebase`, `hive`) — but keep real code
-  identifiers in their true case (`pomodoroStart`, `LocalSession`)
-- prefer `//`; keep `///` only where dartdoc/IDE hover genuinely helps, and lowercase its text too
-- skip comments on trivial getters/setters and obvious `loadX`/`setX` pairs — a comment should
-  add something the name doesn't
+- one line, concise, all lowercase, no trailing punctuation
+- keep real code identifiers in their true case (`pomodoroStart`, `LocalSession`)
+- `//` only: no docstrings (`///`) and no multi-line comment blocks
+- no commented-out code and no stream-of-consciousness notes
 
 ### Key locations
 
