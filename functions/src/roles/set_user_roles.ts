@@ -2,14 +2,8 @@ import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { auth, db } from '../shared/admin';
 import { requireAppCheck } from '../shared/app_check';
+import { assertId } from '../shared/validation';
 import { hasRole, mergeRoles, normalizeRoles, rolesOf } from './roles';
-
-function assertUid(value: unknown): string {
-  if (typeof value !== 'string' || !/^[A-Za-z0-9_-]{1,128}$/.test(value)) {
-    throw new functions.https.HttpsError('invalid-argument', 'uid is invalid.');
-  }
-  return value;
-}
 
 export const setUserRoles = functions.https.onCall(async (data, context) => {
   requireAppCheck(context, 'setUserRoles');
@@ -25,7 +19,7 @@ export const setUserRoles = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('permission-denied', 'Only an administrator can set roles.');
   }
 
-  const uid = assertUid(data?.uid);
+  const uid = assertId(data?.uid, 'uid');
   const roles = normalizeRoles(data?.roles);
   if (uid === actor && !roles.includes('numer:admin')) {
     throw new functions.https.HttpsError('failed-precondition', 'You cannot remove your own administrator role.');
