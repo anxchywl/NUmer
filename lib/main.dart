@@ -12,28 +12,23 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/routes.dart';
+import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/core/firebase_options.dart';
-import 'package:numer_app/features/courses/course.dart';
-import 'package:numer_app/features/account/screens/account.dart';
-import 'package:numer_app/features/auth/screens/auth_screen.dart';
-import 'package:numer_app/features/auth/screens/verification_status.dart';
-import 'package:numer_app/features/auth/screens/profile_setup_screen.dart';
-import 'package:numer_app/features/sessions/screens/alarms.dart';
+import 'package:numer_app/features/courses/courses.dart';
+import 'package:numer_app/features/account/account.dart';
+import 'package:numer_app/features/auth/auth.dart';
+import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/features/home/home.dart';
-import 'package:numer_app/features/stats/screens/stats.dart';
-import 'package:numer_app/features/sessions/screens/timer.dart';
-import 'package:numer_app/features/auth/data/auth_service.dart';
+import 'package:numer_app/features/stats/stats.dart';
 import 'package:numer_app/features/groups/groups.dart';
-import 'package:numer_app/features/habits/data/habit_service.dart';
+import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/core/data/sync_service.dart';
-import 'package:numer_app/features/habits/screens/habits_screen.dart';
-import 'package:numer_app/features/account/widgets/profile_form.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
-import 'package:numer_app/features/sessions/widgets/reflection_bottom_sheet.dart';
 import 'package:numer_app/core/notifications/notifications.dart';
 import 'package:numer_app/core/notifications/recording_notification_service.dart';
 import 'package:numer_app/core/startup_metrics.dart';
@@ -212,8 +207,8 @@ class NumerBootstrapApp extends StatelessWidget {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: _lightTheme,
-          darkTheme: _darkTheme,
+          theme: lightFallbackTheme,
+          darkTheme: darkFallbackTheme,
           themeMode: initialTheme,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -239,19 +234,6 @@ class NumerBootstrapApp extends StatelessWidget {
     );
   }
 }
-
-final ThemeData _lightTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-);
-
-final ThemeData _darkTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.indigo,
-    brightness: Brightness.dark,
-  ),
-);
 
 // top-level app widget, feeds theme, locale and accent colour into materialapp and routes
 class AppRoot extends StatefulWidget {
@@ -313,50 +295,14 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         final locale = data.$2;
         final accentColor = data.$3;
 
-        final lightTheme = ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: accentColor),
-          switchTheme: SwitchThemeData(
-            thumbColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) return accentColor;
-              return null;
-            }),
-            trackColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return accentColor.withValues(alpha: 0.5);
-              }
-              return null;
-            }),
-          ),
-        );
-
-        final darkTheme = ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: accentColor,
-            brightness: Brightness.dark,
-          ),
-          switchTheme: SwitchThemeData(
-            thumbColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) return accentColor;
-              return null;
-            }),
-            trackColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return accentColor.withValues(alpha: 0.5);
-              }
-              return null;
-            }),
-          ),
-        );
-
         return MaterialApp(
+          navigatorKey: rootNavigatorKey,
           title: 'Numer',
           debugShowCheckedModeBanner: false,
           themeAnimationDuration: const Duration(milliseconds: 300),
           themeAnimationCurve: Curves.easeInOut,
-          theme: lightTheme,
-          darkTheme: darkTheme,
+          theme: buildAppTheme(accentColor, Brightness.light),
+          darkTheme: buildAppTheme(accentColor, Brightness.dark),
           themeMode: themeMode,
           locale: locale,
           localizationsDelegates: const [
@@ -368,9 +314,9 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           supportedLocales: AppLocalizations.supportedLocales,
           home: AuthGate(onThemeChange: setTheme),
           routes: {
-            '/shell': (_) => _Shell(onThemeChange: setTheme),
-            '/timer': (_) => const TimerScreen(),
-            '/alarms': (_) => const AlarmsScreen(),
+            routeShell: (_) => _Shell(onThemeChange: setTheme),
+            routeTimer: (_) => const TimerScreen(),
+            routeAlarms: (_) => const AlarmsScreen(),
           },
         );
       },

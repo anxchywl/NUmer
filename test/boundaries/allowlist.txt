@@ -29,16 +29,3 @@ lib/features/stats/screens/stats.dart -> lib/features/habits/data/habit_service.
 lib/features/stats/screens/stats.dart -> lib/features/habits/models/habit.dart
 lib/features/stats/screens/stats.dart -> lib/features/history/data/export_service.dart
 lib/features/stats/screens/stats.dart -> lib/features/history/screens/history.dart
-lib/main.dart -> lib/features/account/screens/account.dart
-lib/main.dart -> lib/features/account/widgets/profile_form.dart
-lib/main.dart -> lib/features/auth/data/auth_service.dart
-lib/main.dart -> lib/features/auth/screens/auth_screen.dart
-lib/main.dart -> lib/features/auth/screens/profile_setup_screen.dart
-lib/main.dart -> lib/features/auth/screens/verification_status.dart
-lib/main.dart -> lib/features/courses/course.dart
-lib/main.dart -> lib/features/habits/data/habit_service.dart
-lib/main.dart -> lib/features/habits/screens/habits_screen.dart
-lib/main.dart -> lib/features/sessions/screens/alarms.dart
-lib/main.dart -> lib/features/sessions/screens/timer.dart
-lib/main.dart -> lib/features/sessions/widgets/reflection_bottom_sheet.dart
-lib/main.dart -> lib/features/stats/screens/stats.dart
