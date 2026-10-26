@@ -7,8 +7,8 @@ import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/history/widgets/export_session_dialog.dart';
-import 'package:numer_app/shared/widgets/universal_avatar.dart';
 import 'package:numer_app/features/account/widgets/accent_color_picker.dart';
+import 'package:numer_app/features/account/widgets/universal_avatar.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
@@ -226,11 +226,9 @@ class _AccountScreenState extends State<AccountScreen> {
                         ListTile(
                           contentPadding: EdgeInsets.zero,
                           leading: UniversalAvatar(
-                            userId: user.uid,
                             name: displayName,
-                            initialAvatarIndex: state.profileAvatarIndex,
-                            initialAvatarColorValue:
-                                state.profileAvatarColorValue,
+                            avatarIndex: state.profileAvatarIndex,
+                            avatarColorValue: state.profileAvatarColorValue,
                             alwaysShowSilhouette: true,
                             size: 48,
                           ),
