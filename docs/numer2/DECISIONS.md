@@ -315,6 +315,7 @@ Evidence: R 4.
 - Domain: `mail.anxchywl.dev`, a subdomain of a domain the owner already uses elsewhere, so
   its own `_dmarc.mail` record leaves the root domain's policy alone. Delivery to
   `@nu.edu.kz` is tested before release (`USER_ACTIONS.md`).
+- From: `NUmer <no-reply@mail.anxchywl.dev>` (owner, 2026-11-27).
 
 ---
 

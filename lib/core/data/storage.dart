@@ -489,17 +489,8 @@ class Storage {
     final box = _db.coursesBox;
     final uid = _db.currentUid!;
     final now = _now();
-    final incomingIds = {for (final c in courses) c.id};
 
-    for (final entry in box.values) {
-      if (!incomingIds.contains(entry.id) && !entry.deleted) {
-        entry.deleted = true;
-        entry.dirty = true;
-        entry.updatedAtMs = now;
-        await entry.save();
-      }
-    }
-
+    // the list may be stale, so a missing course is not a delete
     for (final course in courses) {
       final existing = box.get(course.id);
       if (existing == null) {
@@ -567,6 +558,17 @@ class Storage {
         await existing.save();
       }
     }
+  }
+
+  static Future<void> deleteCourse(String id) async {
+    _ensureUser();
+    final entry = _db.getCourseById(id);
+    if (entry == null || entry.deleted) return;
+    entry
+      ..deleted = true
+      ..dirty = true
+      ..updatedAtMs = _now();
+    await entry.save();
   }
 
   static int _compareCourseOrder(Course a, Course b) {
