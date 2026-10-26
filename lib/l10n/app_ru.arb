@@ -910,6 +910,8 @@
       }
     }
   },
+  "memberFallbackName": "Участник",
+  "joinCodeTooShort": "Используйте не меньше 8 символов.",
   "sessionNotificationAction": "Начать сессию",
   "viaPomodoro": "Через Помидоро",
   "viaManualRecording": "Через ручной ввод"

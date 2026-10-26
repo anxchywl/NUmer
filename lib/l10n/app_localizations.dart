@@ -3988,6 +3988,18 @@ abstract class AppLocalizations {
   /// **'It is time for your {name} session.'**
   String sessionNotificationBody(String name);
 
+  /// No description provided for @memberFallbackName.
+  ///
+  /// In en, this message translates to:
+  /// **'Member'**
+  String get memberFallbackName;
+
+  /// No description provided for @joinCodeTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters.'**
+  String get joinCodeTooShort;
+
   /// No description provided for @sessionNotificationAction.
   ///
   /// In en, this message translates to:

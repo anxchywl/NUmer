@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/features/groups/models/group.dart';
 import 'package:numer_app/features/groups/data/group_service.dart';
+import 'package:numer_app/features/groups/models/join_code.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class CreateGroupScreen extends StatefulWidget {
@@ -229,10 +231,10 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     if (_visibility == GroupVisibility.private &&
-        _codeController.text.trim().length < 4) {
+        !isJoinCodeLongEnough(_codeController.text)) {
       showAppMessage(
         context,
-        'Access code must be at least 4 characters',
+        AppLocalizations.of(context)!.joinCodeTooShort,
         isError: true,
       );
       return;

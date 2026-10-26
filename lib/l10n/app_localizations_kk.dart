@@ -2133,5 +2133,11 @@ class AppLocalizationsKk extends AppLocalizations {
   }
 
   @override
+  String get memberFallbackName => 'Мүше';
+
+  @override
+  String get joinCodeTooShort => 'Кемінде 8 таңба қолданыңыз.';
+
+  @override
   String get sessionNotificationAction => 'Сессияны бастау';
 }

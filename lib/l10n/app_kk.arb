@@ -1009,5 +1009,7 @@
       }
     }
   },
+  "memberFallbackName": "Мүше",
+  "joinCodeTooShort": "Кемінде 8 таңба қолданыңыз.",
   "sessionNotificationAction": "Сессияны бастау"
 }

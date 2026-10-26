@@ -26,9 +26,8 @@ import 'package:numer_app/features/sessions/screens/alarms.dart';
 import 'package:numer_app/features/home/home.dart';
 import 'package:numer_app/features/stats/screens/stats.dart';
 import 'package:numer_app/features/sessions/screens/timer.dart';
-import 'package:numer_app/features/groups/screens/groups_screen.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
-import 'package:numer_app/features/groups/data/group_service.dart';
+import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/data/habit_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/features/habits/screens/habits_screen.dart';
@@ -169,7 +168,14 @@ class NumerBootstrapApp extends StatelessWidget {
           return MultiProvider(
             providers: [
               ChangeNotifierProvider<SyncService>(create: (_) => SyncService()),
-              Provider<GroupService>(create: (_) => GroupService()),
+              Provider<PublicProfileSource>(
+                create: (_) => FirestorePublicProfileSource(),
+              ),
+              Provider<GroupService>(
+                create: (context) => GroupService(
+                  profileSource: context.read<PublicProfileSource>(),
+                ),
+              ),
               Provider<HabitService>(create: (_) => HabitService()),
               ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
                 create: (_) => AppState(),

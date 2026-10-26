@@ -33,7 +33,7 @@ backend/
 - **`core/`** — headless infrastructure used by features: `data/` (Hive local DB, `storage`,
   `sync_service`, `user_storage`), `notifications/`, `firebase_options.dart`,
   `startup_metrics.dart`. Core never imports a feature.
-- **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, avatar, color
+- **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
   token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`

@@ -36,12 +36,9 @@ lib/main.dart -> lib/features/auth/screens/auth_screen.dart
 lib/main.dart -> lib/features/auth/screens/profile_setup_screen.dart
 lib/main.dart -> lib/features/auth/screens/verification_status.dart
 lib/main.dart -> lib/features/courses/course.dart
-lib/main.dart -> lib/features/groups/data/group_service.dart
-lib/main.dart -> lib/features/groups/screens/groups_screen.dart
 lib/main.dart -> lib/features/habits/data/habit_service.dart
 lib/main.dart -> lib/features/habits/screens/habits_screen.dart
 lib/main.dart -> lib/features/sessions/screens/alarms.dart
 lib/main.dart -> lib/features/sessions/screens/timer.dart
 lib/main.dart -> lib/features/sessions/widgets/reflection_bottom_sheet.dart
 lib/main.dart -> lib/features/stats/screens/stats.dart
-lib/shared/widgets/universal_avatar.dart -> lib/features/account/models/profile_avatar.dart

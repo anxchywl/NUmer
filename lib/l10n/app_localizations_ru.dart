@@ -2158,5 +2158,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String get memberFallbackName => 'Участник';
+
+  @override
+  String get joinCodeTooShort => 'Используйте не меньше 8 символов.';
+
+  @override
   String get sessionNotificationAction => 'Начать сессию';
 }

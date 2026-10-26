@@ -1,19 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/groups/models/group_statistics.dart';
+import 'package:numer_app/features/groups/models/public_profile.dart';
 import 'package:numer_app/features/groups/data/group_service.dart';
+import 'package:numer_app/features/groups/data/public_profile_source.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
-import 'package:numer_app/shared/widgets/universal_avatar.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class UserSubjectsBottomSheet extends StatefulWidget {
   final String groupId;
   final String userId;
   final String name;
+  final int? avatarIndex;
   final int avatarColorValue;
+  final String? avatarImageBase64;
   final StatisticsPeriod period;
   final MemberSubjectStats? preloadedStats;
   final bool shouldRefresh;
@@ -23,7 +26,9 @@ class UserSubjectsBottomSheet extends StatefulWidget {
     required this.groupId,
     required this.userId,
     required this.name,
+    this.avatarIndex,
     required this.avatarColorValue,
+    this.avatarImageBase64,
     required this.period,
     this.preloadedStats,
     this.shouldRefresh = true,
@@ -39,7 +44,7 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
   late bool _isUpdating;
   Map<String, dynamic>? _profileData;
 
-  StreamSubscription? _profileSubscription;
+  StreamSubscription<PublicProfile?>? _profileSubscription;
 
   @override
   void initState() {
@@ -73,23 +78,12 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
   }
 
   void _watchProfile() {
-    _profileSubscription = FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.userId)
-        .snapshots()
-        .listen((snapshot) {
-          if (!snapshot.exists || !mounted) return;
-
-          final data = snapshot.data();
-          if (data != null) {
-            setState(() {
-              _profileData = {
-                'major': data['major'],
-                'profileGoal': data['profileGoal'],
-                'profileContact': data['profileContact'],
-              };
-            });
-          }
+    _profileSubscription = context
+        .read<PublicProfileSource>()
+        .watch(widget.userId)
+        .listen((profile) {
+          if (profile == null || !mounted) return;
+          setState(() => _profileData = profile.toLegacyProfileMap());
         });
   }
 
@@ -145,9 +139,10 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                 child: Row(
                   children: [
                     UniversalAvatar(
-                      userId: widget.userId,
                       name: widget.name,
-                      initialAvatarColorValue: widget.avatarColorValue,
+                      avatarIndex: widget.avatarIndex,
+                      avatarColorValue: widget.avatarColorValue,
+                      avatarImageBase64: widget.avatarImageBase64,
                       size: 64,
                     ),
                     const SizedBox(width: 16),
