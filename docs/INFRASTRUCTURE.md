@@ -65,21 +65,26 @@ Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 
 ### Firestore data model
 
-Top-level collections and the per-user subcollection tree (owner read/write unless shared via
-a group; see `firestore.rules` for exact access):
+Top-level collections and the per-user subcollection tree (owner read/write unless noted;
+see `firestore/firestore.rules` for exact access). "Peers" means a signed-in user who shares a
+group with the owner according to `groupIndex`, never according to `users.groupIds`:
 
 ```
-/groups/{groupId}                      group metadata
-  /members, /invites, /secrets, /aggregates, /stats, /leaderboard
-/users/{userId}                        profile (name, major, goals, prefs)
-/email_index/{emailId}                 email → uid lookup
-/mailQueue/{id}                        outgoing email, server only
-/groupIndex/{userId}                   server-written: groups the user belongs to
-/publicProfiles/{userId}               server-written: profile fields group peers may see
-/nudgeLimits, /joinAttempts            server-only rate limit counters
-/roleAudit/{entryId}                   role change log, server only
+/groups/{groupId}                      group metadata; creator/admin edit, count steps by one
+  /members                             creator promotes/demotes; nobody but the creator removes the creator
+  /invites, /secrets, /aggregates, /stats, /leaderboard
+/users/{userId}                        profile; any signed-in user may get one, nobody may list
+/email_index/{emailId}                 email → uid lookup; write own lowercased email only, no reads
+/groupIndex/{userId}                   server-written: groups the user belongs to; owner get only
+/publicProfiles/{userId}               server-written: profile fields peers may get
+/nudges/{nudgeId}                      server-written; receiver reads and sets status 'delivered'
+/config/{docId}, /feed/{docId}         server-written; any signed-in user may get
+/mailQueue, /nudgeLimits, /joinAttempts, /authCodes, /authRateLimits, /authAudit,
+/deletedUsers, /accountEvents, /announcements, /roleAudit
+                                       server only, denied to every client
 /users/{userId}/
-  fcmTokens, aggregates, aggState (server only), sessions, studySessions, courses, studyTimes,
+  fcmTokens, aggregates (peers read), aggState (server only), sessions (peers read,
+  seconds at most 604800), studySessions, courses (peers read), studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
   stats, meta, groupMemberships, nudgeCooldowns,
   habits (+ /history), habit_categories, connections, connectionGroups
