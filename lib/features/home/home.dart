@@ -157,368 +157,405 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           return false;
         },
-        child: CustomScrollView(slivers: [
-          SliverAppBar(
-            title: const _StreakTitle(),
-            centerTitle: false, // Ensure title is left-aligned on iOS
-            actions: [
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(right: 12.0),
-                  child: _SyncStatusChip(),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              title: const _StreakTitle(),
+              centerTitle: false, // Ensure title is left-aligned on iOS
+              actions: [
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 12.0),
+                    child: _SyncStatusChip(),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _FirstRunCreditsGate(),
-                _AutoFinishWatcher(),
-                _ActiveSessionBar(),
               ],
             ),
-          ),
-          if (courses.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: _isIos(context)
-                    ? _IosLiquidActionPill(
-                        icon: Icons.add,
-                        label: AppLocalizations.of(context)!.addCourse,
-                        onPressed: () => _openAddCourse(context),
-                      )
-                    : FilledButton.icon(
-                        onPressed: () => _openAddCourse(context),
-                        icon: const Icon(Icons.add),
-                        label: Text(AppLocalizations.of(context)!.addCourse),
-                      ),
+            const SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  _FirstRunCreditsGate(),
+                  _AutoFinishWatcher(),
+                  _ActiveSessionBar(),
+                ],
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.all(12),
-              sliver: SliverReorderableList(
-                itemCount: courses.length,
-                onReorder: (oldIndex, newIndex) =>
-                    state.reorderCourses(oldIndex, newIndex),
-                itemBuilder: (context, i) {
-                  final c = courses[i];
+            ),
+            if (courses.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: _isIos(context)
+                      ? _IosLiquidActionPill(
+                          icon: Icons.add,
+                          label: AppLocalizations.of(context)!.addCourse,
+                          onPressed: () => _openAddCourse(context),
+                        )
+                      : FilledButton.icon(
+                          onPressed: () => _openAddCourse(context),
+                          icon: const Icon(Icons.add),
+                          label: Text(AppLocalizations.of(context)!.addCourse),
+                        ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: const EdgeInsets.all(12),
+                sliver: SliverReorderableList(
+                  itemCount: courses.length,
+                  onReorder: (oldIndex, newIndex) =>
+                      state.reorderCourses(oldIndex, newIndex),
+                  itemBuilder: (context, i) {
+                    final c = courses[i];
 
-                  return Padding(
-                    key: ValueKey(c.id),
-                    padding: EdgeInsets.only(
-                        bottom: i == courses.length - 1 ? 0 : 8),
-                    child: ReorderableDelayedDragStartListener(
-                      index: i,
-                      child: SwipeableCourseItem(
-                        confirmDelete: () async {
-                          final ok = await showDialog<bool>(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!
-                                  .deleteCourseTitle),
-                              content: Text(AppLocalizations.of(context)!
-                                  .deleteCourseMessage),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.pop(context, false),
-                                  child: Text(
-                                      AppLocalizations.of(context)!.cancel),
-                                ),
-                                FilledButton.icon(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  icon: const Icon(Icons.delete),
-                                  label: Text(
-                                      AppLocalizations.of(context)!.delete),
-                                ),
-                              ],
-                            ),
-                          );
-                          return ok == true;
-                        },
-                        onDelete: () => state.removeCourse(c.id),
-                        child: Builder(
-                          builder: (context) {
-                            final showSummary =
-                                state.homeSummaryRange != HomeSummaryRange.off;
-                            final showProgress =
-                                state.progressView != ProgressView.off;
-                            final customGoalHours =
-                                state.goalHoursForCourse(c.id) ?? 0;
-                            final hasCredits = (c.credits ?? 0) > 0;
-                            final willShowProgressBar = showProgress &&
-                                (hasCredits || customGoalHours > 0);
-                            final isMinimal =
-                                !showSummary && !willShowProgressBar;
-
-                            if (isMinimal) {
-                              final courseTheme = Theme.of(context);
-                              return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 6),
-                                leading: CircleAvatar(backgroundColor: c.color),
+                    return Padding(
+                      key: ValueKey(c.id),
+                      padding: EdgeInsets.only(
+                        bottom: i == courses.length - 1 ? 0 : 8,
+                      ),
+                      child: ReorderableDelayedDragStartListener(
+                        index: i,
+                        child: SwipeableCourseItem(
+                          confirmDelete: () async {
+                            final ok = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
                                 title: Text(
-                                  c.name,
-                                  style: courseTheme.textTheme.titleLarge
-                                      ?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.deleteCourseTitle,
                                 ),
-                                trailing: Icon(Icons.more_horiz,
-                                    color: courseTheme
-                                        .colorScheme.onSurfaceVariant),
-                                onTap: () => _openCourseTimeMenu(context, c),
-                              );
-                            }
-
-                            return ListTile(
-                              leading: CircleAvatar(backgroundColor: c.color),
-                              title: Row(
-                                children: [
-                                  Expanded(
+                                content: Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.deleteCourseMessage,
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
                                     child: Text(
-                                      c.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                      AppLocalizations.of(context)!.cancel,
                                     ),
                                   ),
-                                  if ((c.credits ?? 0) > 0 && showProgress)
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 8),
-                                      child: _CreditsBadge(
-                                        credits: c.credits!,
-                                        onTap: () =>
-                                            _openCreditsPopup(context, c),
-                                      ),
+                                  FilledButton.icon(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    icon: const Icon(Icons.delete),
+                                    label: Text(
+                                      AppLocalizations.of(context)!.delete,
                                     ),
+                                  ),
                                 ],
                               ),
-                              subtitle: Builder(
-                                builder: (context) {
-                                  final showProgressBar =
-                                      hasCredits || customGoalHours > 0;
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      if (showSummary)
-                                        FutureBuilder<Map<String, int>>(
-                                          future:
-                                              _loadCourseSeconds(context, c.id),
-                                          builder: (context, snap) {
-                                            final secs = snap.data?[c.id] ?? 0;
-                                            final label =
-                                                state.homeSummaryLabel(context);
-                                            return Text(
-                                                '$label: ${_fmtHMS(secs)}');
-                                          },
+                            );
+                            return ok == true;
+                          },
+                          onDelete: () => state.removeCourse(c.id),
+                          child: Builder(
+                            builder: (context) {
+                              final showSummary =
+                                  state.homeSummaryRange !=
+                                  HomeSummaryRange.off;
+                              final showProgress =
+                                  state.progressView != ProgressView.off;
+                              final customGoalHours =
+                                  state.goalHoursForCourse(c.id) ?? 0;
+                              final hasCredits = (c.credits ?? 0) > 0;
+                              final willShowProgressBar =
+                                  showProgress &&
+                                  (hasCredits || customGoalHours > 0);
+                              final isMinimal =
+                                  !showSummary && !willShowProgressBar;
+
+                              if (isMinimal) {
+                                final courseTheme = Theme.of(context);
+                                return ListTile(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 6,
+                                  ),
+                                  leading: CircleAvatar(
+                                    backgroundColor: c.color,
+                                  ),
+                                  title: Text(
+                                    c.name,
+                                    style: courseTheme.textTheme.titleLarge
+                                        ?.copyWith(fontWeight: FontWeight.w500),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: Icon(
+                                    Icons.more_horiz,
+                                    color: courseTheme
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                  ),
+                                  onTap: () => _openCourseTimeMenu(context, c),
+                                );
+                              }
+
+                              return ListTile(
+                                leading: CircleAvatar(backgroundColor: c.color),
+                                title: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        c.name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    if ((c.credits ?? 0) > 0 && showProgress)
+                                      Padding(
+                                        padding: const EdgeInsets.only(left: 8),
+                                        child: _CreditsBadge(
+                                          credits: c.credits!,
+                                          onTap: () =>
+                                              _openCreditsPopup(context, c),
                                         ),
-                                      if (showProgressBar && showProgress)
-                                        FutureBuilder<int>(
-                                          future: state.progressView ==
-                                                  ProgressView.day
-                                              ? Future<int>.value(
-                                                  state.todaySecondsFor(c.id),
-                                                )
-                                              : _weeklyElapsedForCourse(
-                                                  context, c.id),
-                                          builder: (context, snap) {
-                                            final elapsed = (snap.data ?? 0);
-                                            final level = c.expLevel ?? 3;
-                                            final weeklyHoursGoal =
-                                                customGoalHours > 0
-                                                    ? customGoalHours
-                                                    : hasCredits
-                                                        ? c.credits! *
-                                                            _hoursPerCreditForLevel(
-                                                                level)
-                                                        : 0;
-                                            if (weeklyHoursGoal <= 0) {
-                                              return const SizedBox.shrink();
-                                            }
-                                            final weeklyGoalSecs =
-                                                (weeklyHoursGoal * 3600)
-                                                    .clamp(1, 1 << 31)
-                                                    .toInt();
-                                            final targetSecs =
+                                      ),
+                                  ],
+                                ),
+                                subtitle: Builder(
+                                  builder: (context) {
+                                    final showProgressBar =
+                                        hasCredits || customGoalHours > 0;
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (showSummary)
+                                          FutureBuilder<Map<String, int>>(
+                                            future: _loadCourseSeconds(
+                                              context,
+                                              c.id,
+                                            ),
+                                            builder: (context, snap) {
+                                              final secs =
+                                                  snap.data?[c.id] ?? 0;
+                                              final label = state
+                                                  .homeSummaryLabel(context);
+                                              return Text(
+                                                '$label: ${_fmtHMS(secs)}',
+                                              );
+                                            },
+                                          ),
+                                        if (showProgressBar && showProgress)
+                                          FutureBuilder<int>(
+                                            future:
                                                 state.progressView ==
-                                                        ProgressView.day
-                                                    ? (weeklyGoalSecs / 7)
+                                                    ProgressView.day
+                                                ? Future<int>.value(
+                                                    state.todaySecondsFor(c.id),
+                                                  )
+                                                : _weeklyElapsedForCourse(
+                                                    context,
+                                                    c.id,
+                                                  ),
+                                            builder: (context, snap) {
+                                              final elapsed = (snap.data ?? 0);
+                                              final level = c.expLevel ?? 3;
+                                              final weeklyHoursGoal =
+                                                  customGoalHours > 0
+                                                  ? customGoalHours
+                                                  : hasCredits
+                                                  ? c.credits! *
+                                                        _hoursPerCreditForLevel(
+                                                          level,
+                                                        )
+                                                  : 0;
+                                              if (weeklyHoursGoal <= 0) {
+                                                return const SizedBox.shrink();
+                                              }
+                                              final weeklyGoalSecs =
+                                                  (weeklyHoursGoal * 3600)
+                                                      .clamp(1, 1 << 31)
+                                                      .toInt();
+                                              final targetSecs =
+                                                  state.progressView ==
+                                                      ProgressView.day
+                                                  ? (weeklyGoalSecs / 7)
                                                         .round()
                                                         .clamp(1, 1 << 31)
-                                                    : weeklyGoalSecs;
-                                            final progress = targetSecs <= 0
-                                                ? 0.0
-                                                : (elapsed / targetSecs)
-                                                    .clamp(0.0, 1.0);
-                                            final labelPrefix = state
-                                                        .progressView ==
-                                                    ProgressView.day
-                                                ? AppLocalizations.of(context)!
-                                                    .dailyGoal
-                                                : AppLocalizations.of(context)!
-                                                    .weeklyGoal;
-                                            final targetHoursLabel =
-                                                state.progressView ==
-                                                        ProgressView.day
-                                                    ? (weeklyHoursGoal / 7)
+                                                  : weeklyGoalSecs;
+                                              final progress = targetSecs <= 0
+                                                  ? 0.0
+                                                  : (elapsed / targetSecs)
+                                                        .clamp(0.0, 1.0);
+                                              final labelPrefix =
+                                                  state.progressView ==
+                                                      ProgressView.day
+                                                  ? AppLocalizations.of(
+                                                      context,
+                                                    )!.dailyGoal
+                                                  : AppLocalizations.of(
+                                                      context,
+                                                    )!.weeklyGoal;
+                                              final targetHoursLabel =
+                                                  state.progressView ==
+                                                      ProgressView.day
+                                                  ? (weeklyHoursGoal / 7)
                                                         .toStringAsFixed(1)
-                                                    : weeklyHoursGoal
+                                                  : weeklyHoursGoal
                                                         .toStringAsFixed(1);
 
-                                            return Padding(
-                                              padding:
-                                                  const EdgeInsets.only(top: 6),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  TweenAnimationBuilder<double>(
-                                                    duration: const Duration(
-                                                        milliseconds: 350),
-                                                    curve: Curves.easeOutCubic,
-                                                    tween: Tween(
+                                              return Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 6,
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    TweenAnimationBuilder<
+                                                      double
+                                                    >(
+                                                      duration: const Duration(
+                                                        milliseconds: 350,
+                                                      ),
+                                                      curve:
+                                                          Curves.easeOutCubic,
+                                                      tween: Tween(
                                                         begin: 0,
-                                                        end: progress),
-                                                    builder: (context, v, _) {
-                                                      return ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(6),
-                                                        child:
-                                                            LinearProgressIndicator(
-                                                          value: v,
-                                                          minHeight: 8,
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    '$labelPrefix: ${_fmtHMS(elapsed)} / $targetHoursLabel${AppLocalizations.of(context)!.hUnit}',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall
-                                                        ?.copyWith(
-                                                            color: Colors.grey),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                    ],
-                                  );
-                                },
-                              ),
-                              trailing: const Icon(Icons.more_horiz),
-                              onTap: () => _openCourseTimeMenu(context, c),
-                            );
-                          },
+                                                        end: progress,
+                                                      ),
+                                                      builder: (context, v, _) {
+                                                        return ClipRRect(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                6,
+                                                              ),
+                                                          child:
+                                                              LinearProgressIndicator(
+                                                                value: v,
+                                                                minHeight: 8,
+                                                              ),
+                                                        );
+                                                      },
+                                                    ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      '$labelPrefix: ${_fmtHMS(elapsed)} / $targetHoursLabel${AppLocalizations.of(context)!.hUnit}',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: Colors.grey,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                trailing: const Icon(Icons.more_horiz),
+                                onTap: () => _openCourseTimeMenu(context, c),
+                              );
+                            },
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
+              ),
+            SliverPadding(
+              padding: EdgeInsets.only(
+                bottom: _isIos(context)
+                    ? _iosBottomNavClearance(context)
+                    : MediaQuery.of(context).padding.bottom + 80,
               ),
             ),
-          SliverPadding(
-            padding: EdgeInsets.only(
-              bottom: _isIos(context)
-                  ? _iosBottomNavClearance(context)
-                  : MediaQuery.of(context).padding.bottom + 80,
-            ),
-          ),
-        ]),
+          ],
+        ),
       ),
       floatingActionButton: courses.isEmpty
           ? null
           : _isIos(context)
-              ? AnimatedSlide(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutQuart,
-                  offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutQuart,
-                    opacity: _fabVisible ? 1 : 0,
-                    child: IgnorePointer(
-                      ignoring: !_fabVisible,
-                      child: Padding(
-                        padding:
-                            EdgeInsets.only(bottom: _iosFabBottomLift(context)),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            _IosLiquidActionPill(
-                              icon: Icons.auto_awesome_outlined,
-                              iconOnly: true,
-                              iconSize: 24,
-                              iconPadding: const EdgeInsets.all(13),
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const AiAnalysisScreen(),
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            _IosLiquidActionPill(
-                              icon: Icons.add,
-                              label: AppLocalizations.of(context)!.addCourse,
-                              onPressed: () => _openAddCourse(context),
-                            ),
-                          ],
-                        ),
-                      ),
+          ? AnimatedSlide(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutQuart,
+              offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutQuart,
+                opacity: _fabVisible ? 1 : 0,
+                child: IgnorePointer(
+                  ignoring: !_fabVisible,
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      bottom: _iosFabBottomLift(context),
                     ),
-                  ),
-                )
-              : AnimatedSlide(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutQuart,
-                  offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 260),
-                    curve: Curves.easeOutQuart,
-                    opacity: _fabVisible ? 1 : 0,
-                    child: IgnorePointer(
-                      ignoring: !_fabVisible,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          FloatingActionButton(
-                            heroTag: 'ai-fab',
-                            backgroundColor:
-                                Theme.of(context).colorScheme.surface,
-                            elevation: 4,
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const AiAnalysisScreen(),
-                                ),
-                              );
-                            },
-                            child: const Icon(Icons.auto_awesome_outlined),
-                          ),
-                          const SizedBox(height: 16),
-                          FloatingActionButton(
-                            heroTag: 'add-fab',
-                            onPressed: () => _openAddCourse(context),
-                            child: const Icon(Icons.add),
-                          ),
-                        ],
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        _IosLiquidActionPill(
+                          icon: Icons.auto_awesome_outlined,
+                          iconOnly: true,
+                          iconSize: 24,
+                          iconPadding: const EdgeInsets.all(13),
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const AiAnalysisScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        _IosLiquidActionPill(
+                          icon: Icons.add,
+                          label: AppLocalizations.of(context)!.addCourse,
+                          onPressed: () => _openAddCourse(context),
+                        ),
+                      ],
                     ),
                   ),
                 ),
+              ),
+            )
+          : AnimatedSlide(
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeOutQuart,
+              offset: _fabVisible ? Offset.zero : const Offset(0, 0.22),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 260),
+                curve: Curves.easeOutQuart,
+                opacity: _fabVisible ? 1 : 0,
+                child: IgnorePointer(
+                  ignoring: !_fabVisible,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FloatingActionButton(
+                        heroTag: 'ai-fab',
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        elevation: 4,
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const AiAnalysisScreen(),
+                            ),
+                          );
+                        },
+                        child: const Icon(Icons.auto_awesome_outlined),
+                      ),
+                      const SizedBox(height: 16),
+                      FloatingActionButton(
+                        heroTag: 'add-fab',
+                        onPressed: () => _openAddCourse(context),
+                        child: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
@@ -535,7 +572,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<Map<String, int>> _loadCourseSeconds(
-      BuildContext context, String id) async {
+    BuildContext context,
+    String id,
+  ) async {
     final state = context.read<AppState>();
     final (start, end) = state.homeSummaryBoundsNow();
     final s = state;
@@ -739,8 +778,10 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(AppLocalizations.of(context)!.addCourse,
-                  style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                AppLocalizations.of(context)!.addCourse,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _name,
@@ -819,8 +860,9 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _credits,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (v) {
                   if (v == null || v.isEmpty) return null;
                   final val = double.tryParse(v);
@@ -848,8 +890,10 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 12),
-                    Text(AppLocalizations.of(context)!.experienceLevel,
-                        style: Theme.of(context).textTheme.labelLarge),
+                    Text(
+                      AppLocalizations.of(context)!.experienceLevel,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
                     Slider(
                       min: 1,
                       max: 5,
@@ -860,10 +904,9 @@ class _AddCourseSheetState extends State<_AddCourseSheet> {
                     ),
                     Text(
                       '${_expShortLabel(context, _expLevel)} ',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: Colors.grey),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
                     ),
                   ],
                 ),
@@ -963,9 +1006,12 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(AppLocalizations.of(context)!.setGoals,
-                        style: tt.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      AppLocalizations.of(context)!.setGoals,
+                      style: tt.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     IconButton(
                       onPressed: () => Navigator.pop(ctx),
                       icon: const Icon(Icons.close),
@@ -986,15 +1032,18 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                     Expanded(
                       child: Text(
                         c.name,
-                        style: tt.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        style: tt.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
@@ -1015,25 +1064,34 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                     color: scheme.surfaceContainerLow,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: scheme.outlineVariant.withValues(alpha: 0.5)),
+                      color: scheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Column(
                     children: [
                       _popupRow(
-                          AppLocalizations.of(context)!
-                              .semester(_kDefaultSemesterWeeks),
-                          _fmtHours(semester, context)),
+                        AppLocalizations.of(
+                          context,
+                        )!.semester(_kDefaultSemesterWeeks),
+                        _fmtHours(semester, context),
+                      ),
                       Divider(
-                          height: 16,
-                          color: scheme.outlineVariant.withValues(alpha: 0.5)),
-                      _popupRow(AppLocalizations.of(context)!.targetPerWeek,
-                          _fmtHours(customWeekly, context),
-                          isBold: true),
+                        height: 16,
+                        color: scheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                      _popupRow(
+                        AppLocalizations.of(context)!.targetPerWeek,
+                        _fmtHours(customWeekly, context),
+                        isBold: true,
+                      ),
                       Divider(
-                          height: 16,
-                          color: scheme.outlineVariant.withValues(alpha: 0.5)),
-                      _popupRow(AppLocalizations.of(context)!.targetPerDay,
-                          _fmtHours(customWeekly / 7, context)),
+                        height: 16,
+                        color: scheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                      _popupRow(
+                        AppLocalizations.of(context)!.targetPerDay,
+                        _fmtHours(customWeekly / 7, context),
+                      ),
                     ],
                   ),
                 ),
@@ -1041,14 +1099,19 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                 const SizedBox(height: 24),
 
                 // Slider
-                Text(AppLocalizations.of(context)!.adjustWeeklyGoal,
-                    style: tt.labelLarge?.copyWith(color: scheme.primary)),
+                Text(
+                  AppLocalizations.of(context)!.adjustWeeklyGoal,
+                  style: tt.labelLarge?.copyWith(color: scheme.primary),
+                ),
                 const SizedBox(height: 8),
                 Text(
-                  AppLocalizations.of(context)!
-                      .hPerWeek(customWeekly.toStringAsFixed(1)),
+                  AppLocalizations.of(
+                    context,
+                  )!.hPerWeek(customWeekly.toStringAsFixed(1)),
                   style: tt.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w600, color: scheme.primary),
+                    fontWeight: FontWeight.w600,
+                    color: scheme.primary,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 Slider(
@@ -1075,11 +1138,16 @@ void _openCreditsPopup(BuildContext context, Course c) async {
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
-                  child: Text(AppLocalizations.of(context)!.save,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    AppLocalizations.of(context)!.save,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
@@ -1097,17 +1165,21 @@ Widget _popupRow(String label, String value, {bool isBold = false}) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 14,
-              fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-            )),
-        Text(value,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-            )),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.grey.shade600,
+            fontSize: 14,
+            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
+          ),
+        ),
       ],
     ),
   );
@@ -1121,8 +1193,9 @@ class _CreditsBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final bg =
-        t.colorScheme.surfaceContainerHighest.withAlpha((0.7 * 255).round());
+    final bg = t.colorScheme.surfaceContainerHighest.withAlpha(
+      (0.7 * 255).round(),
+    );
     final fg = t.colorScheme.onSurface.withAlpha((0.9 * 255).round());
     final text = credits == 1
         ? '1 ${AppLocalizations.of(context)!.credits}'
@@ -1317,9 +1390,9 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           if (!mounted) return;
           showAppMessage(
             context,
-            AppLocalizations.of(context)!.timeSavedMessage(
-              _courseNameWithoutParentheses(courseName),
-            ),
+            AppLocalizations.of(
+              context,
+            )!.timeSavedMessage(_courseNameWithoutParentheses(courseName)),
           );
           _activeId = null;
           _plannedSecs = null;
@@ -1332,9 +1405,9 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
           if (!mounted) return;
           showAppMessage(
             context,
-            AppLocalizations.of(context)!.timeSavedMessage(
-              _courseNameWithoutParentheses(courseName),
-            ),
+            AppLocalizations.of(
+              context,
+            )!.timeSavedMessage(_courseNameWithoutParentheses(courseName)),
           );
           _activeId = null;
           _plannedSecs = null;
@@ -1525,18 +1598,18 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
                   String? snackMessage;
 
                   if (kind == 'timer') {
-                    snackMessage =
-                        AppLocalizations.of(context)!.timeSavedMessage(
-                      _courseNameWithoutParentheses(course.name),
-                    );
+                    snackMessage = AppLocalizations.of(context)!
+                        .timeSavedMessage(
+                          _courseNameWithoutParentheses(course.name),
+                        );
                     seconds = await state.stopTimer(courseId);
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('timer_planned_$courseId');
                   } else if (kind == 'stopwatch') {
-                    snackMessage =
-                        AppLocalizations.of(context)!.timeSavedMessage(
-                      _courseNameWithoutParentheses(course.name),
-                    );
+                    snackMessage = AppLocalizations.of(context)!
+                        .timeSavedMessage(
+                          _courseNameWithoutParentheses(course.name),
+                        );
                     seconds = await state.stopStopwatch(courseId);
                   } else {
                     await state.resetPomodoro(courseId);
@@ -1558,7 +1631,7 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
                       ? 'Done'
                       : (kind == 'stopwatch' ? 'Stop' : 'Reset'),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1783,7 +1856,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final views = WidgetsBinding.instance.platformDispatcher.views;
     final view = views.isNotEmpty ? views.first : null;
     final bottomPx = view?.viewInsets.bottom ?? 0.0;
-    final dpr = view?.devicePixelRatio ??
+    final dpr =
+        view?.devicePixelRatio ??
         WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
     final bottom = bottomPx / dpr;
 
@@ -2099,8 +2173,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       const SizedBox(height: 12),
                       Align(
                         alignment: Alignment.centerLeft,
-                        child: Text(AppLocalizations.of(context)!.color,
-                            style: Theme.of(ctx).textTheme.labelLarge),
+                        child: Text(
+                          AppLocalizations.of(context)!.color,
+                          style: Theme.of(ctx).textTheme.labelLarge,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Wrap(
@@ -2121,7 +2197,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                                   shape: BoxShape.circle,
                                   border: selected.toARGB32() == c.toARGB32()
                                       ? Border.all(
-                                          width: 3, color: Colors.black54)
+                                          width: 3,
+                                          color: Colors.black54,
+                                        )
                                       : null,
                                 ),
                               ),
@@ -2131,7 +2209,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                             onCustomTap: () {
                               FocusManager.instance.primaryFocus?.unfocus();
                               setLocal(
-                                  () => showCustomPicker = !showCustomPicker);
+                                () => showCustomPicker = !showCustomPicker,
+                              );
                             },
                             onColorPicked: (color) =>
                                 setLocal(() => selected = color),
@@ -2257,11 +2336,16 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                                 AppLocalizations.of(context)!.typeTimeToStudy,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                    fontSize: 14, color: Colors.grey),
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
                               ),
                               SizedBox(height: 6),
-                              Icon(Icons.arrow_downward,
-                                  size: 18, color: Colors.grey),
+                              Icon(
+                                Icons.arrow_downward,
+                                size: 18,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 8),
                             ],
                           ),
@@ -2342,8 +2426,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
-          Text(AppLocalizations.of(context)!.maxTime,
-              style: const TextStyle(color: Colors.grey)),
+          Text(
+            AppLocalizations.of(context)!.maxTime,
+            style: const TextStyle(color: Colors.grey),
+          ),
         ],
       ),
     );
@@ -2352,18 +2438,21 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Widget _buildPomodoroTab() {
     final state = context.watch<AppState>();
     final phase = state.pomodoroPhase[widget.course.id] ?? PomodoroPhase.work;
-    final remaining =
-        state.currentPomodoroRemaining(widget.course.id).inSeconds;
+    final remaining = state
+        .currentPomodoroRemaining(widget.course.id)
+        .inSeconds;
     final elapsed = state.currentPomodoroElapsed(widget.course.id).inSeconds;
     final total = state.pomodoroPhaseDurationFor(widget.course.id).inSeconds;
     final completed = state.pomodoroCompletedWorkFor(widget.course.id);
     final isPaused = state.pomodoroPaused[widget.course.id] ?? false;
-    final sliderValue = _pendingLongBreak ??
+    final sliderValue =
+        _pendingLongBreak ??
         state.pomodoroLongBreakMinutesFor(widget.course.id).toDouble();
     final minLong = AppState.pomodoroLongBreakMinMinutes.toDouble();
     final maxLong = AppState.pomodoroLongBreakMaxMinutes.toDouble();
 
-    final hasStarted = (state.pomodoroRunning[widget.course.id] ?? false) ||
+    final hasStarted =
+        (state.pomodoroRunning[widget.course.id] ?? false) ||
         (state.pomodoroPaused[widget.course.id] ?? false) ||
         elapsed > 0;
     final sliderEnabled = !hasStarted;
@@ -2379,8 +2468,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: IntrinsicHeight(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 child: Column(
                   children: [
                     const Spacer(),
@@ -2395,7 +2486,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       _fmt(remaining),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                          fontSize: 48, fontWeight: FontWeight.w800),
+                        fontSize: 48,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -2404,12 +2497,12 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      AppLocalizations.of(context)!
-                          .completedPomodoros(completed),
+                      AppLocalizations.of(
+                        context,
+                      )!.completedPomodoros(completed),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 32),
@@ -2417,8 +2510,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                     Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        AppLocalizations.of(context)!
-                            .longBreakLength(sliderValue.round()),
+                        AppLocalizations.of(
+                          context,
+                        )!.longBreakLength(sliderValue.round()),
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                     ),
@@ -2437,7 +2531,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                           ? (value) async {
                               final appState = context.read<AppState>();
                               await appState.setPomodoroLongBreakMinutes(
-                                  widget.course.id, value.round());
+                                widget.course.id,
+                                value.round(),
+                              );
                               if (!mounted) return;
                               setState(() => _pendingLongBreak = null);
                             }
@@ -2677,9 +2773,10 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
         state.stopwatchRunning[widget.course.id] ?? false;
     final isPomodoroActiveForThis =
         (state.pomodoroRunning[widget.course.id] ?? false) ||
-            (state.pomodoroPaused[widget.course.id] ?? false);
+        (state.pomodoroPaused[widget.course.id] ?? false);
 
-    final isAnyRunningCombined = isTimerRunningForThis ||
+    final isAnyRunningCombined =
+        isTimerRunningForThis ||
         isStopwatchRunningForThis ||
         isPomodoroActiveForThis;
 
@@ -2741,8 +2838,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                           : () async {
                               final appState = context.read<AppState>();
                               final updated = live.copyWith(
-                                  hiddenFromLeaderboard:
-                                      !live.hiddenFromLeaderboard);
+                                hiddenFromLeaderboard:
+                                    !live.hiddenFromLeaderboard,
+                              );
                               await appState.updateCourse(updated);
                               setState(() {}); // Toggle icon state immediately
 
@@ -2750,33 +2848,39 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
                               // Brief delay so the user sees the icon change before the popup closes
                               await Future.delayed(
-                                  const Duration(milliseconds: 300));
+                                const Duration(milliseconds: 300),
+                              );
                               if (!mounted || !context.mounted) return;
 
                               Navigator.pop(context);
 
                               final msg = updated.hiddenFromLeaderboard
-                                  ? AppLocalizations.of(context)!
-                                      .courseHiddenFromLeaderboard
-                                  : AppLocalizations.of(context)!
-                                      .courseVisibleInLeaderboard;
+                                  ? AppLocalizations.of(
+                                      context,
+                                    )!.courseHiddenFromLeaderboard
+                                  : AppLocalizations.of(
+                                      context,
+                                    )!.courseVisibleInLeaderboard;
                               showAppMessage(context, msg);
                             },
                     ),
                     IconButton(
                       tooltip: AppLocalizations.of(context)!.edit,
-                      icon: Icon(Icons.edit,
-                          color: isAnyRunningCombined
-                              ? Colors.grey
-                              : Colors.blueGrey),
+                      icon: Icon(
+                        Icons.edit,
+                        color: isAnyRunningCombined
+                            ? Colors.grey
+                            : Colors.blueGrey,
+                      ),
                       onPressed: isAnyRunningCombined
                           ? null
                           : () => _openEditCourseDialog(context),
                     ),
                     IconButton(
-                      icon: Icon(Icons.delete,
-                          color:
-                              isAnyRunningCombined ? Colors.grey : Colors.red),
+                      icon: Icon(
+                        Icons.delete,
+                        color: isAnyRunningCombined ? Colors.grey : Colors.red,
+                      ),
                       tooltip: 'Delete Course',
                       onPressed: isAnyRunningCombined
                           ? null
@@ -2787,23 +2891,31 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                               final ok = await showDialog<bool>(
                                 context: context,
                                 builder: (dialogCtx) => AlertDialog(
-                                  title: Text(AppLocalizations.of(context)!
-                                      .deleteCourseTitle),
-                                  content: Text(AppLocalizations.of(context)!
-                                      .deleteCourseMessage),
+                                  title: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.deleteCourseTitle,
+                                  ),
+                                  content: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.deleteCourseMessage,
+                                  ),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
                                           Navigator.pop(dialogCtx, false),
                                       child: Text(
-                                          AppLocalizations.of(context)!.cancel),
+                                        AppLocalizations.of(context)!.cancel,
+                                      ),
                                     ),
                                     FilledButton.icon(
                                       onPressed: () =>
                                           Navigator.pop(dialogCtx, true),
                                       icon: const Icon(Icons.delete),
                                       label: Text(
-                                          AppLocalizations.of(context)!.delete),
+                                        AppLocalizations.of(context)!.delete,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -2835,13 +2947,17 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                       onPressed: () => _tabs.animateTo(0),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         shape: const StadiumBorder(),
                       ),
                       child: Text(
                         AppLocalizations.of(context)!.timerTab,
                         style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w700),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -2895,16 +3011,17 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                               child: FilledButton.icon(
                                 onPressed: _tabs.index == 0
                                     ? (isTimerRunningForThis ||
-                                            isPomodoroActiveForThis
-                                        ? null
-                                        : _startTimer)
+                                              isPomodoroActiveForThis
+                                          ? null
+                                          : _startTimer)
                                     : (isStopwatchRunningForThis ||
-                                            isPomodoroActiveForThis
-                                        ? null
-                                        : _startStopwatch),
+                                              isPomodoroActiveForThis
+                                          ? null
+                                          : _startStopwatch),
                                 icon: const Icon(Icons.play_arrow),
-                                label:
-                                    Text(AppLocalizations.of(context)!.start),
+                                label: Text(
+                                  AppLocalizations.of(context)!.start,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -2912,11 +3029,11 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                               child: FilledButton.icon(
                                 onPressed: _tabs.index == 0
                                     ? (isTimerRunningForThis
-                                        ? _doneTimer
-                                        : null)
+                                          ? _doneTimer
+                                          : null)
                                     : (isStopwatchRunningForThis
-                                        ? _doneStopwatch
-                                        : null),
+                                          ? _doneStopwatch
+                                          : null),
                                 icon: const Icon(Icons.check),
                                 label: Text(AppLocalizations.of(context)!.done),
                               ),
@@ -2948,8 +3065,9 @@ class _StreakTitle extends StatelessWidget {
       return Text(
         l10n.noStreakYet,
         style: theme.textTheme.titleMedium?.copyWith(
-          color:
-              theme.colorScheme.onSurfaceVariant.withAlpha((0.8 * 255).round()),
+          color: theme.colorScheme.onSurfaceVariant.withAlpha(
+            (0.8 * 255).round(),
+          ),
           fontWeight: FontWeight.w500,
         ),
       );
