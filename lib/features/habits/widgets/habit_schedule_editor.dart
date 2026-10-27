@@ -79,7 +79,8 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
     _frequencyGoalCtrl = TextEditingController(text: "$_frequencyGoal");
     _workDaysCtrl = TextEditingController(text: "$_interval");
     _restDaysCtrl = TextEditingController(
-        text: _freq == HabitFrequencyType.interval ? "$_frequencyGoal" : "0");
+      text: _freq == HabitFrequencyType.interval ? "$_frequencyGoal" : "0",
+    );
   }
 
   @override
@@ -91,15 +92,17 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
   }
 
   void _notify() {
-    widget.onChanged(ScheduleData(
-      frequencyType: _freq,
-      weekDays: _weekDays,
-      intervalDays: _interval,
-      period: _period,
-      frequencyGoal: _frequencyGoal,
-      startDate: _startDate,
-      endDate: _endDate,
-    ));
+    widget.onChanged(
+      ScheduleData(
+        frequencyType: _freq,
+        weekDays: _weekDays,
+        intervalDays: _interval,
+        period: _period,
+        frequencyGoal: _frequencyGoal,
+        startDate: _startDate,
+        endDate: _endDate,
+      ),
+    );
   }
 
   @override
@@ -110,9 +113,13 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // TITLE
-        Text(l10n.habitScheduleTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(
+          l10n.habitScheduleTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         const SizedBox(height: 16),
 
         // DATES
@@ -160,18 +167,25 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
 
         const SizedBox(height: 24),
 
-        Text(l10n.habitFrequencySectionTitle,
-            style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(
+          l10n.habitFrequencySectionTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         const SizedBox(height: 12),
 
         _buildFreqOption(
           theme,
           type: HabitFrequencyType.daily,
           title: l10n.habitFrequencyEveryDay,
-          child: Text(l10n.habitFrequencyDailyDescription,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          child: Text(
+            l10n.habitFrequencyDailyDescription,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
         ),
         const SizedBox(height: 12),
 
@@ -184,26 +198,39 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.habitFrequencySpecificDescription,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                l10n.habitFrequencySpecificDescription,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: 12),
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest
-                      .withValues(alpha: 0.3),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.3,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
-                    _buildPeriodTab(theme, l10n.habitFrequencyPeriodWeekLabel,
-                        HabitPeriod.week),
-                    _buildPeriodTab(theme, l10n.habitFrequencyPeriodMonthLabel,
-                        HabitPeriod.month),
-                    _buildPeriodTab(theme, l10n.habitFrequencyPeriodYearLabel,
-                        HabitPeriod.year),
+                    _buildPeriodTab(
+                      theme,
+                      l10n.habitFrequencyPeriodWeekLabel,
+                      HabitPeriod.week,
+                    ),
+                    _buildPeriodTab(
+                      theme,
+                      l10n.habitFrequencyPeriodMonthLabel,
+                      HabitPeriod.month,
+                    ),
+                    _buildPeriodTab(
+                      theme,
+                      l10n.habitFrequencyPeriodYearLabel,
+                      HabitPeriod.year,
+                    ),
                   ],
                 ),
               ),
@@ -226,50 +253,57 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.habitFrequencyTimesPerPeriodDescription,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                l10n.habitFrequencyTimesPerPeriodDescription,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   SizedBox(
-                      width: 80,
-                      child: TextFormField(
-                        controller: _frequencyGoalCtrl,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3),
-                        ],
-                        decoration: _inputDecoration(theme),
-                        onChanged: (v) {
-                          final trimmed = v.trim();
-                          if (trimmed.isEmpty) {
-                            setState(() => _frequencyGoal = 0);
-                            _notify();
-                            return;
-                          }
-                          int val = int.tryParse(trimmed) ?? 1;
-                          if (val < 1) val = 1;
-                          final maxVal = switch (_period) {
-                            HabitPeriod.week => 7,
-                            HabitPeriod.month => 31,
-                            HabitPeriod.year => 365,
-                          };
-                          if (val > maxVal) {
-                            val = maxVal;
-                            _frequencyGoalCtrl.text = "$val";
-                            _frequencyGoalCtrl.selection =
-                                TextSelection.fromPosition(TextPosition(
-                                    offset: _frequencyGoalCtrl.text.length));
-                          }
-                          setState(() {
-                            _frequencyGoal = val;
-                            _notify();
-                          });
-                        },
-                      )),
+                    width: 80,
+                    child: TextFormField(
+                      controller: _frequencyGoalCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      decoration: _inputDecoration(theme),
+                      onChanged: (v) {
+                        final trimmed = v.trim();
+                        if (trimmed.isEmpty) {
+                          setState(() => _frequencyGoal = 0);
+                          _notify();
+                          return;
+                        }
+                        int val = int.tryParse(trimmed) ?? 1;
+                        if (val < 1) val = 1;
+                        final maxVal = switch (_period) {
+                          HabitPeriod.week => 7,
+                          HabitPeriod.month => 31,
+                          HabitPeriod.year => 365,
+                        };
+                        if (val > maxVal) {
+                          val = maxVal;
+                          _frequencyGoalCtrl.text = "$val";
+                          _frequencyGoalCtrl.selection =
+                              TextSelection.fromPosition(
+                                TextPosition(
+                                  offset: _frequencyGoalCtrl.text.length,
+                                ),
+                              );
+                        }
+                        setState(() {
+                          _frequencyGoal = val;
+                          _notify();
+                        });
+                      },
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Text(l10n.habitTimesPerLabel),
                   const SizedBox(width: 12),
@@ -307,56 +341,63 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.habitFrequencyWorkRestDescription,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+              Text(
+                l10n.habitFrequencyWorkRestDescription,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Text("${l10n.habitWorkLabel} "),
                   SizedBox(
-                      width: 60,
-                      child: TextFormField(
-                        controller: _workDaysCtrl,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3)
-                        ],
-                        decoration:
-                            _inputDecoration(theme).copyWith(hintText: "0"),
-                        onChanged: (v) {
-                          final val = int.tryParse(v) ?? 0;
-                          setState(() {
-                            _interval = val;
-                            _notify();
-                          });
-                        },
-                      )),
+                    width: 60,
+                    child: TextFormField(
+                      controller: _workDaysCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      decoration: _inputDecoration(
+                        theme,
+                      ).copyWith(hintText: "0"),
+                      onChanged: (v) {
+                        final val = int.tryParse(v) ?? 0;
+                        setState(() {
+                          _interval = val;
+                          _notify();
+                        });
+                      },
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   const Text("×"),
                   const SizedBox(width: 12),
                   SizedBox(
-                      width: 60,
-                      child: TextFormField(
-                        controller: _restDaysCtrl,
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(3)
-                        ],
-                        decoration:
-                            _inputDecoration(theme).copyWith(hintText: "0"),
-                        onChanged: (v) {
-                          final val = int.tryParse(v) ?? 0;
-                          setState(() {
-                            _frequencyGoal = val;
-                            _notify();
-                          }); // Storing rest days in frequencyGoal
-                        },
-                      )),
+                    width: 60,
+                    child: TextFormField(
+                      controller: _restDaysCtrl,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(3),
+                      ],
+                      decoration: _inputDecoration(
+                        theme,
+                      ).copyWith(hintText: "0"),
+                      onChanged: (v) {
+                        final val = int.tryParse(v) ?? 0;
+                        setState(() {
+                          _frequencyGoal = val;
+                          _notify();
+                        }); // Storing rest days in frequencyGoal
+                      },
+                    ),
+                  ),
                   Text(" ${l10n.habitRestLabel}"),
                 ],
               ),
@@ -371,32 +412,43 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
     return InputDecoration(
       isDense: true,
       filled: true,
-      fillColor:
-          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      fillColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
+      ),
       border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
       enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
       focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: theme.colorScheme.primary, width: 2)),
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+      ),
     );
   }
 
-  Widget _buildDatePicker(BuildContext context,
-      {required String label,
-      required DateTime? date,
-      required Function(DateTime) onPick,
-      VoidCallback? onClear,
-      String? placeholder}) {
+  Widget _buildDatePicker(
+    BuildContext context, {
+    required String label,
+    required DateTime? date,
+    required Function(DateTime) onPick,
+    VoidCallback? onClear,
+    String? placeholder,
+  }) {
     final theme = Theme.of(context);
     final localeName = AppLocalizations.of(context)!.localeName;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: theme.textTheme.labelSmall
-                ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
         const SizedBox(height: 6),
         InkWell(
           onTap: () async {
@@ -415,8 +467,9 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -426,23 +479,31 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                   date != null
                       ? DateFormat.yMMMd(localeName).format(date)
                       : (placeholder ??
-                          AppLocalizations.of(context)!
-                              .habitSelectDatePlaceholder),
+                            AppLocalizations.of(
+                              context,
+                            )!.habitSelectDatePlaceholder),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: date != null
                         ? theme.colorScheme.onSurface
-                        : theme.colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.7),
-                    fontWeight:
-                        date != null ? FontWeight.w500 : FontWeight.normal,
+                        : theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.7,
+                          ),
+                    fontWeight: date != null
+                        ? FontWeight.w500
+                        : FontWeight.normal,
                   ),
                 ),
                 if (date != null && onClear != null)
                   GestureDetector(
-                      onTap: onClear, child: const Icon(Icons.close, size: 16))
+                    onTap: onClear,
+                    child: const Icon(Icons.close, size: 16),
+                  )
                 else
-                  const Icon(Icons.calendar_today,
-                      size: 16, color: Colors.grey),
+                  const Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
               ],
             ),
           ),
@@ -451,10 +512,12 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
     );
   }
 
-  Widget _buildFreqOption(ThemeData theme,
-      {required HabitFrequencyType type,
-      required String title,
-      required Widget child}) {
+  Widget _buildFreqOption(
+    ThemeData theme, {
+    required HabitFrequencyType type,
+    required String title,
+    required Widget child,
+  }) {
     final selected = _freq == type;
     final disabled = widget.lockTypeChange && !selected;
 
@@ -465,9 +528,9 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           onTap: disabled
               ? null
               : () => setState(() {
-                    _freq = type;
-                    _notify();
-                  }),
+                  _freq = type;
+                  _notify();
+                }),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
@@ -476,14 +539,17 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
               color: selected
                   ? theme.colorScheme.secondaryContainer
                   : (disabled
-                      ? theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3)
-                      : theme.colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.2)),
+                        ? theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          )
+                        : theme.colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.2,
+                          )),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color:
-                    selected ? theme.colorScheme.primary : Colors.transparent,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : Colors.transparent,
                 width: 1,
               ),
             ),
@@ -496,20 +562,23 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                   color: selected
                       ? theme.colorScheme.primary
                       : (disabled
-                          ? theme.colorScheme.outline.withValues(alpha: 0.3)
-                          : theme.colorScheme.outline),
+                            ? theme.colorScheme.outline.withValues(alpha: 0.3)
+                            : theme.colorScheme.outline),
                 ),
                 const SizedBox(width: 12),
-                Text(title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: selected
-                          ? theme.colorScheme.onSecondaryContainer
-                          : (disabled
-                              ? theme.colorScheme.onSurface
-                                  .withValues(alpha: 0.38)
+                Text(
+                  title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? theme.colorScheme.onSecondaryContainer
+                        : (disabled
+                              ? theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.38,
+                                )
                               : theme.colorScheme.onSurface),
-                    )),
+                  ),
+                ),
               ],
             ),
           ),
@@ -521,7 +590,10 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
           child: selected
               ? Padding(
                   padding: const EdgeInsets.only(
-                      top: 12, left: 16, bottom: 8), // Indent content below
+                    top: 12,
+                    left: 16,
+                    bottom: 8,
+                  ), // Indent content below
                   child: child,
                 )
               : const SizedBox.shrink(),
@@ -589,9 +661,10 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
             foregroundColor: active
                 ? theme.colorScheme.onPrimary
                 : theme.colorScheme.onSurface,
-            child: Text(days[index],
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            child: Text(
+              days[index],
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
           ),
         );
       }),
@@ -625,23 +698,24 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
                     : theme.colorScheme.surfaceContainerHighest,
                 shape: BoxShape.circle,
               ),
-              child: Text("$day",
-                  style: TextStyle(
-                    color: selected
-                        ? theme.colorScheme.onPrimary
-                        : theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  )),
+              child: Text(
+                "$day",
+                style: TextStyle(
+                  color: selected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
             ),
           ),
         );
         if (day < rowEnd) rowDays.add(const SizedBox(width: 8));
       }
-      rows.add(Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: rowDays,
-      ));
+      rows.add(
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: rowDays),
+      );
       if (rowEnd < 31) rows.add(const SizedBox(height: 8));
     }
 
@@ -654,7 +728,9 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
   Widget _buildYearSelector(ThemeData theme) {
     final localeName = AppLocalizations.of(context)!.localeName;
     final months = List.generate(
-        12, (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)));
+      12,
+      (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -662,31 +738,35 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _weekDays.where((encoded) {
-            final m = encoded ~/ 100;
-            final d = encoded % 100;
-            return m >= 1 && m <= 12 && d >= 1 && d <= 31;
-          }).map((encoded) {
-            final m = encoded ~/ 100;
-            final d = encoded % 100;
-            return Chip(
-              label: Text("${months[m - 1]} $d"),
-              onDeleted: () => setState(() {
-                _weekDays.remove(encoded);
-                _notify();
-              }),
-            );
-          }).toList(),
+          children: _weekDays
+              .where((encoded) {
+                final m = encoded ~/ 100;
+                final d = encoded % 100;
+                return m >= 1 && m <= 12 && d >= 1 && d <= 31;
+              })
+              .map((encoded) {
+                final m = encoded ~/ 100;
+                final d = encoded % 100;
+                return Chip(
+                  label: Text("${months[m - 1]} $d"),
+                  onDeleted: () => setState(() {
+                    _weekDays.remove(encoded);
+                    _notify();
+                  }),
+                );
+              })
+              .toList(),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: () async {
             final now = DateTime.now();
             final picked = await showDatePicker(
-                context: context,
-                initialDate: now,
-                firstDate: DateTime(now.year, 1, 1),
-                lastDate: DateTime(now.year, 12, 31));
+              context: context,
+              initialDate: now,
+              firstDate: DateTime(now.year, 1, 1),
+              lastDate: DateTime(now.year, 12, 31),
+            );
             if (picked != null) {
               final encoded = picked.month * 100 + picked.day;
               setState(() {
@@ -726,13 +806,16 @@ class _HabitScheduleEditorState extends State<HabitScheduleEditor> {
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         transitionBuilder: (child, anim) => FadeTransition(
-            opacity: anim, child: ScaleTransition(scale: anim, child: child)),
+          opacity: anim,
+          child: ScaleTransition(scale: anim, child: child),
+        ),
         child: Text(
           label.toUpperCase(),
           key: ValueKey(p),
           style: TextStyle(
-              color: theme.colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.bold),
+            color: theme.colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
