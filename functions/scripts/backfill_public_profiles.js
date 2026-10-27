@@ -17,38 +17,24 @@ const emulator = process.env.FIRESTORE_EMULATOR_HOST;
 console.log(emulator ? `target=emulator ${emulator}` : `target=project ${projectId}`);
 
 // the built module initialises the default app on require
-const { toPublicProfile } = require('../lib/profiles/public_profile');
+const { syncPublicProfile } = require('../lib/profiles/public_profile');
 const db = admin.firestore();
 db.settings({ projectId });
 
 const PAGE_SIZE = 300;
-// a commit is capped at 10 MiB and legacy avatars are large
-const MAX_BATCH_IMAGE_LENGTH = 8000000;
+const CONCURRENCY = 20;
 const dryRun = process.argv.includes('--dry-run');
 
 async function writeProfiles(docs) {
-  let batch = db.batch();
-  let imageLength = 0;
-  for (const doc of docs) {
-    const profile = toPublicProfile(doc.data());
-    const length = profile.avatarImageBase64?.length ?? 0;
-    if (imageLength + length > MAX_BATCH_IMAGE_LENGTH) {
-      await batch.commit();
-      batch = db.batch();
-      imageLength = 0;
-    }
-    imageLength += length;
-    batch.set(db.collection('publicProfiles').doc(doc.id), {
-      ...profile,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+  for (let i = 0; i < docs.length; i += CONCURRENCY) {
+    await Promise.all(docs.slice(i, i + CONCURRENCY).map((doc) => syncPublicProfile(doc.id)));
   }
-  await batch.commit();
 }
 
 (async function main() {
   const query = db.collection('users')
     .orderBy(admin.firestore.FieldPath.documentId())
+    .select()
     .limit(PAGE_SIZE);
   let page = await query.get();
   let users = 0;
