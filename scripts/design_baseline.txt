@@ -1,11 +1,11 @@
 color_literal	lib/app/app_state.dart	1
 color_literal	lib/app/app_theme.dart	2
 text_literal	lib/app/shell/android_tab_bar.dart	2
-shadow	lib/app/shell/app_shell.dart	1
 gradient	lib/app/shell/ios_tab_bar.dart	1
 blur	lib/app/shell/ios_tab_bar.dart	2
 color_literal	lib/app/shell/ios_tab_bar.dart	2
 text_literal	lib/app/shell/ios_tab_bar.dart	1
+shadow	lib/app/shell/shell_hooks.dart	1
 print	lib/core/data/sync_service.dart	1
 print	lib/core/notifications/notifications.dart	15
 color_literal	lib/core/notifications/recording_notification_service.dart	1
