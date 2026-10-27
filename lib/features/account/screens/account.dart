@@ -115,7 +115,7 @@ class _AccountScreenState extends State<AccountScreen> {
 
     await appState.stopAndSaveAllActiveSessions();
     await appState.waitForPendingReflections();
-    await syncService.syncNow();
+    await syncService.pushNow();
 
     if (!mounted) return;
 
@@ -261,7 +261,7 @@ class _AccountScreenState extends State<AccountScreen> {
                                           .stopAndSaveAllActiveSessions();
                                       await appState
                                           .waitForPendingReflections();
-                                      await syncService.syncNow();
+                                      await syncService.pushNow();
 
                                       await authController.signOut();
                                       if (!mounted) return;
