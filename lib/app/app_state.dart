@@ -345,7 +345,7 @@ class AppState extends ChangeNotifier {
   }
 
   void _triggerSync() {
-    unawaited(triggerSync());
+    unawaited(_syncService?.pushNow());
   }
 
   // does the real load work, reads storage, hydrates the shell then finishes in the background
@@ -601,7 +601,7 @@ class AppState extends ChangeNotifier {
     final sync = _syncService;
     if (sync != null) {
       // push immediately so group visibility updates without delay
-      await sync.syncNow(full: false);
+      await sync.pushNow();
     } else {
       _triggerSync();
     }
