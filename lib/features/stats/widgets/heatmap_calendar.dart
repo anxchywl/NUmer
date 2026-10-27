@@ -105,8 +105,11 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
           return _buildCell(day, isToday: true);
         },
         selectedBuilder: (context, day, focusedDay) {
-          return _buildCell(day,
-              isToday: isSameDay(day, DateTime.now()), isSelected: true);
+          return _buildCell(
+            day,
+            isToday: isSameDay(day, DateTime.now()),
+            isSelected: true,
+          );
         },
         outsideBuilder: (context, day, focusedDay) {
           return null;
@@ -115,8 +118,11 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
     );
   }
 
-  Widget _buildCell(DateTime day,
-      {bool isToday = false, bool isSelected = false}) {
+  Widget _buildCell(
+    DateTime day, {
+    bool isToday = false,
+    bool isSelected = false,
+  }) {
     final key = DateTime(day.year, day.month, day.day);
     final minutes = _dailyMinutes[key] ?? 0;
     final color = _getColor(minutes);
@@ -132,23 +138,25 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
         color: Theme.of(context).primaryColor,
         shape: BoxShape.circle,
       );
-      textStyle =
-          textStyle?.copyWith(color: Colors.white, fontWeight: FontWeight.bold);
-    } else if (hasHeat) {
-      decoration = BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-      );
       textStyle = textStyle?.copyWith(
-          color: _getLevel(minutes) > 4 ? Colors.white : Colors.black87,
-          fontWeight: FontWeight.w600);
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      );
+    } else if (hasHeat) {
+      decoration = BoxDecoration(color: color, shape: BoxShape.circle);
+      textStyle = textStyle?.copyWith(
+        color: _getLevel(minutes) > 4 ? Colors.white : Colors.black87,
+        fontWeight: FontWeight.w600,
+      );
     } else if (isToday) {
       decoration = BoxDecoration(
         border: Border.all(color: Theme.of(context).primaryColor),
         shape: BoxShape.circle,
       );
       textStyle = textStyle?.copyWith(
-          color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold);
+        color: Theme.of(context).primaryColor,
+        fontWeight: FontWeight.bold,
+      );
     }
 
     return Center(
@@ -156,10 +164,7 @@ class _HeatmapCalendarState extends State<HeatmapCalendar> {
         margin: const EdgeInsets.all(6.0),
         alignment: Alignment.center,
         decoration: decoration,
-        child: Text(
-          '${day.day}',
-          style: textStyle,
-        ),
+        child: Text('${day.day}', style: textStyle),
       ),
     );
   }
