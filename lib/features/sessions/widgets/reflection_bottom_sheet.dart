@@ -38,17 +38,21 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
     setState(() => _isSaving = true);
     try {
       await context.read<AppState>().saveSessionNotes(
-            id: widget.sessionId,
-            notes: _controller.text,
-          );
+        id: widget.sessionId,
+        notes: _controller.text,
+      );
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(AppLocalizations.of(context)!
-                  .failedToSaveReflection(e.toString()))),
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.failedToSaveReflection(e.toString()),
+            ),
+          ),
         );
       }
     }
@@ -73,9 +77,9 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
         children: [
           Text(
             AppLocalizations.of(context)!.sessionFinished(_durationString),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -85,8 +89,10 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
             decoration: InputDecoration(
               hintText: AppLocalizations.of(context)!.whatDidYouWorkOn,
               border: const OutlineInputBorder(),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             minLines: 1,
             maxLines: 3,
