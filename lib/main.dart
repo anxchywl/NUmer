@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui' show ImageFilter;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -12,6 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/shell/ios_tab_bar.dart';
 import 'package:numer_app/app/shell/android_tab_bar.dart';
 import 'package:numer_app/app/shell/shell_tabs.dart';
 import 'package:numer_app/app/routes.dart';
@@ -67,19 +67,6 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
         ? const AppleDebugProvider()
         : const AppleAppAttestProvider(),
   );
-}
-
-// model for a single item in the ios-style bottom navigation bar
-class _IosNavItem {
-  final String label;
-  final IconData icon;
-  final IconData selectedIcon;
-
-  const _IosNavItem({
-    required this.label,
-    required this.icon,
-    required this.selectedIcon,
-  });
 }
 
 // app entrypoint, preloads the stored theme then mounts the bootstrap widget
@@ -605,15 +592,6 @@ class _ShellState extends State<_Shell> {
   @override
   Widget build(BuildContext context) {
     final tabs = buildShellTabs(context, onThemeChange: widget.onThemeChange);
-    final iosItems = tabs
-        .map(
-          (tab) => _IosNavItem(
-            label: tab.label,
-            icon: tab.icon,
-            selectedIcon: tab.selectedIcon,
-          ),
-        )
-        .toList();
     final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
     final tabPages = tabs
         .map((tab) => _KeepAlivePage(child: tab.builder(context)))
@@ -642,7 +620,11 @@ class _ShellState extends State<_Shell> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: _buildIosLiquidGlassNavigationBar(context, iosItems),
+              child: IosTabBar(
+                currentIndex: _index,
+                onTap: _onTabSelected,
+                tabs: tabs,
+              ),
             ),
         ],
       ),
@@ -653,151 +635,6 @@ class _ShellState extends State<_Shell> {
               onTap: _onTabSelected,
               tabs: tabs,
             ),
-    );
-  }
-
-  Widget _buildIosLiquidGlassNavigationBar(
-    BuildContext context,
-    List<_IosNavItem> items,
-  ) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final barBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
-    const barHeight = 66.0;
-    const horizontalMargin = 14.0;
-    const bottomSpacing = 2.0;
-    const innerPadding = 8.0;
-    const highlightInset = 4.0;
-    final overlayHeight = barHeight + bottomSpacing + bottomInset;
-    return SizedBox(
-      height: overlayHeight,
-      child: Stack(
-        children: [
-          Positioned(
-            left: horizontalMargin,
-            right: horizontalMargin,
-            bottom: barBottomOffset,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final slotWidth =
-                    (constraints.maxWidth - innerPadding * 2) / items.length;
-                final activeWidth = slotWidth + 12;
-                final activeLeft =
-                    innerPadding +
-                    _index * slotWidth +
-                    ((slotWidth - activeWidth) / 2);
-
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(34),
-                  child: SizedBox(
-                    height: barHeight,
-                    child: Stack(
-                      children: [
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          left: activeLeft,
-                          top: highlightInset,
-                          width: activeWidth,
-                          height: barHeight - (highlightInset * 2),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.white.withValues(
-                                      alpha: isDark ? 0.09 : 0.24,
-                                    ),
-                                    Colors.white.withValues(
-                                      alpha: isDark ? 0.05 : 0.16,
-                                    ),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(28),
-                                border: Border.all(color: Colors.transparent),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: innerPadding,
-                          ),
-                          child: Row(
-                            children: List.generate(items.length, (i) {
-                              final selected = _index == i;
-                              final item = items[i];
-                              return Expanded(
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(24),
-                                  onTap: () => _onTabSelected(i),
-                                  child: SizedBox(
-                                    height: barHeight,
-                                    child: AnimatedScale(
-                                      scale: selected ? 1.08 : 1.0,
-                                      duration: const Duration(
-                                        milliseconds: 180,
-                                      ),
-                                      curve: Curves.easeOutCubic,
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            selected
-                                                ? item.selectedIcon
-                                                : item.icon,
-                                            size: selected ? 24 : 20,
-                                            color: selected
-                                                ? scheme.primary
-                                                : scheme.onSurface.withValues(
-                                                    alpha: 0.72,
-                                                  ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            item.label,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  fontSize: selected
-                                                      ? 12.0
-                                                      : 11.0,
-                                                  color: selected
-                                                      ? scheme.primary
-                                                      : scheme.onSurface
-                                                            .withValues(
-                                                              alpha: 0.74,
-                                                            ),
-                                                  fontWeight: selected
-                                                      ? FontWeight.w700
-                                                      : FontWeight.w500,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
     );
   }
 
