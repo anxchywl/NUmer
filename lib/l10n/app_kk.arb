@@ -1011,5 +1011,8 @@
   },
   "memberFallbackName": "Мүше",
   "joinCodeTooShort": "Кемінде 8 таңба қолданыңыз.",
-  "sessionNotificationAction": "Сессияны бастау"
+  "sessionNotificationAction": "Сессияны бастау",
+  "updateRequiredTitle": "NUmer қолданбасын жаңартыңыз",
+  "updateRequiredBody": "Бұл нұсқаға енді қолдау көрсетілмейді. Жалғастыру үшін соңғы нұсқаны орнатыңыз.",
+  "updateRequiredAction": "Жаңарту"
 }

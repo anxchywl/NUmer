@@ -2158,4 +2158,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sessionNotificationAction => 'Start session';
+
+  @override
+  String get updateRequiredTitle => 'Update NUmer';
+
+  @override
+  String get updateRequiredBody =>
+      'This version is no longer supported. Install the latest version to continue.';
+
+  @override
+  String get updateRequiredAction => 'Update';
 }

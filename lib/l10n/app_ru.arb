@@ -914,5 +914,8 @@
   "joinCodeTooShort": "Используйте не меньше 8 символов.",
   "sessionNotificationAction": "Начать сессию",
   "viaPomodoro": "Через Помидоро",
-  "viaManualRecording": "Через ручной ввод"
+  "viaManualRecording": "Через ручной ввод",
+  "updateRequiredTitle": "Обновите NUmer",
+  "updateRequiredBody": "Эта версия больше не поддерживается. Установите последнюю версию, чтобы продолжить.",
+  "updateRequiredAction": "Обновить"
 }

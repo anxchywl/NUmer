@@ -2140,4 +2140,14 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get sessionNotificationAction => 'Сессияны бастау';
+
+  @override
+  String get updateRequiredTitle => 'NUmer қолданбасын жаңартыңыз';
+
+  @override
+  String get updateRequiredBody =>
+      'Бұл нұсқаға енді қолдау көрсетілмейді. Жалғастыру үшін соңғы нұсқаны орнатыңыз.';
+
+  @override
+  String get updateRequiredAction => 'Жаңарту';
 }

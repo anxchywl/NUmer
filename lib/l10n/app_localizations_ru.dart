@@ -2165,4 +2165,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sessionNotificationAction => 'Начать сессию';
+
+  @override
+  String get updateRequiredTitle => 'Обновите NUmer';
+
+  @override
+  String get updateRequiredBody =>
+      'Эта версия больше не поддерживается. Установите последнюю версию, чтобы продолжить.';
+
+  @override
+  String get updateRequiredAction => 'Обновить';
 }

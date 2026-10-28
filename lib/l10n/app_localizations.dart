@@ -4005,6 +4005,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Start session'**
   String get sessionNotificationAction;
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update NUmer'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This version is no longer supported. Install the latest version to continue.'**
+  String get updateRequiredBody;
+
+  /// No description provided for @updateRequiredAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Update'**
+  String get updateRequiredAction;
 }
 
 class _AppLocalizationsDelegate
