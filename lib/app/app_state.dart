@@ -37,6 +37,15 @@ class SessionOverlapException implements Exception {
   String toString() => message;
 }
 
+String activeSessionSignature({
+  required bool isStudying,
+  String? courseId,
+  String? kind,
+  int? startMs,
+  int? expectedEndMs,
+}) =>
+    '$isStudying|${courseId ?? '-'}|${kind ?? '-'}|${startMs ?? '-'}|${expectedEndMs ?? '-'}';
+
 // central app state, holds profile, courses, sessions, timers and settings and
 // notifies the ui on change, backed by hive and synced through syncservice
 class AppState extends ChangeNotifier {
@@ -50,6 +59,8 @@ class AppState extends ChangeNotifier {
   Future<void>? _loadFuture;
   Future<void>? _backgroundHydration;
   SyncService? _syncService;
+  (String, String)? _sentSessionSignature;
+  int _sessionSendCount = 0;
   HabitService? _habitService; // injected
   bool _hydrated = false;
   bool get isHydrated => _hydrated;
@@ -2096,7 +2107,8 @@ class AppState extends ChangeNotifier {
     // broadcast to remote
     final sync = _syncService;
     if (sync != null) {
-      await sync.updateActiveSession(
+      await _sendActiveSessionIfChanged(
+        sync,
         isStudying: activeCourseId != null,
         courseId: activeCourseId,
         kind: activeKind,
@@ -2104,6 +2116,51 @@ class AppState extends ChangeNotifier {
         expectedEnd: activeExpectedEnd,
       );
     }
+  }
+
+  Future<void> _sendActiveSessionIfChanged(
+    SyncService sync, {
+    required bool isStudying,
+    String? courseId,
+    String? kind,
+    DateTime? start,
+    DateTime? expectedEnd,
+  }) async {
+    Future<bool> send() => sync.updateActiveSession(
+          isStudying: isStudying,
+          courseId: courseId,
+          kind: kind,
+          start: start,
+          expectedEnd: expectedEnd,
+        );
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      await send();
+      return;
+    }
+
+    final signature = activeSessionSignature(
+      isStudying: isStudying,
+      courseId: courseId,
+      kind: kind,
+      startMs: start?.millisecondsSinceEpoch,
+      expectedEndMs: expectedEnd?.millisecondsSinceEpoch,
+    );
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'active_session_sig_$uid';
+    final cached = _sentSessionSignature;
+    final last = cached?.$1 == uid ? cached?.$2 : prefs.getString(key);
+    if (signature == last) return;
+
+    // writes are acknowledged late when offline, so the old signature is stale once sent
+    final attempt = ++_sessionSendCount;
+    _sentSessionSignature = null;
+    await prefs.remove(key);
+    final sent = await send();
+    if (!sent || attempt != _sessionSendCount) return;
+    _sentSessionSignature = (uid, signature);
+    await prefs.setString(key, signature);
   }
 
   Future<Map<String, int>> secondsByCourseBetween(
@@ -2296,6 +2353,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> reset() async {
     await clearAll();
+    _sentSessionSignature = null;
     _isLoaded = false;
   }
 
