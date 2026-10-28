@@ -21,15 +21,51 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/users/$(request.auth.uid)/groupMemberships/$(groupId));
     }
 
-    function userGroupIds(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.groupIds;
+    function groupIndexPath(userId) {
+      return /databases/$(database)/documents/groupIndex/$(userId);
+    }
+
+    function indexedGroupIds(userId) {
+      return exists(groupIndexPath(userId)) ? get(groupIndexPath(userId)).data.groupIds : [];
     }
 
     function hasSharedGroup(userId) {
       return isSignedIn() &&
-        userGroupIds(request.auth.uid) is list &&
-        userGroupIds(userId) is list &&
-        userGroupIds(request.auth.uid).hasAny(userGroupIds(userId));
+        indexedGroupIds(request.auth.uid) is list &&
+        indexedGroupIds(userId) is list &&
+        indexedGroupIds(request.auth.uid).hasAny(indexedGroupIds(userId));
+    }
+
+    function groupData(groupId) {
+      return get(/databases/$(database)/documents/groups/$(groupId)).data;
+    }
+
+    function groupExists(groupId) {
+      return exists(/databases/$(database)/documents/groups/$(groupId));
+    }
+
+    function isGroupCreator(groupId) {
+      return isSignedIn() && groupExists(groupId) && groupData(groupId).createdBy == request.auth.uid;
+    }
+
+    function isGroupPublic(groupId) {
+      return groupExists(groupId) &&
+        (!('visibility' in groupData(groupId)) || groupData(groupId).visibility == 'public');
+    }
+
+    function affected() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function memberCountStep() {
+      let before = ('memberCount' in resource.data) ? resource.data.memberCount : 0;
+      let after = ('memberCount' in request.resource.data) ? request.resource.data.memberCount : before;
+      return after == before || after == before + 1 || after == before - 1 || (before <= 1 && after == 0);
+    }
+
+    function validSessionWrite() {
+      let d = request.resource.data;
+      return !('seconds' in d) || (d.seconds is number && d.seconds >= 0 && d.seconds <= 604800);
     }
 
     function isGroupAdmin(groupId) {
@@ -76,17 +112,20 @@ service cloud.firestore {
         isGroupMember(groupId) ||
         isGroupAdmin(groupId)
       );
-      allow create: if isSignedIn() && request.resource.data.createdBy == request.auth.uid;
-      
-      // Update: Check ownership via 'resource' (current doc) OR admin role via 'members' subcollection
-      allow update: if isSignedIn() && (
-        resource.data.createdBy == request.auth.uid ||
-        (
-          exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)) &&
-          get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role == 'admin'
-        ) ||
-        isMemberSelfUpdatingCount(groupId)
-      );
+      allow create: if isSignedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(
+             ['name', 'description', 'visibility', 'createdBy', 'createdAt', 'updatedAt', 'memberCount'])
+        && request.resource.data.memberCount == 1;
+
+      allow update: if isSignedIn()
+        && request.resource.data.createdBy == resource.data.createdBy
+        && memberCountStep()
+        && (
+          (isGroupAdmin(groupId)
+            && affected().hasOnly(['name', 'description', 'visibility', 'updatedAt', 'memberCount']))
+          || isMemberSelfUpdatingCount(groupId)
+        );
 
       allow delete: if isSignedIn() && request.auth.uid == resource.data.createdBy;
 
@@ -96,23 +135,19 @@ service cloud.firestore {
           exists(/databases/$(database)/documents/groups/$(groupId)) &&
           get(/databases/$(database)/documents/groups/$(groupId)).data.visibility == 'public'
         );
-        allow create: if isSignedIn() && memberId == request.auth.uid && (
-          // Case 1: Group doesn't exist yet (Creating group) - Verify we become the creator
-          isCreatingGroupAsOwner(groupId) ||
-          // Case 2: Group exists - Check visibility or ownership
-          (exists(/databases/$(database)/documents/groups/$(groupId)) && (
-             // Allow if visibility is 'public' or not set (defaults to public) or if user is the creator
-             (!('visibility' in get(/databases/$(database)/documents/groups/$(groupId)).data) ||
-              get(/databases/$(database)/documents/groups/$(groupId)).data.visibility == 'public') ||
-             get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
-          ))
-        );
-        // Admins can add/remove others, Users can remove themselves (leave)
-        // Group Creator can also promote/demote members
-        allow update, delete: if isSignedIn() && (
-          memberId == request.auth.uid ||
-          isGroupAdmin(groupId) ||
-          get(/databases/$(database)/documents/groups/$(groupId)).data.createdBy == request.auth.uid
+        allow create: if isSignedIn() && memberId == request.auth.uid
+          && request.resource.data.keys().hasOnly(['role', 'joinedAt'])
+          && (
+            (isCreatingGroupAsOwner(groupId) && request.resource.data.role == 'admin')
+            || (isGroupCreator(groupId) && request.resource.data.role in ['admin', 'member'])
+            || (isGroupPublic(groupId) && request.resource.data.role == 'member')
+          );
+        allow update: if isGroupCreator(groupId)
+          && affected().hasOnly(['role'])
+          && request.resource.data.role in ['admin', 'member'];
+        allow delete: if isSignedIn() && (
+          memberId == request.auth.uid
+          || (isGroupAdmin(groupId) && memberId != groupData(groupId).createdBy)
         );
       }
 
@@ -160,39 +195,44 @@ service cloud.firestore {
         );
       }
       // Allow deletion of all subcollection documents when deleting the group (recursive delete)
+      // members are excluded because rules are or-ed and this would bypass the creator guard
       match /{document=**} {
-        allow delete: if isSignedIn() && isGroupAdmin(groupId);
+        allow delete: if isSignedIn() && isGroupAdmin(groupId) && document[0] != 'members';
       }
     }
 
     // Users collection
     match /users/{userId} {
-      allow read: if true; // Profiles need to be readable for leaderboards/members
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow get: if isSignedIn();
+      allow list: if false;
+      allow write: if isOwner(userId);
     }
 
     // Email index for password reset lookup
     match /email_index/{emailId} {
-      allow read: if true;
-      allow write: if request.auth != null &&
-        request.resource.data.uid == request.auth.uid;
+      allow get, list: if false;
+      allow create, update: if isSignedIn()
+        && request.auth.token.email != null
+        && emailId == request.auth.token.email.lower()
+        && request.resource.data.uid == request.auth.uid;
+      allow delete: if false;
     }
 
     match /users/{userId}/fcmTokens/{tokenId} {
       allow read, write, delete: if request.auth != null && request.auth.uid == userId;
     }
 
-    // User aggregates: allow reading if authenticated (needed for group stats)
+    // user aggregates: owner and co-members only
     match /users/{userId}/aggregates/{document=**} {
-      allow read: if true; // PUBLIC: Needed for leaderboards to show stats for other members
+      allow read: if isOwner(userId) || hasSharedGroup(userId);
       allow write: if false; // Only Cloud Functions (admin SDK) should write
       allow delete: if isOwner(userId);
     }
 
     match /users/{userId}/sessions/{sessionId} {
-      // Allow peer reading if they share a group, but only for sessions of non-hidden courses
       allow read: if isOwner(userId) || hasSharedGroup(userId);
-      allow write: if isOwner(userId);
+      allow create, update: if isOwner(userId) && validSessionWrite();
+      allow delete: if isOwner(userId);
     }
 
     // Private user data - Owner only
@@ -277,6 +317,75 @@ service cloud.firestore {
 
     match /users/{userId}/habit_categories/{catId} {
       allow read, write: if isOwner(userId);
+    }
+
+    match /nudges/{nudgeId} {
+      allow read: if isSignedIn() && resource.data.receiverId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.receiverId == request.auth.uid
+        && affected().hasOnly(['status']) && request.resource.data.status == 'delivered';
+      allow create, delete: if false;
+    }
+
+    // server-maintained mirrors and config, clients only read
+    match /publicProfiles/{userId} {
+      allow get: if isOwner(userId) || hasSharedGroup(userId);
+      allow list, write: if false;
+    }
+
+    match /groupIndex/{userId} {
+      allow get: if isOwner(userId);
+      allow list, write: if false;
+    }
+
+    match /config/{docId} {
+      allow get: if isSignedIn();
+      allow list, write: if false;
+    }
+
+    match /feed/{docId} {
+      allow get: if isSignedIn();
+      allow list, write: if false;
+    }
+
+    match /users/{userId}/aggState/{docId} {
+      allow read, write: if false;
+    }
+
+    // server only
+    match /nudgeLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    match /joinAttempts/{docId} {
+      allow read, write: if false;
+    }
+
+    match /authCodes/{docId} {
+      allow read, write: if false;
+    }
+
+    match /authRateLimits/{docId} {
+      allow read, write: if false;
+    }
+
+    match /mailQueue/{docId} {
+      allow read, write: if false;
+    }
+
+    match /authAudit/{docId} {
+      allow read, write: if false;
+    }
+
+    match /deletedUsers/{docId} {
+      allow read, write: if false;
+    }
+
+    match /accountEvents/{docId} {
+      allow read, write: if false;
+    }
+
+    match /announcements/{docId} {
+      allow read, write: if false;
     }
 
     // Role change log - server only
