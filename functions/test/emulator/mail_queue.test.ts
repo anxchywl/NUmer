@@ -27,8 +27,14 @@ async function queued(to: string | null) {
 
 async function deliver(to: string | null, sender: FakeSender) {
   const snapshot = await queued(to);
-  await processMailQueued(snapshot, sender, noWait);
+  await processMailQueued(snapshot, () => sender, noWait);
   return snapshot.ref.get();
+}
+
+function expectPurged(after: FirebaseFirestore.DocumentSnapshot) {
+  expect(after.data()).not.toHaveProperty('to');
+  expect(after.data()).not.toHaveProperty('vars');
+  expect(after.data()).toHaveProperty('failedAt');
 }
 
 describe('mail queue', () => {
@@ -81,9 +87,7 @@ describe('mail queue', () => {
     const after = await deliver('student@example.org', sender);
 
     expect(sender.attempts).toHaveLength(2);
-    expect(after.data()).not.toHaveProperty('to');
-    expect(after.data()).not.toHaveProperty('vars');
-    expect(after.data()).toHaveProperty('failedAt');
+    expectPurged(after);
   });
 
   it('does not retry after status 422', async () => {
@@ -92,6 +96,29 @@ describe('mail queue', () => {
     const after = await deliver('student@example.org', sender);
 
     expect(sender.attempts).toHaveLength(1);
-    expect(after.data()).not.toHaveProperty('to');
+    expectPurged(after);
+  });
+
+  it('purges the entry when the sender cannot be configured', async () => {
+    const snapshot = await queued('student@example.org');
+    const failure = new Error('MAIL_FROM and MAIL_API_KEY are required');
+    const createSender = () => {
+      throw failure;
+    };
+
+    await expect(processMailQueued(snapshot, createSender, noWait)).rejects.toBe(failure);
+
+    expectPurged(await snapshot.ref.get());
+  });
+
+  it('purges the entry when it cannot be rendered', async () => {
+    const sender = new FakeSender();
+    await queue.add({ to: 'student@example.org', template: 'unknown', locale: 'en', vars: { code: '481920' } });
+    const [snapshot] = (await queue.get()).docs;
+
+    await expect(processMailQueued(snapshot, () => sender, noWait)).rejects.toThrow(TypeError);
+
+    expect(sender.attempts).toHaveLength(0);
+    expectPurged(await snapshot.ref.get());
   });
 });
