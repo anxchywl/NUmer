@@ -74,6 +74,8 @@ const codeStyle =
   'font-size: 32px; font-weight: 700; letter-spacing: 6px; ' +
   'font-family: ui-monospace, Menlo, Consolas, monospace; color: #202124;';
 const noteStyle = 'font-size: 13px; color: #5F6368;';
+// text colours are fixed dark, so the background is fixed light for dark mode clients
+const backgroundStyle = 'background-color: #FFFFFF;';
 
 function isMailLocale(locale: string): locale is MailLocale {
   return Object.prototype.hasOwnProperty.call(copy, locale);
@@ -103,10 +105,10 @@ function renderHtml(locale: MailLocale, { intro, validity, footer }: Copy, code?
   return [
     '<!DOCTYPE html>',
     `<html lang="${escapeHtml(locale)}">`,
-    '<head><meta charset="utf-8"><meta name="color-scheme" content="light dark"></head>',
-    `<body style="margin: 0; font-family: ${fontStack};">`,
+    '<head><meta charset="utf-8"><meta name="color-scheme" content="light"></head>',
+    `<body style="margin: 0; ${backgroundStyle} font-family: ${fontStack};">`,
     '<table role="presentation" align="center" cellpadding="0" cellspacing="0" ' +
-      'style="width: 100%; max-width: 480px; margin: 0 auto; text-align: center;">',
+      `style="width: 100%; max-width: 480px; margin: 0 auto; text-align: center; ${backgroundStyle}">`,
     ...rows,
     '</table>',
     '</body>',
