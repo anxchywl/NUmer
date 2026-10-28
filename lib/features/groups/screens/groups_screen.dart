@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -24,9 +26,51 @@ class _GroupsScreenState extends State<GroupsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
+  Timer? _searchDebounce;
+  String? _userId;
+  Stream<List<GroupMembership>>? _membershipsStream;
+  late Stream<List<Group>> _groupsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _groupsStream = _watchGroups(_searchQuery);
+  }
+
+  // runs after initState and again if the signed in user changes
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final userId = Provider.of<AuthController>(context).currentUser?.uid;
+    if (userId == _userId) return;
+    _userId = userId;
+    _membershipsStream = userId == null
+        ? null
+        : context.read<GroupService>().watchUserMemberships(userId);
+  }
+
+  Stream<List<Group>> _watchGroups(String query) {
+    final groupService = context.read<GroupService>();
+    return query.isEmpty
+        ? groupService.watchPublicGroups()
+        : groupService.searchGroups(query);
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+      final query = value.trim();
+      if (query == _searchQuery) return;
+      setState(() {
+        _searchQuery = query;
+        _groupsStream = _watchGroups(query);
+      });
+    });
+  }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
@@ -53,11 +97,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
       );
     }
 
-    final groupService = context.read<GroupService>();
-
     return Scaffold(
       body: StreamBuilder<List<GroupMembership>>(
-        stream: groupService.watchUserMemberships(currentUser.uid),
+        stream: _membershipsStream,
         builder: (context, membershipSnap) {
           if (membershipSnap.hasError) {
             return Center(
@@ -77,11 +119,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
           final memberships = membershipSnap.data ?? const <GroupMembership>[];
           final hasMemberships = memberships.isNotEmpty;
           final showSearchSection = !hasMemberships;
-          final groupsStream = showSearchSection
-              ? (_searchQuery.isEmpty
-                    ? groupService.watchPublicGroups()
-                    : groupService.searchGroups(_searchQuery))
-              : null;
 
           return CustomScrollView(
             slivers: [
@@ -139,11 +176,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           vertical: 14,
                         ),
                       ),
-                      onChanged: (val) {
-                        setState(() {
-                          _searchQuery = val.trim();
-                        });
-                      },
+                      onChanged: _onSearchChanged,
                     ),
                   ),
                 ),
@@ -160,72 +193,69 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                   ),
                 ),
-                if (groupsStream != null)
-                  StreamBuilder<List<Group>>(
-                    stream: groupsStream,
-                    builder: (context, groupSnap) {
-                      if (groupSnap.hasError) {
-                        return SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Center(
-                              child: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.errorLoadingGroups(
-                                  groupSnap.error.toString(),
-                                ),
-                              ),
+                StreamBuilder<List<Group>>(
+                  stream: _groupsStream,
+                  builder: (context, groupSnap) {
+                    if (groupSnap.hasError) {
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.errorLoadingGroups(groupSnap.error.toString()),
                             ),
                           ),
-                        );
-                      }
-
-                      final groups = groupSnap.data ?? const <Group>[];
-                      if (groups.isEmpty) {
-                        return SliverToBoxAdapter(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Center(
-                              child: Text(
-                                AppLocalizations.of(context)!.noSearchResults,
-                                style: Theme.of(context).textTheme.bodyLarge
-                                    ?.copyWith(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurfaceVariant,
-                                    ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
-
-                      return SliverList(
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          final group = groups[index];
-                          final isJoined = memberships.any(
-                            (m) => m.groupId == group.id,
-                          );
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: _GroupCard(
-                              group: group,
-                              isJoining: _joining.contains(group.id),
-                              onJoin: isJoined
-                                  ? null
-                                  : () => _handleJoinGroup(group),
-                            ),
-                          );
-                        }, childCount: groups.length),
+                        ),
                       );
-                    },
-                  ),
+                    }
+
+                    final groups = groupSnap.data ?? const <Group>[];
+                    if (groups.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Center(
+                            child: Text(
+                              AppLocalizations.of(context)!.noSearchResults,
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final group = groups[index];
+                        final isJoined = memberships.any(
+                          (m) => m.groupId == group.id,
+                        );
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: _GroupCard(
+                            group: group,
+                            isJoining: _joining.contains(group.id),
+                            onJoin: isJoined
+                                ? null
+                                : () => _handleJoinGroup(group),
+                          ),
+                        );
+                      }, childCount: groups.length),
+                    );
+                  },
+                ),
               ],
               SliverPadding(
                 padding: EdgeInsets.only(

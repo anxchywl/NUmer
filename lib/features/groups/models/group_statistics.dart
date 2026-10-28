@@ -143,6 +143,20 @@ class MemberStudyData {
     );
   }
 
+  MemberStudyData withProfile(Map<String, dynamic> profile) {
+    return copyWith(
+      name: profile['profileName'] as String?,
+      avatarIndex: profile['profileAvatarIndex'] as int?,
+      // copyWith ignores null, so an empty string drops a removed image
+      avatarBase64: profile['profileAvatarImageBase64'] as String? ?? '',
+      avatarColorValue: profile['avatarColorValue'] as int?,
+      isStudying: profile['isStudying'] as bool? ?? false,
+      activeSession: profile['activeSession'] as Map<String, dynamic>?,
+      allowsNudges: profile['allowNudges'] != false,
+      canReceiveNudges: profile['fcmEnabled'] == true,
+    );
+  }
+
   double getPercentageOfAverage(int groupAverage) {
     if (groupAverage == 0) return 100.0;
     final pct = (studyTimeSeconds / groupAverage) * 100.0;

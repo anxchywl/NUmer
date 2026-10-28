@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/groups/models/group_statistics.dart';
 import 'package:numer_app/features/groups/data/group_service.dart';
 
 import 'package:numer_app/features/groups/widgets/user_subjects_bottom_sheet.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
-import 'package:numer_app/shared/widgets/universal_avatar.dart';
+
+String _displayName(BuildContext context, MemberStudyData member) =>
+    member.name.isEmpty
+    ? AppLocalizations.of(context)!.memberFallbackName
+    : member.name;
 
 class GroupLeaderboard extends StatefulWidget {
   final String groupId;
@@ -79,8 +84,10 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
       builder: (context) => UserSubjectsBottomSheet(
         groupId: widget.groupId,
         userId: member.userId,
-        name: member.name,
+        name: _displayName(this.context, member),
+        avatarIndex: member.avatarIndex,
         avatarColorValue: member.avatarColorValue,
+        avatarImageBase64: member.avatarBase64,
         period: _selectedPeriod,
         preloadedStats: cachedStats,
         shouldRefresh: shouldRefresh,
@@ -551,11 +558,10 @@ class _PodiumMemberState extends State<_PodiumMember>
                   }
 
                   return UniversalAvatar(
-                    userId: member.userId,
-                    name: member.name,
-                    initialAvatarIndex: member.avatarIndex,
-                    initialAvatarColorValue: member.avatarColorValue,
-                    initialAvatarBase64: member.avatarBase64,
+                    name: _displayName(context, member),
+                    avatarIndex: member.avatarIndex,
+                    avatarColorValue: member.avatarColorValue,
+                    avatarImageBase64: member.avatarBase64,
                     size: size,
                     fontSize: isFirst ? 40 : 32,
                   );
@@ -608,7 +614,7 @@ class _PodiumMemberState extends State<_PodiumMember>
           child: Column(
             children: [
               Text(
-                member.name,
+                _displayName(context, member),
                 textAlign: TextAlign.center,
                 maxLines: 2,
                 softWrap: true,
@@ -694,11 +700,10 @@ class _RankListTile extends StatelessWidget {
               clipBehavior: Clip.none,
               children: [
                 UniversalAvatar(
-                  userId: member.userId,
-                  name: member.name,
-                  initialAvatarIndex: member.avatarIndex,
-                  initialAvatarColorValue: member.avatarColorValue,
-                  initialAvatarBase64: member.avatarBase64,
+                  name: _displayName(context, member),
+                  avatarIndex: member.avatarIndex,
+                  avatarColorValue: member.avatarColorValue,
+                  avatarImageBase64: member.avatarBase64,
                   size: 48,
                   fontSize: 20,
                 ),
@@ -734,7 +739,7 @@ class _RankListTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    member.name,
+                    _displayName(context, member),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colorScheme.onSurface,

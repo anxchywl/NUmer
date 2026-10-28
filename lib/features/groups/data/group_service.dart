@@ -7,16 +7,23 @@ import 'package:flutter/foundation.dart';
 import 'package:numer_app/features/groups/models/group.dart';
 import 'package:numer_app/features/groups/models/group_statistics.dart';
 import 'package:numer_app/features/groups/data/group_aggregation_service.dart';
+import 'package:numer_app/features/groups/data/public_profile_source.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/entities.dart';
 
 class GroupService {
-  GroupService({FirebaseFirestore? firestore, FirebaseAuth? auth})
-    : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+  GroupService({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    PublicProfileSource? profileSource,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance,
+       _profiles =
+           profileSource ?? FirestorePublicProfileSource(firestore: firestore);
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final PublicProfileSource _profiles;
   final Map<String, Stream<GroupStatistics>> _statsCache = {};
 
   String? get _uid => _auth.currentUser?.uid;
@@ -31,6 +38,7 @@ class GroupService {
     return _groupsRef
         .where('visibility', isEqualTo: GroupVisibility.public.label)
         .orderBy('name')
+        .limit(50)
         .snapshots()
         .map((snap) => snap.docs.map(Group.fromDoc).toList());
   }
@@ -63,18 +71,10 @@ class GroupService {
         .collection('groupMemberships')
         .orderBy('joinedAt', descending: true)
         .snapshots()
-        .map((snap) {
-          final memberships = snap.docs
-              .map(GroupMembership.fromDoc)
-              .toList(growable: false);
-          final groupIds = memberships.map((m) => m.groupId).toList();
-          unawaited(
-            _userDoc(
-              userId,
-            ).set({'groupIds': groupIds}, SetOptions(merge: true)),
-          );
-          return memberships;
-        });
+        .map(
+          (snap) =>
+              snap.docs.map(GroupMembership.fromDoc).toList(growable: false),
+        );
   }
 
   Stream<GroupMembership?> watchMembershipForUser(
@@ -129,6 +129,7 @@ class GroupService {
     StreamSubscription? membershipSub;
     final memberStatusSubs = <String, StreamSubscription>{};
     Set<String> memberIds = {};
+    final latestProfiles = <String, Map<String, dynamic>>{};
     GroupStatistics? lastStats;
     bool closed = false;
 
@@ -160,35 +161,19 @@ class GroupService {
       unawaited(cleanup());
     }
 
-    void updatePresence(
-      String userId,
-      DocumentSnapshot<Map<String, dynamic>> snap,
-    ) {
-      if (lastStats == null || !snap.exists) return;
-      final data = snap.data();
-      if (data == null) return;
+    void updatePresence(String userId, Map<String, dynamic>? data) {
+      if (data == null) {
+        latestProfiles.remove(userId);
+        return;
+      }
+      latestProfiles[userId] = data;
+      if (lastStats == null) return;
       final current = lastStats!.members;
       final index = current.indexWhere((m) => m.userId == userId);
       if (index < 0) return;
 
       final oldMember = current[index];
-      final updatedMember = oldMember.copyWith(
-        name: data['profileName'] as String? ?? oldMember.name,
-        avatarIndex:
-            (data['profileAvatarIndex'] ?? data['avatarIndex']) as int? ??
-            oldMember.avatarIndex,
-        avatarBase64:
-            data['profileAvatarImageBase64'] as String? ??
-            oldMember.avatarBase64,
-        avatarColorValue:
-            (data['avatarColorValue'] ?? data['profileAvatarColorValue'])
-                as int? ??
-            oldMember.avatarColorValue,
-        isStudying: data['isStudying'] as bool? ?? false,
-        activeSession: data['activeSession'] as Map<String, dynamic>?,
-        allowsNudges: data['allowNudges'] != false,
-        canReceiveNudges: data['fcmEnabled'] == true,
-      );
+      final updatedMember = oldMember.withProfile(data);
 
       // Check for profile changes to persist to cache
       final profileChanged =
@@ -257,16 +242,15 @@ class GroupService {
       for (final id in toRemove) {
         memberStatusSubs[id]?.cancel();
         memberStatusSubs.remove(id);
+        latestProfiles.remove(id);
       }
 
       for (final id in currentMemberIds) {
         if (!memberStatusSubs.containsKey(id)) {
-          memberStatusSubs[id] = _firestore
-              .collection('users')
-              .doc(id)
-              .snapshots()
+          memberStatusSubs[id] = _profiles
+              .watch(id)
               .listen(
-                (snap) => updatePresence(id, snap),
+                (profile) => updatePresence(id, profile?.toLegacyProfileMap()),
                 onError: (e, st) {
                   debugPrint('Error watching member presence for $id: $e');
                 },
@@ -327,6 +311,10 @@ class GroupService {
                     member.avatarColorValue,
               );
             }
+
+            // a snapshot can land before these members exist, or between rebuilds
+            final live = latestProfiles[doc.id];
+            if (live != null) member = member.withProfile(live);
 
             return member;
           }),
@@ -493,20 +481,14 @@ class GroupService {
     required String userId,
   }) async {
     try {
-      final doc = await _firestore.collection('users').doc(userId).get();
-      if (!doc.exists) return null;
-      final data = doc.data() ?? {};
-      final profileData = <String, dynamic>{
-        'profileName': data['profileName'],
-        'major': data['major'],
-        'profileGoal': data['profileGoal'],
-        'profileContact': data['profileContact'],
-        'profileAvatarIndex': data['profileAvatarIndex'],
-        'avatarIndex': data['avatarIndex'],
-        'profileAvatarImageBase64': data['profileAvatarImageBase64'],
-        'avatarColorValue': data['avatarColorValue'],
-        'profileAvatarColorValue': data['profileAvatarColorValue'],
-      };
+      final profile = await _profiles.fetch(userId);
+      if (profile == null) return null;
+      // presence is not cached, and its timestamps cannot be stored in hive
+      final profileData = profile.toLegacyProfileMap()
+        ..remove('isStudying')
+        ..remove('activeSession')
+        ..remove('allowNudges')
+        ..remove('fcmEnabled');
       final key = _profileCacheKey(groupId, userId);
       _memberProfileCache[key] = (data: profileData, timestamp: DateTime.now());
       unawaited(_persistProfileCache());

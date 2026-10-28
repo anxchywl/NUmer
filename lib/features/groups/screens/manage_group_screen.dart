@@ -6,7 +6,8 @@ import 'package:numer_app/features/groups/models/group.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/groups/data/group_service.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
-import 'package:numer_app/shared/widgets/user_profile_tile.dart';
+import 'package:numer_app/features/groups/models/join_code.dart';
+import 'package:numer_app/features/groups/widgets/user_profile_tile.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class ManageGroupScreen extends StatefulWidget {
@@ -22,6 +23,8 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _codeController = TextEditingController();
+  final _codeFieldKey = GlobalKey<FormFieldState<String>>();
+  String? _loadedCode;
   GroupVisibility _visibility = GroupVisibility.public;
   bool _initialized = false;
   bool _saving = false;
@@ -374,6 +377,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                             if (_visibility == GroupVisibility.private) ...[
                               const SizedBox(height: 16),
                               TextFormField(
+                                key: _codeFieldKey,
                                 controller: _codeController,
                                 enabled: isAdmin,
                                 decoration: InputDecoration(
@@ -408,6 +412,15 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                     return AppLocalizations.of(
                                       context,
                                     )!.codeRequired;
+                                  }
+                                  // older groups keep their short code until it is edited
+                                  if (_visibility == GroupVisibility.private &&
+                                      value != null &&
+                                      value != _loadedCode &&
+                                      !isJoinCodeLongEnough(value)) {
+                                    return AppLocalizations.of(
+                                      context,
+                                    )!.joinCodeTooShort;
                                   }
                                   return null;
                                 },
@@ -577,7 +590,6 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                           key: ValueKey(member.userId),
                                           child: UserProfileTile(
                                             userId: member.userId,
-                                            role: member.role.label,
                                             showOnlyMajor: true,
                                             trailing: _buildMemberTrailing(
                                               member: member,
@@ -619,6 +631,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
       showAppMessage(context, 'Group name cannot be empty', isError: true);
       return;
     }
+
+    // the code field is absent for public groups
+    final codeValid = _codeFieldKey.currentState?.validate() ?? true;
+    if (canEditAdvanced && !codeValid) return;
 
     setState(() => _saving = true);
     try {
@@ -887,7 +903,10 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
     try {
       final code = await service.getGroupJoinCode(widget.groupId);
       if (mounted && code != null) {
-        setState(() => _codeController.text = code);
+        setState(() {
+          _loadedCode = code;
+          _codeController.text = code;
+        });
       }
     } catch (_) {}
   }
