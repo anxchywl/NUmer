@@ -178,7 +178,7 @@ unused project was reused, and an id cannot be renamed.
 1. `node functions/scripts/send_test_email.js --to <you>@nu.edu.kz --locale ru --template verify`
 2. Repeat for a Gmail address and for `--locale kk` and `en`.
 3. Check: inbox, not junk; Cyrillic and Kazakh letters render; the code is readable in dark
-   mode on a phone.
+   mode on a phone, including the iOS Mail app.
 4. If the university mail puts it in junk, ask its IT desk to allow the sending domain, and
    do not release until it lands in the inbox.
 
