@@ -22,7 +22,8 @@ changes since the last sync timestamp are pulled on launch, on first bootstrap, 
 and on resume when the last pull is at least 10 minutes old (or none has happened yet). A reconnect
 runs a full pull if none has happened in this session or the session began with a bootstrap. There
 is no background timer. A sync requested while another is running runs after it. It also runs a
-heartbeat to claim/verify active timers across devices.
+heartbeat to claim/verify active timers across devices, which also records the app's build
+number as `users/{uid}.appBuild`.
 Data flow, end to end:
 
 1. User acts in a feature screen → mutates `AppState`.
@@ -89,6 +90,26 @@ group with the owner according to `groupIndex`, never according to `users.groupI
   stats, meta, groupMemberships, nudgeCooldowns,
   habits (+ /history), habit_categories, connections, connectionGroups
 ```
+
+### Remote flags and minimum build
+
+`config/app` is edited only in the console or with the Admin SDK:
+
+```
+minSupportedBuild: int
+modules: { <id>: { enabled: bool, rollout: 0..100, allow: [uid], minBuild: int } }
+```
+
+A module is visible when `enabled`, the app build is at least `minBuild`, and the uid is in
+`allow` or its stable hash modulo 100 is below `rollout`. A missing document or field turns
+modules off, and a module entry with a field of the wrong type is ignored. A build below
+`minSupportedBuild` shows only the update-required screen. This binds only versions that
+contain the check.
+
+`AppConfigService` (`core/config/`) starts from the copy cached on the device and never delays
+startup. It reads the document from the server when a user is signed in at launch, on sign-in
+and on resume, at most once in 6 hours after a successful read. No feature is gated by a flag
+yet.
 
 ### Cloud Functions (`functions/src/`)
 
@@ -206,6 +227,7 @@ firebase deploy --only functions
 - App shell: `lib/app/` (entry `bootstrap.dart`, root widget `numer_app.dart`, tabs `shell/`)
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
+- Remote flags: `lib/core/config/`
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
 - Module backend token verification: `backend/numer_identity/` (see its README)

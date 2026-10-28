@@ -20,13 +20,16 @@ class SyncService extends ChangeNotifier {
     FirebaseFirestore? firestore,
     Connectivity? connectivity,
     LocalDatabase? database,
-  }) : _firestore = firestore ?? FirebaseFirestore.instance,
+    int? appBuild,
+  }) : _appBuild = appBuild,
+       _firestore = firestore ?? FirebaseFirestore.instance,
        _connectivity = connectivity ?? Connectivity(),
        _db = database ?? LocalDatabase.instance;
 
   final FirebaseFirestore _firestore;
   final Connectivity _connectivity;
   final LocalDatabase _db;
+  final int? _appBuild;
   final SyncSchedule _schedule = const SyncSchedule();
 
   SyncStatus _status = SyncStatus.offline;
@@ -523,6 +526,7 @@ class SyncService extends ChangeNotifier {
         'deviceId': _deviceId,
         'updatedAt': FieldValue.serverTimestamp(),
       },
+      if (_appBuild != null) 'appBuild': _appBuild,
     }, SetOptions(merge: true));
   }
 

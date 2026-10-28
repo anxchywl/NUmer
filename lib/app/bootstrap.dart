@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,6 +17,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/app/numer_app.dart';
+import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/sync_service.dart';
@@ -68,7 +70,10 @@ Future<void> startApp() async {
 
   // Preload stored theme to avoid initial flicker to system theme.
   // This MUST happen before runApp() so the first frame uses the correct theme.
-  final prefs = await SharedPreferences.getInstance();
+  final (prefs, packageInfo) = await (
+    SharedPreferences.getInstance(),
+    PackageInfo.fromPlatform(),
+  ).wait;
   final storedTheme = prefs.getString(AppState.kThemePrefsKey);
   final initialTheme = _parseThemeMode(storedTheme);
   AppState.setInitialThemeMode(initialTheme);
@@ -79,7 +84,22 @@ Future<void> startApp() async {
   );
   final initFuture = _initializeApp(useEmulator: useEmulator);
 
-  runApp(NumerBootstrapApp(initFuture: initFuture, initialTheme: initialTheme));
+  runApp(
+    NumerBootstrapApp(
+      initFuture: initFuture,
+      initialTheme: initialTheme,
+      prefs: prefs,
+      appBuild: int.tryParse(packageInfo.buildNumber) ?? 0,
+    ),
+  );
+}
+
+Future<Map<String, dynamic>?> _fetchAppConfig() async {
+  // a firestore cache fallback would count as a fresh read
+  final snapshot = await FirebaseFirestore.instance
+      .doc('config/app')
+      .get(const GetOptions(source: Source.server));
+  return snapshot.data();
 }
 
 // converts a stored preference string into a thememode
@@ -128,10 +148,14 @@ Future<void> _initializeApp({required bool useEmulator}) async {
 class NumerBootstrapApp extends StatelessWidget {
   final Future<void> initFuture;
   final ThemeMode initialTheme;
+  final SharedPreferences prefs;
+  final int appBuild;
   const NumerBootstrapApp({
     super.key,
     required this.initFuture,
     required this.initialTheme,
+    required this.prefs,
+    required this.appBuild,
   });
 
   @override
@@ -142,7 +166,16 @@ class NumerBootstrapApp extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return MultiProvider(
             providers: [
-              ChangeNotifierProvider<SyncService>(create: (_) => SyncService()),
+              ChangeNotifierProvider<AppConfigService>(
+                create: (_) => AppConfigService(
+                  prefs: prefs,
+                  fetch: _fetchAppConfig,
+                  build: appBuild,
+                ),
+              ),
+              ChangeNotifierProvider<SyncService>(
+                create: (_) => SyncService(appBuild: appBuild),
+              ),
               Provider<PublicProfileSource>(
                 create: (_) => FirestorePublicProfileSource(),
               ),
