@@ -93,8 +93,8 @@ a group; see `firestore.rules` for exact access):
 | Firestore trigger | `onCourseWrite` | Recompute aggregates when course visibility changes |
 | Firestore trigger | `onGroupMemberDelete` | Clean up membership associations |
 | Firestore trigger | `onMailQueued` | Render and send a queued email |
-| Firestore trigger | `onGroupMemberWrite` | Maintain `groupIndex` from member create and delete |
-| Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles` |
+| Firestore trigger | `onGroupMemberWrite` | Maintain `groupIndex` from member create and delete, retried on failure |
+| Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles`, retried on failure |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
