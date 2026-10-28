@@ -39,7 +39,7 @@ streak heatmaps/calendars.
 Log touchpoints with classmates/friends: interaction dates, notes, custom tags, birthdays,
 and follow-up reminders (e.g. nudge after 30 days without contact). The feature is fully
 built under `lib/features/connections/` but intentionally not yet exposed in the app's
-navigation — see the marker in `lib/main.dart`.
+navigation — see the marker in `lib/app/shell/shell_tabs.dart`.
 
 ### Study groups & leaderboards — `groups`
 Create/join public or private groups (private groups use secure join codes). Live

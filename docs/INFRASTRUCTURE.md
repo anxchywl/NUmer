@@ -58,7 +58,7 @@ Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 - **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/`, one folder per area,
   re-exported by `functions/src/index.ts`).
 - **Cloud Messaging (FCM)** — nudge push notifications.
-- **App Check** — activated by the app in release; debug provider in debug builds (`main.dart`).
+- **App Check** — activated by the app in release; debug provider in debug builds (`app/bootstrap.dart`).
   Cloud Functions enforce it only for the callables listed in the configuration below.
 - Dart config generated at `lib/core/firebase_options.dart` (wired via the `flutter` block in
   `firebase.json`).
@@ -203,6 +203,7 @@ firebase deploy --only functions
   <address> --template verify --locale en)`, with the three variables in the environment.
 
 ## Key files
+- App shell: `lib/app/` (entry `bootstrap.dart`, root widget `numer_app.dart`, tabs `shell/`)
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Notifications: `lib/core/notifications/`
@@ -214,7 +215,6 @@ firebase deploy --only functions
 Deferred intentionally to keep the shipping app stable — tackle incrementally:
 
 - Decompose the large `app/app_state.dart` `ChangeNotifier` into per-feature controllers.
-- Split `main.dart` into `app/bootstrap.dart`, `app/router.dart`, `app/app.dart`.
 - Break `core/data/storage.dart`'s imports of feature models (`courses`, `habits`,
   `sessions`) so `core` no longer imports a feature.
 - Repair and unskip `test/features/account/accent_color_picker_test.dart` (pre-existing
