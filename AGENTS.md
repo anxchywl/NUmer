@@ -129,7 +129,7 @@ When adding fields to models (e.g. `Course`, `Habit`, `Person`):
 
 ### 4. Firestore Security Rules Compliance
 Before making changes that involve writing or reading collections:
-- Check if your collections are protected. In `firestore.rules`, all data (like `habits`, `connections`, `courses`, `sessions`) is strictly owner-read-write, with the exception of `/groups`, `/users` profiles, and user aggregates/sessions (if in a shared study group).
+- Check if your collections are protected. In `firestore/firestore.rules`, user data (like `habits`, `connections`, `courses`, `sessions`) is owner-read-write. The exceptions: `/groups` follow group roles; any signed-in user may get (not list) a `/users` profile; `sessions`, `courses`, `aggregates` and `/publicProfiles` are readable by co-members, decided by the server-written `/groupIndex`. Server-written collections (`groupIndex`, `publicProfiles`, `mailQueue`, `roleAudit` and the rest listed in [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md)) are denied to client writes; a new one needs its own deny block.
 - If you add a subcollection under `/users/{userId}/`, you **must** update `firestore.rules` to allow owner access.
 
 ### 5. Multi-lingual Support
