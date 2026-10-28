@@ -52,7 +52,7 @@ class _AuthGateState extends State<AuthGate> {
     return Consumer2<AppConfigService, AuthController>(
       builder: (context, config, auth, _) {
         final child = config.updateRequired
-            ? const UpdateRequiredScreen()
+            ? UpdateRequiredScreen(onRecheck: () => config.refresh(force: true))
             : _buildForAuthState(context, auth);
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
