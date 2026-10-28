@@ -1,6 +1,7 @@
 import functionsTest from 'firebase-functions-test';
+import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '../../src/shared/admin';
-import { onUserProfileWrite } from '../../src/profiles/public_profile';
+import { onUserProfileWrite, syncPublicProfile } from '../../src/profiles/public_profile';
 
 const test = functionsTest({ projectId: 'demo-numer' });
 const wrapped = test.wrap(onUserProfileWrite);
@@ -14,6 +15,11 @@ async function deliver(uid: string, before: Record<string, unknown>, after: Reco
   await wrapped(change, { params: { userId: uid } });
 }
 
+async function write(uid: string, before: Record<string, unknown>, after: Record<string, unknown>) {
+  await db.doc(`users/${uid}`).set(after);
+  await deliver(uid, before, after);
+}
+
 async function mirrorOf(uid: string) {
   return (await db.doc(`publicProfiles/${uid}`).get()).data();
 }
@@ -24,7 +30,7 @@ describe('onUserProfileWrite', () => {
   afterAll(() => test.cleanup());
 
   it('writes the mirror on create', async () => {
-    await deliver('create', {}, user);
+    await write('create', {}, user);
     const mirror = await mirrorOf('create');
     expect(mirror?.profileName).toBe('Aru');
     expect(mirror?.updatedAt).toBeDefined();
@@ -32,21 +38,56 @@ describe('onUserProfileWrite', () => {
   });
 
   it('rewrites the mirror on a name change', async () => {
-    await deliver('rename', {}, user);
-    await deliver('rename', user, { ...user, profileName: 'Dana' });
+    await write('rename', {}, user);
+    await write('rename', user, { ...user, profileName: 'Dana' });
     expect((await mirrorOf('rename'))?.profileName).toBe('Dana');
   });
 
   it('skips a private change', async () => {
-    await deliver('private', {}, user);
+    const studying = {
+      ...user,
+      isStudying: true,
+      activeSession: { courseId: 'c1', startUtc: Timestamp.fromMillis(1000) },
+    };
+    await write('private', {}, studying);
     const before = await mirrorOf('private');
-    await deliver('private', user, { ...user, email: 'other@example.test' });
+    await write('private', studying, { ...studying, email: 'other@example.test' });
     expect((await mirrorOf('private'))?.updatedAt).toEqual(before?.updatedAt);
   });
 
+  it('keeps the current state when an older event arrives last', async () => {
+    const started = { ...user, isStudying: true };
+    const ended = { ...user, isStudying: false };
+    await write('order', started, ended);
+    await deliver('order', ended, started);
+    expect((await mirrorOf('order'))?.isStudying).toBe(false);
+  });
+
+  it('repairs a stale mirror on a private change', async () => {
+    await db.doc('publicProfiles/stale').set({ profileName: 'Old' });
+    await write('stale', user, { ...user, email: 'other@example.test' });
+    expect((await mirrorOf('stale'))?.profileName).toBe('Aru');
+  });
+
   it('removes the mirror on delete', async () => {
-    await deliver('remove', {}, user);
+    await write('remove', {}, user);
+    await db.doc('users/remove').delete();
     await deliver('remove', user, {});
     expect(await mirrorOf('remove')).toBeUndefined();
+  });
+
+  it('does not mirror a deleted user from a late event', async () => {
+    await deliver('gone', {}, user);
+    expect(await mirrorOf('gone')).toBeUndefined();
+  });
+
+  it('asks for failed events to be retried', () => {
+    expect(onUserProfileWrite.__endpoint.eventTrigger?.retry).toBe(true);
+  });
+
+  it('fills a missing mirror without an event', async () => {
+    await db.doc('users/filled').set(user);
+    await syncPublicProfile('filled');
+    expect((await mirrorOf('filled'))?.profileName).toBe('Aru');
   });
 });
