@@ -41,6 +41,8 @@ tells you whether P0-08 worked.
 
 **Baseline (2026-11-27, Nov 21 to 27):** 4.4K reads, 873 writes, 12 deletes in total; peak day about 1.3K reads. About 1% of the free daily quota, far below the R 4 model, so the cost work is not urgent.
 
+**A-3 done (2026-11-27):** an existing $5 monthly budget with alerts at 50% and 100% covers it.
+
 **B-0 done (2026-11-27):** `analyzeCourseAi` deleted from `numer-60744`.
 
 ### A-3 Set a billing alert
