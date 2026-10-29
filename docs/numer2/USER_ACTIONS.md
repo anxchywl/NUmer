@@ -142,6 +142,9 @@ unused project was reused, and an id cannot be renamed.
    token once a staging build with the debug provider prints one.
 
 ### B-11 Console checks that need no task
+
+**Done 2026-11-27:** iOS and Android API keys restricted to the app (bundle ids, package plus app signing, upload and debug SHA-1); the two GitHub secret-scanning alerts closed as won't fix.
+
 **Why:** the security review could not see the console (`RESEARCH.md` 3.3 and 14).
 1. Authentication, Settings, User actions: turn on "Email enumeration protection".
 2. Authentication, Settings, Password policy: minimum length 8, mode "Require enforcement".
