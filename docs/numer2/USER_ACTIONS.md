@@ -39,6 +39,10 @@ tells you whether P0-08 worked.
 3. Functions, each function: invocations per day.
 4. Repeat one week after P0-08 and P0-09 are live.
 
+**Baseline (2026-11-27, Nov 21 to 27):** 4.4K reads, 873 writes, 12 deletes in total; peak day about 1.3K reads. About 1% of the free daily quota, far below the R 4 model, so the cost work is not urgent.
+
+**B-0 done (2026-11-27):** `analyzeCourseAi` deleted from `numer-60744`.
+
 ### A-3 Set a billing alert
 **Why:** an unmetered callable was open (`RESEARCH.md` 3.2, H3). **Waits:** P0-14 lists it.
 1. Google Cloud console, Billing, Budgets and alerts.
