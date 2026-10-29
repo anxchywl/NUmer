@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/routes.dart';
 import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
@@ -295,6 +296,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         final accentColor = data.$3;
 
         return MaterialApp(
+          navigatorKey: rootNavigatorKey,
           title: 'Numer',
           debugShowCheckedModeBanner: false,
           themeAnimationDuration: const Duration(milliseconds: 300),
@@ -312,9 +314,9 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           supportedLocales: AppLocalizations.supportedLocales,
           home: AuthGate(onThemeChange: setTheme),
           routes: {
-            '/shell': (_) => _Shell(onThemeChange: setTheme),
-            '/timer': (_) => const TimerScreen(),
-            '/alarms': (_) => const AlarmsScreen(),
+            routeShell: (_) => _Shell(onThemeChange: setTheme),
+            routeTimer: (_) => const TimerScreen(),
+            routeAlarms: (_) => const AlarmsScreen(),
           },
         );
       },
