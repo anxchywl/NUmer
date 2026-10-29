@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/shell/shell_tabs.dart';
 import 'package:numer_app/app/routes.dart';
 import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
@@ -24,7 +25,6 @@ import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/features/home/home.dart';
-import 'package:numer_app/features/stats/stats.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/core/data/sync_service.dart';
@@ -603,22 +603,28 @@ class _ShellState extends State<_Shell> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      const HomeScreen(),
-      const HabitsScreen(),
-      const StatsScreen(),
-      // Connections feature is planned but intentionally hidden for now. The code in
-      // lib/features/connections/ is complete and kept in sync; to enable it, uncomment
-      // the line below AND add a matching entry to _buildDestinations()/_buildIosNavItems().
-      // const ConnectionsScreen(),
-      const GroupsScreen(),
-      AccountScreen(onThemeChange: widget.onThemeChange),
-    ];
-    final destinations = _buildDestinations(context);
-    final iosItems = _buildIosNavItems(context);
+    final tabs = buildShellTabs(context, onThemeChange: widget.onThemeChange);
+    final destinations = tabs
+        .map(
+          (tab) => NavigationDestination(
+            icon: Icon(tab.icon),
+            selectedIcon: Icon(tab.selectedIcon),
+            label: tab.label,
+          ),
+        )
+        .toList();
+    final iosItems = tabs
+        .map(
+          (tab) => _IosNavItem(
+            label: tab.label,
+            icon: tab.icon,
+            selectedIcon: tab.selectedIcon,
+          ),
+        )
+        .toList();
     final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
-    final tabPages = pages
-        .map((page) => _KeepAlivePage(child: page))
+    final tabPages = tabs
+        .map((tab) => _KeepAlivePage(child: tab.builder(context)))
         .toList(growable: false);
 
     return Scaffold(
@@ -652,67 +658,6 @@ class _ShellState extends State<_Shell> {
           ? null
           : _buildDefaultNavigationBar(context, destinations),
     );
-  }
-
-  List<NavigationDestination> _buildDestinations(BuildContext context) {
-    return [
-      NavigationDestination(
-        icon: const Icon(Icons.home_outlined),
-        selectedIcon: const Icon(Icons.home),
-        label: AppLocalizations.of(context)!.home,
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.check_circle_outline),
-        selectedIcon: const Icon(Icons.check_circle),
-        label: AppLocalizations.of(context)!.habitsNavLabel,
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.bar_chart_outlined),
-        selectedIcon: const Icon(Icons.bar_chart),
-        label: AppLocalizations.of(context)!.statistics,
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.group_outlined),
-        selectedIcon: const Icon(Icons.group),
-        label: AppLocalizations.of(context)!.groups,
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.person_outline),
-        selectedIcon: const Icon(Icons.settings),
-        label: AppLocalizations.of(context)!.account,
-      ),
-    ];
-  }
-
-  List<_IosNavItem> _buildIosNavItems(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return <_IosNavItem>[
-      _IosNavItem(
-        label: l10n.home,
-        icon: Icons.home_outlined,
-        selectedIcon: Icons.home,
-      ),
-      _IosNavItem(
-        label: l10n.habitsNavLabel,
-        icon: Icons.check_circle_outline,
-        selectedIcon: Icons.check_circle,
-      ),
-      _IosNavItem(
-        label: l10n.statistics,
-        icon: Icons.bar_chart_outlined,
-        selectedIcon: Icons.bar_chart,
-      ),
-      _IosNavItem(
-        label: l10n.groups,
-        icon: Icons.group_outlined,
-        selectedIcon: Icons.group,
-      ),
-      _IosNavItem(
-        label: l10n.account,
-        icon: Icons.person_outline,
-        selectedIcon: Icons.settings,
-      ),
-    ];
   }
 
   Widget _buildDefaultNavigationBar(
