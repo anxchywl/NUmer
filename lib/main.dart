@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/shell/android_tab_bar.dart';
 import 'package:numer_app/app/shell/shell_tabs.dart';
 import 'package:numer_app/app/routes.dart';
 import 'package:numer_app/app/app_theme.dart';
@@ -604,15 +605,6 @@ class _ShellState extends State<_Shell> {
   @override
   Widget build(BuildContext context) {
     final tabs = buildShellTabs(context, onThemeChange: widget.onThemeChange);
-    final destinations = tabs
-        .map(
-          (tab) => NavigationDestination(
-            icon: Icon(tab.icon),
-            selectedIcon: Icon(tab.selectedIcon),
-            label: tab.label,
-          ),
-        )
-        .toList();
     final iosItems = tabs
         .map(
           (tab) => _IosNavItem(
@@ -656,56 +648,11 @@ class _ShellState extends State<_Shell> {
       ),
       bottomNavigationBar: isIOS
           ? null
-          : _buildDefaultNavigationBar(context, destinations),
-    );
-  }
-
-  Widget _buildDefaultNavigationBar(
-    BuildContext context,
-    List<NavigationDestination> destinations,
-  ) {
-    return NavigationBarTheme(
-      data: NavigationBarThemeData(
-        height: 64,
-        backgroundColor: Theme.of(
-          context,
-        ).colorScheme.surface.withValues(alpha: 0.94),
-        surfaceTintColor: Colors.transparent,
-        indicatorColor: Theme.of(
-          context,
-        ).colorScheme.primaryContainer.withValues(alpha: 0.4),
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          final theme = Theme.of(context);
-          if (states.contains(WidgetState.selected)) {
-            return theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            );
-          }
-          return theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            fontSize: 12,
-          );
-        }),
-        iconTheme: WidgetStateProperty.resolveWith((states) {
-          final theme = Theme.of(context);
-          if (states.contains(WidgetState.selected)) {
-            return IconThemeData(color: theme.colorScheme.primary, size: 26);
-          }
-          return IconThemeData(
-            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-            size: 24,
-          );
-        }),
-      ),
-      child: NavigationBar(
-        backgroundColor: Colors.transparent,
-        selectedIndex: _index,
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        destinations: destinations,
-        onDestinationSelected: _onTabSelected,
-      ),
+          : AndroidTabBar(
+              currentIndex: _index,
+              onTap: _onTabSelected,
+              tabs: tabs,
+            ),
     );
   }
 
