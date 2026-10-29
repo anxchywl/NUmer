@@ -12,6 +12,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/app/app_state.dart';
@@ -205,8 +206,8 @@ class NumerBootstrapApp extends StatelessWidget {
 
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          theme: _lightTheme,
-          darkTheme: _darkTheme,
+          theme: lightFallbackTheme,
+          darkTheme: darkFallbackTheme,
           themeMode: initialTheme,
           localizationsDelegates: const [
             AppLocalizations.delegate,
@@ -232,19 +233,6 @@ class NumerBootstrapApp extends StatelessWidget {
     );
   }
 }
-
-final ThemeData _lightTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-);
-
-final ThemeData _darkTheme = ThemeData(
-  useMaterial3: true,
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: Colors.indigo,
-    brightness: Brightness.dark,
-  ),
-);
 
 // top-level app widget, feeds theme, locale and accent colour into materialapp and routes
 class AppRoot extends StatefulWidget {
@@ -306,50 +294,13 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
         final locale = data.$2;
         final accentColor = data.$3;
 
-        final lightTheme = ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: accentColor),
-          switchTheme: SwitchThemeData(
-            thumbColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) return accentColor;
-              return null;
-            }),
-            trackColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return accentColor.withValues(alpha: 0.5);
-              }
-              return null;
-            }),
-          ),
-        );
-
-        final darkTheme = ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: accentColor,
-            brightness: Brightness.dark,
-          ),
-          switchTheme: SwitchThemeData(
-            thumbColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) return accentColor;
-              return null;
-            }),
-            trackColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
-                return accentColor.withValues(alpha: 0.5);
-              }
-              return null;
-            }),
-          ),
-        );
-
         return MaterialApp(
           title: 'Numer',
           debugShowCheckedModeBanner: false,
           themeAnimationDuration: const Duration(milliseconds: 300),
           themeAnimationCurve: Curves.easeInOut,
-          theme: lightTheme,
-          darkTheme: darkTheme,
+          theme: buildAppTheme(accentColor, Brightness.light),
+          darkTheme: buildAppTheme(accentColor, Brightness.dark),
           themeMode: themeMode,
           locale: locale,
           localizationsDelegates: const [
