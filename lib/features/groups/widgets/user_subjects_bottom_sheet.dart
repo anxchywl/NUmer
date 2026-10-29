@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/groups/models/group_statistics.dart';
@@ -81,6 +82,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
     _profileSubscription = context
         .read<PublicProfileSource>()
         .watch(widget.userId)
+        // the source retries, so the sheet keeps what it shows meanwhile
+        .handleError((Object _) {}, test: (e) => e is FirebaseException)
         .listen((profile) {
           if (profile == null || !mounted) return;
           setState(() => _profileData = profile.toLegacyProfileMap());
