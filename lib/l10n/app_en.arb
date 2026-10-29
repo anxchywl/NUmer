@@ -1018,5 +1018,7 @@
       }
     }
   },
+  "memberFallbackName": "Member",
+  "joinCodeTooShort": "Use at least 8 characters.",
   "sessionNotificationAction": "Start session"
 }

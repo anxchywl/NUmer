@@ -2151,5 +2151,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get memberFallbackName => 'Member';
+
+  @override
+  String get joinCodeTooShort => 'Use at least 8 characters.';
+
+  @override
   String get sessionNotificationAction => 'Start session';
 }
