@@ -7,3 +7,5 @@ export { onMailQueued } from './mail/queue';
 export { onGroupMemberWrite } from './groups/membership_index';
 export { onUserProfileWrite } from './profiles/public_profile';
 export { setUserRoles } from './roles/set_user_roles';
+export { sendEmailVerificationCode, verifyEmailCode } from './auth/email_verification';
+export { requestPasswordResetCode, verifyPasswordResetCode, confirmPasswordReset } from './auth/password_reset';
