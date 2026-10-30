@@ -18,7 +18,7 @@ and a domain can be understood by opening one folder.
 
 ```
 lib/
-  main.dart              # entrypoint only — runApp(NumerBootstrapApp(...))
+  main.dart              # entrypoint only — calls startApp()
   app/                   # app shell specific to NUmer (not reusable)
   core/                  # cross-cutting INFRA (side effects, singletons)
   shared/                # PURE reusable UI — no business logic, no feature imports
@@ -28,8 +28,9 @@ backend/
   numer_identity/        # python Firebase ID-token verifier for module backends
 ```
 
-- **`app/`** — composition root: `app_state.dart` (the global `ChangeNotifier`) plus, over
-  time, bootstrap/router/root-widget extracted from `main.dart`.
+- **`app/`** — composition root: `bootstrap.dart` (startup and providers), `numer_app.dart`
+  (root widget and `MaterialApp`), `app_theme.dart`, `auth_gate.dart`, `routes.dart`, `shell/`
+  (tab shell and navigation bars) and `app_state.dart` (the global `ChangeNotifier`).
 - **`core/`** — headless infrastructure used by features: `data/` (Hive local DB, `storage`,
   `sync_service`, `user_storage`), `notifications/`, `firebase_options.dart`,
   `startup_metrics.dart`. Core never imports a feature.
@@ -57,7 +58,7 @@ files. Small features (`ai_analysis`, `courses`) stay flat.
 Current features: `auth`, `account`, `habits`, `groups`, `courses`,
 `sessions` (timer/alarms), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
 only), `home`, and
-`connections` (built but intentionally hidden — see the marker in `lib/main.dart`).
+`connections` (built but intentionally hidden — see the marker in `lib/app/shell/shell_tabs.dart`).
 
 **Dependency rule (one direction):** `features → core → shared`. `core`/`shared` must never
 import a feature; a feature imports another feature only via its barrel
@@ -96,7 +97,8 @@ code does; names and structure do that.
 1. `mkdir lib/features/<name>` and add an empty `lib/features/<name>/<name>.dart` barrel.
 2. Add files flat; add subfolders only at ~3 files of a kind.
 3. `export` the public surface from the barrel.
-4. Register its route/provider in `app/` (wire it into `main.dart`).
+4. Wire it up in `app/`: providers in `bootstrap.dart`, routes in `routes.dart` and
+   `numer_app.dart`, tabs in `shell/shell_tabs.dart`.
 5. Add tests under `test/features/<name>/`.
 6. Reuse from `shared/` (UI) and `core/` (infra); never copy another feature's file.
 

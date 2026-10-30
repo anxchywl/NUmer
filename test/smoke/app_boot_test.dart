@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:numer_app/main.dart';
+import 'package:numer_app/app/bootstrap.dart';
 
 void main() {
   testWidgets('bootstrap app renders its loading shell while initializing', (
