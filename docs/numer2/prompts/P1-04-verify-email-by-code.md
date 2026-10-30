@@ -21,6 +21,10 @@ code screen that calls the new callables.
 - `lib/shared/widgets/app_toast.dart` (`showAppMessage`)
 
 ## Context
+- App Check, as built in P1-02: the two verification callables require App Check in release
+  builds (without consuming the token). Map reason `app-check` to the generic "try again"
+  message. App Check is skipped on emulator, web and debug builds without `ENABLE_APPCHECK`
+  (`lib/app/bootstrap.dart`).
 Today:
 - `AuthController.register` creates the user, calls `user.sendEmailVerification()`, waits one
   second, then writes `email_index`. The register form then opens a non-dismissable
