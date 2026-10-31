@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -9,8 +11,55 @@ const _googlePlayUrl =
     'https://play.google.com/store/apps/details?id=app.anx.numer';
 
 // shown instead of the app when this build is older than the supported minimum
-class UpdateRequiredScreen extends StatelessWidget {
-  const UpdateRequiredScreen({super.key});
+class UpdateRequiredScreen extends StatefulWidget {
+  const UpdateRequiredScreen({super.key, required this.onRecheck});
+
+  // a wrong minimum must stop blocking soon after it is corrected
+  final Future<void> Function() onRecheck;
+
+  @override
+  State<UpdateRequiredScreen> createState() => _UpdateRequiredScreenState();
+}
+
+class _UpdateRequiredScreenState extends State<UpdateRequiredScreen>
+    with WidgetsBindingObserver {
+  static const _recheckInterval = Duration(seconds: 60);
+
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        widget.onRecheck();
+        _startTimer();
+      case AppLifecycleState.hidden:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        _timer?.cancel();
+      case AppLifecycleState.inactive:
+        break;
+    }
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(_recheckInterval, (_) => widget.onRecheck());
+  }
 
   Future<void> _openStore() async {
     final isApple =
