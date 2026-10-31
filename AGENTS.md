@@ -29,11 +29,13 @@ backend/
 ```
 
 - **`app/`** — composition root: `bootstrap.dart` (startup and providers), `numer_app.dart`
-  (root widget and `MaterialApp`), `app_theme.dart`, `auth_gate.dart`, `routes.dart`, `shell/`
-  (tab shell and navigation bars) and `app_state.dart` (the global `ChangeNotifier`).
-- **`core/`** — headless infrastructure used by features: `data/` (Hive local DB, `storage`,
-  `sync_service`, `user_storage`), `notifications/`, `firebase_options.dart`,
-  `startup_metrics.dart`. Core never imports a feature.
+  (root widget and `MaterialApp`), `app_theme.dart`, `auth_gate.dart`,
+  `update_required_screen.dart`, `routes.dart`, `shell/` (tab shell and navigation bars) and
+  `app_state.dart` (the global `ChangeNotifier`).
+- **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
+  minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
+  `notifications/`, `firebase_options.dart`, `startup_metrics.dart`. Core never imports a
+  feature.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer

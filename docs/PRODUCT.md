@@ -64,6 +64,8 @@ The composed landing surface tying the above together.
   online-only area.
 - **Localized:** every user-facing string is available in English, Russian, and Kazakh.
 - **Notifications:** local reminders/alarms, recording notifications, and FCM push nudges.
+- **Update required:** a build older than the supported minimum shows only a screen that
+  links to its store page.
 
 ## Platforms
 iOS, Android, and macOS. Live on the [App Store](https://apps.apple.com/kz/app/numer-app/id6759787785)
