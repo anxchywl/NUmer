@@ -7,6 +7,8 @@ import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/app/shell/app_shell.dart';
+import 'package:numer_app/app/update_required_screen.dart';
+import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 import 'package:numer_app/shared/widgets/loading_screen.dart';
@@ -47,9 +49,11 @@ class _AuthGateState extends State<AuthGate> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthController>(
-      builder: (context, auth, _) {
-        final child = _buildForAuthState(context, auth);
+    return Consumer2<AppConfigService, AuthController>(
+      builder: (context, config, auth, _) {
+        final child = config.updateRequired
+            ? const UpdateRequiredScreen()
+            : _buildForAuthState(context, auth);
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 180),
           switchInCurve: Curves.easeOutCubic,

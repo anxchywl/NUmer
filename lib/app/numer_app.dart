@@ -11,6 +11,7 @@ import 'package:numer_app/app/app_theme.dart';
 import 'package:numer_app/app/auth_gate.dart';
 import 'package:numer_app/app/routes.dart';
 import 'package:numer_app/app/shell/app_shell.dart';
+import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 import 'package:numer_app/features/auth/auth.dart';
@@ -25,20 +26,26 @@ class AppRoot extends StatefulWidget {
 }
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
+  late final AuthController _auth;
+  bool _signedIn = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _auth = context.read<AuthController>()..addListener(_refreshConfigOnSignIn);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       StartupMetrics.markFirstFrame();
       _syncActiveSessions();
       context.read<AppState>().loadThemeMode();
+      _refreshConfigOnSignIn();
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _auth.removeListener(_refreshConfigOnSignIn);
     super.dispose();
   }
 
@@ -46,7 +53,20 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _syncActiveSessions();
+      _refreshConfig();
     }
+  }
+
+  void _refreshConfigOnSignIn() {
+    if (!mounted) return;
+    final signedIn = _auth.currentUser != null;
+    if (signedIn && !_signedIn) _refreshConfig();
+    _signedIn = signedIn;
+  }
+
+  void _refreshConfig() {
+    // deliberately not awaited, startup must not wait for the network
+    context.read<AppConfigService>().refresh();
   }
 
   void _syncActiveSessions() {
