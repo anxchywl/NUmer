@@ -1020,5 +1020,8 @@
   },
   "memberFallbackName": "Member",
   "joinCodeTooShort": "Use at least 8 characters.",
-  "sessionNotificationAction": "Start session"
+  "sessionNotificationAction": "Start session",
+  "updateRequiredTitle": "Update NUmer",
+  "updateRequiredBody": "This version is no longer supported. Install the latest version to continue.",
+  "updateRequiredAction": "Update"
 }
