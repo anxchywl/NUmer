@@ -17,6 +17,13 @@ all inside the app. Replace the link-based reset sheet with these three steps.
 - `lib/l10n/app_en.arb` (the keys `resetPasswordTitle`, `resetPasswordSubtitle`, `invalidEmailFormat`, `passwordLength`)
 
 ## Context
+- App Check, as built in P1-02: the three reset callables (`requestPasswordResetCode`,
+  `verifyPasswordResetCode` and the final reset) enforce and consume the App Check token. Call
+  each of them with `FirebaseFunctions.instance.httpsCallable(name,
+  options: HttpsCallableOptions(limitedUseAppCheckToken: true))`; with the default cached token
+  the second call fails with `failed-precondition` and reason `app-check`. Map reason
+  `app-check` to the generic "try again" message. App Check is skipped on emulator, web and
+  debug builds without `ENABLE_APPCHECK` (`lib/app/bootstrap.dart`).
 Today `ResetPasswordSheet` (opened only from the sign-in form, with an `initialEmail`) asks
 for an email and calls `sendPasswordResetSecure`, which throttles on the client, reads
 `email_index` and `users/{uid}.emailVerified`, and finally calls Firebase's
