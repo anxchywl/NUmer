@@ -1,6 +1,7 @@
 describe('exports', () => {
   it('keeps the deployed function names', () => {
     expect(Object.keys(require('../../src/index')).sort()).toEqual([
+      'confirmPasswordReset',
       'deleteAccountCallable',
       'deleteGroupCallable',
       'joinPrivateGroup',
@@ -10,8 +11,12 @@ describe('exports', () => {
       'onMailQueued',
       'onStudySessionWrite',
       'onUserProfileWrite',
+      'requestPasswordResetCode',
+      'sendEmailVerificationCode',
       'sendNudge',
       'setUserRoles',
+      'verifyEmailCode',
+      'verifyPasswordResetCode',
     ]);
   });
 });
