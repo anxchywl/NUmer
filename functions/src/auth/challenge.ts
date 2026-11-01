@@ -110,6 +110,7 @@ export async function checkCode(
   docId: string,
   purpose: CodePurpose,
   subject: string,
+  emailHash: string,
   code: string,
   secret: string,
   now: number,
@@ -129,7 +130,10 @@ export async function checkCode(
     }
     const expected = hashCode(secret, purpose, subject, code, data.codeId);
     const matches =
-      data.uid !== null && data.keyVersion === keyVersion && safeEqualHex(data.codeHash, expected);
+      data.uid !== null &&
+      data.emailHash === emailHash &&
+      data.keyVersion === keyVersion &&
+      safeEqualHex(data.codeHash, expected);
     if (!matches) {
       txn.update(ref, { attempts: attempts + 1 });
       return { invalid: maxAttempts - attempts - 1 };

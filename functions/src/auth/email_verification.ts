@@ -20,22 +20,20 @@ interface VerifyInput {
 
 type CallableContext = functions.https.CallableContext;
 
-function signedInEmail(context: CallableContext, fields: AuditFields) {
+// the user record, not the token, so a code is bound to the address the account has now
+async function currentAccount(context: CallableContext, fields: AuditFields) {
   if (!context.auth) {
     throw fail('unauthenticated', 'unauthenticated');
   }
-  const { uid, token } = context.auth;
+  const { uid } = context.auth;
   fields.uid = uid;
-  if (!token.email) {
+  const user = await auth.getUser(uid);
+  if (!user.email) {
     throw fail('failed-precondition', 'no-email');
   }
-  const emailHash = sha256Hex(normalizeEmail(token.email));
+  const emailHash = sha256Hex(normalizeEmail(user.email));
   fields.emailHash = emailHash;
-  return { uid, email: token.email, emailHash, verified: token.email_verified === true };
-}
-
-async function isVerified(uid: string, tokenVerified: boolean): Promise<boolean> {
-  return tokenVerified || (await auth.getUser(uid)).emailVerified;
+  return { uid, email: user.email, emailHash, verified: user.emailVerified };
 }
 
 export async function handleSendEmailVerificationCode(
@@ -48,8 +46,8 @@ export async function handleSendEmailVerificationCode(
   const secret = authSecret();
   const fields: AuditFields = { ipHash: ipHash(secret, clientIp(context)) };
   return audited('sendEmailVerificationCode', fields, now, async () => {
-    const { uid, email, emailHash, verified } = signedInEmail(context, fields);
-    if (await isVerified(uid, verified)) {
+    const { uid, email, emailHash, verified } = await currentAccount(context, fields);
+    if (verified) {
       fields.result = 'already-verified';
       return { status: 'already-verified', resendAvailableAt: now, expiresAt: now };
     }
@@ -100,7 +98,7 @@ export async function handleVerifyEmailCode(
   const ip = clientIp(context);
   const fields: AuditFields = { ipHash: ipHash(secret, ip) };
   return audited('verifyEmailCode', fields, now, async () => {
-    const { uid } = signedInEmail(context, fields);
+    const { uid, emailHash } = await currentAccount(context, fields);
     const code = data?.code;
     if (!isSixDigits(code)) {
       throw fail('invalid-argument', 'malformed-code');
@@ -112,7 +110,7 @@ export async function handleVerifyEmailCode(
     }
 
     const docId = `verify_${uid}`;
-    const result = await checkCode(docId, 'verify', uid, code, secret, now);
+    const result = await checkCode(docId, 'verify', uid, emailHash, code, secret, now);
     if (result === 'none') {
       throw fail('not-found', 'no-active-code');
     }

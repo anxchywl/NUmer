@@ -122,7 +122,7 @@ export async function handleVerifyPasswordResetCode(
     }
     await enforce(verifyLimits(limitSubjects(call, emailHash)), now);
 
-    const result = await checkCode(docId, 'reset', emailHash, code, secret, now);
+    const result = await checkCode(docId, 'reset', emailHash, emailHash, code, secret, now);
     if (result === 'locked') {
       throw fail('resource-exhausted', 'too-many-attempts');
     }
