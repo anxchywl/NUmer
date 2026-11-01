@@ -13,6 +13,7 @@ import {
 
 const uid = 'verify-user';
 const email = 'Verify.User@Example.org';
+const noEmailUid = 'verify-no-email';
 const context = signedIn(uid, email);
 const challenge = db.doc(`authCodes/verify_${uid}`);
 
@@ -28,7 +29,7 @@ describe('email verification codes', () => {
   });
 
   afterAll(async () => {
-    await auth.deleteUser(uid);
+    await auth.deleteUsers([uid, noEmailUid]);
     await db.terminate();
   });
 
@@ -41,7 +42,7 @@ describe('email verification codes', () => {
 
     expect(sent).toEqual({ status: 'sent', resendAvailableAt: startTime + 60_000, expiresAt: startTime + 600_000 });
     expect(sender.sent).toHaveLength(1);
-    expect(sender.sent[0].to).toBe(email);
+    expect(sender.sent[0].to).toBe(email.toLowerCase());
     expect((await auth.getUser(uid)).emailVerified).toBe(true);
     const stored = await storedStrings(['authCodes', 'mailQueue', 'authAudit']);
     expect(stored.some((value) => value.includes(code))).toBe(false);
@@ -73,17 +74,34 @@ describe('email verification codes', () => {
     expect(sender.sent).toHaveLength(1);
   });
 
-  it('answers already-verified with the current time', async () => {
+  it('answers already-verified from the user record with the current time', async () => {
+    const { sender, deps } = fakeDeps();
+    await auth.updateUser(uid, { emailVerified: true });
+
+    const result = await handleSendEmailVerificationCode({}, context, deps);
+
+    expect(result).toEqual({ status: 'already-verified', resendAvailableAt: startTime, expiresAt: startTime });
+    expect(sender.sent).toHaveLength(0);
+  });
+
+  it('sends to the address on the user record, not a stale token claim', async () => {
     const { sender, deps } = fakeDeps();
 
-    const fromToken = await handleSendEmailVerificationCode({}, signedIn(uid, email, true), deps);
-    await auth.updateUser(uid, { emailVerified: true });
-    const fromRecord = await handleSendEmailVerificationCode({}, context, deps);
+    await handleSendEmailVerificationCode({}, signedIn(uid, 'stale@example.org', true), deps);
 
-    const expected = { status: 'already-verified', resendAvailableAt: startTime, expiresAt: startTime };
-    expect(fromToken).toEqual(expected);
-    expect(fromRecord).toEqual(expected);
-    expect(sender.sent).toHaveLength(0);
+    expect(sender.sent.map((message) => message.to)).toEqual([email.toLowerCase()]);
+  });
+
+  it('refuses a code after the account email changed', async () => {
+    const { sender, deps } = fakeDeps();
+    await handleSendEmailVerificationCode({}, context, deps);
+    await auth.updateUser(uid, { email: 'victim@example.org' });
+
+    await expect(handleVerifyEmailCode({ code: sentCode(sender.sent[0]) }, context, deps)).rejects.toMatchObject({
+      code: 'permission-denied',
+      ...reason({ reason: 'invalid-code' }),
+    });
+    expect((await auth.getUser(uid)).emailVerified).toBe(false);
   });
 
   it('rejects a caller without a session or without an email', async () => {
@@ -92,7 +110,9 @@ describe('email verification codes', () => {
     await expect(handleSendEmailVerificationCode({}, {} as never, deps)).rejects.toMatchObject({
       code: 'unauthenticated',
     });
-    await expect(handleVerifyEmailCode({ code: '123456' }, signedIn(uid), deps)).rejects.toMatchObject({
+    await auth.deleteUsers([noEmailUid]);
+    await auth.createUser({ uid: noEmailUid });
+    await expect(handleVerifyEmailCode({ code: '123456' }, signedIn(noEmailUid), deps)).rejects.toMatchObject({
       code: 'failed-precondition',
       ...reason({ reason: 'no-email' }),
     });
