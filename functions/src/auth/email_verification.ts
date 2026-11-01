@@ -1,13 +1,12 @@
 import * as functions from 'firebase-functions/v1';
 import { auth } from '../shared/admin';
-import { requireAppCheck } from '../shared/app_check';
 import { getMailSender } from '../mail/sender_factory';
 import { renderEmail } from '../mail/templates';
 import { MailDeliveryError } from '../mail/types';
 import { audited, AuditFields } from './audit';
 import { checkCode, deleteChallenge, releaseCode, replaceChallenge } from './challenge';
 import { isSixDigits, normalizeEmail, sha256Hex } from './codes';
-import { authSecret, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
+import { authSecret, callableOptions, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
 import { hitAll, sendLimits, verifyLimits } from './rate_limits';
 
 interface SendInput {
@@ -41,10 +40,10 @@ export async function handleSendEmailVerificationCode(
   context: CallableContext,
   deps: Deps,
 ) {
-  requireAppCheck(context, 'sendEmailVerificationCode');
   const now = deps.now();
   const secret = authSecret();
-  const fields: AuditFields = { ipHash: ipHash(secret, clientIp(context)) };
+  const ip = clientIp(context);
+  const fields: AuditFields = { ipHash: ipHash(secret, ip) };
   return audited('sendEmailVerificationCode', fields, now, async () => {
     const { uid, email, emailHash, verified } = await currentAccount(context, fields);
     if (verified) {
@@ -66,7 +65,7 @@ export async function handleSendEmailVerificationCode(
       return { status: 'cooldown', resendAvailableAt, expiresAt };
     }
 
-    const limit = await hitAll(sendLimits({ uid, emailHash }), now);
+    const limit = await hitAll(sendLimits('verify', { uid, emailHash, ipHash: ip ? fields.ipHash : undefined }), now);
     if (!limit.allowed) {
       await deleteChallenge(docId, challenge.codeId);
       throw rateLimited(limit.retryAfterSeconds);
@@ -92,7 +91,6 @@ export async function handleVerifyEmailCode(
   context: CallableContext,
   deps: Deps,
 ) {
-  requireAppCheck(context, 'verifyEmailCode');
   const now = deps.now();
   const secret = authSecret();
   const ip = clientIp(context);
@@ -139,7 +137,7 @@ function verificationDeps(): Deps {
   return { mail: getMailSender(), now: Date.now };
 }
 
-const verificationOptions = { secrets: ['AUTH_CODE_SECRET', 'MAIL_API_KEY'] };
+const verificationOptions = callableOptions(['AUTH_CODE_SECRET', 'MAIL_API_KEY']);
 
 export const sendEmailVerificationCode = functions
   .runWith(verificationOptions)

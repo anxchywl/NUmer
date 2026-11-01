@@ -59,13 +59,16 @@ function check(key: string | false, limit: number, windowSeconds: number): Limit
   return key ? [{ key, limit, windowSeconds }] : [];
 }
 
-export function sendLimits({ emailHash, uid, ipHash }: Subjects): LimitCheck[] {
+export type SendFlow = 'verify' | 'reset';
+
+// each flow has its own global cap, so abuse of one cannot stop the other
+export function sendLimits(flow: SendFlow, { emailHash, uid, ipHash }: Subjects): LimitCheck[] {
   return [
     ...check(!!emailHash && `send:email:${emailHash}`, 3, 900),
     ...check(!!emailHash && `send:email:${emailHash}`, 10, 86400),
     ...check(!!uid && `send:uid:${uid}`, 5, 3600),
     ...check(!!ipHash && `send:ip:${ipHash}`, 10, 3600),
-    ...check('send:global:all', 2000, 86400),
+    ...check(`send:global:${flow}`, 2000, 86400),
   ];
 }
 
