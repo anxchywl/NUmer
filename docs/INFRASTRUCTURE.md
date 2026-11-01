@@ -108,8 +108,10 @@ contain the check.
 
 `AppConfigService` (`core/config/`) starts from the copy cached on the device and never delays
 startup. It reads the document from the server when a user is signed in at launch, on sign-in
-and on resume, at most once in 6 hours after a successful read. No feature is gated by a flag
-yet.
+and on resume, at most once in 6 hours after a successful read. While the update-required
+screen is shown it reads again on every resume and every 60 seconds while the app is visible,
+without that limit, and the screen closes as soon as the build is allowed. No feature is gated
+by a flag yet.
 
 ### Cloud Functions (`functions/src/`)
 
