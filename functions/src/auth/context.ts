@@ -29,6 +29,13 @@ export function callableOptions(secrets: string[]) {
   return { enforceAppCheck: process.env.AUTH_ENFORCE_APPCHECK !== 'off', secrets };
 }
 
+// enforceAppCheck lets a replayed token through and only flags it, so the handler refuses it
+export function refuseReplayedAppCheck(context: functions.https.CallableContext) {
+  if (context.app?.alreadyConsumed) {
+    throw fail('failed-precondition', 'app-check');
+  }
+}
+
 export function authSecret(): string {
   const secret = process.env.AUTH_CODE_SECRET;
   if (!secret) {

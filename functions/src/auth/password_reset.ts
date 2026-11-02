@@ -4,7 +4,18 @@ import { enqueueMail } from '../mail/queue';
 import { audited, AuditFields } from './audit';
 import { checkCode, consumeTicket, releaseTicket, replaceChallenge } from './challenge';
 import { isSixDigits, isValidEmail, normalizeEmail, sha256Hex } from './codes';
-import { authSecret, callableOptions, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
+import {
+  authSecret,
+  callableOptions,
+  clientIp,
+  Deps,
+  fail,
+  ipHash,
+  normalizeLocale,
+  rateLimited,
+  refuseReplayedAppCheck,
+  tryAgain,
+} from './context';
 import { hitAll, LimitCheck, sendLimits, verifyLimits } from './rate_limits';
 
 type ResetDeps = Pick<Deps, 'now'>;
@@ -38,6 +49,7 @@ interface Caller {
 }
 
 function caller(context: CallableContext, deps: ResetDeps): Caller {
+  refuseReplayedAppCheck(context);
   const secret = authSecret();
   const ip = clientIp(context);
   return { now: deps.now(), secret, ip, fields: { ipHash: ipHash(secret, ip) } };
@@ -192,7 +204,7 @@ export async function handleConfirmPasswordReset(
   });
 }
 
-const resetOptions = callableOptions(['AUTH_CODE_SECRET']);
+const resetOptions = { ...callableOptions(['AUTH_CODE_SECRET']), consumeAppCheckToken: true };
 
 const resetDeps = (): ResetDeps => ({ now: Date.now });
 
