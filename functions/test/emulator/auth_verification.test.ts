@@ -247,15 +247,24 @@ describe('email verification codes', () => {
     expect((await auth.getUser(uid)).emailVerified).toBe(true);
   });
 
+  it('writes no audit row for calls refused before any limit', async () => {
+    const { deps } = fakeDeps();
+
+    await expect(handleSendEmailVerificationCode({}, {} as never, deps)).rejects.toThrow();
+    await expect(handleVerifyEmailCode({ code: '12' }, context, deps)).rejects.toThrow();
+
+    expect((await db.collection('authAudit').get()).size).toBe(0);
+  });
+
   it('writes one audit row per call without a code or an address', async () => {
     const { sender, deps } = fakeDeps();
     await handleSendEmailVerificationCode({}, context, deps);
-    await expect(handleVerifyEmailCode({ code: '12' }, context, deps)).rejects.toThrow();
+    await expect(handleVerifyEmailCode({ code: wrongCode(sentCode(sender.sent[0])) }, context, deps)).rejects.toThrow();
 
     const rows = (await db.collection('authAudit').get()).docs.map((doc) => doc.data());
     expect(rows.map((row) => [row.action, row.result]).sort()).toEqual([
       ['sendEmailVerificationCode', 'sent'],
-      ['verifyEmailCode', 'malformed-code'],
+      ['verifyEmailCode', 'invalid-code'],
     ]);
     for (const row of rows) {
       expect(row.uid).toBe(uid);
