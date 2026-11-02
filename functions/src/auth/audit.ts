@@ -27,7 +27,10 @@ function resultOf(error: unknown): string {
   return 'error';
 }
 
-// the audit row is written for every outcome, then the error goes on to the caller unchanged
+// refused before any limit applies, so a row for these would be an unmetered write
+const unaudited = new Set(['unauthenticated', 'malformed-code', 'malformed-input', 'invalid-email', 'app-check']);
+
+// the audit row is written for every other outcome, then the error goes on to the caller unchanged
 export async function audited<T>(
   action: string,
   fields: AuditFields,
@@ -39,7 +42,10 @@ export async function audited<T>(
     await audit(action, { ...fields, result: fields.result ?? 'ok' }, now);
     return value;
   } catch (error) {
-    await audit(action, { ...fields, result: resultOf(error) }, now);
+    const result = resultOf(error);
+    if (!unaudited.has(result)) {
+      await audit(action, { ...fields, result }, now);
+    }
     throw error;
   }
 }
