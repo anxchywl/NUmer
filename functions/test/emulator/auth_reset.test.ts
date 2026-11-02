@@ -29,14 +29,14 @@ async function ticketFor(deps: ReturnType<typeof fakeDeps>['deps']) {
   return resetTicket;
 }
 
-function signIn(password: string) {
+function signIn(password: string, address = email) {
   const url =
     `http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}` +
     '/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=emulator';
   return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, returnSecureToken: true }),
+    body: JSON.stringify({ email: address, password, returnSecureToken: true }),
   });
 }
 
@@ -71,6 +71,19 @@ describe('password reset codes', () => {
     expect(knownCounts).toEqual([1, 1]);
     expect(unknownCounts).toEqual([1, 1]);
     expect(unknownFields).toEqual(knownFields);
+  });
+
+  it('refuses a replayed app check token on all three callables', async () => {
+    const { deps } = fakeDeps();
+    const replayed = { ...context, app: { appId: 'app', token: {}, alreadyConsumed: true } } as typeof context;
+    const refused = { code: 'failed-precondition', ...reason({ reason: 'app-check' }) };
+
+    await expect(handleRequestPasswordResetCode({ email }, replayed, deps)).rejects.toMatchObject(refused);
+    await expect(handleVerifyPasswordResetCode({ email, code: '123456' }, replayed, deps)).rejects.toMatchObject(refused);
+    await expect(
+      handleConfirmPasswordReset({ email, resetTicket: 'a'.repeat(43), newPassword }, replayed, deps),
+    ).rejects.toMatchObject(refused);
+    expect(await count('authCodes')).toBe(0);
   });
 
   it('rejects an invalid email', async () => {
@@ -174,6 +187,49 @@ describe('password reset codes', () => {
     await expect(handleConfirmPasswordReset({ email, resetTicket, newPassword }, context, deps)).resolves.toEqual({
       success: true,
     });
+  });
+
+  it('keeps the ticket usable when revoking the sessions fails', async () => {
+    const { deps } = fakeDeps();
+    const resetTicket = await ticketFor(deps);
+    const failure = Object.assign(new Error('provider detail'), { code: 'auth/internal-error' });
+    const spy = jest.spyOn(auth, 'revokeRefreshTokens').mockRejectedValueOnce(failure);
+
+    await expect(handleConfirmPasswordReset({ email, resetTicket, newPassword }, context, deps)).rejects.toMatchObject({
+      code: 'internal',
+      message: 'Try again.',
+    });
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+    const revoke = jest.spyOn(auth, 'revokeRefreshTokens');
+
+    await expect(handleConfirmPasswordReset({ email, resetTicket, newPassword }, context, deps)).resolves.toEqual({
+      success: true,
+    });
+    expect(revoke).toHaveBeenCalledWith(uid);
+    revoke.mockRestore();
+  });
+
+  it('refuses a ticket after the account email changed', async () => {
+    const { deps } = fakeDeps();
+    const resetTicket = await ticketFor(deps);
+    await auth.updateUser(uid, { email: 'moved@example.org' });
+
+    await expect(handleConfirmPasswordReset({ email, resetTicket, newPassword }, context, deps)).rejects.toMatchObject(
+      invalidTicket,
+    );
+    expect((await signIn(oldPassword, 'moved@example.org')).ok).toBe(true);
+    expect((await auth.getUser(uid)).emailVerified).toBe(false);
+  });
+
+  it('refuses a ticket for a deleted account', async () => {
+    const { deps } = fakeDeps();
+    const resetTicket = await ticketFor(deps);
+    await auth.deleteUsers([uid]);
+
+    await expect(handleConfirmPasswordReset({ email, resetTicket, newPassword }, context, deps)).rejects.toMatchObject(
+      invalidTicket,
+    );
   });
 
   it('refuses an expired ticket', async () => {

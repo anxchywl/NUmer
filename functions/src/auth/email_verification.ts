@@ -96,7 +96,7 @@ export async function handleVerifyEmailCode(
   const ip = clientIp(context);
   const fields: AuditFields = { ipHash: ipHash(secret, ip) };
   return audited('verifyEmailCode', fields, now, async () => {
-    const { uid, emailHash } = await currentAccount(context, fields);
+    const { uid, email, emailHash } = await currentAccount(context, fields);
     const code = data?.code;
     if (!isSixDigits(code)) {
       throw fail('invalid-argument', 'malformed-code');
@@ -123,7 +123,8 @@ export async function handleVerifyEmailCode(
     }
 
     try {
-      await auth.updateUser(uid, { emailVerified: true });
+      // writing the checked address too undoes an email change that raced this call
+      await auth.updateUser(uid, { email, emailVerified: true });
     } catch (error) {
       functions.logger.error('verification_update_failed', { code: (error as { code?: string }).code });
       await releaseCode(docId, result.codeId);

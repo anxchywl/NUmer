@@ -4,7 +4,18 @@ import { enqueueMail } from '../mail/queue';
 import { audited, AuditFields } from './audit';
 import { checkCode, consumeTicket, releaseTicket, replaceChallenge } from './challenge';
 import { isSixDigits, isValidEmail, normalizeEmail, sha256Hex } from './codes';
-import { authSecret, callableOptions, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
+import {
+  authSecret,
+  callableOptions,
+  clientIp,
+  Deps,
+  fail,
+  ipHash,
+  normalizeLocale,
+  rateLimited,
+  refuseReplayedAppCheck,
+  tryAgain,
+} from './context';
 import { hitAll, LimitCheck, sendLimits, verifyLimits } from './rate_limits';
 
 type ResetDeps = Pick<Deps, 'now'>;
@@ -38,6 +49,7 @@ interface Caller {
 }
 
 function caller(context: CallableContext, deps: ResetDeps): Caller {
+  refuseReplayedAppCheck(context);
   const secret = authSecret();
   const ip = clientIp(context);
   return { now: deps.now(), secret, ip, fields: { ipHash: ipHash(secret, ip) } };
@@ -133,6 +145,19 @@ export async function handleVerifyPasswordResetCode(
   });
 }
 
+// the account may have moved to another address since the code was sent
+async function stillOwnsAddress(uid: string, emailHash: string): Promise<boolean> {
+  try {
+    const { email } = await auth.getUser(uid);
+    return email !== undefined && sha256Hex(normalizeEmail(email)) === emailHash;
+  } catch (error) {
+    if ((error as { code?: string }).code !== 'auth/user-not-found') {
+      throw error;
+    }
+    return false;
+  }
+}
+
 function parsePassword(value: unknown): string {
   if (typeof value !== 'string') {
     throw fail('invalid-argument', 'malformed-input');
@@ -160,25 +185,26 @@ export async function handleConfirmPasswordReset(
     await enforce(verifyLimits(limitSubjects(call, emailHash)), now);
 
     const owner = await consumeTicket(docId, ticket, secret, now);
-    if (owner === null) {
+    if (owner === null || !(await stillOwnsAddress(owner.uid, emailHash))) {
       throw fail('permission-denied', 'invalid-or-expired-ticket');
     }
     fields.uid = owner.uid;
 
+    // a retry after a failed revoke sets the same password again and revokes then
     try {
       await auth.updateUser(owner.uid, { password, emailVerified: true });
+      await auth.revokeRefreshTokens(owner.uid);
     } catch (error) {
       functions.logger.error('password_update_failed', { code: (error as { code?: string }).code });
       await releaseTicket(docId);
       throw tryAgain();
     }
-    await auth.revokeRefreshTokens(owner.uid);
     await enqueueMail(email, 'passwordChanged', owner.locale, {});
     return { success: true };
   });
 }
 
-const resetOptions = callableOptions(['AUTH_CODE_SECRET']);
+const resetOptions = { ...callableOptions(['AUTH_CODE_SECRET']), consumeAppCheckToken: true };
 
 const resetDeps = (): ResetDeps => ({ now: Date.now });
 
