@@ -25,6 +25,10 @@ export function tryAgain(): functions.https.HttpsError {
   return new functions.https.HttpsError('internal', 'Try again.');
 }
 
+export function callableOptions(secrets: string[]) {
+  return { enforceAppCheck: process.env.AUTH_ENFORCE_APPCHECK !== 'off', secrets };
+}
+
 export function authSecret(): string {
   const secret = process.env.AUTH_CODE_SECRET;
   if (!secret) {

@@ -112,12 +112,36 @@ describe('auth rate limits', () => {
     );
   });
 
-  it('refuses all sends after 2000 a day', async () => {
+  it('refuses verification sends after 2000 a day and still accepts resets', async () => {
     const { sender, deps } = fakeDeps();
-    await fill('send:global:all', 86400, 2000);
+    await fill('send:global:verify', 86400, 2000);
+
+    await expect(handleSendEmailVerificationCode({}, signedIn(uid, email), deps)).rejects.toMatchObject(rateLimited);
+    await expect(handleRequestPasswordResetCode({ email }, anonymous(), deps)).resolves.toMatchObject({
+      status: 'accepted',
+    });
+    expect(sender.sent).toHaveLength(0);
+  });
+
+  it('refuses reset sends after 2000 a day and still sends verification codes', async () => {
+    const { sender, deps } = fakeDeps();
+    await fill('send:global:reset', 86400, 2000);
 
     await expect(handleRequestPasswordResetCode({ email }, anonymous(), deps)).rejects.toMatchObject(rateLimited);
+    await expect(handleSendEmailVerificationCode({}, signedIn(uid, email), deps)).resolves.toMatchObject({
+      status: 'sent',
+    });
+    expect(sender.sent).toHaveLength(1);
+  });
+
+  it('refuses verification sends per ip after 10 an hour', async () => {
+    const { sender, deps } = fakeDeps();
+    await fill(`send:ip:${testIpHash}`, 3600, 10);
+
     await expect(handleSendEmailVerificationCode({}, signedIn(uid, email), deps)).rejects.toMatchObject(rateLimited);
-    expect(sender.sent).toHaveLength(0);
+    await expect(handleSendEmailVerificationCode({}, signedIn(uid, email, false, ''), deps)).resolves.toMatchObject({
+      status: 'sent',
+    });
+    expect(sender.sent).toHaveLength(1);
   });
 });

@@ -128,6 +128,8 @@ by a flag yet.
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
 | Callable | `setUserRoles` | Administrator sets a user's module roles (see below) |
+| Callable | `sendEmailVerificationCode`, `verifyEmailCode` | Email and verify a 6-digit code that marks the signed-in user's email verified |
+| Callable | `requestPasswordResetCode`, `verifyPasswordResetCode`, `confirmPasswordReset` | Queue a 6-digit reset code, trade it for a single-use ticket, set the new password |
 
 Callables enforce authentication. App Check is off by default and switched on per callable:
 list export names, comma-separated, in `APPCHECK_ENFORCED` in `functions/.env` (`*` means all;
@@ -138,6 +140,16 @@ Transactional email (`functions/src/mail/`) renders the `verify`, `reset` and
 `passwordChanged` templates in EN, RU and KK. Callers send through `MailSender`, or queue with
 `enqueueMail` when they must not wait for delivery. A delivered entry is deleted. A failed one
 is stripped of its address and code.
+
+Email codes (`functions/src/auth/`) replace Firebase's email links. A code lives 10 minutes,
+allows 5 attempts and a resend after 60 seconds; it is stored only as an HMAC keyed by the
+`AUTH_CODE_SECRET` secret in `authCodes`, with fixed-window counters in `authRateLimits` and
+one `authAudit` row per call (hashes only). The reset request answers the same whether or not
+the account exists and sends through `mailQueue`; the verification send is inline. Errors
+carry `details.reason` for the client. All five callables enforce App Check unless
+`AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary. Verification
+and reset each have their own 2,000 sends a day cap, which a caller who gets past App Check
+can use up for that flow only.
 
 Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
 reaches a client on its next token refresh. Allowed values are listed in

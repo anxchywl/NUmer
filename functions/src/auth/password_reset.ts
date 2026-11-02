@@ -4,7 +4,7 @@ import { enqueueMail } from '../mail/queue';
 import { audited, AuditFields } from './audit';
 import { checkCode, consumeTicket, releaseTicket, replaceChallenge } from './challenge';
 import { isSixDigits, isValidEmail, normalizeEmail, sha256Hex } from './codes';
-import { authSecret, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
+import { authSecret, callableOptions, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
 import { hitAll, LimitCheck, sendLimits, verifyLimits } from './rate_limits';
 
 type ResetDeps = Pick<Deps, 'now'>;
@@ -86,7 +86,7 @@ export async function handleRequestPasswordResetCode(
   return audited('requestPasswordResetCode', fields, now, async () => {
     const { email, emailHash, docId } = parseEmail(data?.email, 'invalid-email', fields);
     const locale = normalizeLocale(data?.locale);
-    await enforce(sendLimits(limitSubjects(call, emailHash)), now);
+    await enforce(sendLimits('reset', limitSubjects(call, emailHash)), now);
 
     const uid = await activeUid(email);
     const challenge = await replaceChallenge(
@@ -122,7 +122,7 @@ export async function handleVerifyPasswordResetCode(
     }
     await enforce(verifyLimits(limitSubjects(call, emailHash)), now);
 
-    const result = await checkCode(docId, 'reset', emailHash, code, secret, now);
+    const result = await checkCode(docId, 'reset', emailHash, emailHash, code, secret, now);
     if (result === 'locked') {
       throw fail('resource-exhausted', 'too-many-attempts');
     }
@@ -178,10 +178,7 @@ export async function handleConfirmPasswordReset(
   });
 }
 
-const resetOptions = {
-  enforceAppCheck: process.env.AUTH_ENFORCE_APPCHECK !== 'off',
-  secrets: ['AUTH_CODE_SECRET'],
-};
+const resetOptions = callableOptions(['AUTH_CODE_SECRET']);
 
 const resetDeps = (): ResetDeps => ({ now: Date.now });
 

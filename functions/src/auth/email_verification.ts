@@ -1,13 +1,12 @@
 import * as functions from 'firebase-functions/v1';
 import { auth } from '../shared/admin';
-import { requireAppCheck } from '../shared/app_check';
 import { getMailSender } from '../mail/sender_factory';
 import { renderEmail } from '../mail/templates';
 import { MailDeliveryError } from '../mail/types';
 import { audited, AuditFields } from './audit';
 import { checkCode, deleteChallenge, releaseCode, replaceChallenge } from './challenge';
 import { isSixDigits, normalizeEmail, sha256Hex } from './codes';
-import { authSecret, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
+import { authSecret, callableOptions, clientIp, Deps, fail, ipHash, normalizeLocale, rateLimited, tryAgain } from './context';
 import { hitAll, sendLimits, verifyLimits } from './rate_limits';
 
 interface SendInput {
@@ -20,22 +19,20 @@ interface VerifyInput {
 
 type CallableContext = functions.https.CallableContext;
 
-function signedInEmail(context: CallableContext, fields: AuditFields) {
+// the user record, not the token, so a code is bound to the address the account has now
+async function currentAccount(context: CallableContext, fields: AuditFields) {
   if (!context.auth) {
     throw fail('unauthenticated', 'unauthenticated');
   }
-  const { uid, token } = context.auth;
+  const { uid } = context.auth;
   fields.uid = uid;
-  if (!token.email) {
+  const user = await auth.getUser(uid);
+  if (!user.email) {
     throw fail('failed-precondition', 'no-email');
   }
-  const emailHash = sha256Hex(normalizeEmail(token.email));
+  const emailHash = sha256Hex(normalizeEmail(user.email));
   fields.emailHash = emailHash;
-  return { uid, email: token.email, emailHash, verified: token.email_verified === true };
-}
-
-async function isVerified(uid: string, tokenVerified: boolean): Promise<boolean> {
-  return tokenVerified || (await auth.getUser(uid)).emailVerified;
+  return { uid, email: user.email, emailHash, verified: user.emailVerified };
 }
 
 export async function handleSendEmailVerificationCode(
@@ -43,13 +40,13 @@ export async function handleSendEmailVerificationCode(
   context: CallableContext,
   deps: Deps,
 ) {
-  requireAppCheck(context, 'sendEmailVerificationCode');
   const now = deps.now();
   const secret = authSecret();
-  const fields: AuditFields = { ipHash: ipHash(secret, clientIp(context)) };
+  const ip = clientIp(context);
+  const fields: AuditFields = { ipHash: ipHash(secret, ip) };
   return audited('sendEmailVerificationCode', fields, now, async () => {
-    const { uid, email, emailHash, verified } = signedInEmail(context, fields);
-    if (await isVerified(uid, verified)) {
+    const { uid, email, emailHash, verified } = await currentAccount(context, fields);
+    if (verified) {
       fields.result = 'already-verified';
       return { status: 'already-verified', resendAvailableAt: now, expiresAt: now };
     }
@@ -68,7 +65,7 @@ export async function handleSendEmailVerificationCode(
       return { status: 'cooldown', resendAvailableAt, expiresAt };
     }
 
-    const limit = await hitAll(sendLimits({ uid, emailHash }), now);
+    const limit = await hitAll(sendLimits('verify', { uid, emailHash, ipHash: ip ? fields.ipHash : undefined }), now);
     if (!limit.allowed) {
       await deleteChallenge(docId, challenge.codeId);
       throw rateLimited(limit.retryAfterSeconds);
@@ -94,13 +91,12 @@ export async function handleVerifyEmailCode(
   context: CallableContext,
   deps: Deps,
 ) {
-  requireAppCheck(context, 'verifyEmailCode');
   const now = deps.now();
   const secret = authSecret();
   const ip = clientIp(context);
   const fields: AuditFields = { ipHash: ipHash(secret, ip) };
   return audited('verifyEmailCode', fields, now, async () => {
-    const { uid } = signedInEmail(context, fields);
+    const { uid, emailHash } = await currentAccount(context, fields);
     const code = data?.code;
     if (!isSixDigits(code)) {
       throw fail('invalid-argument', 'malformed-code');
@@ -112,7 +108,7 @@ export async function handleVerifyEmailCode(
     }
 
     const docId = `verify_${uid}`;
-    const result = await checkCode(docId, 'verify', uid, code, secret, now);
+    const result = await checkCode(docId, 'verify', uid, emailHash, code, secret, now);
     if (result === 'none') {
       throw fail('not-found', 'no-active-code');
     }
@@ -141,7 +137,7 @@ function verificationDeps(): Deps {
   return { mail: getMailSender(), now: Date.now };
 }
 
-const verificationOptions = { secrets: ['AUTH_CODE_SECRET', 'MAIL_API_KEY'] };
+const verificationOptions = callableOptions(['AUTH_CODE_SECRET', 'MAIL_API_KEY']);
 
 export const sendEmailVerificationCode = functions
   .runWith(verificationOptions)
