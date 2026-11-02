@@ -146,9 +146,10 @@ allows 5 attempts and a resend after 60 seconds; it is stored only as an HMAC ke
 `AUTH_CODE_SECRET` secret in `authCodes`, with fixed-window counters in `authRateLimits` and
 one `authAudit` row per call (hashes only). The reset request answers the same whether or not
 the account exists and sends through `mailQueue`; the verification send is inline. Errors
-carry `details.reason` for the client. The three reset callables enforce App Check unless
-`AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary, and the
-2,000 sends a day global cap can be used up by a caller who gets past App Check.
+carry `details.reason` for the client. All five callables enforce App Check unless
+`AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary. Verification
+and reset each have their own 2,000 sends a day cap, which a caller who gets past App Check
+can use up for that flow only.
 
 Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
 reaches a client on its next token refresh. Allowed values are listed in
