@@ -73,6 +73,19 @@ describe('password reset codes', () => {
     expect(unknownFields).toEqual(knownFields);
   });
 
+  it('refuses a replayed app check token on all three callables', async () => {
+    const { deps } = fakeDeps();
+    const replayed = { ...context, app: { appId: 'app', token: {}, alreadyConsumed: true } } as typeof context;
+    const refused = { code: 'failed-precondition', ...reason({ reason: 'app-check' }) };
+
+    await expect(handleRequestPasswordResetCode({ email }, replayed, deps)).rejects.toMatchObject(refused);
+    await expect(handleVerifyPasswordResetCode({ email, code: '123456' }, replayed, deps)).rejects.toMatchObject(refused);
+    await expect(
+      handleConfirmPasswordReset({ email, resetTicket: 'a'.repeat(43), newPassword }, replayed, deps),
+    ).rejects.toMatchObject(refused);
+    expect(await count('authCodes')).toBe(0);
+  });
+
   it('rejects an invalid email', async () => {
     const { deps } = fakeDeps();
 
