@@ -149,7 +149,9 @@ the account exists and sends through `mailQueue`; the verification send is inlin
 carry `details.reason` for the client. All five callables enforce App Check unless
 `AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary. Verification
 and reset each have their own 2,000 sends a day cap, which a caller who gets past App Check
-can use up for that flow only.
+can use up for that flow only. The three reset callables also consume the App Check token and
+refuse a reused one with reason `app-check`, so the client must call them with limited-use
+tokens.
 
 Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
 reaches a client on its next token refresh. Allowed values are listed in
