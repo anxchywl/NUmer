@@ -144,7 +144,7 @@ is stripped of its address and code.
 Email codes (`functions/src/auth/`) replace Firebase's email links. A code lives 10 minutes,
 allows 5 attempts and a resend after 60 seconds; it is stored only as an HMAC keyed by the
 `AUTH_CODE_SECRET` secret in `authCodes`, with fixed-window counters in `authRateLimits` and
-one `authAudit` row per call (hashes only). The reset request answers the same whether or not
+one `authAudit` row per call that passes the input checks (hashes only). The reset request answers the same whether or not
 the account exists and sends through `mailQueue`; the verification send is inline. Errors
 carry `details.reason` for the client. All five callables enforce App Check unless
 `AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary. Verification
