@@ -1,0 +1,3 @@
+tags:
+  images:
+    skip: "run with --tags images --run-skipped --update-goldens"
