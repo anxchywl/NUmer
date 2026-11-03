@@ -21,6 +21,12 @@ jobs:
         with:
           node-version: 22
       - run: ./scripts/verify.sh
+      - run: |
+          flutter pub get
+          dart format --output=none --set-exit-if-changed .
+          flutter analyze
+          flutter test
+        working-directory: packages/numer_ui
 
   functions-emulator:
     runs-on: ubuntu-latest

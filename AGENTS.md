@@ -24,6 +24,8 @@ lib/
   shared/                # PURE reusable UI — no business logic, no feature imports
   features/              # the product — one self-contained folder per domain
   l10n/                  # generated localization — do not hand-edit
+packages/
+  numer_ui/              # design tokens and components shared with modules
 backend/
   numer_identity/        # python Firebase ID-token verifier for module backends
 ```
@@ -38,6 +40,10 @@ backend/
   feature.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
+- **`packages/numer_ui/`** — the design language of
+  [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens
+  and components, depending only on `flutter`. New and changed UI takes them from
+  `package:numer_ui/numer_ui.dart`.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
   token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`
   (see its README).
