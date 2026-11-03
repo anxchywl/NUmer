@@ -86,3 +86,7 @@ key.properties
 backend/numer_identity/dist/
 backend/numer_identity/.coverage
 .venv/
+
+# numer_ui package
+packages/numer_ui/pubspec.lock
+packages/numer_ui/test/goldens/
