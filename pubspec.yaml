@@ -14,6 +14,8 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  numer_ui:
+    path: packages/numer_ui
   intl: ^0.20.2
 
   # state & UI
