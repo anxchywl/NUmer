@@ -180,6 +180,25 @@ describe('email verification codes', () => {
     expect(first).not.toBe(second);
   });
 
+  it('verifies only the address the code was sent to when the email changes during the call', async () => {
+    const { sender, deps } = fakeDeps();
+    await handleSendEmailVerificationCode({}, context, deps);
+    const update = auth.updateUser.bind(auth);
+    const spy = jest.spyOn(auth, 'updateUser').mockImplementationOnce(async (target, properties) => {
+      await update(target, { email: 'victim@example.org' });
+      return update(target, properties);
+    });
+
+    await expect(handleVerifyEmailCode({ code: sentCode(sender.sent[0]) }, context, deps)).resolves.toEqual({
+      verified: true,
+    });
+    spy.mockRestore();
+
+    const user = await auth.getUser(uid);
+    expect(user.email).toBe(email.toLowerCase());
+    expect(user.emailVerified).toBe(true);
+  });
+
   it('keeps attempts at five or less under six concurrent wrong guesses', async () => {
     const { sender, deps } = fakeDeps();
     await handleSendEmailVerificationCode({}, context, deps);
