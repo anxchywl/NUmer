@@ -144,14 +144,14 @@ is stripped of its address and code.
 Email codes (`functions/src/auth/`) replace Firebase's email links. A code lives 10 minutes,
 allows 5 attempts and a resend after 60 seconds; it is stored only as an HMAC keyed by the
 `AUTH_CODE_SECRET` secret in `authCodes`, with fixed-window counters in `authRateLimits` and
-one `authAudit` row per call that passes the input checks (hashes only). The reset request answers the same whether or not
-the account exists and sends through `mailQueue`; the verification send is inline. Errors
-carry `details.reason` for the client. All five callables enforce App Check unless
-`AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are secondary. Verification
-and reset each have their own 2,000 sends a day cap, which a caller who gets past App Check
-can use up for that flow only. The three reset callables also consume the App Check token and
-refuse a reused one with reason `app-check`, so the client must call them with limited-use
-tokens.
+one `authAudit` row per call that passes the input checks (hashes only). The reset request
+answers the same whether or not the account exists and sends through `mailQueue`; the
+verification send is inline. Errors carry `details.reason` for the client. All five callables
+enforce App Check unless `AUTH_ENFORCE_APPCHECK=off` in `functions/.env`; the per-IP limits are
+secondary. Verification and reset each have their own 2,000 sends a day cap, which a caller who
+gets past App Check can use up for that flow only. The three reset callables also consume the
+App Check token and refuse a reused one with reason `app-check`, so the client must call them
+with limited-use tokens.
 
 Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
 reaches a client on its next token refresh. Allowed values are listed in
