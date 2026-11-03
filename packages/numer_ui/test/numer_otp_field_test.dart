@@ -345,6 +345,27 @@ void main() {
     }
   });
 
+  testWidgets('disabled digits use the disabled colour', (tester) async {
+    final controller = TextEditingController(text: '1');
+    addTearDown(controller.dispose);
+
+    for (final enabled in [true, false]) {
+      await tester.pumpWidget(
+        _app(_Calls(), controller: controller, enabled: enabled),
+      );
+      await tester.pumpAndSettle();
+
+      final onSurface = Theme.of(
+        tester.element(find.byType(NumerOtpField)),
+      ).colorScheme.onSurface;
+      final digit = tester.widget<Text>(find.text('1').last);
+      expect(
+        digit.style!.color,
+        enabled ? onSurface : onSurface.withValues(alpha: 0.38),
+      );
+    }
+  });
+
   testWidgets('tapping any box focuses the field', (tester) async {
     final focusNode = FocusNode();
     addTearDown(focusNode.dispose);
