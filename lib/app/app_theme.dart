@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 final ThemeData lightFallbackTheme = ThemeData(
   useMaterial3: true,
@@ -20,6 +21,9 @@ ThemeData buildAppTheme(Color accent, Brightness brightness) {
       seedColor: accent,
       brightness: brightness,
     ),
+    extensions: [
+      brightness == Brightness.dark ? NumerColors.dark : NumerColors.light,
+    ],
     switchTheme: SwitchThemeData(
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) return accent;
