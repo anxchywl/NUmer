@@ -26,6 +26,7 @@ Everything substantive lives in focused docs — this README is just the entry p
 | [docs/PRODUCT.md](docs/PRODUCT.md) | **What** the app does — features and user-facing behavior |
 | [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) | **How it runs & ships** — architecture, Firebase, Cloud Functions, build/deploy |
 | [AGENTS.md](AGENTS.md) | **How the code is organized** — repo/feature layout, conventions, and rules for AI assistants |
+| [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance budgets and baselines |
 | [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) | Privacy policy |
 
 ## Repository structure
@@ -39,7 +40,7 @@ numer_app/
 ├── macos/          # native macOS project
 ├── assets/         # app icon and static assets
 ├── test/           # widget and smoke tests
-├── docs/           # PRODUCT, INFRASTRUCTURE, privacy policy
+├── docs/           # PRODUCT, INFRASTRUCTURE, PERFORMANCE, privacy policy
 ├── firestore/      # Firestore security rules and indexes
 ├── firebase.json · .firebaserc            # Firebase CLI config (must stay at root)
 └── pubspec.yaml · l10n.yaml               # Flutter + localization config (must stay at root)

@@ -11,6 +11,7 @@ flutter analyze
 dart run scripts/check_arb.dart
 bash scripts/check_copy.sh
 bash scripts/check_design.sh
+bash scripts/check_file_size.sh
 flutter test --coverage
 bash scripts/coverage_floor.sh coverage/lcov.info "$(cat scripts/coverage_floor.txt)"
 (cd functions && npm ci && npm run build && npm test)

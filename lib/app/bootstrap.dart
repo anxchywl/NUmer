@@ -81,6 +81,22 @@ void installCrashHooks(CrashReporter reporter) {
   };
 }
 
+// crash reporting is optional, so its failure must not stop the rest of startup
+Future<void> startCrashReporting(
+  CrashReporter reporter, {
+  required bool installHooks,
+}) async {
+  try {
+    await reporter.init();
+  } on FirebaseException catch (error, stack) {
+    FlutterError.reportError(
+      FlutterErrorDetails(exception: error, stack: stack),
+    );
+    return;
+  }
+  if (installHooks) installCrashHooks(reporter);
+}
+
 // app entrypoint, preloads the stored theme then mounts the bootstrap widget
 Future<void> startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -147,9 +163,8 @@ Future<void> _initializeApp({
 }) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  await crashReporter.init();
   // outside release the hooks would only hide uncaught errors from the console
-  if (kReleaseMode) installCrashHooks(crashReporter);
+  await startCrashReporting(crashReporter, installHooks: kReleaseMode);
 
   if (!kIsWeb) {
     FirebaseFirestore.instance.settings = const Settings(

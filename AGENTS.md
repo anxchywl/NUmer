@@ -159,6 +159,7 @@ The script does not run device builds, emulator tests or deploys.
 - **Comments**: see [Comment style](#comment-style)
 - **Language**: English for code, comments, docs and commits
 - **Commits**: conventional prefix (`feat`, `fix`, `refactor`, `docs`, `chore`, `test`), lowercase, imperative, no period, subject line only, no trailers
+- **Size**: a source file stays under 400 lines and a function under about 60; when a file grows past that, split it by responsibility (one widget, section or service per file). `scripts/check_file_size.sh` enforces it: files in `scripts/file_size_baseline.txt` predate the rule and may only shrink, and a file that shrinks lowers its entry in the same commit
 - **Shape**: follow the file's existing patterns; early returns; small single-purpose functions; short descriptive names; `lower_snake_case.dart` with `*_screen.dart`, `*_service.dart`, `*_sheet.dart` suffixes
 - **Leftovers**: no debug prints, commented-out code, temporary variables or emoji
 - **Errors**: catch the specific failure you handle; never catch broadly or swallow
