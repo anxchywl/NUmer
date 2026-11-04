@@ -11,6 +11,46 @@ const double _borderWidth = 2;
 
 final RegExp _nonDigits = RegExp('[^0-9]');
 
+// handles would be drawn over the boxes, which stand in for the text
+final TextSelectionControls _noHandles = _NoHandles();
+
+class _NoHandles extends EmptyTextSelectionControls
+    with TextSelectionHandleControls {}
+
+// digits only ever go to the end, and a whole code replaces what was typed
+class _AppendingFormatter extends TextInputFormatter {
+  const _AppendingFormatter(this.length);
+
+  final int length;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final added = _addedText(oldValue, newValue.text);
+    if (added.isEmpty) return newValue;
+    final isWholeCode = added.replaceAll(_nonDigits, '').length >= length;
+    final text = isWholeCode ? added : oldValue.text + added;
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
+  String _addedText(TextEditingValue oldValue, String text) {
+    final selection = oldValue.selection;
+    final replaces = selection.isValid && !selection.isCollapsed;
+    final before = replaces
+        ? selection.textBefore(oldValue.text)
+        : oldValue.text;
+    final after = replaces ? selection.textAfter(oldValue.text) : '';
+    final fits = text.length >= before.length + after.length;
+    if (!fits || !text.startsWith(before) || !text.endsWith(after)) return '';
+    return text.substring(before.length, text.length - after.length);
+  }
+}
+
 class NumerOtpField extends StatefulWidget {
   const NumerOtpField({
     super.key,
@@ -99,20 +139,19 @@ class _NumerOtpFieldState extends State<NumerOtpField> {
   void _handleText() {
     final text = _controller.text;
     final digits = _firstDigits(text);
-    // a tap may move the hidden cursor, which would scramble the next digit
     final end = TextSelection.collapsed(offset: digits.length);
-    if (text != digits || _controller.selection != end) {
+    final selection = _controller.selection;
+    // ios selects a digit before deleting it, and answering that undoes the delete
+    final strayCursor = selection.isCollapsed && selection != end;
+    if (text != digits || strayCursor) {
       _controller.value = TextEditingValue(text: digits, selection: end);
       return;
     }
     if (digits == _value) return;
 
-    final wasComplete = _value.length == widget.length;
     setState(() => _value = digits);
     widget.onChanged?.call(digits);
-    if (!wasComplete && digits.length == widget.length) {
-      widget.onCompleted(digits);
-    }
+    if (digits.length == widget.length) widget.onCompleted(digits);
   }
 
   String _firstDigits(String text) {
@@ -137,6 +176,13 @@ class _NumerOtpFieldState extends State<NumerOtpField> {
   }
 
   Widget _buildHiddenField() {
+    return TextSelectionTheme(
+      data: const TextSelectionThemeData(selectionColor: Colors.transparent),
+      child: _buildTextField(),
+    );
+  }
+
+  Widget _buildTextField() {
     return TextField(
       controller: _controller,
       focusNode: _focusNode,
@@ -145,7 +191,9 @@ class _NumerOtpFieldState extends State<NumerOtpField> {
       style: context.text.sectionTitle.copyWith(color: Colors.transparent),
       cursorColor: Colors.transparent,
       showCursor: false,
-      enableInteractiveSelection: false,
+      selectionControls: _noHandles,
+      contextMenuBuilder: _buildPasteMenu,
+      magnifierConfiguration: TextMagnifierConfiguration.disabled,
       decoration: const InputDecoration(
         filled: false,
         border: InputBorder.none,
@@ -157,8 +205,25 @@ class _NumerOtpFieldState extends State<NumerOtpField> {
       autofillHints: const [AutofillHints.oneTimeCode],
       keyboardType: TextInputType.number,
       inputFormatters: [
+        _AppendingFormatter(widget.length),
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(widget.length),
+      ],
+    );
+  }
+
+  Widget _buildPasteMenu(BuildContext context, EditableTextState field) {
+    if (SystemContextMenu.isSupportedByField(field)) {
+      return SystemContextMenu.editableText(
+        editableTextState: field,
+        items: const [IOSSystemContextMenuItemPaste()],
+      );
+    }
+    return AdaptiveTextSelectionToolbar.buttonItems(
+      anchors: field.contextMenuAnchors,
+      buttonItems: [
+        for (final item in field.contextMenuButtonItems)
+          if (item.type == ContextMenuButtonType.paste) item,
       ],
     );
   }

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_ui/numer_ui.dart';
 
@@ -62,7 +64,152 @@ List<BoxDecoration> _decorations(WidgetTester tester) {
       .toList();
 }
 
+void _mockClipboard(WidgetTester tester, String text) {
+  final messenger = tester.binding.defaultBinaryMessenger;
+  messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+    if (call.method == 'Clipboard.getData') return {'text': text};
+    if (call.method == 'Clipboard.hasStrings') return {'value': true};
+    return null;
+  });
+  addTearDown(
+    () => messenger.setMockMethodCallHandler(SystemChannels.platform, null),
+  );
+}
+
+Future<void> _pressPasteShortcut(WidgetTester tester) async {
+  final modifier = defaultTargetPlatform == TargetPlatform.iOS
+      ? LogicalKeyboardKey.metaLeft
+      : LogicalKeyboardKey.controlLeft;
+  await tester.sendKeyDownEvent(modifier);
+  await tester.sendKeyEvent(LogicalKeyboardKey.keyV);
+  await tester.sendKeyUpEvent(modifier);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pasteFromMenu(WidgetTester tester) async {
+  await tester.longPressAt(tester.getCenter(_boxes.at(3)));
+  await tester.pumpAndSettle();
+
+  expect(find.text('Paste'), findsOneWidget);
+  for (final other in ['Cut', 'Copy', 'Select all', 'Select All']) {
+    expect(find.text(other), findsNothing);
+  }
+  await tester.tap(find.text('Paste'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  final platforms = TargetPlatformVariant({
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+  });
+  final ways = {
+    'the menu': _pasteFromMenu,
+    'the shortcut': _pressPasteShortcut,
+  };
+
+  for (final way in ways.entries) {
+    for (final typed in ['', '12', '123456']) {
+      testWidgets(
+        'pasting with ${way.key} over "$typed" fills every box',
+        (tester) async {
+          final calls = _Calls();
+          final controller = TextEditingController();
+          addTearDown(controller.dispose);
+          _mockClipboard(tester, 'Your code is 482 913.');
+          await tester.pumpWidget(_app(calls, controller: controller));
+          await tester.showKeyboard(find.byType(TextField));
+          await tester.enterText(find.byType(TextField), typed);
+          await tester.pumpAndSettle();
+          calls.completed.clear();
+
+          await way.value(tester);
+
+          expect(controller.text, '482913');
+          expect(_boxDigits(tester), ['4', '8', '2', '9', '1', '3']);
+          expect(calls.completed, ['482913']);
+        },
+        variant: platforms,
+      );
+    }
+  }
+
+  testWidgets('a short paste is added after the typed digits', (tester) async {
+    final calls = _Calls();
+    _mockClipboard(tester, '345');
+    await tester.pumpWidget(_app(calls));
+    await tester.showKeyboard(find.byType(TextField));
+    await tester.enterText(find.byType(TextField), '12');
+
+    await _pressPasteShortcut(tester);
+
+    expect(_boxDigits(tester), ['1', '2', '3', '4', '5']);
+    expect(calls.completed, isEmpty);
+  });
+
+  testWidgets('a code inserted by the keyboard replaces typed digits', (
+    tester,
+  ) async {
+    final calls = _Calls();
+    await tester.pumpWidget(_app(calls));
+    await tester.enterText(find.byType(TextField), '12');
+
+    await tester.enterText(find.byType(TextField), '12482913');
+
+    expect(calls.completed, ['482913']);
+  });
+
+  testWidgets('a delete that selects first is not answered', (tester) async {
+    final calls = _Calls();
+    await tester.pumpWidget(_app(calls));
+    await tester.showKeyboard(find.byType(TextField));
+    await tester.enterText(find.byType(TextField), '1234');
+    await tester.pump();
+    tester.testTextInput.log.clear();
+
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '1234',
+        selection: TextSelection(baseOffset: 3, extentOffset: 4),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.testTextInput.log.map((call) => call.method),
+      isNot(contains('TextInput.setEditingState')),
+    );
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '123',
+        selection: TextSelection.collapsed(offset: 3),
+      ),
+    );
+    await tester.pump();
+    expect(_boxDigits(tester), ['1', '2', '3']);
+    expect(calls.changed.last, '123');
+  });
+
+  testWidgets('typing over a selection still appends', (tester) async {
+    final controller = TextEditingController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(_app(_Calls(), controller: controller));
+    await tester.showKeyboard(find.byType(TextField));
+    await tester.enterText(find.byType(TextField), '12');
+    controller.selection = const TextSelection(baseOffset: 0, extentOffset: 2);
+
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: '5',
+        selection: TextSelection.collapsed(offset: 1),
+      ),
+    );
+    await tester.pump();
+
+    expect(controller.text, '125');
+    expect(controller.selection, const TextSelection.collapsed(offset: 3));
+  });
+
   testWidgets('typing six digits completes once', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(_app(calls));
