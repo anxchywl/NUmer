@@ -36,8 +36,8 @@ backend/
   `app_state.dart` (the global `ChangeNotifier`).
 - **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
   minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
-  `notifications/`, `firebase_options.dart`, `startup_metrics.dart`. Core never imports a
-  feature.
+  `notifications/`, `observability/` (crash reporting), `firebase_options.dart`,
+  `startup_metrics.dart`. Core never imports a feature.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
 - **`packages/numer_ui/`** — the design language of

@@ -13,6 +13,7 @@ import 'package:numer_app/app/routes.dart';
 import 'package:numer_app/app/shell/app_shell.dart';
 import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
@@ -27,25 +28,25 @@ class AppRoot extends StatefulWidget {
 
 class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
   late final AuthController _auth;
-  bool _signedIn = false;
+  String? _uid;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _auth = context.read<AuthController>()..addListener(_refreshConfigOnSignIn);
+    _auth = context.read<AuthController>()..addListener(_handleAuthChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       StartupMetrics.markFirstFrame();
       _syncActiveSessions();
       context.read<AppState>().loadThemeMode();
-      _refreshConfigOnSignIn();
+      _handleAuthChanged();
     });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _auth.removeListener(_refreshConfigOnSignIn);
+    _auth.removeListener(_handleAuthChanged);
     super.dispose();
   }
 
@@ -57,11 +58,13 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     }
   }
 
-  void _refreshConfigOnSignIn() {
+  void _handleAuthChanged() {
     if (!mounted) return;
-    final signedIn = _auth.currentUser != null;
-    if (signedIn && !_signedIn) _refreshConfig();
-    _signedIn = signedIn;
+    final uid = _auth.currentUser?.uid;
+    if (uid == _uid) return;
+    if (_uid == null) _refreshConfig();
+    _uid = uid;
+    context.read<CrashReporter>().setUser(uid);
   }
 
   void _refreshConfig() {

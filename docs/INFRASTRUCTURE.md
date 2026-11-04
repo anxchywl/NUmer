@@ -59,6 +59,9 @@ Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 - **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/`, one folder per area,
   re-exported by `functions/src/index.ts`).
 - **Cloud Messaging (FCM)** — nudge push notifications.
+- **Crashlytics** — crash reports from release builds only, tagged with the uid and nothing
+  else about the user, sent through `core/observability/`. Collection is off in
+  `AndroidManifest.xml` and `Info.plist`, and the app turns it on at runtime.
 - **App Check** — activated by the app in release; debug provider in debug builds (`app/bootstrap.dart`).
   Cloud Functions enforce it only for the callables listed in the configuration below.
 - Dart config generated at `lib/core/firebase_options.dart` (wired via the `flutter` block in
@@ -244,6 +247,7 @@ firebase deploy --only functions
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Remote flags: `lib/core/config/`
+- Crash reporting: `lib/core/observability/`
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
 - Module backend token verification: `backend/numer_identity/` (see its README)
