@@ -19,3 +19,10 @@ if command -v shellcheck >/dev/null; then
 else
   echo "shellcheck is not installed, skipping infra scripts"
 fi
+(
+  cd packages/numer_ui
+  flutter pub get
+  dart format --output=none --set-exit-if-changed .
+  flutter analyze
+  flutter test
+)

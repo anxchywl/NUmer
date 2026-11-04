@@ -2,6 +2,15 @@ import 'dart:io';
 
 const _baselinePath = 'scripts/design_baseline.txt';
 const _roots = ['lib', 'packages'];
+const _tokensPath = 'packages/numer_ui/lib/src/tokens/';
+const _buttonChildPath =
+    'packages/numer_ui/lib/src/components/numer_button_child.dart';
+
+const _exempt = {
+  'color_literal': _tokensPath,
+  'text_literal': _tokensPath,
+  'spinner': _buttonChildPath,
+};
 
 final _patterns = {
   'gradient': RegExp(r'\b(Linear|Radial|Sweep)Gradient\b'),
@@ -51,11 +60,17 @@ Map<String, int> _countMatches() {
   for (final path in _dartFiles()) {
     final source = File(path).readAsStringSync();
     for (final pattern in _patterns.entries) {
+      if (_isExempt(pattern.key, path)) continue;
       final count = pattern.value.allMatches(source).length;
       if (count > 0) counts['${pattern.key}\t$path'] = count;
     }
   }
   return counts;
+}
+
+bool _isExempt(String id, String path) {
+  final prefix = _exempt[id];
+  return prefix != null && path.startsWith(prefix);
 }
 
 List<String> _dartFiles() {
