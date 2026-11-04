@@ -8,6 +8,7 @@ import '../tokens/numer_text.dart';
 const double _boxWidth = 48;
 const double _boxHeight = 56;
 const double _borderWidth = 2;
+const double _disabledAlpha = 0.38;
 
 final RegExp _nonDigits = RegExp('[^0-9]');
 
@@ -252,7 +253,11 @@ class _NumerOtpFieldState extends State<NumerOtpField> {
       ),
       child: Text(
         index < _value.length ? _value[index] : '',
-        style: context.text.sectionTitle,
+        style: context.text.sectionTitle.copyWith(
+          color: widget.enabled
+              ? null
+              : colors.onSurface.withValues(alpha: _disabledAlpha),
+        ),
       ),
     );
   }

@@ -27,7 +27,8 @@ enum _State {
   empty(''),
   partial('123'),
   focused('12'),
-  error('');
+  error(''),
+  disabled('123');
 
   const _State(this.value);
 
@@ -73,6 +74,7 @@ void main() {
                       controller: controller,
                       autofocus: state == _State.focused,
                       hasError: state == _State.error,
+                      enabled: state != _State.disabled,
                       onCompleted: (_) {},
                     ),
                   ),
