@@ -2596,12 +2596,6 @@ abstract class AppLocalizations {
   /// **'Signed in successfully'**
   String get signedInSuccessfully;
 
-  /// No description provided for @resendEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend email'**
-  String get resendEmail;
-
   /// No description provided for @enterEmail.
   ///
   /// In en, this message translates to:

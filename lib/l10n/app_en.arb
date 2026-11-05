@@ -605,7 +605,6 @@
   "afterCreatingAccount": "After creating an account, you'll need to verify your email to start using the app.",
   "verificationEmailSent": "Verification email sent!",
   "signedInSuccessfully": "Signed in successfully",
-  "resendEmail": "Resend email",
   "enterEmail": "Please enter your email address.",
   "invalidEmail": "Please enter a valid email address.",
   "enterPassword": "Enter your password.",

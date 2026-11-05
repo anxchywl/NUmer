@@ -1352,9 +1352,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedInSuccessfully => 'Signed in successfully';
 
   @override
-  String get resendEmail => 'Resend email';
-
-  @override
   String get enterEmail => 'Please enter your email address.';
 
   @override

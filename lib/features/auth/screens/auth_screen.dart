@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
-import 'package:numer_app/features/auth/screens/email_verification_dialog.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 // Validation patterns
@@ -514,29 +513,6 @@ class _LoginFormState extends State<_LoginForm> {
       return;
     }
 
-    if (error.contains('verify your email')) {
-      showAppMessage(
-        context,
-        error,
-        isError: true,
-        actionLabel: AppLocalizations.of(context)!.resendEmail,
-        onAction: () async {
-          final result = await auth.sendEmailVerification();
-          if (!mounted) return;
-
-          if (result == null) {
-            showAppMessage(
-              context,
-              AppLocalizations.of(context)!.verificationEmailSent,
-            );
-          } else {
-            showAppMessage(context, result, isError: true);
-          }
-        },
-      );
-      return;
-    }
-
     showAppMessage(context, error, isError: true);
   }
 
@@ -701,51 +677,6 @@ class _RegisterFormState extends State<_RegisterForm> {
 
     if (error != null) {
       showAppMessage(context, error, isError: true);
-      return;
-    }
-
-    final verified = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const EmailVerificationDialog(),
-    );
-
-    if (!mounted) return;
-
-    if (verified == true) {
-      final loginError = await auth.signIn(
-        email: _loginController.text,
-        password: _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      if (loginError != null) {
-        showAppMessage(context, loginError, isError: true);
-      }
-
-      setState(() {
-        _autoValidate = false;
-        _loginController.clear();
-        _displayNameController.clear();
-        _passwordController.clear();
-      });
-    } else {
-      await auth.signOut();
-
-      if (!mounted) return;
-
-      final parent = context.findAncestorStateOfType<_AuthScreenState>();
-      parent?.setState(() {
-        parent._showLogin = true;
-      });
-
-      setState(() {
-        _autoValidate = false;
-        _loginController.clear();
-        _displayNameController.clear();
-        _passwordController.clear();
-      });
     }
   }
 }
