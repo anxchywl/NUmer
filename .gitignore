@@ -90,3 +90,11 @@ backend/numer_identity/.coverage
 # numer_ui package
 packages/numer_ui/pubspec.lock
 packages/numer_ui/test/goldens/
+
+# per-environment firebase config
+android/app/google-services.production.json
+android/app/google-services.staging.json
+ios/Runner/GoogleService-Info.production.plist
+ios/Runner/GoogleService-Info.staging.plist
+env/*.json
+!env/*.example.json

@@ -1,6 +1,7 @@
 {
   "projects": {
-    "default": "numer-60744"
+    "default": "numer-60744",
+    "staging": "lendings-killer"
   },
   "targets": {},
   "etags": {}

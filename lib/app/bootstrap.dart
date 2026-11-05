@@ -116,11 +116,19 @@ Future<void> startApp() async {
     'USE_FIRESTORE_EMULATOR',
     defaultValue: false,
   );
+  if (useEmulator && kReleaseMode && appEnv == 'production') {
+    throw StateError(
+      'USE_FIRESTORE_EMULATOR is refused in a production release build',
+    );
+  }
+  // resolved before runApp because the loading shell hides init errors
+  final firebaseOptions = DefaultFirebaseOptions.currentPlatform;
   // crashlytics has no web implementation
   final crashReporter = kReleaseMode && !kIsWeb
       ? FirebaseCrashReporter()
       : NoopCrashReporter();
   final initFuture = _initializeApp(
+    firebaseOptions: firebaseOptions,
     useEmulator: useEmulator,
     crashReporter: crashReporter,
   );
@@ -158,10 +166,16 @@ ThemeMode _parseThemeMode(String? value) {
 
 // one-time firebase and hive bootstrap that runs before the app is usable
 Future<void> _initializeApp({
+  required FirebaseOptions firebaseOptions,
   required bool useEmulator,
   required CrashReporter crashReporter,
 }) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(options: firebaseOptions);
+
+  // auth accepts the emulator only before its first use
+  if (useEmulator) {
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
+  }
 
   // outside release the hooks would only hide uncaught errors from the console
   await startCrashReporting(crashReporter, installHooks: kReleaseMode);
