@@ -24,6 +24,7 @@ import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/firebase_options.dart';
 import 'package:numer_app/core/notifications/notifications.dart';
 import 'package:numer_app/core/notifications/recording_notification_service.dart';
+import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/groups/groups.dart';
@@ -63,6 +64,23 @@ Future<void> _activateAppCheck({required bool useEmulator}) async {
   );
 }
 
+// the framework handler that was already installed still runs
+void installCrashHooks(CrashReporter reporter) {
+  final previous = FlutterError.onError;
+  FlutterError.onError = (details) {
+    reporter.recordError(
+      details.exception,
+      details.stack ?? StackTrace.empty,
+      fatal: true,
+    );
+    previous?.call(details);
+  };
+  PlatformDispatcher.instance.onError = (error, stack) {
+    reporter.recordError(error, stack, fatal: true);
+    return true;
+  };
+}
+
 // app entrypoint, preloads the stored theme then mounts the bootstrap widget
 Future<void> startApp() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +100,14 @@ Future<void> startApp() async {
     'USE_FIRESTORE_EMULATOR',
     defaultValue: false,
   );
-  final initFuture = _initializeApp(useEmulator: useEmulator);
+  // crashlytics has no web implementation
+  final crashReporter = kReleaseMode && !kIsWeb
+      ? FirebaseCrashReporter()
+      : NoopCrashReporter();
+  final initFuture = _initializeApp(
+    useEmulator: useEmulator,
+    crashReporter: crashReporter,
+  );
 
   runApp(
     NumerBootstrapApp(
@@ -90,6 +115,7 @@ Future<void> startApp() async {
       initialTheme: initialTheme,
       prefs: prefs,
       appBuild: int.tryParse(packageInfo.buildNumber) ?? 0,
+      crashReporter: crashReporter,
     ),
   );
 }
@@ -115,8 +141,15 @@ ThemeMode _parseThemeMode(String? value) {
 }
 
 // one-time firebase and hive bootstrap that runs before the app is usable
-Future<void> _initializeApp({required bool useEmulator}) async {
+Future<void> _initializeApp({
+  required bool useEmulator,
+  required CrashReporter crashReporter,
+}) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await crashReporter.init();
+  // outside release the hooks would only hide uncaught errors from the console
+  if (kReleaseMode) installCrashHooks(crashReporter);
 
   if (!kIsWeb) {
     FirebaseFirestore.instance.settings = const Settings(
@@ -150,12 +183,14 @@ class NumerBootstrapApp extends StatelessWidget {
   final ThemeMode initialTheme;
   final SharedPreferences prefs;
   final int appBuild;
+  final CrashReporter crashReporter;
   const NumerBootstrapApp({
     super.key,
     required this.initFuture,
     required this.initialTheme,
     required this.prefs,
     required this.appBuild,
+    required this.crashReporter,
   });
 
   @override
@@ -166,6 +201,7 @@ class NumerBootstrapApp extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return MultiProvider(
             providers: [
+              Provider<CrashReporter>.value(value: crashReporter),
               ChangeNotifierProvider<AppConfigService>(
                 create: (_) => AppConfigService(
                   prefs: prefs,

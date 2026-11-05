@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/app/bootstrap.dart';
+import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -18,6 +19,7 @@ void main() {
         initialTheme: ThemeMode.system,
         prefs: prefs,
         appBuild: 1,
+        crashReporter: NoopCrashReporter(),
       ),
     );
 
