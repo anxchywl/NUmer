@@ -187,16 +187,18 @@ native config file also initialises the default app, so it must be switched toge
 
 | Environment | Run the app | Deploy functions and rules | Config files (git-ignored) |
 |-------------|-------------|----------------------------|----------------------------|
-| Emulator | `flutter run --dart-define=USE_FIRESTORE_EMULATOR=true` plus the defines of the project it stands in for | nothing to deploy, the emulators read the working tree | native files of that project |
+| Emulator | `./scripts/use_firebase_env.sh staging`, then `flutter run --dart-define-from-file=env/staging.json --dart-define=USE_FIRESTORE_EMULATOR=true` | nothing to deploy, the emulators read the working tree | `functions/.secret.local`, `functions/.env.local` and the staging files |
 | Staging | `./scripts/use_firebase_env.sh staging`, then `flutter run --dart-define-from-file=env/staging.json` | `./scripts/deploy_staging.sh` (`DRY_RUN=1` prints the command) | `env/staging.json`, `functions/.env.<staging id>`, `*.staging.*` native files |
 | Production | `./scripts/use_firebase_env.sh production`, then `flutter run` with `--dart-define` for `FIREBASE_ANDROID_API_KEY` and `FIREBASE_IOS_API_KEY` | by the owner, by hand: `firebase deploy --project default` | `functions/.env.numer-60744`, `*.production.*` native files |
 
 - The native files live beside the ones the build reads:
   `android/app/google-services.<env>.json` and `ios/Runner/GoogleService-Info.<env>.plist`. The
-  script copies both over `google-services.json` and `GoogleService-Info.plist`.
+  script copies both over `google-services.json` and `GoogleService-Info.plist`. A production
+  file with no saved copy is saved first, and the script refuses to switch when the active and
+  saved production files differ.
 - Create `env/staging.json` from `env/staging.example.json`. The values come from
   `firebase apps:sdkconfig` for the staging apps; the storage bucket and the API keys must equal
-  those in the native files.
+  those in the native files. A staging build refuses the production project id.
 - Before the first staging deploy, set the `MAIL_API_KEY` and `AUTH_CODE_SECRET` secrets in that
   project. The deploy script refuses a missing alias, the production id and a missing env file.
 - Staging normally runs in debug. A staging release build needs App Check registered for the
@@ -205,14 +207,26 @@ native config file also initialises the default app, so it must be switched toge
 ### Emulators
 
 ```bash
-(cd functions && npm run build) && firebase emulators:start --only auth,functions,firestore
+cp functions/.secret.local.example functions/.secret.local
 ```
 
+```bash
+./scripts/start_emulators.sh
+```
+
+- The copy is made once. Without `functions/.secret.local` the Functions emulator reads the
+  declared secrets from the project's Secret Manager, so a bare `firebase emulators:start`, which
+  runs as the production project, would load production secrets and send real mail. Always use the
+  script (`npm start` in `functions/` runs it): it runs under the staging project id and refuses
+  to start until every secret in the example file is set.
+- For the email code flows, put `MAIL_PROVIDER=console` and `AUTH_ENFORCE_APPCHECK=off` in the
+  git-ignored `functions/.env.local`. No mail is sent; the log shows only the subject, so the code
+  itself cannot be read there.
 - `USE_FIRESTORE_EMULATOR=true` points Auth (9099), Firestore (8080) and Functions (5001) at
   `localhost` and skips App Check. Other Firebase services, such as Cloud Messaging, still reach
   the project in the app's options.
-- The emulators serve the default (production) project id unless started with
-  `--project staging`; match it to the app's `APP_ENV`.
+- Run the app with the staging defines: with production options its project id differs from the
+  emulators' and its function calls do not reach them.
 - A release build with `APP_ENV=production` refuses to start with the switch on.
 - On Android the Firebase plugins replace `localhost` with `10.0.2.2`, which reaches the host
   from an Android emulator only. Because of that, `adb reverse tcp:8080 tcp:8080` (and the same
