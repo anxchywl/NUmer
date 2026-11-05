@@ -917,5 +917,49 @@
   "viaManualRecording": "Через ручной ввод",
   "updateRequiredTitle": "Обновите NUmer",
   "updateRequiredBody": "Эта версия больше не поддерживается. Установите последнюю версию, чтобы продолжить.",
-  "updateRequiredAction": "Обновить"
+  "updateRequiredAction": "Обновить",
+  "codeScreenTitle": "Введите код",
+  "codeScreenSubtitle": "Мы отправили 6-значный код на {email}",
+  "@codeScreenSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "codeFieldLabel": "6-значный код",
+  "verifyCodeButton": "Подтвердить",
+  "resendCode": "Отправить снова",
+  "resendCodeIn": "Отправить снова через {seconds} с",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "newCodeSent": "Новый код отправлен.",
+  "codeInvalid": "Неверный код. Осталось попыток: {count}.",
+  "@codeInvalid": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeInvalidOrExpired": "Неверный или устаревший код. Запросите новый.",
+  "codeExpired": "Код устарел. Запросите новый.",
+  "codeTooManyAttempts": "Слишком много неверных попыток. Запросите новый код.",
+  "codeRateLimited": "Слишком много запросов. Повторите через {seconds} с.",
+  "@codeRateLimited": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "codeDeliveryFailed": "Не удалось отправить письмо. Попробуйте ещё раз.",
+  "codeCheckFailed": "Не удалось проверить код. Попробуйте ещё раз.",
+  "codeOffline": "Нет соединения. Проверьте сеть и повторите.",
+  "emailVerifiedMessage": "Почта подтверждена."
 }
