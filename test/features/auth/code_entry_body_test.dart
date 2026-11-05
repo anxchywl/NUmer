@@ -182,6 +182,19 @@ void main() {
     expect(find.text(_tooMany), findsNothing);
   });
 
+  testWidgets('locks after the last wrong attempt', (tester) async {
+    await _submitFailing(
+      tester,
+      const CodeFailure(CodeFailureReason.invalidCode, attemptsLeft: 0),
+    );
+
+    expect(find.text(_tooMany), findsOneWidget);
+    expect(find.textContaining('0 attempts'), findsNothing);
+    expect(_fieldEnabled(tester), isFalse);
+    expect(_verifyEnabled(tester), isFalse);
+    expect(_resendEnabled(tester), isTrue);
+  });
+
   testWidgets('counts a rate limit down and releases the buttons', (
     tester,
   ) async {
