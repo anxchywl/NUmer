@@ -248,6 +248,7 @@ firebase deploy --only functions
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Remote flags: `lib/core/config/`
 - Crash reporting: `lib/core/observability/`
+- Performance budgets and measuring scripts: [PERFORMANCE.md](PERFORMANCE.md)
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
 - Module backend token verification: `backend/numer_identity/` (see its README)
