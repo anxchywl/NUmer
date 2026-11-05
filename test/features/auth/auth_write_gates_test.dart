@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:numer_app/features/auth/data/auth_service.dart'
-    show shouldSaveFcmToken, shouldUpsertEmailIndex;
+import 'package:numer_app/features/auth/data/auth_write_gates.dart';
 
 void main() {
   final savedAt = DateTime(2026, 1, 1).millisecondsSinceEpoch;
