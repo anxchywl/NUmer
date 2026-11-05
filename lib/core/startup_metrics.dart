@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-// Lightweight startup instrumentation — tracks time-to-first-frame, local Hive
-// hydration, and Firebase sync duration. All timings are relative to app_start.
+// one place for launch timings, so a slow start can be traced to its stage
 class StartupMetrics {
   StartupMetrics._();
 
