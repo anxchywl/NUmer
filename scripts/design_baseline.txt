@@ -20,9 +20,8 @@ icon_pack	lib/features/account/models/profile_avatar.dart	129
 color_literal	lib/features/account/screens/account.dart	4
 text_literal	lib/features/account/screens/account.dart	30
 weight	lib/features/account/screens/account.dart	2
-spinner	lib/features/account/screens/account.dart	3
-snackbar	lib/features/account/screens/account.dart	1
-alert	lib/features/account/screens/account.dart	3
+spinner	lib/features/account/screens/account.dart	2
+alert	lib/features/account/screens/account.dart	2
 chip	lib/features/account/widgets/accent_color_picker.dart	3
 color_literal	lib/features/account/widgets/accent_color_picker.dart	17
 text_literal	lib/features/account/widgets/accent_color_picker.dart	2

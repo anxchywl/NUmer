@@ -225,6 +225,8 @@ unused project was reused, and an id cannot be renamed.
 3. In the console search for the uid: there must be no document under `users`,
    `publicProfiles`, `groupIndex`, `email_index`, `nudges`, or any group.
 4. Firestore console, TTL: add a policy on `deletedUsers.expiresAt`.
+5. Deploy `firestore/firestore.indexes.json` before the functions: `sweepDeletedUsers` needs the
+   `deletedUsers` index on `status`, `sweptAt`, `completedAt`.
 
 ### C-7 Adoption check, reminder, then rules stage 2 (P1-08)
 **Why:** stage 2 degrades versions older than 1.2.0.
