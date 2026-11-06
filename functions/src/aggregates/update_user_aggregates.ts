@@ -10,8 +10,10 @@ import {
   userFieldsOf,
 } from './derive';
 import { contributionOf } from './ledger';
+import { updateIfExists } from '../shared/user_writes';
 
 export interface LegacyInputs {
+  userExists: boolean;
   groupIds: string[];
   user: UserFields;
   hiddenCourseIds: Set<string>;
@@ -50,6 +52,7 @@ export async function loadLegacyInputs(userId: string, now: Date): Promise<Legac
   });
 
   return {
+    userExists: profileSnap.exists,
     groupIds,
     user,
     hiddenCourseIds,
@@ -81,10 +84,9 @@ export async function writeAggregates(userId: string, groupIds: string[], payloa
 export async function updateUserAggregates(userId: string) {
   const now = new Date();
   const inputs = await loadLegacyInputs(userId, now);
-  await db.collection('users').doc(userId).set(
-    { groupIds: inputs.groupIds },
-    { merge: true },
-  );
+  if (!inputs.userExists) return { payload: null, reads: inputs.reads };
+  const updated = await updateIfExists(db.collection('users').doc(userId), { groupIds: inputs.groupIds });
+  if (!updated) return { payload: null, reads: inputs.reads };
   const payload = derivePayload({
     userId,
     user: inputs.user,

@@ -25,11 +25,11 @@ function differingKeys(a: AggregatePayload, b: AggregatePayload): string[] {
 }
 
 function reportShadow(
-  legacy: AggregatePayload,
+  legacy: AggregatePayload | null,
   shadow: AggregatePayload | null,
   fields: { uid: string; sessionId?: string; courseId?: string },
 ) {
-  if (!shadow) return;
+  if (!legacy || !shadow) return;
   const keys = differingKeys(legacy, shadow);
   if (keys.length === 0) return;
   functions.logger.error('aggregate_shadow_mismatch', { ...fields, keys });

@@ -18,12 +18,18 @@ export const onGroupMemberWrite = functions
 
     // events arrive late or twice, and the transaction stops a change landing between read and write
     await db.runTransaction(async (txn) => {
-      const member = await txn.get(memberRef(groupId, memberId));
+      const [member, index] = await txn.getAll(memberRef(groupId, memberId), indexRef(memberId));
       const { arrayUnion, arrayRemove, serverTimestamp } = admin.firestore.FieldValue;
-      txn.set(indexRef(memberId), {
-        groupIds: member.exists ? arrayUnion(groupId) : arrayRemove(groupId),
-        updatedAt: serverTimestamp(),
-      }, { merge: true });
+      if (index.exists) {
+        txn.update(index.ref, {
+          groupIds: member.exists ? arrayUnion(groupId) : arrayRemove(groupId),
+          updatedAt: serverTimestamp(),
+        });
+        return;
+      }
+      // a missing index with no membership is a removed or deleted user, so nothing is re-created
+      if (!member.exists) return;
+      txn.create(index.ref, { groupIds: [groupId], updatedAt: serverTimestamp() });
     });
   });
 

@@ -10,6 +10,14 @@ void main() {
     expect(firebaseEnvFrom('staging'), FirebaseEnv.staging);
   });
 
+  test('accepts a staging project id', () {
+    expect(stagingProjectIdFrom('some-staging'), 'some-staging');
+  });
+
+  test('refuses the production project as staging', () {
+    expect(() => stagingProjectIdFrom('numer-60744'), throwsStateError);
+  });
+
   test('refuses any other value', () {
     for (final value in ['', 'prod', 'Staging', 'emulator']) {
       expect(() => firebaseEnvFrom(value), throwsStateError, reason: value);

@@ -15,6 +15,15 @@ FirebaseEnv firebaseEnvFrom(String value) => switch (value) {
   _ => throw StateError('unknown APP_ENV "$value", use production or staging'),
 };
 
+String stagingProjectIdFrom(String value) {
+  if (value == 'numer-60744') {
+    throw StateError(
+      'STAGING_FIREBASE_PROJECT_ID names the production project',
+    );
+  }
+  return value;
+}
+
 const String _androidApiKey = String.fromEnvironment(
   'FIREBASE_ANDROID_API_KEY',
 );
@@ -104,7 +113,7 @@ class DefaultFirebaseOptions {
       'STAGING_FIREBASE_SENDER_ID',
       _stagingSenderId,
     ),
-    projectId: _required('STAGING_FIREBASE_PROJECT_ID', _stagingProjectId),
+    projectId: _requiredStagingProjectId(),
     storageBucket: _required(
       'STAGING_FIREBASE_STORAGE_BUCKET',
       _stagingStorageBucket,
@@ -118,7 +127,7 @@ class DefaultFirebaseOptions {
       'STAGING_FIREBASE_SENDER_ID',
       _stagingSenderId,
     ),
-    projectId: _required('STAGING_FIREBASE_PROJECT_ID', _stagingProjectId),
+    projectId: _requiredStagingProjectId(),
     storageBucket: _required(
       'STAGING_FIREBASE_STORAGE_BUCKET',
       _stagingStorageBucket,
@@ -127,6 +136,10 @@ class DefaultFirebaseOptions {
       'STAGING_FIREBASE_IOS_BUNDLE_ID',
       _stagingIosBundleId,
     ),
+  );
+
+  static String _requiredStagingProjectId() => stagingProjectIdFrom(
+    _required('STAGING_FIREBASE_PROJECT_ID', _stagingProjectId),
   );
 
   static String _required(String name, String value) {

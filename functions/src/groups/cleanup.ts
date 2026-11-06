@@ -17,13 +17,6 @@ export async function deleteQueryBatch(
   }
 }
 
-export async function deleteUserCollections(userId: string, names: string[]) {
-  const userRef = db.collection('users').doc(userId);
-  await Promise.all(
-    names.map((name) => deleteQueryBatch(userRef.collection(name))),
-  );
-}
-
 export async function deleteGroupCascade(groupRef: FirebaseFirestore.DocumentReference) {
   const groupId = groupRef.id;
   const membersSnap = await groupRef.collection('members').get();
@@ -34,16 +27,14 @@ export async function deleteGroupCascade(groupRef: FirebaseFirestore.DocumentRef
   const chunkSize = 200;
   for (let i = 0; i < memberIds.length; i += chunkSize) {
     const batch = db.batch();
-    const slice = memberIds.slice(i, i + chunkSize);
-    for (const memberId of slice) {
-      const userRef = db.collection('users').doc(memberId);
-      const membershipRef = userRef.collection('groupMemberships').doc(groupId);
-      batch.delete(membershipRef);
-      batch.set(
-        userRef,
-        { groupIds: admin.firestore.FieldValue.arrayRemove(groupId) },
-        { merge: true },
-      );
+    const userRefs = memberIds.slice(i, i + chunkSize).map((id) => db.collection('users').doc(id));
+    // one update of a deleted user document would fail the whole batch
+    const users = await db.getAll(...userRefs);
+    for (const user of users) {
+      batch.delete(user.ref.collection('groupMemberships').doc(groupId));
+      if (user.exists) {
+        batch.update(user.ref, { groupIds: admin.firestore.FieldValue.arrayRemove(groupId) });
+      }
     }
     await batch.commit();
   }
