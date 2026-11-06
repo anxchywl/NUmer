@@ -532,6 +532,30 @@ abstract class AppLocalizations {
   /// **'Deleting account...'**
   String get deletingAccount;
 
+  /// No description provided for @deleteAccountPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password to delete the account'**
+  String get deleteAccountPasswordTitle;
+
+  /// No description provided for @deleteAccountWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong password. Try again.'**
+  String get deleteAccountWrongPassword;
+
+  /// No description provided for @deleteAccountNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Try again.'**
+  String get deleteAccountNetworkError;
+
+  /// No description provided for @deleteAccountFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete the account. Try again.'**
+  String get deleteAccountFailed;
+
   /// No description provided for @accountDeleted.
   ///
   /// In en, this message translates to:

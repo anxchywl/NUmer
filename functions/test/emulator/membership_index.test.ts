@@ -70,9 +70,9 @@ describe('onGroupMemberWrite', () => {
     expect(onGroupMemberWrite.__endpoint.eventTrigger?.retry).toBe(true);
   });
 
-  it('leaves the id out when a create event arrives after the delete', async () => {
+  it('writes no index when a create event arrives after the delete', async () => {
     await deliver('g1', 'late', {}, { role: 'member' });
-    expect((await indexOf('late'))?.groupIds).toEqual([]);
+    expect(await indexOf('late')).toBeUndefined();
   });
 });
 

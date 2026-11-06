@@ -10,11 +10,13 @@ describe('exports', () => {
       'onGroupMemberWrite',
       'onMailQueued',
       'onStudySessionWrite',
+      'onUserDeletionRequested',
       'onUserProfileWrite',
       'requestPasswordResetCode',
       'sendEmailVerificationCode',
       'sendNudge',
       'setUserRoles',
+      'sweepDeletedUsers',
       'verifyEmailCode',
       'verifyPasswordResetCode',
     ]);

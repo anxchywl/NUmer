@@ -250,6 +250,21 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deletingAccount => 'Удаление аккаунта...';
 
   @override
+  String get deleteAccountPasswordTitle =>
+      'Введите пароль, чтобы удалить аккаунт';
+
+  @override
+  String get deleteAccountWrongPassword =>
+      'Неверный пароль. Попробуйте ещё раз.';
+
+  @override
+  String get deleteAccountNetworkError => 'Нет соединения. Попробуйте ещё раз.';
+
+  @override
+  String get deleteAccountFailed =>
+      'Не удалось удалить аккаунт. Попробуйте ещё раз.';
+
+  @override
   String get accountDeleted => 'Аккаунт удалён';
 
   @override

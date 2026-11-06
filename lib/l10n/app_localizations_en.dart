@@ -250,6 +250,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deletingAccount => 'Deleting account...';
 
   @override
+  String get deleteAccountPasswordTitle =>
+      'Enter your password to delete the account';
+
+  @override
+  String get deleteAccountWrongPassword => 'Wrong password. Try again.';
+
+  @override
+  String get deleteAccountNetworkError => 'No connection. Try again.';
+
+  @override
+  String get deleteAccountFailed => 'Could not delete the account. Try again.';
+
+  @override
   String get accountDeleted => 'Account deleted';
 
   @override
