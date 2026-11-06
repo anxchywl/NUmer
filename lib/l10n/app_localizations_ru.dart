@@ -1353,9 +1353,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signedInSuccessfully => 'Вход выполнен успешно';
 
   @override
-  String get resendEmail => 'Отправить повторно';
-
-  @override
   String get enterEmail => 'Пожалуйста, введите адрес эл. почты.';
 
   @override

@@ -1351,9 +1351,6 @@ class AppLocalizationsKk extends AppLocalizations {
   String get signedInSuccessfully => 'Сәтті кірдіңіз';
 
   @override
-  String get resendEmail => 'Қайта жіберу';
-
-  @override
   String get enterEmail => 'Эл. поштаңызды енгізіңіз.';
 
   @override
