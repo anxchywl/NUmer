@@ -9,6 +9,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/history/widgets/export_session_dialog.dart';
 import 'package:numer_app/features/account/widgets/accent_color_picker.dart';
 import 'package:numer_app/features/account/widgets/universal_avatar.dart';
+import 'package:numer_app/features/account/widgets/delete_account_sheet.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
@@ -41,7 +42,6 @@ class _AccountScreenState extends State<AccountScreen> {
     final appState = context.read<AppState>();
     final syncService = context.read<SyncService>();
     final navigator = Navigator.of(context, rootNavigator: true);
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final currentContext = context;
 
     final confirmed = await showDialog<bool>(
@@ -108,43 +108,20 @@ class _AccountScreenState extends State<AccountScreen> {
       },
     );
 
-    if (confirmed != true) return;
+    if (confirmed != true || !mounted) return;
 
-    if (!mounted) return;
-
-    await appState.stopAndSaveAllActiveSessions();
-    await appState.waitForPendingReflections();
-    await syncService.pushNow();
-
-    if (!mounted) return;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 24),
-            Text(AppLocalizations.of(context)!.deletingAccount),
-          ],
-        ),
+    final deleted = await showDeleteAccountSheet(
+      context,
+      onDelete: (password) => auth.deleteAccount(
+        password: password,
+        beforeDelete: () async {
+          await appState.stopAndSaveAllActiveSessions();
+          await appState.waitForPendingReflections();
+          await syncService.pushNow();
+        },
       ),
     );
-
-    String? error;
-    try {
-      error = await auth.deleteAccount();
-    } finally {
-      if (navigator.canPop()) {
-        navigator.pop();
-      }
-    }
-
-    if (error != null) {
-      scaffoldMessenger.showSnackBar(SnackBar(content: Text(error)));
-      return;
-    }
+    if (!deleted) return;
 
     navigator.pushNamedAndRemoveUntil('/', (route) => false);
   }
