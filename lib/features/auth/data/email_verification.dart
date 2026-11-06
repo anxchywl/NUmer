@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_code_api.dart';
 
 mixin EmailVerification {
+  String? _acceptedUid;
+
   AuthCodeApi get codeApi;
   FirebaseAuth get firebaseAuth;
   Future<String?> checkEmailVerified();
@@ -40,12 +42,16 @@ mixin EmailVerification {
 
   Future<CodeResult> verifyEmailCode(String code) async {
     final uid = firebaseAuth.currentUser?.uid;
-    final result = await codeApi.verifyEmailCode(code);
-    if (result is! CodeOk) {
-      if (uid != null && _endsCode(result)) await _forgetCode(uid);
-      return result;
+    // an accepted code is spent, so a retry only has the session left to refresh
+    if (uid == null || uid != _acceptedUid) {
+      final result = await codeApi.verifyEmailCode(code);
+      if (result is! CodeOk) {
+        if (uid != null && _endsCode(result)) await _forgetCode(uid);
+        return result;
+      }
+      _acceptedUid = uid;
     }
-    return await refreshVerifiedEmail() ?? result;
+    return await refreshVerifiedEmail() ?? const CodeOk({'verified': true});
   }
 
   // the gate advances only once the session itself reports a verified address

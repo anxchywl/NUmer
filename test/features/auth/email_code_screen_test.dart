@@ -14,8 +14,10 @@ class _FakeUser implements User {
   int reloads = 0;
   FirebaseAuthException? tokenError;
 
+  String id = 'student';
+
   @override
-  String get uid => 'student';
+  String get uid => id;
 
   @override
   String get email => 'a.student@nu.edu.kz';
@@ -240,6 +242,42 @@ void main() {
 
     expect(result, refused);
     expect(auth.user.tokenRefreshes, isEmpty);
+  });
+
+  testWidgets('retries only the refresh after an accepted code', (
+    tester,
+  ) async {
+    final auth = _FakeAuth()
+      ..user.tokenError = FirebaseAuthException(code: 'network-request-failed');
+    final api = FakeAuthCodeApi()..sendResult = _sent();
+    await _pumpScreen(tester, _controller(auth, api));
+    await tester.enterText(find.byType(TextField), '123456');
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.textContaining('No connection'), findsOneWidget);
+
+    auth.user.tokenError = null;
+    api.verifyResult = const CodeFailure(CodeFailureReason.noActiveCode);
+    await tester.tap(find.byType(FilledButton));
+    await tester.pump();
+    await tester.pump();
+
+    expect(api.checkedCodes, ['123456']);
+    expect(auth.user.tokenRefreshes, [true]);
+    expect(find.textContaining('Code expired'), findsNothing);
+  });
+
+  test('checks the code again for another account', () async {
+    final auth = _FakeAuth();
+    final api = FakeAuthCodeApi();
+    final controller = _controller(auth, api);
+    await controller.verifyEmailCode('123456');
+
+    auth.user.id = 'another';
+    await controller.verifyEmailCode('654321');
+
+    expect(api.checkedCodes, ['123456', '654321']);
   });
 
   test('reports offline when the session cannot be refreshed', () async {
