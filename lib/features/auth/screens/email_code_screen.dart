@@ -26,11 +26,23 @@ class _EmailCodeScreenState extends State<EmailCodeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _sendFirstCode());
   }
 
+  // a new code would replace the one the user may be about to type
   Future<void> _sendFirstCode() async {
     if (!mounted) return;
-    final result = await _send();
+    final pending = await context
+        .read<AuthController>()
+        .pendingVerificationCode();
+    if (!mounted) return;
+    final result = pending ?? await _send();
     if (!mounted) return;
     setState(() => _firstSend = result);
+    if (pending != null) await _advanceIfVerified();
+  }
+
+  // without a send nothing else reports a link used while the app was closed
+  Future<void> _advanceIfVerified() async {
+    final failure = await context.read<AuthController>().refreshVerifiedEmail();
+    if (failure == null && mounted) _announceVerified();
   }
 
   // the address may already be verified, for example through an emailed link

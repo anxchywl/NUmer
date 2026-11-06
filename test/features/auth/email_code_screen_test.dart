@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_auth_code_api.dart';
 
@@ -12,6 +13,9 @@ class _FakeUser implements User {
   final List<bool> tokenRefreshes = [];
   int reloads = 0;
   FirebaseAuthException? tokenError;
+
+  @override
+  String get uid => 'student';
 
   @override
   String get email => 'a.student@nu.edu.kz';
@@ -79,7 +83,97 @@ Future<void> _pumpScreen(
   await tester.pump();
 }
 
+CodeOk _sent({Duration life = const Duration(minutes: 10)}) {
+  final now = DateTime.now();
+  return CodeOk({
+    'status': 'sent',
+    'resendAvailableAt': now.millisecondsSinceEpoch,
+    'expiresAt': now.add(life).millisecondsSinceEpoch,
+  });
+}
+
+// a second mount with the same stored preferences stands for a cold start
+Future<FakeAuthCodeApi> _restart(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox());
+  final api = FakeAuthCodeApi()..sendResult = _sent();
+  await _pumpScreen(tester, _controller(_FakeAuth(), api));
+  return api;
+}
+
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
+  testWidgets('sends no new code while the last one is valid', (tester) async {
+    final first = FakeAuthCodeApi()..sendResult = _sent();
+    await _pumpScreen(tester, _controller(_FakeAuth(), first));
+
+    final second = await _restart(tester);
+
+    expect(first.sentLocales, ['en']);
+    expect(second.sentLocales, isEmpty);
+
+    await tester.tap(find.text('Resend code'));
+    await tester.pump();
+
+    expect(second.sentLocales, ['en']);
+  });
+
+  testWidgets('sends again when the last code has expired', (tester) async {
+    final first = FakeAuthCodeApi()
+      ..sendResult = _sent(life: const Duration(seconds: -1));
+    await _pumpScreen(tester, _controller(_FakeAuth(), first));
+
+    final second = await _restart(tester);
+
+    expect(second.sentLocales, ['en']);
+  });
+
+  testWidgets('sends again after a send that failed', (tester) async {
+    final first = FakeAuthCodeApi()
+      ..sendResult = const CodeFailure(CodeFailureReason.offline);
+    await _pumpScreen(tester, _controller(_FakeAuth(), first));
+
+    final second = await _restart(tester);
+
+    expect(second.sentLocales, ['en']);
+  });
+
+  const dead = {
+    'an expired code': CodeFailure(CodeFailureReason.codeExpired),
+    'a missing code': CodeFailure(CodeFailureReason.noActiveCode),
+    'a locked code': CodeFailure(CodeFailureReason.tooManyAttempts),
+    'the last attempt': CodeFailure(
+      CodeFailureReason.invalidCode,
+      attemptsLeft: 0,
+    ),
+  };
+  for (final MapEntry(key: name, value: failure) in dead.entries) {
+    testWidgets('sends again after $name', (tester) async {
+      final first = FakeAuthCodeApi()
+        ..sendResult = _sent()
+        ..verifyResult = failure;
+      final controller = _controller(_FakeAuth(), first);
+      await _pumpScreen(tester, controller);
+      await controller.verifyEmailCode('123456');
+
+      final second = await _restart(tester);
+
+      expect(second.sentLocales, ['en']);
+    });
+  }
+
+  testWidgets('checks the session once when it skips the send', (tester) async {
+    final first = FakeAuthCodeApi()..sendResult = _sent();
+    await _pumpScreen(tester, _controller(_FakeAuth(), first));
+    await tester.pumpWidget(const SizedBox());
+    final auth = _FakeAuth();
+
+    await _pumpScreen(tester, _controller(auth, FakeAuthCodeApi()));
+
+    expect(auth.user.reloads, 1);
+    expect(find.textContaining('Could not'), findsNothing);
+  });
+
   testWidgets('sends one code in the app locale on mount', (tester) async {
     final api = FakeAuthCodeApi();
     final controller = _controller(_FakeAuth(), api);
