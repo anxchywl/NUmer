@@ -106,7 +106,7 @@ class _AuthGateState extends State<AuthGate> {
           context.read<AppState>().unload();
         });
       }
-      return const EmailVerificationStatus();
+      return const EmailCodeScreen();
     }
 
     if (auth.isBootstrapping || !auth.isSyncReady || !auth.isProfileReady) {
