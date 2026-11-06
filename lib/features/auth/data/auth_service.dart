@@ -14,11 +14,13 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/data/user_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
+import 'account_deletion.dart';
 import 'auth_code_api.dart';
 import 'auth_write_gates.dart';
 import 'email_verification.dart';
 import 'password_reset_result.dart';
 
+export 'account_deletion.dart';
 export 'password_reset_result.dart';
 
 class AuthFailure implements Exception {
@@ -33,15 +35,18 @@ class AuthController extends ChangeNotifier with EmailVerification {
   AuthController({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
+    FirebaseFunctions? functions,
     AuthCodeApi? codeApi,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
+       _functions = functions ?? FirebaseFunctions.instance,
        codeApi = codeApi ?? FunctionsAuthCodeApi() {
     _subscription = _auth.authStateChanges().listen(_handleAuthState);
   }
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final FirebaseFunctions _functions;
   @override
   final AuthCodeApi codeApi;
   SyncService? _syncService;
@@ -166,8 +171,12 @@ class AuthController extends ChangeNotifier with EmailVerification {
     lastPreparationError = null;
     _forcedLoggedOut = false;
     UserStorage.setCurrentUser(user.uid);
-    _syncReady = false;
+    _startPreparation(user);
+    notifyListeners();
+  }
 
+  void _startPreparation(User user) {
+    _syncReady = false;
     final future = _prepareUser(user);
     _initializingUser = future;
     unawaited(
@@ -187,7 +196,6 @@ class AuthController extends ChangeNotifier with EmailVerification {
             notifyListeners();
           }),
     );
-    notifyListeners();
   }
 
   String? lastPreparationError;
@@ -546,206 +554,42 @@ class AuthController extends ChangeNotifier with EmailVerification {
     notifyListeners();
   }
 
-  Future<String?> deleteAccount() async {
+  // re-authentication comes first so a wrong password leaves sync and local data untouched
+  Future<DeleteAccountFailure?> deleteAccount({
+    required String password,
+    Future<void> Function()? beforeDelete,
+  }) async {
     final user = _currentUser;
-    if (user == null) return 'Not signed in';
+    if (user == null) return DeleteAccountFailure.failed;
 
     _setBusy(true);
     try {
-      final userId = user.uid;
+      final failure = await reauthenticateForDeletion(user, password);
+      if (failure != null) return failure;
 
+      await beforeDelete?.call();
       _syncReady = false;
       _initializingUser = null;
       await _syncService?.stop();
 
-      await _deleteAccountRemote(user);
-      _pendingAccountDeletedMessage = true;
+      try {
+        await _functions.httpsCallable('deleteAccountCallable').call();
+      } on FirebaseFunctionsException {
+        _startPreparation(user);
+        return DeleteAccountFailure.failed;
+      }
 
-      await _clearLocalUserData(userId);
+      _pendingAccountDeletedMessage = true;
+      await _clearLocalUserData(user.uid);
       _currentUser = null;
       _profileData = null;
       _profileReady = false;
       _requiresEmailVerification = false;
       await _auth.signOut();
       notifyListeners();
-
       return null;
-    } on FirebaseAuthException catch (e) {
-      return _messageForAuthCode(e.code);
-    } on FirebaseFunctionsException catch (e) {
-      return e.message ?? 'Failed to delete account. Please try again.';
-    } catch (e) {
-      return 'Failed to delete account: $e';
     } finally {
       _setBusy(false);
-    }
-  }
-
-  Future<void> _deleteAccountRemote(User user) async {
-    final callable = FirebaseFunctions.instance.httpsCallable(
-      'deleteAccountCallable',
-    );
-    try {
-      await callable.call();
-    } on FirebaseFunctionsException catch (e) {
-      if (e.code == 'unimplemented' || e.code == 'not-found') {
-        await _deleteAccountLocally(user);
-        return;
-      }
-      rethrow;
-    }
-  }
-
-  Future<void> _deleteAccountLocally(User user) async {
-    final userId = user.uid;
-    await _removeUserMemberships(userId);
-    await _deleteGroupsOwnedBy(userId);
-    await _deleteUserOwnedData(userId);
-    await _deleteUserProfileDocument(userId);
-    await user.delete();
-  }
-
-  Future<void> _deleteGroupsOwnedBy(String userId) async {
-    final groupsSnapshot = await _firestore
-        .collection('groups')
-        .where('createdBy', isEqualTo: userId)
-        .get();
-
-    await Future.wait(groupsSnapshot.docs.map(_deleteOwnedGroupCascade));
-  }
-
-  Future<void> _deleteOwnedGroupCascade(
-    QueryDocumentSnapshot<Map<String, dynamic>> groupDoc,
-  ) async {
-    final groupRef = groupDoc.reference;
-    final groupId = groupRef.id;
-
-    final results = await Future.wait<QuerySnapshot<Map<String, dynamic>>>([
-      groupRef.collection('members').get(),
-      groupRef.collection('invites').get(),
-    ]);
-
-    final membersSnapshot = results[0];
-    final invitesSnapshot = results[1];
-
-    final memberRefs = membersSnapshot.docs
-        .map((doc) => doc.reference)
-        .toList();
-    final inviteRefs = invitesSnapshot.docs
-        .map((doc) => doc.reference)
-        .toList();
-
-    final membershipRefs = membersSnapshot.docs
-        .map(
-          (doc) => _firestore
-              .collection('users')
-              .doc(doc.id)
-              .collection('groupMemberships')
-              .doc(groupId),
-        )
-        .toList();
-
-    await Future.wait([
-      _deleteDocumentRefs(memberRefs),
-      _deleteDocumentRefs(inviteRefs),
-      _deleteDocumentRefs(membershipRefs),
-    ]);
-
-    await groupRef.delete();
-  }
-
-  Future<void> _removeUserMemberships(String userId) async {
-    final membershipSnapshot = await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('groupMemberships')
-        .get();
-
-    const chunkSize = 400;
-    for (var i = 0; i < membershipSnapshot.docs.length; i += chunkSize) {
-      final slice = membershipSnapshot.docs.sublist(
-        i,
-        min(i + chunkSize, membershipSnapshot.docs.length),
-      );
-
-      final groupSnapshots = await Future.wait(
-        slice.map((m) => _firestore.collection('groups').doc(m.id).get()),
-      );
-
-      final batch = _firestore.batch();
-      for (var j = 0; j < slice.length; j++) {
-        final membership = slice[j];
-        final groupSnap = groupSnapshots[j];
-        final groupId = membership.id;
-        final groupRef = _firestore.collection('groups').doc(groupId);
-
-        batch.delete(groupRef.collection('members').doc(userId));
-        batch.delete(groupRef.collection('aggregates').doc(userId));
-        batch.delete(membership.reference);
-
-        if (groupSnap.exists) {
-          batch.set(groupRef, {
-            'memberCount': FieldValue.increment(-1),
-            'updatedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
-        }
-      }
-      await batch.commit();
-    }
-  }
-
-  Future<void> _deleteUserOwnedData(String userId) async {
-    final userDoc = _firestore.collection('users').doc(userId);
-    const subcollections = [
-      'courses',
-      'studyTimes',
-      'courseGoals',
-      'courseProgress',
-      'sessions',
-      'studySessions',
-      'goals',
-      'reflections',
-      'preferences',
-      'groupMemberships',
-      'meta',
-      'aggregates',
-    ];
-
-    await Future.wait([
-      for (final name in subcollections)
-        _deleteQueryBatch(userDoc.collection(name)),
-    ]);
-  }
-
-  Future<void> _deleteUserProfileDocument(String userId) async {
-    final userDoc = _firestore.collection('users').doc(userId);
-    await userDoc.delete();
-  }
-
-  Future<void> _deleteQueryBatch(
-    Query<Map<String, dynamic>> query, {
-    int batchSize = 250,
-  }) async {
-    while (true) {
-      final snapshot = await query.limit(batchSize).get();
-      if (snapshot.docs.isEmpty) break;
-      await _deleteDocumentRefs(
-        snapshot.docs.map((doc) => doc.reference).toList(),
-      );
-      if (snapshot.docs.length < batchSize) break;
-    }
-  }
-
-  Future<void> _deleteDocumentRefs(List<DocumentReference> refs) async {
-    if (refs.isEmpty) return;
-    const chunkSize = 400;
-    for (var i = 0; i < refs.length; i += chunkSize) {
-      final slice = refs.sublist(i, min(i + chunkSize, refs.length));
-      final batch = _firestore.batch();
-      for (final ref in slice) {
-        batch.delete(ref);
-      }
-      await batch.commit();
     }
   }
 
