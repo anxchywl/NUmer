@@ -16,6 +16,7 @@ import 'package:numer_app/core/data/user_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'auth_code_api.dart';
 import 'auth_write_gates.dart';
+import 'email_verification.dart';
 import 'password_reset_result.dart';
 
 export 'password_reset_result.dart';
@@ -28,20 +29,21 @@ class AuthFailure implements Exception {
   String toString() => message;
 }
 
-class AuthController extends ChangeNotifier {
+class AuthController extends ChangeNotifier with EmailVerification {
   AuthController({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     AuthCodeApi? codeApi,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
-       _codeApi = codeApi ?? FunctionsAuthCodeApi() {
+       codeApi = codeApi ?? FunctionsAuthCodeApi() {
     _subscription = _auth.authStateChanges().listen(_handleAuthState);
   }
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final AuthCodeApi _codeApi;
+  @override
+  final AuthCodeApi codeApi;
   SyncService? _syncService;
   late final StreamSubscription<User?> _subscription;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSub;
@@ -64,6 +66,8 @@ class AuthController extends ChangeNotifier {
   int _lastResetRequestMs = 0;
 
   User? get currentUser => _currentUser;
+  @override
+  FirebaseAuth get firebaseAuth => _auth;
   Map<String, dynamic>? get profile => _profileData;
   bool get isProfileReady => _profileReady;
   bool get isBusy => _isBusy;
@@ -473,6 +477,7 @@ class AuthController extends ChangeNotifier {
     }
   }
 
+  @override
   Future<String?> checkEmailVerified() async {
     try {
       final user = _auth.currentUser;
@@ -494,31 +499,6 @@ class AuthController extends ChangeNotifier {
     } catch (e) {
       return 'Failed to check verification status. Please try again.';
     }
-  }
-
-  Future<CodeResult> sendVerificationCode(String locale) =>
-      _codeApi.sendEmailVerificationCode(locale);
-
-  Future<CodeResult> verifyEmailCode(String code) async {
-    final result = await _codeApi.verifyEmailCode(code);
-    if (result is! CodeOk) return result;
-    return await refreshVerifiedEmail() ?? result;
-  }
-
-  // the gate advances only once the session itself reports a verified address
-  Future<CodeFailure?> refreshVerifiedEmail() async {
-    try {
-      await _auth.currentUser?.getIdToken(true);
-    } on FirebaseAuthException catch (e) {
-      return CodeFailure(
-        e.code == 'network-request-failed'
-            ? CodeFailureReason.offline
-            : CodeFailureReason.unknown,
-      );
-    }
-    final error = await checkEmailVerified();
-    if (error == null) return null;
-    return const CodeFailure(CodeFailureReason.unknown);
   }
 
   Future<String?> signIn({
