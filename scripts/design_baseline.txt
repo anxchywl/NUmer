@@ -35,15 +35,8 @@ shadow	lib/features/auth/screens/auth_screen.dart	4
 color_literal	lib/features/auth/screens/auth_screen.dart	2
 spinner	lib/features/auth/screens/auth_screen.dart	1
 snackbar	lib/features/auth/screens/auth_screen.dart	4
-shadow	lib/features/auth/screens/email_verification_dialog.dart	1
-weight	lib/features/auth/screens/email_verification_dialog.dart	1
-spinner	lib/features/auth/screens/email_verification_dialog.dart	1
-snackbar	lib/features/auth/screens/email_verification_dialog.dart	2
 shadow	lib/features/auth/screens/profile_setup_screen.dart	1
 spinner	lib/features/auth/screens/profile_setup_screen.dart	1
-weight	lib/features/auth/screens/verification_status.dart	1
-spinner	lib/features/auth/screens/verification_status.dart	1
-snackbar	lib/features/auth/screens/verification_status.dart	4
 print	lib/features/connections/data/connections_service.dart	2
 color_literal	lib/features/connections/models/contact_group.dart	1
 text_literal	lib/features/connections/models/contact_group.dart	1
