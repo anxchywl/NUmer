@@ -53,7 +53,7 @@ App version: `1.0.3+32` (see `pubspec.yaml`). Icons are generated via
 
 Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 
-- **Auth** — email/password with verification.
+- **Auth** — email/password, with the address verified by an emailed 6-digit code.
 - **Firestore** — primary cloud store (rules in `firestore/firestore.rules`, indexes in
   `firestore/firestore.indexes.json`; paths wired via `firebase.json`).
 - **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/`, one folder per area,

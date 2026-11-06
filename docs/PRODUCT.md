@@ -16,8 +16,8 @@ Each capability below maps to a feature folder under `lib/features/` (see
 ## Capabilities
 
 ### Onboarding & profile — `auth`, `account`
-Sign-up/sign-in with email verification, guided onboarding, and a profile (avatar, name,
-major, study goals, accent color, preferred language).
+Sign-up/sign-in with email verification by a 6-digit code, guided onboarding, and a
+profile (avatar, name, major, study goals, accent color, preferred language).
 
 ### Courses & goals — `courses`
 Create courses with weekly study-hour goals, credits, experience levels, and custom order.
