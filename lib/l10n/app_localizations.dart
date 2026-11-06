@@ -4023,6 +4023,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Update'**
   String get updateRequiredAction;
+
+  /// No description provided for @codeScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get codeScreenTitle;
+
+  /// No description provided for @codeScreenSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a 6-digit code to {email}'**
+  String codeScreenSubtitle(String email);
+
+  /// No description provided for @codeFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'6-digit code'**
+  String get codeFieldLabel;
+
+  /// No description provided for @verifyCodeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify'**
+  String get verifyCodeButton;
+
+  /// No description provided for @resendCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code'**
+  String get resendCode;
+
+  /// No description provided for @resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend code in {seconds} s'**
+  String resendCodeIn(int seconds);
+
+  /// No description provided for @newCodeSent.
+  ///
+  /// In en, this message translates to:
+  /// **'New code sent.'**
+  String get newCodeSent;
+
+  /// No description provided for @codeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong code. {count, plural, one{1 attempt left.} other{{count} attempts left.}}'**
+  String codeInvalid(int count);
+
+  /// No description provided for @codeInvalidOrExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong or expired code. Request a new one.'**
+  String get codeInvalidOrExpired;
+
+  /// No description provided for @codeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expired. Request a new one.'**
+  String get codeExpired;
+
+  /// No description provided for @codeTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many wrong attempts. Request a new code.'**
+  String get codeTooManyAttempts;
+
+  /// No description provided for @codeRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests. Try again in {seconds} s.'**
+  String codeRateLimited(int seconds);
+
+  /// No description provided for @codeDeliveryFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the email. Try again.'**
+  String get codeDeliveryFailed;
+
+  /// No description provided for @codeCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check the code. Try again.'**
+  String get codeCheckFailed;
+
+  /// No description provided for @codeOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Check the network and try again.'**
+  String get codeOffline;
+
+  /// No description provided for @emailVerifiedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Email verified.'**
+  String get emailVerifiedMessage;
 }
 
 class _AppLocalizationsDelegate

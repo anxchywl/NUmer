@@ -2150,4 +2150,63 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get updateRequiredAction => 'Жаңарту';
+
+  @override
+  String get codeScreenTitle => 'Кодты енгізіңіз';
+
+  @override
+  String codeScreenSubtitle(String email) {
+    return '$email мекенжайына 6 таңбалы код жібердік';
+  }
+
+  @override
+  String get codeFieldLabel => '6 таңбалы код';
+
+  @override
+  String get verifyCodeButton => 'Растау';
+
+  @override
+  String get resendCode => 'Қайта жіберу';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return '$seconds с кейін қайта жіберу';
+  }
+
+  @override
+  String get newCodeSent => 'Жаңа код жіберілді.';
+
+  @override
+  String codeInvalid(int count) {
+    return 'Код қате. $count мүмкіндік қалды.';
+  }
+
+  @override
+  String get codeInvalidOrExpired =>
+      'Код қате немесе мерзімі өткен. Жаңасын сұраңыз.';
+
+  @override
+  String get codeExpired => 'Кодтың мерзімі өтті. Жаңасын сұраңыз.';
+
+  @override
+  String get codeTooManyAttempts => 'Қате әрекет тым көп. Жаңа код сұраңыз.';
+
+  @override
+  String codeRateLimited(int seconds) {
+    return 'Сұраныс тым көп. $seconds с кейін қайталаңыз.';
+  }
+
+  @override
+  String get codeDeliveryFailed =>
+      'Хатты жіберу мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get codeCheckFailed =>
+      'Кодты тексеру мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get codeOffline => 'Байланыс жоқ. Желіні тексеріп, қайталаңыз.';
+
+  @override
+  String get emailVerifiedMessage => 'Пошта расталды.';
 }

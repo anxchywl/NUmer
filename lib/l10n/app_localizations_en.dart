@@ -2168,4 +2168,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get updateRequiredAction => 'Update';
+
+  @override
+  String get codeScreenTitle => 'Enter the code';
+
+  @override
+  String codeScreenSubtitle(String email) {
+    return 'We sent a 6-digit code to $email';
+  }
+
+  @override
+  String get codeFieldLabel => '6-digit code';
+
+  @override
+  String get verifyCodeButton => 'Verify';
+
+  @override
+  String get resendCode => 'Resend code';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return 'Resend code in $seconds s';
+  }
+
+  @override
+  String get newCodeSent => 'New code sent.';
+
+  @override
+  String codeInvalid(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count attempts left.',
+      one: '1 attempt left.',
+    );
+    return 'Wrong code. $_temp0';
+  }
+
+  @override
+  String get codeInvalidOrExpired =>
+      'Wrong or expired code. Request a new one.';
+
+  @override
+  String get codeExpired => 'Code expired. Request a new one.';
+
+  @override
+  String get codeTooManyAttempts =>
+      'Too many wrong attempts. Request a new code.';
+
+  @override
+  String codeRateLimited(int seconds) {
+    return 'Too many requests. Try again in $seconds s.';
+  }
+
+  @override
+  String get codeDeliveryFailed => 'Could not send the email. Try again.';
+
+  @override
+  String get codeCheckFailed => 'Could not check the code. Try again.';
+
+  @override
+  String get codeOffline => 'No connection. Check the network and try again.';
+
+  @override
+  String get emailVerifiedMessage => 'Email verified.';
 }

@@ -1014,5 +1014,49 @@
   "sessionNotificationAction": "Сессияны бастау",
   "updateRequiredTitle": "NUmer қолданбасын жаңартыңыз",
   "updateRequiredBody": "Бұл нұсқаға енді қолдау көрсетілмейді. Жалғастыру үшін соңғы нұсқаны орнатыңыз.",
-  "updateRequiredAction": "Жаңарту"
+  "updateRequiredAction": "Жаңарту",
+  "codeScreenTitle": "Кодты енгізіңіз",
+  "codeScreenSubtitle": "{email} мекенжайына 6 таңбалы код жібердік",
+  "@codeScreenSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "codeFieldLabel": "6 таңбалы код",
+  "verifyCodeButton": "Растау",
+  "resendCode": "Қайта жіберу",
+  "resendCodeIn": "{seconds} с кейін қайта жіберу",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "newCodeSent": "Жаңа код жіберілді.",
+  "codeInvalid": "Код қате. {count} мүмкіндік қалды.",
+  "@codeInvalid": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeInvalidOrExpired": "Код қате немесе мерзімі өткен. Жаңасын сұраңыз.",
+  "codeExpired": "Кодтың мерзімі өтті. Жаңасын сұраңыз.",
+  "codeTooManyAttempts": "Қате әрекет тым көп. Жаңа код сұраңыз.",
+  "codeRateLimited": "Сұраныс тым көп. {seconds} с кейін қайталаңыз.",
+  "@codeRateLimited": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "codeDeliveryFailed": "Хатты жіберу мүмкін болмады. Қайталап көріңіз.",
+  "codeCheckFailed": "Кодты тексеру мүмкін болмады. Қайталап көріңіз.",
+  "codeOffline": "Байланыс жоқ. Желіні тексеріп, қайталаңыз.",
+  "emailVerifiedMessage": "Пошта расталды."
 }

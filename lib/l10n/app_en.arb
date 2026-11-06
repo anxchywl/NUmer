@@ -1023,5 +1023,49 @@
   "sessionNotificationAction": "Start session",
   "updateRequiredTitle": "Update NUmer",
   "updateRequiredBody": "This version is no longer supported. Install the latest version to continue.",
-  "updateRequiredAction": "Update"
+  "updateRequiredAction": "Update",
+  "codeScreenTitle": "Enter the code",
+  "codeScreenSubtitle": "We sent a 6-digit code to {email}",
+  "@codeScreenSubtitle": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "codeFieldLabel": "6-digit code",
+  "verifyCodeButton": "Verify",
+  "resendCode": "Resend code",
+  "resendCodeIn": "Resend code in {seconds} s",
+  "@resendCodeIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "newCodeSent": "New code sent.",
+  "codeInvalid": "Wrong code. {count, plural, one{1 attempt left.} other{{count} attempts left.}}",
+  "@codeInvalid": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "codeInvalidOrExpired": "Wrong or expired code. Request a new one.",
+  "codeExpired": "Code expired. Request a new one.",
+  "codeTooManyAttempts": "Too many wrong attempts. Request a new code.",
+  "codeRateLimited": "Too many requests. Try again in {seconds} s.",
+  "@codeRateLimited": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "codeDeliveryFailed": "Could not send the email. Try again.",
+  "codeCheckFailed": "Could not check the code. Try again.",
+  "codeOffline": "No connection. Check the network and try again.",
+  "emailVerifiedMessage": "Email verified."
 }

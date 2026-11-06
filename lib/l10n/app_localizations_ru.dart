@@ -2175,4 +2175,63 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updateRequiredAction => 'Обновить';
+
+  @override
+  String get codeScreenTitle => 'Введите код';
+
+  @override
+  String codeScreenSubtitle(String email) {
+    return 'Мы отправили 6-значный код на $email';
+  }
+
+  @override
+  String get codeFieldLabel => '6-значный код';
+
+  @override
+  String get verifyCodeButton => 'Подтвердить';
+
+  @override
+  String get resendCode => 'Отправить снова';
+
+  @override
+  String resendCodeIn(int seconds) {
+    return 'Отправить снова через $seconds с';
+  }
+
+  @override
+  String get newCodeSent => 'Новый код отправлен.';
+
+  @override
+  String codeInvalid(int count) {
+    return 'Неверный код. Осталось попыток: $count.';
+  }
+
+  @override
+  String get codeInvalidOrExpired =>
+      'Неверный или устаревший код. Запросите новый.';
+
+  @override
+  String get codeExpired => 'Код устарел. Запросите новый.';
+
+  @override
+  String get codeTooManyAttempts =>
+      'Слишком много неверных попыток. Запросите новый код.';
+
+  @override
+  String codeRateLimited(int seconds) {
+    return 'Слишком много запросов. Повторите через $seconds с.';
+  }
+
+  @override
+  String get codeDeliveryFailed =>
+      'Не удалось отправить письмо. Попробуйте ещё раз.';
+
+  @override
+  String get codeCheckFailed => 'Не удалось проверить код. Попробуйте ещё раз.';
+
+  @override
+  String get codeOffline => 'Нет соединения. Проверьте сеть и повторите.';
+
+  @override
+  String get emailVerifiedMessage => 'Почта подтверждена.';
 }
