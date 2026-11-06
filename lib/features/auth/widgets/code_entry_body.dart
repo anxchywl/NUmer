@@ -163,7 +163,13 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
     }
   }
 
-  void _applyFailure(CodeFailure failure) {
+  void _applyFailure(CodeFailure reported) {
+    final spent =
+        reported.reason == CodeFailureReason.invalidCode &&
+        reported.attemptsLeft == 0;
+    final failure = spent
+        ? const CodeFailure(CodeFailureReason.tooManyAttempts)
+        : reported;
     _hasResult = true;
     _failure = failure;
     switch (failure.reason) {
