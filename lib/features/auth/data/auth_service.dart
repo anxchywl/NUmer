@@ -14,6 +14,7 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/data/user_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
+import 'auth_code_api.dart';
 
 class AuthFailure implements Exception {
   final String message;
@@ -40,14 +41,19 @@ bool shouldUpsertEmailIndex(String normalizedEmail, String? written) =>
     normalizedEmail != written;
 
 class AuthController extends ChangeNotifier {
-  AuthController({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance {
+  AuthController({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    AuthCodeApi? codeApi,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _codeApi = codeApi ?? FunctionsAuthCodeApi() {
     _subscription = _auth.authStateChanges().listen(_handleAuthState);
   }
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  final AuthCodeApi _codeApi;
   SyncService? _syncService;
   late final StreamSubscription<User?> _subscription;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _profileSub;
@@ -465,17 +471,9 @@ class AuthController extends ChangeNotifier {
         await user.updateDisplayName(trimmedDisplayName);
       }
 
-      try {
-        await user.sendEmailVerification();
+      await _upsertEmailIndex(user.email, user.uid);
 
-        await Future.delayed(const Duration(seconds: 1));
-
-        await _upsertEmailIndex(user.email, user.uid);
-
-        return null;
-      } catch (e) {
-        return 'Failed to send verification email. Please try again.';
-      }
+      return null;
     } on FirebaseAuthException catch (e) {
       return _messageForAuthCode(e.code);
     } on FirebaseException catch (e) {
@@ -508,6 +506,31 @@ class AuthController extends ChangeNotifier {
     } catch (e) {
       return 'Failed to check verification status. Please try again.';
     }
+  }
+
+  Future<CodeResult> sendVerificationCode(String locale) =>
+      _codeApi.sendEmailVerificationCode(locale);
+
+  Future<CodeResult> verifyEmailCode(String code) async {
+    final result = await _codeApi.verifyEmailCode(code);
+    if (result is! CodeOk) return result;
+    return await refreshVerifiedEmail() ?? result;
+  }
+
+  // the gate advances only once the session itself reports a verified address
+  Future<CodeFailure?> refreshVerifiedEmail() async {
+    try {
+      await _auth.currentUser?.getIdToken(true);
+    } on FirebaseAuthException catch (e) {
+      return CodeFailure(
+        e.code == 'network-request-failed'
+            ? CodeFailureReason.offline
+            : CodeFailureReason.unknown,
+      );
+    }
+    final error = await checkEmailVerified();
+    if (error == null) return null;
+    return const CodeFailure(CodeFailureReason.unknown);
   }
 
   Future<String?> signIn({
