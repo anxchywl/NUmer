@@ -15,6 +15,10 @@ import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/data/user_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'auth_code_api.dart';
+import 'auth_write_gates.dart';
+import 'password_reset_result.dart';
+
+export 'password_reset_result.dart';
 
 class AuthFailure implements Exception {
   final String message;
@@ -23,22 +27,6 @@ class AuthFailure implements Exception {
   @override
   String toString() => message;
 }
-
-const _fcmResaveAfter = Duration(days: 7);
-
-bool shouldSaveFcmToken(
-  String token,
-  String? savedToken,
-  int? savedAtMs,
-  int nowMs,
-) {
-  if (savedToken != token || savedAtMs == null) return true;
-  if (nowMs < savedAtMs) return true;
-  return nowMs - savedAtMs >= _fcmResaveAfter.inMilliseconds;
-}
-
-bool shouldUpsertEmailIndex(String normalizedEmail, String? written) =>
-    normalizedEmail != written;
 
 class AuthController extends ChangeNotifier {
   AuthController({
@@ -1065,20 +1053,4 @@ class AuthController extends ChangeNotifier {
     _fcmMessageSub?.cancel();
     super.dispose();
   }
-}
-
-class PasswordResetResult {
-  final bool success;
-  final bool verificationRequired;
-  final bool verificationEmailSent;
-  final String message;
-  final String? code;
-
-  const PasswordResetResult({
-    required this.success,
-    required this.verificationRequired,
-    required this.verificationEmailSent,
-    required this.message,
-    this.code,
-  });
 }
