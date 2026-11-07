@@ -567,3 +567,36 @@ NUmer's rules come first; the module repos' rules are merged in where NUmer had 
 | O-6 | Replace users' avatar glyphs with Material ones (D-30)? | no, keep the glyphs | P5-05 |
 | O-7 | Add crash reporting (a new SDK and a privacy-policy line)? | yes, Crashlytics | P0-14 |
 | O-8 | Target device for the performance baseline | Samsung Galaxy S23 | P0-14 |
+
+---
+
+## H. Phase 3 expansion (2026-11-27)
+
+Decisions taken while expanding the phase 3 outlines into prompts, from the code on `main`
+at `5a6359c`.
+
+### D-33 File size limit. New (owner, 2026-11-27).
+
+- **Decision:** a source file stays under 400 lines and a function under about 60 (`AGENTS.md`
+  "Size"). `scripts/check_file_size.sh`, run by `verify.sh`, enforces it. The 33 files in
+  `scripts/file_size_baseline.txt` predate the rule and may only shrink; a commit that shrinks
+  one lowers its entry, and a commit that splits one away removes it.
+- **Why:** the largest files (`home.dart` 3098, `stats.dart` 3228, `add_habit_sheet.dart`
+  2462) cannot be reviewed or changed by an executor in one session, and every phase 3 task
+  touches them.
+- **Consequences:** phase 3 gains three pure splits, P3-14 (`stats.dart`), P3-15
+  (`add_habit_sheet.dart`) and P3-16 (`habits_screen.dart`); P3-04 and P3-05 end with the
+  files they touch under the limit. A split keeps the big `State` class at its original path,
+  so when a class cannot get under 400 lines without changing how its state is shared, the
+  file stays in the baseline at its new, lower size. A new path is never added to the
+  baseline; if a split needs that, the executor stops and asks.
+
+| # | Decision | Why |
+|---|---|---|
+| D-34 | Homes: course list, add, edit, goal popup in `courses/widgets/`; time sheet, active session bar, auto-finish watcher in `sessions/widgets/`; new features `study`, `campus`, `news`; `ModuleDescriptor` in `lib/core/modules/` (features cannot import `lib/app/`); the Upcoming store in `lib/core/upcoming/`; `ShellHeader` in `account` | feature-first layout and the boundary test |
+| D-35 | Until P3-06 the Study root is two rows (Statistics, History) pushing the existing screens, not the Statistics content under a new header | `StatsScreen` works unchanged as a pushed screen; no temporary mode in it |
+| D-36 | P3-05 deletes the timer and alarm screens and the alarm code in `AppState`; on load it cancels the notifications of any stored alarm and clears `alarms_v1` once | nothing in this repository's history navigates to alarms; a stored alarm would fire with no way to remove it |
+| D-37 | Feed events come from the Events public list `/api/events` (no auth), which has no publish time: an event's `publishedAt` is when the composer first saw it, carried over from the previous `feed/current`; `startsAt` reads `date` and `time` as UTC+05:00. Announcement titles at most 100 characters, bodies 400 per language, to keep the document under 100 KB | resolves P3-08's stop condition |
+| D-38 | P3-01 ships component images from a tagged widget test instead of an `example/` app; the bottom sheet theme does not set `showDragHandle` | the P1-03 precedent; existing sheets draw their own handle |
+| D-39 | `DESIGN.md` 9.1 extended for `app_ui` colours in module use and missing from it: `grey`, `iconSecondary` to `onSurfaceVariant`; `white` to `onPrimary`; `black`, `iconPrimary` to `onSurface`; `lightGrey` to `outlineVariant`; `orange` to `warning`; `green` to `success`; `blue` to `primary`; `blueLight`, `infoLight` to `primaryContainer`; `errorLight` to `errorContainer`; `successLight`, `warningLight` to `surfaceContainerHighest`; `iconDisabled` to `onSurface` at 0.38 | together 200 call sites; without a row the executor would guess |
+| D-40 | News and Upcoming open module screens through a host hook `bool Function(BuildContext, item)` that returns false until a module fills it (P4-08, P4-11); an event then opens a detail built from the feed item | no module exists in phase 3; the descriptor stays small |
