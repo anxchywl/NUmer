@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 enum DeleteAccountFailure { wrongPassword, network, failed }
@@ -30,5 +31,16 @@ Future<DeleteAccountFailure?> reauthenticateForDeletion(
     return null;
   } on FirebaseAuthException catch (e) {
     return deleteAccountFailureFor(e.code);
+  }
+}
+
+// the default instance is resolved here so a controller can be built without firebase in tests
+Future<bool> requestServerDeletion(FirebaseFunctions? functions) async {
+  final client = functions ?? FirebaseFunctions.instance;
+  try {
+    await client.httpsCallable('deleteAccountCallable').call();
+    return true;
+  } on FirebaseFunctionsException {
+    return false;
   }
 }
