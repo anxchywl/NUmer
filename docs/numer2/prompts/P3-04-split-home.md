@@ -35,7 +35,7 @@ user can see or do changes.
   | 61-76 | `_hoursPerCreditForLevel` | course list, goal popup |
   | 78-93 | `_expShortLabel` | add course sheet, goal popup |
   | 95-101 | `_fmtHours` | goal popup |
-  | 103-108 | `_fmtHMS` | course list, active session bar, time sheet |
+  | 103-108 | `_fmtHMS` | course list, time sheet (the bar has its own `_fmtHMSLocal`) |
   | 110-112 | `_courseNameWithoutParentheses` | auto-finish watcher, active session bar, time sheet |
   | 116-586 | `HomeScreen` and its state; the course list is lines 201-465 inside `build`; `_loadCourseSeconds` is 574-585 | shell |
   | 587-668 | `_IosLiquidActionPill` | `HomeScreen` |
@@ -224,7 +224,7 @@ user can see or do changes.
 - [ ] Every new or edited file is under 400 lines and `bash scripts/check_file_size.sh` passes; `scripts/file_size_baseline.txt` lost the `home.dart` line and gained none.
 - [ ] `build` of `_CourseTimeMenuState` and every extracted widget's `build` are under about 60 lines, or the report names each one that is not and why.
 - [ ] `grep -rn "features/home/home.dart" test/boundaries/allowlist.txt` prints nothing, and the allowlist gained no line.
-- [ ] `grep -rn "_kMaxSecs\|_fmtHMS\b\|_colorChoices" lib` prints nothing.
+- [ ] `grep -rn "_kMaxSecs\|_fmtHMS\b\|_colorChoices" lib/features/home lib/features/courses lib/features/sessions` prints nothing (other features have private names of their own that stay).
 - [ ] The design totals diff shows no total higher than before.
 - [ ] `git diff --stat` shows `home.dart` losing about 3090 lines and the new files gaining about the same; the report states the two numbers.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).

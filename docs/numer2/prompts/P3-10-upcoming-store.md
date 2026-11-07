@@ -15,8 +15,8 @@ works offline.
 - `docs/numer2/DECISIONS.md` D-21, D-40
 - `lib/core/config/app_config_service.dart` (a `SharedPreferences`-backed `ChangeNotifier`)
 - `lib/features/home/home_screen.dart` (after P3-07, and P3-09 if it has landed)
-- `lib/features/account/screens/settings_screen.dart`: the sign-out handler and the
-  successful-deletion path
+- `lib/features/account/data/sign_out.dart` (`signOutAndReset`, P3-03) and the
+  successful-deletion path in `lib/features/account/widgets/settings/settings_delete_section.dart` (P3-05)
 - `lib/app/bootstrap.dart` (provider list)
 
 ## Context
@@ -70,9 +70,10 @@ works offline.
    between the Today section and the News section. `HomeScreen` gains `required bool
    Function(BuildContext, UpcomingItem) openUpcoming`; `shell_tabs.dart` passes `(_, _) =>
    false`.
-5. Sign-out and deletion: in the Settings sign-out handler, before `authController.signOut()`,
-   `await context.read<UpcomingStore>().clear(uid)` with the uid read before the awaits; on
-   successful account deletion, the same call before navigating away.
+5. Sign-out and deletion: in `signOutAndReset`, read the uid and the `UpcomingStore` before the
+   first `await` and call `await upcoming.clear(uid)` before `auth.signOut()`; this covers
+   Settings and the module session expiry. On successful account deletion, make the same
+   call before navigating away.
 6. Strings: add the two keys; run `flutter gen-l10n`.
 7. Tests:
    - `test/core/upcoming/upcoming_store_test.dart` (fake clock, mock prefs): put then

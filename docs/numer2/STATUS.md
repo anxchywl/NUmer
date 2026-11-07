@@ -4,13 +4,13 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 27 done, 3 in progress, 53 to do (83 tasks).**
+**Total: 30 done, 1 in progress, 54 to do (85 tasks). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do
 
 Rule since 2026-11-27: source files stay under 400 lines (`AGENTS.md` "Size"); 33 older files may only shrink.
 
-## Phase 0: Foundation (14 of 16 done)
+## Phase 0: Foundation (15 of 16 done)
 
 Fix what is broken or risky in today's app before building on it. Ends in release 1.1.0.
 
@@ -30,10 +30,10 @@ Fix what is broken or risky in today's app before building on it. Ends in releas
 | ✅ | P0-12 Split `main.dart` | The 1,171-line app entry file is split into clear parts |
 | ✅ | P0-13 Feature flags and min build | Modules can be switched on remotely; very old app versions can be asked to update |
 | ✅ | P0-14 Observability | Crash reporting and baselines for startup time and app size |
-| ⏳ | P0-15 Staging project | A safe copy of the backend to test deploys before production |
+| ✅ | P0-15 Staging project | A safe copy of the backend to test deploys before production |
 | ⏳ | P0-16 Docs after foundation | Update `AGENTS.md` and the infrastructure doc |
 
-## Phase 1: Sign-in rework (3 of 10 done)
+## Phase 1: Sign-in rework (5 of 10 done)
 
 Email verification and password reset by 6-digit code in a branded email. Ends in release 1.2.0.
 
@@ -42,10 +42,10 @@ Email verification and password reset by 6-digit code in a branded email. Ends i
 | ✅ | P1-01 Email module | The server can send branded emails in EN, RU and KK through Resend |
 | ✅ | P1-02 Email-code callables | The server side of the codes: create, send, check, limits, security |
 | ✅ | P1-03 Design tokens and code field | Shared colors, spacing and the 6-box code input (paste and autofill work) |
-| 🔄 | P1-04 Verify email by code | New users type the code from the email instead of tapping a link |
-| ⏳ | P1-05 Reset password by code | Forgot password: email, code, new password, all inside the app |
+| ✅ | P1-04 Verify email by code | New users type the code from the email instead of tapping a link |
+| 🔄 | P1-05 Reset password by code | Forgot password: email, code, new password, all inside the app |
 | ⏳ | P1-06 Retire `email_index` | Remove the old, unsafe email lookup from the app |
-| 🔄 | P1-07 Account deletion | Deleting an account removes everything it owns (App Store rule) |
+| ✅ | P1-07 Account deletion | Deleting an account removes everything it owns (App Store rule) |
 | ⏳ | P1-08 Rules stage 2 | Close the last exposure once most users run the new version |
 | ✅ | P1-09 App Check switch | App Check can be turned on per server function without a code change |
 | ⏳ | P1-10 Docs after auth | Docs describe the new sign-in, email and deletion |
@@ -70,7 +70,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ⏳ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (0 of 16; prompts written except P3-12 and P3-13)
+## Phase 3: Superapp shell (0 of 18; all prompts written)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
@@ -87,11 +87,13 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ⏳ | P3-09 News on Home | The news list on Home and its own screen |
 | ⏳ | P3-10 Upcoming store | Bookings and reminders shown on Home without loading modules |
 | ⏳ | P3-11 Campus tab | The list of campus modules |
-| ⏳ | P3-12 Design pass | Remove gradients, glass and chips per the design rules |
+| ⏳ | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |
 | ⏳ | P3-13 Docs after shell | Docs describe the new layout |
 | ⏳ | P3-14 Split `stats.dart` | Break the 3,228-line statistics screen into small files (no visible change) |
 | ⏳ | P3-15 Split `add_habit_sheet.dart` | Break the 2,462-line add-habit sheet into small files |
 | ⏳ | P3-16 Split `habits_screen.dart` | Break the 1,610-line habits screen into small files |
+| ⏳ | P3-17 States pass | Confirmations become bottom sheets; loading spinners become quiet placeholders |
+| ⏳ | P3-18 Focus mode everywhere | While typing in any sheet, only the field and a Done button stay on screen |
 
 ## Phase 4: Module integration (0 of 15)
 
@@ -141,7 +143,7 @@ Gradus, Clavis, Events and Muto appear inside NUmer, each behind a feature flag.
 ## Releases and deploys (not started)
 
 Nothing above reaches users until these happen, in order, with you:
-1. Deploy phase 0 server changes to staging, then production (`USER_ACTIONS.md` B-3 to B-6)
+1. Deploy phase 0 server changes to staging (done 2026-11-27, owner test pending), then production (`USER_ACTIONS.md` B-3 to B-6)
 2. Release app 1.1.0 (phase 0)
 3. Deploy phase 1 server changes; release app 1.2.0 (sign-in by code)
 4. Redeploy the four module backends with NUmer sign-in (needs your approval)

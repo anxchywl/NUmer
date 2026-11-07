@@ -27,8 +27,8 @@ hand-styled widgets.
   customised. `lightFallbackTheme` and `darkFallbackTheme` (lines 4-15) are for the bootstrap
   loading screen and stay as they are.
 - `buildAppTheme` is called from `lib/app/numer_app.dart:105-106`.
-- `showAppMessage` (`lib/shared/widgets/app_toast.dart:4-44`) is the toast. It is called 58
-  times from 13 files; those call sites do not change in this task.
+- `showAppMessage` (`lib/shared/widgets/app_toast.dart:4-44`) is the toast. It is called 55
+  times from 14 files; those call sites do not change in this task.
 - `numer_ui` depends on `flutter` only and has no localisations. A component that needs a
   word the package cannot know takes it as a parameter, except "Cancel", which comes from
   `MaterialLocalizations.of(context).cancelButtonLabel`.
@@ -69,8 +69,8 @@ hand-styled widgets.
      const Size(64, 48), shape: RoundedRectangleBorder(borderRadius:
      BorderRadius.circular(NumerRadius.md))))`. `FilledButton.tonal` reads the same theme.
    - `textButtonTheme`: the same `minimumSize` and `shape` with `TextButton.styleFrom`.
-   - `segmentedButtonTheme`: `SegmentedButton.styleFrom(shape: RoundedRectangleBorder(
-     borderRadius: BorderRadius.circular(NumerRadius.md)))`.
+   - `segmentedButtonTheme`: `SegmentedButtonThemeData(style: SegmentedButton.styleFrom(shape:
+     RoundedRectangleBorder(borderRadius: BorderRadius.circular(NumerRadius.md))))`.
    - `bottomSheetTheme`: `backgroundColor` and `modalBackgroundColor`
      `scheme.surfaceContainerLow`, `elevation: 0`, `modalElevation: 0`, `shape:
      RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top:
@@ -224,7 +224,9 @@ hand-styled widgets.
      `error`; "Cancel" comes from `MaterialLocalizations`.
    - `numer_skeleton_test.dart`: after `pump(const Duration(milliseconds: 299))` nothing is
      drawn; after one more millisecond, `rows` rows of the right height; box colour alpha
-     0.08; no `AnimationController` or `CircularProgressIndicator` in the tree.
+     0.08; no `AnimationController` and no progress indicator in the tree (assert with
+     `find.bySubtype<ProgressIndicator>()`; `check_design.dart` also scans `packages/numer_ui/test/`,
+     so no test file may spell `CircularProgressIndicator`).
    - `numer_states_test.dart`: empty and error states put the text 32 below their top, centre
      it, show one button; retry calls `onRetry`.
    - `numer_status_label_test.dart`: each tone gives its colour; no `DecoratedBox` or
@@ -278,7 +280,7 @@ hand-styled widgets.
 - [ ] `cd packages/numer_ui && flutter test` runs the 12 new test files and they pass.
 - [ ] `grep -rn "package:numer_app" packages/numer_ui` prints nothing.
 - [ ] `grep -rln "SnackBar(" packages/numer_ui/lib lib/shared` prints only `numer_message.dart`.
-- [ ] `lib/shared/widgets/app_toast.dart` is a forwarder of at most 13 lines.
+- [ ] `lib/shared/widgets/app_toast.dart` holds only the imports, the comment and the forwarder.
 - [ ] `scripts/design_baseline.txt` has no line for `packages/numer_ui` and no count higher than before.
 - [ ] Gallery images (both modes, text scale 1.0 and 1.3) and the four before and after app screenshots are attached to the report.
 - [ ] The report answers each review item of `DESIGN.md` section 11 for the gallery with yes or no.

@@ -21,7 +21,8 @@ for study and habits, and one button that gets the user back into studying in on
 - `lib/features/courses/course_format.dart` (`hoursPerCreditForLevel`) and the goal logic in
   `lib/features/courses/widgets/course_list.dart` (the weekly goal: custom hours, else
   credits times `hoursPerCreditForLevel(expLevel ?? 3)`)
-- `lib/features/sessions/widgets/course_time_sheet.dart`: `_startTimer`, `_startStopwatch`,
+- `lib/features/sessions/widgets/course_time_sheet/course_time_actions.dart` (the `part`
+  mixin of P3-04): `_startTimer`, `_startStopwatch`,
   `_startPomodoro` and the `state.startTimer`, `state.startStopwatch`,
   `state.startPomodoro` calls in them
 - `lib/features/habits/data/habit_service.dart:51-92` (`habitsStream`, local first),
@@ -76,7 +77,7 @@ for study and habits, and one button that gets the user back into studying in on
    `Future<void> save(String courseId)` (writes the key of the Context, notifies when the
    value changed). Export it from `sessions.dart`. In `bootstrap.dart` add
    `ChangeNotifierProvider<LastCourseStore>(create: (_) => LastCourseStore(prefs))`. In
-   `course_time_sheet.dart`, after each of the three start calls that returns true (for the
+   `course_time_actions.dart` (where `context` is the state's), after each of the three start calls that returns true (for the
    timer, read the return value that is ignored today), call
    `context.read<LastCourseStore>().save(widget.course.id)`.
 3. `lib/features/habits/models/habit_day_summary.dart`: `({int done, int total})
@@ -95,10 +96,12 @@ for study and habits, and one button that gets the user back into studying in on
    Function(ShellDestination) onSelect` parameter of `buildShellTabs`; Home is built as
    `HomeScreen(onOpenStudy: () => onSelect(ShellDestination.study), onOpenHabits: () =>
    onSelect(ShellDestination.habits))`. `AppShell` passes a function that finds the index of
-   that destination and calls `_onTabSelected`.
+   that destination and calls `_onTabSelected`. Update every caller of `buildShellTabs`,
+   including P3-05's `test/app/shell/shell_tabs_test.dart`.
 7. `HomeScreen({required VoidCallback onOpenStudy, required VoidCallback onOpenHabits})`, a
    `StatefulWidget` (it holds the habits stream), builds one `RefreshIndicator(onRefresh: () => context.read<SyncService>().syncNow())`
-   around one `CustomScrollView`, top to bottom:
+   around one `CustomScrollView(physics: const AlwaysScrollableScrollPhysics(), ...)` (short
+   content must still pull to refresh), top to bottom:
    - `ShellHeader(title: const StreakTitle())` with no other action. Delete
      `sync_status_chip.dart`.
    - The status line: when `sync.status == SyncStatus.offline`, `l10n.homeOffline`; else

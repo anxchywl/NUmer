@@ -58,8 +58,10 @@ a user can see or do changes.
      `part` mixin with `_toggleHabit`, `_scrollToToday`, `_updateWeekDates`).
 3. `build` keeps the `Scaffold`, the scroll listener, the header and the switch, and
    assembles the tabs; under about 60 lines if the header allows, else name it in the report.
-4. Imports through barrels; remove the `habits_screen.dart -> auth_service.dart` allowlist
-   line if the file no longer imports it directly; add none.
+4. Imports through barrels: import `package:numer_app/features/auth/auth.dart` instead of
+   `auth_service.dart` in every file that needs `AuthController`, and delete the
+   `habits_screen.dart -> auth_service.dart` allowlist line. If the boundary test reports a
+   violation, fix the import, not the allowlist.
 5. `scripts/file_size_baseline.txt`: lower or remove the `habits_screen.dart` entry; add no
    line. `dart run scripts/check_design.dart --write-baseline`; no total rises.
 6. Add `test/features/habits/habit_dates_test.dart` (characterisation of the moved helpers:
