@@ -3,6 +3,7 @@ import * as admin from 'firebase-admin';
 import { db } from '../shared/admin';
 import { normalizeEmail, sha256Hex } from '../auth/codes';
 import { deleteGroupCascade, deleteQueryBatch, removeUserMemberships } from '../groups/cleanup';
+import { deletionMarkerRef } from '../shared/user_writes';
 
 const alreadyExistsCode = 6;
 const nudgeBatchSize = 300;
@@ -15,11 +16,31 @@ function hasCode(err: unknown, code: unknown): boolean {
   return (err as { code?: unknown } | null)?.code === code;
 }
 
+// the ids stay on the marker so later passes can remove documents a racing trigger wrote back
 async function removeGroups(uid: string) {
   const owned = await db.collection('groups').where('createdBy', '==', uid).get();
+  const memberships = await userRef(uid).collection('groupMemberships').select().get();
+  const groupIds = [...owned.docs, ...memberships.docs].map((doc) => doc.id);
+  if (groupIds.length > 0) {
+    await deletionMarkerRef(uid).update({ groupIds: admin.firestore.FieldValue.arrayUnion(...groupIds) });
+  }
   await removeUserMemberships(uid, new Set(owned.docs.map((doc) => doc.id)));
   for (const group of owned.docs) {
     await deleteGroupCascade(group.ref);
+  }
+}
+
+async function removeGroupLeftovers(uid: string) {
+  const groupIds: string[] = (await deletionMarkerRef(uid).get()).get('groupIds') ?? [];
+  const chunkSize = 200;
+  for (let i = 0; i < groupIds.length; i += chunkSize) {
+    const batch = db.batch();
+    for (const groupId of groupIds.slice(i, i + chunkSize)) {
+      const group = db.collection('groups').doc(groupId);
+      batch.delete(group.collection('aggregates').doc(uid));
+      batch.delete(group.collection('members').doc(uid));
+    }
+    await batch.commit();
   }
 }
 
@@ -79,7 +100,7 @@ async function recordEvent(uid: string) {
 
 // sweptAt starts as null so the sweep can query for it
 async function markDone(uid: string) {
-  await db.collection('deletedUsers').doc(uid).update({
+  await deletionMarkerRef(uid).update({
     status: 'done',
     completedAt: admin.firestore.FieldValue.serverTimestamp(),
     sweptAt: null,
@@ -95,6 +116,7 @@ const purgeSteps: [string, (uid: string) => Promise<unknown>][] = [
   ['auth_records', deleteAuthRecords],
   ['mirrors', deleteMirrors],
   ['user_tree_again', (uid) => db.recursiveDelete(userRef(uid))],
+  ['group_leftovers', removeGroupLeftovers],
   ['auth_user', deleteAuthUser],
   ['event', recordEvent],
   ['done', markDone],
@@ -140,6 +162,7 @@ export async function sweepPurgedUsers(now = Date.now()): Promise<void> {
   for (const marker of done.docs) {
     await db.recursiveDelete(userRef(marker.id));
     await deleteMirrors(marker.id);
+    await removeGroupLeftovers(marker.id);
     await marker.ref.update({ sweptAt: admin.firestore.FieldValue.serverTimestamp() });
   }
 }

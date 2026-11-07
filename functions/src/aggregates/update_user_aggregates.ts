@@ -10,7 +10,7 @@ import {
   userFieldsOf,
 } from './derive';
 import { contributionOf } from './ledger';
-import { updateIfExists } from '../shared/user_writes';
+import { deletionMarkerRef } from '../shared/user_writes';
 
 export interface LegacyInputs {
   userExists: boolean;
@@ -72,21 +72,25 @@ export function aggregateDocument(payload: AggregatePayload) {
   return { ...payload, updatedAt: admin.firestore.FieldValue.serverTimestamp() };
 }
 
+// reading the marker in the transaction orders this write before a purge or skips it
 export async function writeAggregates(userId: string, groupIds: string[], payload: AggregatePayload) {
-  const batch = db.batch();
+  const userRef = db.collection('users').doc(userId);
   const data = aggregateDocument(payload);
-  for (const ref of aggregateRefs(userId, groupIds)) {
-    batch.set(ref, data, { merge: true });
-  }
-  await batch.commit();
+  return db.runTransaction(async (txn) => {
+    const [user, marker] = await txn.getAll(userRef, deletionMarkerRef(userId));
+    if (!user.exists || marker.exists) return false;
+    txn.update(userRef, { groupIds });
+    for (const ref of aggregateRefs(userId, groupIds)) {
+      txn.set(ref, data, { merge: true });
+    }
+    return true;
+  });
 }
 
 export async function updateUserAggregates(userId: string) {
   const now = new Date();
   const inputs = await loadLegacyInputs(userId, now);
   if (!inputs.userExists) return { payload: null, reads: inputs.reads };
-  const updated = await updateIfExists(db.collection('users').doc(userId), { groupIds: inputs.groupIds });
-  if (!updated) return { payload: null, reads: inputs.reads };
   const payload = derivePayload({
     userId,
     user: inputs.user,
@@ -94,6 +98,6 @@ export async function updateUserAggregates(userId: string) {
     contributions: inputs.contributions,
     now,
   });
-  await writeAggregates(userId, inputs.groupIds, payload);
-  return { payload, reads: inputs.reads };
+  const wrote = await writeAggregates(userId, inputs.groupIds, payload);
+  return { payload: wrote ? payload : null, reads: inputs.reads };
 }

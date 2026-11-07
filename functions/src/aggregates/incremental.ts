@@ -11,6 +11,7 @@ import {
   pruneLedger,
 } from './ledger';
 import { aggregateDocument, aggregateRefs, loadLegacyInputs } from './update_user_aggregates';
+import { deletionMarkerRef } from '../shared/user_writes';
 
 const STATE_VERSION = 1;
 const REBUILD_AFTER_MS = 7 * 24 * 3600 * 1000;
@@ -88,13 +89,14 @@ async function runEvent(
   }
 
   const outcome = !proceed ? { payload: null, wrote: false } : await db.runTransaction(async tx => {
-    const [txState, txUser, memberships] = await Promise.all([
+    const [txState, txUser, marker, memberships] = await Promise.all([
       tx.get(stateRef(userId)),
       tx.get(userRef),
+      tx.get(deletionMarkerRef(userId)),
       tx.get(userRef.collection('groupMemberships')),
     ]);
-    reads += 2 + memberships.size;
-    if (!txUser.exists || (requireState && !txState.exists)) return { payload: null, wrote: false };
+    reads += 3 + memberships.size;
+    if (!txUser.exists || marker.exists || (requireState && !txState.exists)) return { payload: null, wrote: false };
 
     const user = userFieldsOf(txUser.data());
     const tz = timezoneOf(user);
