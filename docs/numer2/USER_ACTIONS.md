@@ -146,6 +146,15 @@ unused project was reused, and an id cannot be renamed.
    the debug token: Play Integrity (the local debug keystore's SHA-1 and SHA-256 are on the
    Android app) and App Attest (team `4Y2RNJH629`) are registered, not enforced. Register the
    token once a staging build with the debug provider prints one.
+6. Before the first switch, copy the current `android/app/google-services.json` to
+   `google-services.production.json` and `ios/Runner/GoogleService-Info.plist` to
+   `GoogleService-Info.production.plist`, and place the staging files beside them as
+   `*.staging.*`.
+7. Create `env/staging.json` from `env/staging.example.json` and `functions/.env.lendings-killer`
+   from `functions/.env.example`.
+8. Set the `MAIL_API_KEY` and `AUTH_CODE_SECRET` secrets in the staging project, then run
+   `./scripts/deploy_staging.sh` yourself.
+9. Run the app once against staging on a device and confirm that sign-up works.
 
 ### B-11 Console checks that need no task
 
