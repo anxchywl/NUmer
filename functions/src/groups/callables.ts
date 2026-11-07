@@ -143,7 +143,8 @@ export const joinPrivateGroup = functions.https.onCall(async (data, context) => 
       // We store secrets in a subcollection to prevent public read access via client SDKs
       // Assuming admin creates this doc when setting group to private
       const secretRef = groupRef.collection('secrets').doc('settings');
-      const secretSnap = await txn.get(secretRef);
+      const userRef = db.collection('users').doc(uid);
+      const [secretSnap, userSnap] = await txn.getAll(secretRef, userRef);
 
       if (!secretSnap.exists) {
         // Fallback or error if secret config is missing.
@@ -170,9 +171,9 @@ export const joinPrivateGroup = functions.https.onCall(async (data, context) => 
         joinedAt: now,
       });
 
-      txn.set(db.collection('users').doc(uid), {
-        groupIds: admin.firestore.FieldValue.arrayUnion(groupId)
-      }, { merge: true });
+      if (userSnap.exists) {
+        txn.update(userRef, { groupIds: admin.firestore.FieldValue.arrayUnion(groupId) });
+      }
 
       const currentCount = (groupData?.memberCount || 0) as number;
       txn.update(groupRef, {
