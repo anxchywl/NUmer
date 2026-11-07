@@ -17,7 +17,6 @@ lib/features/habits/screens/add_habit_sheet.dart -> lib/features/auth/data/auth_
 lib/features/habits/screens/archived_habits_screen.dart -> lib/features/auth/data/auth_service.dart
 lib/features/habits/screens/habit_details_screen.dart -> lib/features/auth/data/auth_service.dart
 lib/features/habits/screens/habits_calendar_screen.dart -> lib/features/auth/data/auth_service.dart
-lib/features/habits/screens/habits_screen.dart -> lib/features/auth/data/auth_service.dart
 lib/features/habits/widgets/habit_logging_sheet.dart -> lib/features/courses/course.dart
 lib/features/history/widgets/export_session_dialog.dart -> lib/features/courses/course.dart
 lib/features/home/home.dart -> lib/features/ai_analysis/ai_analysis_screen.dart

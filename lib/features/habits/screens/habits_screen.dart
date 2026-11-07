@@ -5,8 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui';
 import 'package:numer_app/features/habits/models/habit.dart';
-import 'package:numer_app/features/auth/data/auth_service.dart';
+import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/habits/data/habit_service.dart';
+import 'package:numer_app/features/habits/habit_dates.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/habits/screens/habits_calendar_screen.dart';
 import 'package:numer_app/features/habits/screens/archived_habits_screen.dart';
@@ -100,23 +101,9 @@ class _HabitsScreenState extends State<HabitsScreen>
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _lastWeekStart = weekStart;
-    final offset = _weekStartOffset(today, weekStart);
+    final offset = weekStartOffset(today, weekStart);
     final start = today.subtract(Duration(days: offset));
     _weekDates = List.generate(7, (i) => start.add(Duration(days: i)));
-  }
-
-  bool _isFutureDate(DateTime date) {
-    final today = DateTime.now();
-    final todayMidnight = DateTime(today.year, today.month, today.day);
-    final dateMidnight = DateTime(date.year, date.month, date.day);
-    return dateMidnight.isAfter(todayMidnight);
-  }
-
-  int _weekStartOffset(DateTime date, WeekStart weekStart) {
-    if (weekStart == WeekStart.monday) {
-      return (date.weekday - DateTime.monday).clamp(0, 6);
-    }
-    return date.weekday % 7;
   }
 
   @override
@@ -272,8 +259,8 @@ class _HabitsScreenState extends State<HabitsScreen>
                     final filteredHabits = allHabits.where((h) {
                       if (!h.isScheduledFor(_selectedDate)) return false;
                       // Check completion status for the selected date
-                      final dateKey = _dateKey(_selectedDate);
-                      final currentValue = h.last7[dateKey] ?? 0.0;
+                      final key = dateKey(_selectedDate);
+                      final currentValue = h.last7[key] ?? 0.0;
                       final isCompletedOnDate = currentValue >= h.targetValue;
 
                       // Show if completed on this date OR period goal NOT met.
@@ -380,8 +367,8 @@ class _HabitsScreenState extends State<HabitsScreen>
                         if (!h.isScheduledFor(_selectedDate)) return false;
 
                         // Check completion status for the selected date
-                        final dateKey = _dateKey(_selectedDate);
-                        final currentValue = h.last7[dateKey] ?? 0.0;
+                        final key = dateKey(_selectedDate);
+                        final currentValue = h.last7[key] ?? 0.0;
                         final isCompletedOnDate = currentValue >= h.targetValue;
 
                         // RULE: Show if completed on this date OR period goal NOT met.
@@ -624,15 +611,15 @@ class _HabitsScreenState extends State<HabitsScreen>
   }
 
   Future<void> _toggleHabit(Habit habit, DateTime date) async {
-    if (_isFutureDate(date)) return;
+    if (isFutureDate(date)) return;
     HapticFeedback.lightImpact();
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
 
     if (habit.type == HabitType.yesNo) {
-      final dateKey = _dateKey(date);
-      final isCompleted = habit.last7[dateKey] != null;
+      final key = dateKey(date);
+      final isCompleted = habit.last7[key] != null;
       await context.read<HabitService>().toggleCompletion(
         userId: uid,
         habit: habit,
@@ -641,7 +628,7 @@ class _HabitsScreenState extends State<HabitsScreen>
       );
     } else {
       // Show numeric/time input bottom sheet
-      final dateKey = _dateKey(date);
+      final key = dateKey(date);
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -653,7 +640,7 @@ class _HabitsScreenState extends State<HabitsScreen>
           habit: habit,
           date: date,
           userId: uid,
-          initialValue: habit.last7[dateKey],
+          initialValue: habit.last7[key],
         ),
       );
     }
@@ -803,9 +790,9 @@ class _HabitsScreenState extends State<HabitsScreen>
     ThemeData theme,
     AppLocalizations l10n,
   ) {
-    final dateKey = _dateKey(_selectedDate);
-    final currentValue = habit.last7[dateKey] ?? 0.0;
-    final isFuture = _isFutureDate(_selectedDate);
+    final key = dateKey(_selectedDate);
+    final currentValue = habit.last7[key] ?? 0.0;
+    final isFuture = isFutureDate(_selectedDate);
     final isDark = theme.brightness == Brightness.dark;
     final localeName = l10n.localeName;
     final numberFormat = NumberFormat.decimalPattern(localeName);
@@ -918,10 +905,6 @@ class _HabitsScreenState extends State<HabitsScreen>
     final sStr = secs.toString().padLeft(2, '0');
     return "$hStr:$mStr:$sStr";
   }
-
-  String _dateKey(DateTime d) {
-    return "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-  }
 }
 
 class _IosLiquidActionPill extends StatelessWidget {
@@ -1029,7 +1012,7 @@ class _HabitItemState extends State<_HabitItem> {
     // Find start of current week
     final weekStart = context.read<AppState>().weekStart;
     final today = DateTime(now.year, now.month, now.day);
-    final currentWeekStartOffset = _weekStartOffset(today, weekStart);
+    final currentWeekStartOffset = weekStartOffset(today, weekStart);
     final currentWeekStart = today.subtract(
       Duration(days: currentWeekStartOffset),
     );
@@ -1040,7 +1023,7 @@ class _HabitItemState extends State<_HabitItem> {
       widget.habit.startDate.month,
       widget.habit.startDate.day,
     );
-    final startWeekStartOffset = _weekStartOffset(startDate, weekStart);
+    final startWeekStartOffset = weekStartOffset(startDate, weekStart);
     final startWeekStart = startDate.subtract(
       Duration(days: startWeekStartOffset),
     );
@@ -1051,13 +1034,6 @@ class _HabitItemState extends State<_HabitItem> {
 
     // Minimum offset is negative (going back in time)
     return -weeksDiff;
-  }
-
-  int _weekStartOffset(DateTime date, WeekStart weekStart) {
-    if (weekStart == WeekStart.monday) {
-      return (date.weekday - DateTime.monday).clamp(0, 6);
-    }
-    return date.weekday % 7;
   }
 
   String _formatWeekRange(List<DateTime> dates) {
@@ -1158,13 +1134,6 @@ class _HabitItemState extends State<_HabitItem> {
     return DateFormat.E(localeName).format(date);
   }
 
-  bool _isFutureDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final dateMidnight = DateTime(date.year, date.month, date.day);
-    return dateMidnight.isAfter(today);
-  }
-
   bool _isBeforeStartDate(DateTime date) {
     final dateMidnight = DateTime(date.year, date.month, date.day);
     final startMidnight = DateTime(
@@ -1175,12 +1144,9 @@ class _HabitItemState extends State<_HabitItem> {
     return dateMidnight.isBefore(startMidnight);
   }
 
-  String _dateKey(DateTime date) =>
-      "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-
   Future<void> _handleToggle(DateTime date) async {
     // Defer state changes to the service; no optimistic UI flips to avoid stale caches.
-    final key = _dateKey(date);
+    final key = dateKey(date);
 
     // Prevent double-taps on same key while pending
     if (_pendingKeys.contains(key)) return;
@@ -1468,9 +1434,9 @@ class _HabitItemState extends State<_HabitItem> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: weekDates.map((date) {
-                        final dateKey = _dateKey(date);
-                        final isSaving = _pendingKeys.contains(dateKey);
-                        final currentVal = widget.habit.last7[dateKey] ?? 0.0;
+                        final key = dateKey(date);
+                        final isSaving = _pendingKeys.contains(key);
+                        final currentVal = widget.habit.last7[key] ?? 0.0;
                         final isCompleted =
                             currentVal >= widget.habit.targetValue;
                         final isPartialProgress =
@@ -1485,7 +1451,7 @@ class _HabitItemState extends State<_HabitItem> {
 
                         // Determine styling state
                         final isPreStart = _isBeforeStartDate(date);
-                        final isFuture = _isFutureDate(date);
+                        final isFuture = isFutureDate(date);
                         final isScheduled = widget.habit.isScheduledFor(date);
                         final isGoalMet = widget.habit.isGoalMetForPeriod(
                           widget.habit.last7,
