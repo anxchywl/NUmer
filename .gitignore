@@ -76,6 +76,7 @@ functions/lib/
 
 # environment files with secrets
 functions/.env.local
+functions/.secret.local
 .env
 .env.*
 !functions/.env.example
