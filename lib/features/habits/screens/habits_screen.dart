@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import 'package:numer_app/features/habits/models/habit.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/habits/data/habit_service.dart';
@@ -13,9 +12,10 @@ import 'package:numer_app/features/habits/screens/archived_habits_screen.dart';
 import 'package:numer_app/features/habits/widgets/habit_logging_sheet.dart';
 import 'package:numer_app/features/habits/widgets/eisenhower_matrix_widget.dart';
 import 'package:numer_app/features/habits/widgets/habit_sorter_card.dart';
-import 'package:numer_app/features/habits/widgets/habit_completion_indicator.dart';
 import 'package:numer_app/features/habits/widgets/habit_list_item.dart';
 import 'package:numer_app/features/habits/widgets/ios_liquid_action_pill.dart';
+import 'package:numer_app/features/habits/widgets/habits_date_picker.dart';
+import 'package:numer_app/features/habits/widgets/today_habit_item.dart';
 import 'package:numer_app/features/habits/screens/add_habit_sheet.dart';
 
 import 'package:numer_app/core/data/storage.dart';
@@ -311,7 +311,7 @@ class _HabitsScreenState extends State<HabitsScreen>
                                   )
                                 : KeyedSubtree(
                                     key: _calendarKey,
-                                    child: _buildHorizontalDatePicker(theme),
+                                    child: _buildDatePicker(),
                                   ),
 
                             // Matrix grid
@@ -345,7 +345,7 @@ class _HabitsScreenState extends State<HabitsScreen>
                   return SliverToBoxAdapter(
                     child: KeyedSubtree(
                       key: _calendarKey,
-                      child: _buildHorizontalDatePicker(theme),
+                      child: _buildDatePicker(),
                     ),
                   );
                 },
@@ -426,7 +426,12 @@ class _HabitsScreenState extends State<HabitsScreen>
                             index,
                           ) {
                             final habit = habits[index];
-                            return _buildTodayHabitItem(habit, theme, l10n);
+                            return TodayHabitItem(
+                              habit: habit,
+                              selectedDate: _selectedDate,
+                              onToggle: () =>
+                                  _toggleHabit(habit, _selectedDate),
+                            );
                           }, childCount: habits.length),
                         ),
                       );
@@ -695,8 +700,7 @@ class _HabitsScreenState extends State<HabitsScreen>
     );
   }
 
-  Widget _buildHorizontalDatePicker(ThemeData theme) {
-    final localeName = AppLocalizations.of(context)!.localeName;
+  Widget _buildDatePicker() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
@@ -713,196 +717,12 @@ class _HabitsScreenState extends State<HabitsScreen>
       });
     }
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final itemWidth = (screenWidth - 24) / 7; // Show 7 items
-
-    return Container(
-      height: 90,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: ListView.builder(
-        controller: _dateScrollController,
-        scrollDirection: Axis.horizontal,
-        itemCount: 61, // 30 days back + today + 30 days forward
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemBuilder: (context, index) {
-          final date = today.add(Duration(days: index - 30));
-          final isSelected =
-              date.year == _selectedDate.year &&
-              date.month == _selectedDate.month &&
-              date.day == _selectedDate.day;
-          final isToday =
-              date.year == today.year &&
-              date.month == today.month &&
-              date.day == today.day;
-
-          return GestureDetector(
-            onTap: () => setState(() => _selectedDate = date),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: itemWidth - 8, // Subtract margin
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : (isToday
-                          ? theme.colorScheme.primary.withValues(alpha: 0.1)
-                          : Colors.transparent),
-                borderRadius: BorderRadius.circular(16),
-                border: isToday && !isSelected
-                    ? Border.all(color: theme.colorScheme.primary, width: 1)
-                    : null,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    DateFormat.E(localeName).format(date),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    date.day.toString(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+    return HabitsDatePicker(
+      // 30 days back + today + 30 days forward
+      dates: List.generate(61, (i) => today.add(Duration(days: i - 30))),
+      selectedDate: _selectedDate,
+      scrollController: _dateScrollController,
+      onSelect: (date) => setState(() => _selectedDate = date),
     );
-  }
-
-  Widget _buildTodayHabitItem(
-    Habit habit,
-    ThemeData theme,
-    AppLocalizations l10n,
-  ) {
-    final key = dateKey(_selectedDate);
-    final currentValue = habit.last7[key] ?? 0.0;
-    final isFuture = isFutureDate(_selectedDate);
-    final isDark = theme.brightness == Brightness.dark;
-    final localeName = l10n.localeName;
-    final numberFormat = NumberFormat.decimalPattern(localeName);
-    final appState = context.read<AppState>();
-    final useLightTitle =
-        appState.homeSummaryRange == HomeSummaryRange.off &&
-        habit.connectedCourseIds.isEmpty;
-
-    String requirementText;
-    if (habit.type == HabitType.numeric) {
-      final unit = (habit.unit ?? "").trim();
-      final currentStr = numberFormat.format(currentValue.toInt());
-      final targetStr = numberFormat.format(habit.targetValue.toInt());
-      requirementText = unit.isNotEmpty
-          ? l10n.habitRequirementToday(currentStr, targetStr, unit)
-          : l10n.habitRequirementTodayNoUnit(currentStr, targetStr);
-    } else if (habit.type == HabitType.time) {
-      final curStr = _formatDurationHms(currentValue);
-      final tarStr = _formatDurationHms(habit.targetValue);
-      requirementText = l10n.habitRequirementTodayNoUnit(curStr, tarStr);
-    } else {
-      requirementText = l10n.habitRequirementMarkDone;
-    }
-
-    final row = Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: isDark
-            ? Border.all(
-                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.4),
-              )
-            : null,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: habit.color.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              IconData(
-                habit.iconCodePoint,
-                fontFamily: habit.iconFamily,
-                fontPackage: habit.iconPackage,
-              ),
-              color: habit.color,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  habit.name,
-                  style: TextStyle(
-                    fontWeight: useLightTitle
-                        ? FontWeight.w500
-                        : FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  requirementText,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: isFuture ? null : () => _toggleHabit(habit, _selectedDate),
-            child: HabitCompletionIndicator(
-              habit: habit,
-              currentValue: currentValue,
-              size: 36,
-            ),
-          ),
-        ],
-      ),
-    );
-    if (!isFuture) return row;
-    return Opacity(opacity: 0.5, child: row);
-  }
-
-  String _formatDurationHms(double seconds) {
-    final totalSeconds = seconds.round().clamp(0, 359999).toInt();
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final secs = totalSeconds % 60;
-    final hStr = hours.toString().padLeft(2, '0');
-    final mStr = minutes.toString().padLeft(2, '0');
-    final sStr = secs.toString().padLeft(2, '0');
-    return "$hStr:$mStr:$sStr";
   }
 }
