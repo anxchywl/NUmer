@@ -127,8 +127,10 @@ by a flag yet.
 | Firestore trigger | `onMailQueued` | Render and send a queued email |
 | Firestore trigger | `onGroupMemberWrite` | Maintain `groupIndex` from member create and delete, retried on failure |
 | Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles`, retried on failure |
+| Firestore trigger | `onUserDeletionRequested` | Purge a user marked in `deletedUsers`, retried on failure |
+| Scheduled | `sweepDeletedUsers` | Daily: remove what a signed-in device wrote after a purge |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
-| Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
+| Callable | `deleteAccountCallable` | Disable the auth user and mark it in `deletedUsers` for the purge |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
 | Callable | `setUserRoles` | Administrator sets a user's module roles (see below) |
@@ -175,6 +177,19 @@ full recompute to a per-user ledger in the private `users/{uid}/aggState/v1`, wh
 default 0) also runs that share of users through the ledger without publishing and logs
 `aggregate_shadow_mismatch` when its payload differs; both are set in `functions/.env`
 (see `functions/.env.example`).
+
+Account deletion: the client re-authenticates with the password, then `deleteAccountCallable`
+disables the Auth user, revokes its refresh tokens and creates `deletedUsers/{uid}` (`pending`,
+expires after 30 days). `onUserDeletionRequested` runs `purgeUser`: memberships and owned
+groups, `users/{uid}` and its subtree, nudges, `email_index`, `authCodes`, `publicProfiles`,
+`groupIndex`, the Auth user, then `accountEvents/deleted_{uid}` for module backends, and marks
+the marker `done`. Every step is idempotent; a second call while `pending` sets
+`retryRequestedAt` and runs the purge again. Triggers never re-create a user's documents: they
+`update` and stop on a missing document. `sweepDeletedUsers` deletes, once more, the subtree
+and mirrors of users purged more than 2 hours earlier, because another device's ID token stays
+valid for up to an hour. Until the purge finishes the same email cannot sign up again.
+`DELETE_REQUIRES_RECENT_AUTH=on` in `functions/.env` makes the callable require a sign-in from
+the last 5 minutes; it stays `off` while older app versions cannot re-authenticate.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
