@@ -19,6 +19,10 @@ import 'package:numer_app/features/history/screens/history.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import '../models/stats_models.dart';
 import '../stats_format.dart';
+import '../widgets/chart_tooltip.dart';
+import '../widgets/pie_chart_with_tooltip.dart';
+import '../widgets/stats_block.dart';
+import '../widgets/stats_section_container.dart';
 import 'package:numer_app/shared/widgets/tip_icon.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -351,8 +355,7 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildSectionContainer(
-              context,
+            child: StatsSectionContainer(
               title: AppLocalizations.of(context)!.dayStatistics,
               trailingHeader: TipIcon(
                 title: AppLocalizations.of(context)!.tip,
@@ -444,7 +447,7 @@ class _StatsScreenState extends State<StatsScreen> {
                       final slices = snap.data?.slices ?? const <Slice>[];
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                        child: _PieChartWithTooltip(
+                        child: PieChartWithTooltip(
                           totalSeconds: total,
                           slices: slices,
                           tooltip: _sliceTooltip,
@@ -499,8 +502,7 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildSectionContainer(
-              context,
+            child: StatsSectionContainer(
               title: AppLocalizations.of(context)!.periodStatistics,
               trailingHeader: TipIcon(
                 title: AppLocalizations.of(context)!.tip,
@@ -513,17 +515,17 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: Wrap(
                       spacing: 8,
                       children: [
-                        _SegChip(
+                        SegChip(
                           label: AppLocalizations.of(context)!.week,
                           selected: _range == Range.week,
                           onTap: () => _setRange(Range.week),
                         ),
-                        _SegChip(
+                        SegChip(
                           label: AppLocalizations.of(context)!.month,
                           selected: _range == Range.month,
                           onTap: () => _setRange(Range.month),
                         ),
-                        _SegChip(
+                        SegChip(
                           label: AppLocalizations.of(context)!.year,
                           selected: _range == Range.year,
                           onTap: () => _setRange(Range.year),
@@ -602,7 +604,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                        child: _ChartWithTooltipOverlay(
+                        child: ChartWithTooltipOverlay(
                           tooltip: _tooltip,
                           onDismiss: () => setState(() => _tooltip = null),
                           child: AspectRatio(
@@ -781,7 +783,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   return;
                                                 }
 
-                                                final anchor = _extractLocal(
+                                                final anchor = extractLocal(
                                                   event,
                                                 );
                                                 if (anchor == null) return;
@@ -858,8 +860,7 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildSectionContainer(
-              context,
+            child: StatsSectionContainer(
               title: (_range == Range.week)
                   ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisWeek}'
                   : (_range == Range.month)
@@ -928,7 +929,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         final avgSecs = activeDays > 0
                             ? (totalSecs ~/ activeDays)
                             : 0;
-                        return _StatsBlock(
+                        return StatsBlock(
                           totalSecs: totalSecs,
                           avgSecs: avgSecs,
                           mostName: mostName,
@@ -947,7 +948,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     final avgSecs = activeDays > 0
                         ? (totalSecs ~/ activeDays)
                         : 0;
-                    content = _StatsBlock(
+                    content = StatsBlock(
                       totalSecs: totalSecs,
                       avgSecs: avgSecs,
                       mostName: mostName,
@@ -968,8 +969,7 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
           ),
           SliverToBoxAdapter(
-            child: _buildSectionContainer(
-              context,
+            child: StatsSectionContainer(
               title: AppLocalizations.of(context)!.habitStatistics,
               child: _buildHabitStatistics(context),
             ),
@@ -979,61 +979,6 @@ class _StatsScreenState extends State<StatsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSectionContainer(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-    bool useCard = true,
-    Widget? trailingHeader,
-  }) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              ?trailingHeader,
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: useCard
-              ? Container(
-                  clipBehavior: Clip.none,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(
-                          alpha: isDark ? 0.2 : 0.05,
-                        ),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: child,
-                )
-              : child,
-        ),
-      ],
     );
   }
 
@@ -2201,723 +2146,5 @@ class _StatsScreenState extends State<StatsScreen> {
     } catch (e) {
       rethrow;
     }
-  }
-}
-
-Offset? _extractLocal(FlTouchEvent e) {
-  if (e is FlTapUpEvent) return e.localPosition;
-  if (e is FlTapDownEvent) return e.localPosition;
-  if (e is FlLongPressStart) return e.localPosition;
-  if (e is FlLongPressMoveUpdate) return e.localPosition;
-  if (e is FlPanDownEvent) return e.localPosition;
-  if (e is FlPanUpdateEvent) return e.localPosition;
-  if (e is FlPointerHoverEvent) return e.localPosition;
-  return null;
-}
-
-class _ChartWithTooltipOverlay extends StatelessWidget {
-  final BucketTooltip? tooltip;
-  final VoidCallback onDismiss;
-  final Widget child;
-  const _ChartWithTooltipOverlay({
-    required this.tooltip,
-    required this.onDismiss,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        child,
-        if (tooltip != null)
-          Positioned.fill(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onDismiss,
-              child: const SizedBox.expand(),
-            ),
-          ),
-        if (tooltip != null)
-          Positioned.fill(
-            child: CustomSingleChildLayout(
-              delegate: _TooltipLayoutDelegate(
-                anchor: tooltip!.anchor,
-                screenPadding: 16.0,
-              ),
-              child: _TooltipBubble(data: tooltip!),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _TooltipBubble extends StatelessWidget {
-  final BucketTooltip data;
-  const _TooltipBubble({required this.data});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: scheme.surfaceContainerHighest,
-      elevation: 4,
-      borderRadius: BorderRadius.circular(10),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: 160,
-          maxWidth: 240,
-          maxHeight: 400,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                data.title,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 13,
-                  color: scheme.onSurface,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 4),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  children: [
-                    for (final it in data.items)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: it.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                it.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              it.valueHms,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatsBlock extends StatelessWidget {
-  final int totalSecs;
-  final int avgSecs;
-  final String mostName;
-  final int mostSecs;
-  final Color? mostColor;
-  final String leastName;
-  final int leastSecs;
-  final Color? leastColor;
-
-  const _StatsBlock({
-    required this.totalSecs,
-    required this.avgSecs,
-    required this.mostName,
-    required this.mostSecs,
-    this.mostColor,
-    required this.leastName,
-    required this.leastSecs,
-    this.leastColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    const spacing = 12.0;
-
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.1),
-            ),
-          ),
-          child: Column(
-            children: [
-              Text(
-                l10n.total,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                fmtTotalVerbose(
-                  totalSecs,
-                  context,
-                ).replaceFirst(' ${l10n.total.toLowerCase()}', ''),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: spacing),
-        Row(
-          children: [
-            Expanded(
-              child: _DetailStatCard(
-                title: l10n.mostStudied,
-                value: mostName,
-                subValue: mostSecs > 0 ? fmtHMS(mostSecs) : null,
-                accentColor: mostColor,
-                icon: Icons.trending_up,
-              ),
-            ),
-            const SizedBox(width: spacing),
-            Expanded(
-              child: _DetailStatCard(
-                title: l10n.leastStudied,
-                value: leastName,
-                subValue: (leastSecs > 0 && mostSecs > 0)
-                    ? fmtHMS(leastSecs)
-                    : null,
-                accentColor: leastColor,
-                icon: Icons.trending_down,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: spacing),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.avgPerDay,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                fmtHMS(avgSecs),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.right,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DetailStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String? subValue;
-  final Color? accentColor;
-  final IconData icon;
-
-  const _DetailStatCard({
-    required this.title,
-    required this.value,
-    this.subValue,
-    this.accentColor,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                icon,
-                size: 14,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (accentColor != null)
-                Container(
-                  width: 3,
-                  height: 28,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      value,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (subValue != null)
-                      Text(
-                        subValue!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontSize: 10,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SegChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _SegChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          color: selected ? theme.colorScheme.onPrimary : null,
-        ),
-      ),
-      selected: selected,
-      onSelected: (_) => onTap(),
-      selectedColor: theme.colorScheme.primary,
-      shape: StadiumBorder(side: BorderSide(color: theme.dividerColor)),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-    );
-  }
-}
-
-class _PieChartWithTooltip extends StatefulWidget {
-  final int totalSeconds;
-  final List<Slice> slices;
-  final SliceTooltip? tooltip;
-  final void Function(SliceTooltip)? onSliceTap;
-  final VoidCallback onDismiss;
-
-  const _PieChartWithTooltip({
-    required this.totalSeconds,
-    required this.slices,
-    required this.tooltip,
-    required this.onSliceTap,
-    required this.onDismiss,
-  });
-
-  @override
-  State<_PieChartWithTooltip> createState() => _PieChartWithTooltipState();
-}
-
-class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: widget.onDismiss,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 300,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final w = constraints.maxWidth;
-                final h = constraints.maxHeight;
-                // Use more realistic max dimensions or better, handle it dynamically.
-                // For now, let's just make the boundary checks more robust.
-                const tooltipW = 160.0;
-                const tooltipH = 80.0;
-
-                final safeLocal = widget.tooltip?.local ?? Offset.zero;
-                double left = safeLocal.dx - tooltipW / 2;
-                double top = safeLocal.dy - tooltipH - 12;
-
-                // Ensure it's within the LayoutBuilder constraints with some padding
-                if (left < 12) left = 12;
-                if (left + tooltipW > w - 12) left = w - tooltipW - 12;
-
-                if (top < 12 && widget.tooltip != null) {
-                  // If it flies off top, show below the point
-                  top = safeLocal.dy + 12;
-                }
-                if (top + tooltipH > h - 12) {
-                  // If it flies off bottom, push it up
-                  top = h - tooltipH - 12;
-                }
-
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    PieChart(
-                      PieChartData(
-                        startDegreeOffset: -90,
-                        sectionsSpace: 2,
-                        centerSpaceRadius: 60,
-                        sections: widget.slices.isEmpty
-                            ? [
-                                PieChartSectionData(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .surfaceContainerHighest
-                                      .withAlpha((0.6 * 255).round()),
-                                  value: 1,
-                                  radius: 90,
-                                  showTitle: false,
-                                ),
-                              ]
-                            : [
-                                for (final s in widget.slices)
-                                  () {
-                                    final percent = widget.totalSeconds == 0
-                                        ? 0
-                                        : s.seconds / widget.totalSeconds;
-                                    final showTitle = percent >= 0.03;
-                                    final label = showTitle
-                                        ? pieSectionTitle(
-                                            s.name,
-                                            s.seconds,
-                                            context,
-                                          )
-                                        : '';
-                                    return PieChartSectionData(
-                                      color: s.color,
-                                      value: s.seconds.toDouble(),
-                                      radius: 90,
-                                      showTitle: showTitle,
-                                      title: label,
-                                      titleStyle: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 11,
-                                          ),
-                                      titlePositionPercentageOffset: 0.65,
-                                    );
-                                  }(),
-                              ],
-                        pieTouchData: PieTouchData(
-                          touchCallback: (event, response) {
-                            if (event is! FlTapUpEvent) return;
-                            final touched = response?.touchedSection;
-                            if (touched == null) return;
-                            final index = touched.touchedSectionIndex;
-                            if (index < 0 || index >= widget.slices.length) {
-                              return;
-                            }
-
-                            final s = widget.slices[index];
-                            final local = event.localPosition;
-
-                            widget.onSliceTap?.call(
-                              SliceTooltip(
-                                local: local,
-                                id: s.id,
-                                name: s.name,
-                                seconds: s.seconds,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOutCubic,
-                    ),
-                    if (widget.totalSeconds == 0 || widget.slices.isEmpty)
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: Center(
-                            child: Text(
-                              AppLocalizations.of(context)!.noData,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: Colors.black45,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (widget.totalSeconds > 0 && widget.slices.isNotEmpty)
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)!.total,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurfaceVariant,
-                                  fontSize: 13,
-                                ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            fmtHMS(widget.totalSeconds),
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (widget.tooltip != null)
-                      Positioned.fill(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: widget.onDismiss,
-                          child: const SizedBox.expand(),
-                        ),
-                      ),
-                    if (widget.tooltip != null)
-                      Positioned(
-                        left: left,
-                        top: top,
-                        child: IntrinsicWidth(
-                          child: IntrinsicHeight(
-                            child: _FadeInTooltipCard(data: widget.tooltip!),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FadeInTooltipCard extends StatefulWidget {
-  final SliceTooltip data;
-  const _FadeInTooltipCard({required this.data});
-
-  @override
-  State<_FadeInTooltipCard> createState() => _FadeInTooltipCardState();
-}
-
-class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 200),
-    )..forward();
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _ctrl,
-      child: Material(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        elevation: 4,
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.data.name,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                fmtHMS(widget.data.seconds),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
-  final Offset anchor;
-  final double screenPadding;
-
-  _TooltipLayoutDelegate({required this.anchor, this.screenPadding = 8.0});
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return BoxConstraints(
-      minWidth: 0,
-      maxWidth: constraints.maxWidth,
-      minHeight: 0,
-      maxHeight: constraints.maxHeight,
-    );
-  }
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    // Center horizontally on anchor
-    double left = anchor.dx - (childSize.width / 2);
-
-    // Ensure it doesn't go off the left/right edges
-    if (left < screenPadding) left = screenPadding;
-    if (left + childSize.width > size.width - screenPadding) {
-      left = size.width - childSize.width - screenPadding;
-    }
-
-    // Position vertically
-    double top;
-    if (anchor.dy < size.height / 2) {
-      // Show below
-      top = anchor.dy + 12;
-    } else {
-      // Show above
-      top = anchor.dy - childSize.height - 12;
-    }
-
-    // Ensure it doesn't go off the top/bottom edges
-    if (top < screenPadding) top = screenPadding;
-    if (top + childSize.height > size.height - screenPadding) {
-      top = size.height - childSize.height - screenPadding;
-    }
-
-    return Offset(left, top);
-  }
-
-  @override
-  bool shouldRelayout(_TooltipLayoutDelegate oldDelegate) {
-    return anchor != oldDelegate.anchor;
   }
 }

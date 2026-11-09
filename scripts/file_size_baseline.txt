@@ -28,4 +28,4 @@
 1122 lib/features/history/screens/history.dart
 583 lib/features/history/widgets/export_session_dialog.dart
 3098 lib/features/home/home.dart
-2923 lib/features/stats/screens/stats.dart
+2150 lib/features/stats/screens/stats.dart
