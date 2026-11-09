@@ -248,6 +248,20 @@ class AppLocalizationsKk extends AppLocalizations {
   String get deletingAccount => 'Есептік жазба жойылуда...';
 
   @override
+  String get deleteAccountPasswordTitle =>
+      'Аккаунтты жою үшін құпиясөзді енгізіңіз';
+
+  @override
+  String get deleteAccountWrongPassword => 'Құпиясөз қате. Қайталап көріңіз.';
+
+  @override
+  String get deleteAccountNetworkError => 'Байланыс жоқ. Қайталап көріңіз.';
+
+  @override
+  String get deleteAccountFailed =>
+      'Аккаунтты жою мүмкін болмады. Қайталап көріңіз.';
+
+  @override
   String get accountDeleted => 'Есептік жазба жойылды';
 
   @override
