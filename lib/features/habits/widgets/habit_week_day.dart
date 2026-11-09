@@ -34,7 +34,6 @@ class HabitWeekDay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final localeName = AppLocalizations.of(context)!.localeName;
     final key = dateKey(date);
     final currentVal = habit.last7[key] ?? 0.0;
     final isCompleted = currentVal >= habit.targetValue;
@@ -65,35 +64,18 @@ class HabitWeekDay extends StatelessWidget {
     // Interaction only allowed on active days and NOT locked and NOT saving
     final canInteract = isActive && !isLocked && !isSaving;
 
-    // Styling Logic
-    Color textColor;
-    if (isPreStart || !isScheduled || isLocked) {
-      // A, C & Locked: Not required, pre-start or locked -> Muted
-      textColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3);
-    } else if (isFuture) {
-      // B: Future Required -> Regular normal color (same as active)
-      textColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
-    } else {
-      // Active
-      textColor = isToday
-          ? habit.color
-          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
-    }
+    final textColor = _textColor(
+      theme,
+      isMuted: isPreStart || !isScheduled || isLocked,
+      isFuture: isFuture,
+      isToday: isToday,
+    );
 
     return GestureDetector(
       onTap: canInteract ? onTap : null,
       child: Column(
         children: [
-          Text(
-            DateFormat.E(localeName).format(date),
-            style: TextStyle(
-              fontSize: 10,
-              color: textColor,
-              fontWeight: (isToday && isScheduled)
-                  ? FontWeight.bold
-                  : FontWeight.normal,
-            ),
-          ),
+          _buildLabel(context, textColor, isToday && isScheduled),
           const SizedBox(height: 6),
           _buildCircle(
             theme,
@@ -107,6 +89,39 @@ class HabitWeekDay extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildLabel(BuildContext context, Color color, bool isBold) {
+    final localeName = AppLocalizations.of(context)!.localeName;
+    return Text(
+      DateFormat.E(localeName).format(date),
+      style: TextStyle(
+        fontSize: 10,
+        color: color,
+        fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+
+  // Styling Logic
+  Color _textColor(
+    ThemeData theme, {
+    required bool isMuted,
+    required bool isFuture,
+    required bool isToday,
+  }) {
+    if (isMuted) {
+      // A, C & Locked: Not required, pre-start or locked -> Muted
+      return theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3);
+    }
+    if (isFuture) {
+      // B: Future Required -> Regular normal color (same as active)
+      return theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+    }
+    // Active
+    return isToday
+        ? habit.color
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
   }
 
   Widget _buildCircle(
