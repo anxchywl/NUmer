@@ -1,11 +1,9 @@
 import 'package:numer_app/features/habits/data/habit_service.dart';
 import 'dart:async';
-import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/habits/models/habit.dart';
 import 'package:numer_app/core/data/storage.dart';
 
@@ -17,6 +15,9 @@ import '../models/stats_models.dart';
 import '../stats_format.dart';
 import '../widgets/chart_tooltip.dart';
 import '../data/habit_stats_loader.dart';
+import '../data/stats_chart_groups.dart';
+import '../data/stats_labels.dart';
+import '../data/stats_loader.dart';
 import '../widgets/habit_statistics.dart';
 import '../widgets/pie_chart_with_tooltip.dart';
 import '../widgets/stats_block.dart';
@@ -30,9 +31,8 @@ class StatsScreen extends StatefulWidget {
 }
 
 class _StatsScreenState extends State<StatsScreen> {
-  DateTime _day = _strip(DateTime.now());
-  static DateTime _strip(DateTime d) => DateTime(d.year, d.month, d.day);
-  bool get _isToday => _strip(DateTime.now()) == _day;
+  DateTime _day = strip(DateTime.now());
+  bool get _isToday => strip(DateTime.now()) == _day;
   SliceTooltip? _sliceTooltip;
 
   void _prevDay() {
@@ -57,7 +57,7 @@ class _StatsScreenState extends State<StatsScreen> {
   void _goToday() {
     if (_isToday) return;
     setState(() {
-      _day = _strip(DateTime.now());
+      _day = strip(DateTime.now());
       _sliceTooltip = null;
     });
   }
@@ -83,7 +83,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   selectedDay: _day,
                   onDaySelected: (selected, focused) {
                     setState(() {
-                      _day = _strip(selected);
+                      _day = strip(selected);
                       _sliceTooltip = null;
                     });
                     Navigator.pop(context);
@@ -104,7 +104,7 @@ class _StatsScreenState extends State<StatsScreen> {
   void _prevRange() {
     final minDate = DateTime(2025, 1, 1);
     final weekStart = context.read<AppState>().weekStart;
-    final (prevStart, _) = _rangeBounds(
+    final (prevStart, _) = rangeBounds(
       DateTime.now(),
       _range,
       _shift - 1,
@@ -218,15 +218,10 @@ class _StatsScreenState extends State<StatsScreen> {
         ? navHeight + navBottomOffset + extra
         : 24.0;
 
-    final pieFuture = _loadPieForDay(_day, courses);
+    final pieFuture = loadPieForDay(_day, courses);
 
-    final (start, end) = _rangeBounds(
-      DateTime.now(),
-      _range,
-      _shift,
-      weekStart,
-    );
-    final bucketsFuture = _loadBucketsForRange(start, end, _range, courses);
+    final (start, end) = rangeBounds(DateTime.now(), _range, _shift, weekStart);
+    final bucketsFuture = loadBucketsForRange(start, end, _range, courses);
 
     return Scaffold(
       body: CustomScrollView(
@@ -363,7 +358,7 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                         ),
                         onPressed: () async {
-                          final dayStart = _strip(_day);
+                          final dayStart = strip(_day);
                           final dayEnd = _isToday
                               ? DateTime.now()
                               : dayStart.add(const Duration(days: 1));
@@ -449,7 +444,7 @@ class _StatsScreenState extends State<StatsScreen> {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Text(
-                                _periodLabel(start, end, _range),
+                                periodLabel(context, start, end, _range),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -521,7 +516,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                     final (
                                       animatedGroups,
                                       _,
-                                    ) = _buildAnimatedGroups(
+                                    ) = buildAnimatedGroups(
                                       buckets,
                                       courses,
                                       unitScale,
@@ -610,7 +605,8 @@ class _StatsScreenState extends State<StatsScreen> {
                                                             top: 6,
                                                           ),
                                                       child: Text(
-                                                        _xLabel(
+                                                        xLabel(
+                                                          context,
                                                           buckets[idx],
                                                           _range,
                                                           weekStart,
@@ -684,14 +680,16 @@ class _StatsScreenState extends State<StatsScreen> {
 
                                                 final bucket = buckets[idx];
                                                 final items =
-                                                    _buildTooltipDetails(
+                                                    buildTooltipDetails(
+                                                      context,
                                                       bucket,
                                                       courses,
                                                     );
                                                 setState(() {
                                                   _tooltip = BucketTooltip(
                                                     anchor: anchor,
-                                                    title: _tooltipTitle(
+                                                    title: tooltipTitle(
+                                                      context,
                                                       bucket,
                                                       _range,
                                                     ),
@@ -798,7 +796,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
                   Widget content;
                   if (_range == Range.year) {
-                    final (start, end) = _rangeBounds(
+                    final (start, end) = rangeBounds(
                       DateTime.now(),
                       _range,
                       _shift,
@@ -874,296 +872,5 @@ class _StatsScreenState extends State<StatsScreen> {
         ],
       ),
     );
-  }
-
-  Future<PiePayload> _loadPieForDay(DateTime day, List<Course> courses) async {
-    final valid = courses.map((c) => c.id).toSet();
-    final start = _strip(day);
-    final isToday = _strip(day) == _strip(DateTime.now());
-    final end = isToday ? DateTime.now() : start.add(const Duration(days: 1));
-    final perCourse = await Storage.secondsByCourseBetween(start, end);
-
-    final slices = <Slice>[];
-    int total = 0;
-    perCourse.forEach((courseId, secs0) {
-      if (!valid.contains(courseId)) return;
-      final secs = secs0 < 0 ? 0 : secs0;
-      if (secs <= 0) return;
-      final course = courses.firstWhere((c) => c.id == courseId);
-      slices.add(
-        Slice(
-          id: courseId,
-          name: course.name,
-          color: course.color,
-          seconds: secs,
-        ),
-      );
-      total += secs;
-    });
-
-    slices.sort((a, b) => b.seconds.compareTo(a.seconds));
-    return PiePayload(slices: slices, totalSeconds: total);
-  }
-
-  Future<BucketsPayload> _loadBucketsForRange(
-    DateTime start,
-    DateTime end,
-    Range r,
-    List<Course> courses,
-  ) async {
-    final valid = courses.map((c) => c.id).toSet();
-    final buckets = <Bucket>[];
-    int totalSecs = 0;
-
-    if (r == Range.week || r == Range.month) {
-      final days = end.difference(start).inDays;
-      final now = DateTime.now();
-      final todayKey = DateTime(now.year, now.month, now.day);
-
-      for (var i = 0; i < days; i++) {
-        final dayStart = DateTime(
-          start.year,
-          start.month,
-          start.day,
-        ).add(Duration(days: i));
-        final isToday =
-            DateTime(dayStart.year, dayStart.month, dayStart.day) == todayKey;
-        final dayEnd = isToday ? now : dayStart.add(const Duration(days: 1));
-
-        final map = await Storage.secondsByCourseBetween(dayStart, dayEnd);
-
-        final cleaned = <String, int>{};
-        map.forEach((k, v) {
-          if (!valid.contains(k)) return;
-          final secs = v < 0 ? 0 : v;
-          if (secs > 0) {
-            cleaned[k] = secs;
-            totalSecs += secs;
-          }
-        });
-
-        for (final c in courses) {
-          cleaned.putIfAbsent(c.id, () => 0);
-        }
-
-        buckets.add(Bucket(date: dayStart, secondsByCourse: cleaned));
-      }
-    } else {
-      for (var month = 1; month <= 12; month++) {
-        final monthStart = DateTime(start.year, month, 1);
-        final monthEnd = DateTime(start.year, month + 1, 1);
-        final now = DateTime.now();
-        final effectiveEnd = (monthEnd.isAfter(now) && now.isAfter(monthStart))
-            ? now
-            : monthEnd;
-
-        final map = await Storage.secondsByCourseBetween(
-          monthStart,
-          effectiveEnd,
-        );
-        final cleaned = <String, int>{};
-        map.forEach((k, v) {
-          if (!valid.contains(k)) return;
-          final secs = v < 0 ? 0 : v;
-          if (secs > 0) {
-            cleaned[k] = secs;
-            totalSecs += secs;
-          }
-        });
-        for (final c in courses) {
-          cleaned.putIfAbsent(c.id, () => 0);
-        }
-        buckets.add(
-          Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true),
-        );
-      }
-    }
-
-    return BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
-  }
-
-  (List<BarChartGroupData>, double) _buildAnimatedGroups(
-    List<Bucket> buckets,
-    List<Course> courses,
-    double unitScale,
-    double t,
-    double barWidth,
-  ) {
-    final groups = <BarChartGroupData>[];
-    double fullMaxY = 0;
-    const double stagger = 0.03;
-
-    final courseById = {for (final c in courses) c.id: c};
-
-    for (var i = 0; i < buckets.length; i++) {
-      final b = buckets[i];
-
-      double accFinal = 0;
-      final segs = <({double from, double to, Color color})>[];
-
-      final entries = b.secondsByCourse.entries.toList()
-        ..sort((a, b) => a.key.compareTo(b.key));
-
-      for (final e in entries) {
-        final course = courseById[e.key];
-        if (course == null) continue;
-        final segValue = (e.value / unitScale).toDouble();
-        if (segValue <= 0) continue;
-        final from = accFinal;
-        final to = accFinal + segValue;
-        accFinal = to;
-        segs.add((from: from, to: to, color: course.color));
-      }
-
-      fullMaxY = math.max(fullMaxY, accFinal);
-
-      final start = i * stagger;
-      final localT = (t - start) / (1 - start);
-      final tt = localT.clamp(0.0, 1.0);
-
-      final items = <BarChartRodStackItem>[];
-      for (final s in segs) {
-        final from = s.from * tt;
-        final to = s.to * tt;
-        if (to > from) items.add(BarChartRodStackItem(from, to, s.color));
-      }
-      final hasData = items.isNotEmpty;
-
-      groups.add(
-        BarChartGroupData(
-          x: i,
-          barRods: [
-            BarChartRodData(
-              toY: hasData ? (accFinal * tt) : 0,
-              width: barWidth,
-              color: Colors.transparent,
-              borderRadius: hasData
-                  ? BorderRadius.circular(6)
-                  : BorderRadius.zero,
-              rodStackItems: hasData ? items : const [],
-            ),
-          ],
-        ),
-      );
-    }
-
-    return (groups, fullMaxY);
-  }
-
-  (DateTime, DateTime) _rangeBounds(
-    DateTime base,
-    Range r,
-    int shift,
-    WeekStart weekStart,
-  ) {
-    switch (r) {
-      case Range.week:
-        final int delta = (weekStart == WeekStart.monday)
-            ? (base.weekday - DateTime.monday)
-            : (base.weekday % 7);
-        final anchor = _strip(base.subtract(Duration(days: delta)));
-        final start = anchor.add(Duration(days: 7 * shift));
-        final end = start.add(const Duration(days: 7));
-        return (start, end);
-
-      case Range.month:
-        final start0 = DateTime(base.year, base.month, 1);
-        final start = DateTime(start0.year, start0.month + shift, 1);
-        final end = DateTime(start.year, start.month + 1, 1);
-        return (_strip(start), _strip(end));
-
-      case Range.year:
-        final start0 = DateTime(base.year, 1, 1);
-        final start = DateTime(start0.year + shift, 1, 1);
-        final end = DateTime(start.year + 1, 1, 1);
-        return (_strip(start), _strip(end));
-    }
-  }
-
-  String _xLabel(Bucket b, Range r, WeekStart weekStart) {
-    switch (r) {
-      case Range.week:
-        final l10n = AppLocalizations.of(context)!;
-        final w = (weekStart == WeekStart.sunday)
-            ? [
-                l10n.sun,
-                l10n.mon,
-                l10n.tue,
-                l10n.wed,
-                l10n.thu,
-                l10n.fri,
-                l10n.sat,
-              ]
-            : [
-                l10n.mon,
-                l10n.tue,
-                l10n.wed,
-                l10n.thu,
-                l10n.fri,
-                l10n.sat,
-                l10n.sun,
-              ];
-        final idx = (weekStart == WeekStart.sunday)
-            ? (b.date.weekday % 7)
-            : (b.date.weekday - 1);
-        final safe = idx.clamp(0, 6);
-        return w[safe];
-
-      case Range.month:
-        const marks = {5, 10, 15, 20, 25, 30};
-        return marks.contains(b.date.day) ? '${b.date.day}' : '';
-
-      case Range.year:
-        return '${b.date.month}';
-    }
-  }
-
-  String _periodLabel(DateTime start, DateTime end, Range r) {
-    switch (r) {
-      case Range.week:
-        final s = fmtDateShort(start, context);
-        final e = fmtDateShort(end.subtract(const Duration(days: 1)), context);
-        return '$s – $e';
-      case Range.month:
-        return '${monthName(context, start.month)} ${start.year}';
-      case Range.year:
-        return '${start.year}';
-    }
-  }
-
-  String _tooltipTitle(Bucket b, Range r) {
-    switch (r) {
-      case Range.week:
-      case Range.month:
-        return fmtDateLong(b.date, context);
-      case Range.year:
-        return '${monthName(context, b.date.month)} ${b.date.year}';
-    }
-  }
-
-  List<TooltipItem> _buildTooltipDetails(Bucket b, List<Course> courses) {
-    final courseById = {for (final c in courses) c.id: c};
-    final items = <TooltipItem>[];
-    final sortedEntries = b.secondsByCourse.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    for (final entry in sortedEntries) {
-      final secs = entry.value;
-      if (secs <= 0) continue;
-      final c = courseById[entry.key];
-      if (c == null) continue;
-      items.add(
-        TooltipItem(color: c.color, label: c.name, valueHms: fmtHMS(secs)),
-      );
-    }
-    if (items.isEmpty) {
-      items.add(
-        TooltipItem(
-          color: Theme.of(context).colorScheme.outline,
-          label: 'No study',
-          valueHms: '00:00:00',
-        ),
-      );
-    }
-    return items;
   }
 }
