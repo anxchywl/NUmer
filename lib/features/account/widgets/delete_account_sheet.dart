@@ -134,15 +134,20 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
                   style: FilledButton.styleFrom(
                     backgroundColor: scheme.error,
                     foregroundColor: scheme.onError,
+                    disabledBackgroundColor: scheme.error,
+                    disabledForegroundColor: scheme.onError,
                   ),
                   onPressed: _loading ? null : _submit,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (_loading) ...[
-                        const SizedBox.square(
+                        SizedBox.square(
                           dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: scheme.onError,
+                          ),
                         ),
                         const SizedBox(width: 8),
                       ],
