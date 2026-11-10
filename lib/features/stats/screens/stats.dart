@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 
 import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/habits/models/habit.dart';
@@ -17,7 +16,8 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import '../models/stats_models.dart';
 import '../stats_format.dart';
 import '../widgets/chart_tooltip.dart';
-import '../widgets/habit_report_sheet.dart';
+import '../data/habit_stats_loader.dart';
+import '../widgets/habit_statistics.dart';
 import '../widgets/pie_chart_with_tooltip.dart';
 import '../widgets/stats_block.dart';
 import '../widgets/stats_section_container.dart';
@@ -175,16 +175,15 @@ class _StatsScreenState extends State<StatsScreen> {
     super.dispose();
   }
 
-  Future<void> _loadAllHabitsStats(List<Habit> habits, String uid) async {
+  Future<void> _loadAllHabitsStats(List<Habit> habits) async {
     if (_loadingHabitsStats) return;
     setState(() => _loadingHabitsStats = true);
 
-    final service = context.read<HabitService>();
     final results = <String, HabitStatsResult>{};
 
     for (final habit in habits) {
       if (habit.archived) continue;
-      final stats = await _computeHabitStats(habit, service, uid);
+      final stats = await computeHabitStats(habit);
       results[habit.id] = stats;
     }
 
@@ -196,121 +195,10 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  Future<HabitStatsResult> _computeHabitStats(
-    Habit habit,
-    HabitService service,
-    String uid,
-  ) async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    // Start from habit start date
-    final start = DateTime(
-      habit.startDate.year,
-      habit.startDate.month,
-      habit.startDate.day,
-    );
-
-    // If future start date, no stats
-    if (start.isAfter(today)) {
-      return const HabitStatsResult(0, 0, 0, 0.0);
+  void _selectInitialHabit(List<Habit> habits) {
+    if (_selectedHabitId == null && habits.isNotEmpty) {
+      _selectedHabitId = habits.first.id;
     }
-
-    // End date: habit.endDate or Today
-    DateTime end = today;
-    if (habit.endDate != null) {
-      final e = DateTime(
-        habit.endDate!.year,
-        habit.endDate!.month,
-        habit.endDate!.day,
-      );
-      if (e.isBefore(today)) end = e;
-    }
-
-    // LOCAL-FIRST: Use local cache for history
-    final localHistory = Storage.getHabitHistoryFromCache(habit.id);
-    final historyMap = <String, double>{};
-    for (final h in localHistory) {
-      if (h.deleted) continue;
-      historyMap[h.dateKey] = h.value ?? 0.0;
-    }
-
-    int required = 0;
-    int completed = 0;
-
-    if (habit.frequencyType == HabitFrequencyType.repeatsInPeriod) {
-      // Period-based logic (Matches HabitService.recalculateStreak)
-      DateTime getPeriodStart(DateTime d) {
-        switch (habit.frequencyPeriod!) {
-          case HabitPeriod.week:
-            // Align with Monday
-            return d.subtract(Duration(days: d.weekday - 1));
-          case HabitPeriod.month:
-            return DateTime(d.year, d.month, 1);
-          case HabitPeriod.year:
-            return DateTime(d.year, 1, 1);
-        }
-      }
-
-      DateTime getNextPeriodStart(DateTime pStart) {
-        switch (habit.frequencyPeriod!) {
-          case HabitPeriod.week:
-            return pStart.add(const Duration(days: 7));
-          case HabitPeriod.month:
-            return DateTime(pStart.year, pStart.month + 1, 1);
-          case HabitPeriod.year:
-            return DateTime(pStart.year + 1, 1, 1);
-        }
-      }
-
-      DateTime pStart = getPeriodStart(start);
-
-      while (!pStart.isAfter(end)) {
-        final pNext = getNextPeriodStart(pStart);
-        final pEnd = pNext.subtract(const Duration(days: 1));
-
-        final iStart = pStart.isBefore(start) ? start : pStart;
-        final iEnd = pEnd.isAfter(end) ? end : pEnd;
-
-        if (!iStart.isAfter(iEnd)) {
-          required += (habit.frequencyGoal ?? 1);
-
-          int periodCompletions = 0;
-          DateTime d = iStart;
-          while (!d.isAfter(iEnd)) {
-            final k =
-                "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-            if ((historyMap[k] ?? 0) >= habit.targetValue) {
-              periodCompletions++;
-            }
-            d = d.add(const Duration(days: 1));
-          }
-
-          final goal = habit.frequencyGoal ?? 1;
-          final capped = periodCompletions > goal ? goal : periodCompletions;
-          completed += capped;
-        }
-        pStart = pNext;
-      }
-    } else {
-      // Day-based logic
-      int totalDays = end.difference(start).inDays + 1;
-      for (var i = 0; i < totalDays; i++) {
-        final d = start.add(Duration(days: i));
-        if (habit.isScheduledFor(d)) {
-          required++;
-          final k =
-              "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
-          if ((historyMap[k] ?? 0) >= habit.targetValue) {
-            completed++;
-          }
-        }
-      }
-    }
-
-    final notCompleted = required - completed;
-    final rate = required > 0 ? (completed / required * 100) : 0.0;
-
-    return HabitStatsResult(required, completed, notCompleted, rate);
   }
 
   @override
@@ -969,7 +857,15 @@ class _StatsScreenState extends State<StatsScreen> {
           SliverToBoxAdapter(
             child: StatsSectionContainer(
               title: AppLocalizations.of(context)!.habitStatistics,
-              child: _buildHabitStatistics(context),
+              child: HabitStatistics(
+                statsByHabit: _allHabitsStatsCache,
+                loading: _loadingHabitsStats,
+                pageController: _habitPageCtrl,
+                reportMonth: _habitStatsMonth,
+                onLoadStats: _loadAllHabitsStats,
+                onHabitsShown: _selectInitialHabit,
+                onHabitSelected: (id) => setState(() => _selectedHabitId = id),
+              ),
             ),
           ),
           SliverPadding(
@@ -1269,279 +1165,5 @@ class _StatsScreenState extends State<StatsScreen> {
       );
     }
     return items;
-  }
-
-  Widget _buildHabitStatistics(BuildContext context) {
-    // Let's get it from FirebaseAuth for now or Provider.
-    final uid =
-        context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ??
-        firebase_auth.FirebaseAuth.instance.currentUser?.uid;
-
-    if (uid == null) return const SizedBox.shrink();
-
-    return StreamBuilder<List<Habit>>(
-      stream: context.read<HabitService>().habitsStream(uid),
-      builder: (context, snapshot) {
-        final habits = snapshot.data ?? [];
-        if (habits.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.all(32),
-            child: Center(
-              child: Text(
-                AppLocalizations.of(context)!.habitStatsEmptyState,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        // Trigger stats load if needed
-        if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _loadAllHabitsStats(habits, uid);
-          });
-        }
-
-        // Initial Page Selection
-        if (_selectedHabitId == null && habits.isNotEmpty) {
-          _selectedHabitId = habits.first.id;
-        }
-
-        return _buildHabitLayout(context, habits, uid);
-      },
-    );
-  }
-
-  // Refactored inner layout to handle the stream wrapping
-  Widget _buildHabitLayout(
-    BuildContext context,
-    List<Habit> habits,
-    String uid,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    // Trigger stats load (idempotent-ish)
-    // If we want live updates, we need to know when to force reload.
-    // The StreamBuilder above rebuilds this widget on event.
-    // So every time this builds, we might want to ensure stats are fresh.
-    // But _loadSetState prevents loops.
-    // We need to invalidate _allHabitsStatsCache upon stream event.
-    // How does the stream builder pass "event" down? It doesn't.
-
-    // Better approach: Listen in initState/didChangeDependencies?
-    // But we are in a mixin/state class.
-    // Let's just add the listener in initState and dispose in dispose.
-
-    return Column(
-      children: [
-        // Month Chooser REMOVED (moved to dialog)
-
-        // Swipe Selector (PageView)
-        SizedBox(
-          height: 180,
-          child: PageView.builder(
-            controller: _habitPageCtrl,
-            itemCount: habits.length,
-            onPageChanged: (index) {
-              setState(() => _selectedHabitId = habits[index].id);
-            },
-            itemBuilder: (context, index) {
-              final habit = habits[index];
-              final stats = _allHabitsStatsCache?[habit.id];
-
-              return AnimatedBuilder(
-                animation: _habitPageCtrl,
-                builder: (context, child) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                    ), // Tighter padding
-                    child: child,
-                  );
-                },
-                // Refined Card Style
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    vertical: 4,
-                    horizontal: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerLow, // Softer background
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              IconData(
-                                habit.iconCodePoint,
-                                fontFamily: habit.iconFamily,
-                                fontPackage: habit.iconPackage,
-                              ),
-                              color: habit.color,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                habit.name,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const Spacer(),
-                        if (stats == null)
-                          const Center(child: CircularProgressIndicator())
-                        else ...[
-                          _buildStatRow(
-                            context,
-                            l10n.habitStatsCompletionRate,
-                            "${stats.completionRate.toStringAsFixed(1)}%",
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildStatCard(
-                                  context,
-                                  l10n.habitStatsCompleted,
-                                  "${stats.completed}",
-                                  Colors.green,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _buildStatCard(
-                                  context,
-                                  l10n.habitStatsMissed,
-                                  "${stats.notCompleted}",
-                                  Colors.redAccent,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Export Button (Outlined Style)
-
-        // Export Button (Centered)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Center(
-            child: OutlinedButton.icon(
-              onPressed: () => showHabitReportSheet(
-                context,
-                habits: habits,
-                initialMonth: _habitStatsMonth,
-              ),
-              icon: const Icon(Icons.download, size: 18),
-              label: Text(l10n.habitReportDownload),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-
-  Widget _buildStatRow(BuildContext context, String label, String value) {
-    final isKK = Localizations.localeOf(context).languageCode == 'kk';
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).hintColor,
-              fontSize: isKK ? 13 : null,
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.visible,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context,
-    String label,
-    String value,
-    Color color,
-  ) {
-    final isKK = Localizations.localeOf(context).languageCode == 'kk';
-    // Cleaner stat card: no border, subtle background
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: isKK ? 10 : 11,
-              color: color.withValues(alpha: 0.8),
-            ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            softWrap: true,
-          ),
-        ],
-      ),
-    );
   }
 }
