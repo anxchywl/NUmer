@@ -135,16 +135,20 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
                     backgroundColor: scheme.error,
                     foregroundColor: scheme.onError,
                   ),
-                  onPressed: _submit,
-                  child: _loading
-                      ? SizedBox.square(
-                          dimension: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: scheme.onError,
-                          ),
-                        )
-                      : Text(l10n.delete),
+                  onPressed: _loading ? null : _submit,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_loading) ...[
+                        const SizedBox.square(
+                          dimension: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(l10n.delete),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
