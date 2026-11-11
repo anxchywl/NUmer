@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,13 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:numer_app/app/app_state.dart';
-import 'package:numer_app/features/courses/course.dart';
-import 'package:numer_app/core/data/storage.dart';
+import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/core/data/sync_service.dart';
-
-import 'package:numer_app/features/ai_analysis/ai_analysis_screen.dart';
-import 'package:numer_app/shared/widgets/color_picker_button.dart';
-import 'package:numer_app/features/courses/swipeable_course_item.dart';
+import 'package:numer_app/features/ai_analysis/ai_analysis.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
@@ -38,80 +33,7 @@ Future<void> showCourseTimeSheet(BuildContext context, Course course) {
   ).whenComplete(() => appState.setCourseSheetOpen(false));
 }
 
-const _colorChoices = <Color>[
-  Color(0xFFEF4444), // Red
-  Color(0xFFF97316), // Orange
-  Color(0xFFFACC15), // Yellow
-  Color(0xFF22C55E), // Green
-  Color(0xFF3B82F6), // Blue
-  Color(0xFF6366F1), // Indigo
-  Color(0xFF8B5CF6), // Violet
-  Color(0xFF84CC16), // Lime
-  Color(0xFF14B8A6), // Teal
-  Color(0xFF06B6D4), // Cyan
-  Color(0xFFA855F7), // Purple
-  Color(0xFFD946EF), // Magenta
-  Color(0xFFEC4899), // Pink
-];
-
 const int _kMaxSecs = 10800;
-
-const int _kDefaultSemesterWeeks = 14;
-
-double _hoursPerCreditForLevel(int level) {
-  switch (level) {
-    case 1:
-      return 3.0;
-    case 2:
-      return 2.5;
-    case 3:
-      return 2.0;
-    case 4:
-      return 1.5;
-    case 5:
-      return 1.0;
-    default:
-      return 2.0;
-  }
-}
-
-String _expShortLabel(BuildContext context, int level) {
-  switch (level) {
-    case 1:
-      return AppLocalizations.of(context)!.expLevel1;
-    case 2:
-      return AppLocalizations.of(context)!.expLevel2;
-    case 3:
-      return AppLocalizations.of(context)!.expLevel3;
-    case 4:
-      return AppLocalizations.of(context)!.expLevel4;
-    case 5:
-      return AppLocalizations.of(context)!.expLevel5;
-    default:
-      return AppLocalizations.of(context)!.expLevelDefault;
-  }
-}
-
-String _fmtHours(double h, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final whole = h.floor();
-  final mins = ((h - whole) * 60).round();
-  if (mins == 0) return '$whole${l10n.hUnit}';
-  return '$whole${l10n.hUnit} $mins${l10n.mUnit}';
-}
-
-String _fmtHMS(int s) {
-  final h = (s ~/ 3600).toString().padLeft(2, '0');
-  final m = ((s % 3600) ~/ 60).toString().padLeft(2, '0');
-  final sec = (s % 60).toString().padLeft(2, '0');
-  return '$h:$m:$sec';
-}
-
-String _courseNameWithoutParentheses(String value) {
-  return value.replaceAll(RegExp(r'\s*\([^)]*\)'), '').trim();
-}
-
-// _savedSnack removed
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -174,7 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SliverToBoxAdapter(
               child: Column(
                 children: [
-                  _FirstRunCreditsGate(),
+                  FirstRunCreditsGate(),
                   _AutoFinishWatcher(),
                   _ActiveSessionBar(),
                 ],
@@ -188,280 +110,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       ? _IosLiquidActionPill(
                           icon: Icons.add,
                           label: AppLocalizations.of(context)!.addCourse,
-                          onPressed: () => _openAddCourse(context),
+                          onPressed: () => showAddCourseSheet(context),
                         )
                       : FilledButton.icon(
-                          onPressed: () => _openAddCourse(context),
+                          onPressed: () => showAddCourseSheet(context),
                           icon: const Icon(Icons.add),
                           label: Text(AppLocalizations.of(context)!.addCourse),
                         ),
                 ),
               )
             else
-              SliverPadding(
-                padding: const EdgeInsets.all(12),
-                sliver: SliverReorderableList(
-                  itemCount: courses.length,
-                  onReorder: (oldIndex, newIndex) =>
-                      state.reorderCourses(oldIndex, newIndex),
-                  itemBuilder: (context, i) {
-                    final c = courses[i];
-
-                    return Padding(
-                      key: ValueKey(c.id),
-                      padding: EdgeInsets.only(
-                        bottom: i == courses.length - 1 ? 0 : 8,
-                      ),
-                      child: ReorderableDelayedDragStartListener(
-                        index: i,
-                        child: SwipeableCourseItem(
-                          confirmDelete: () async {
-                            final ok = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.deleteCourseTitle,
-                                ),
-                                content: Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.deleteCourseMessage,
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text(
-                                      AppLocalizations.of(context)!.cancel,
-                                    ),
-                                  ),
-                                  FilledButton.icon(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    icon: const Icon(Icons.delete),
-                                    label: Text(
-                                      AppLocalizations.of(context)!.delete,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                            return ok == true;
-                          },
-                          onDelete: () => state.removeCourse(c.id),
-                          child: Builder(
-                            builder: (context) {
-                              final showSummary =
-                                  state.homeSummaryRange !=
-                                  HomeSummaryRange.off;
-                              final showProgress =
-                                  state.progressView != ProgressView.off;
-                              final customGoalHours =
-                                  state.goalHoursForCourse(c.id) ?? 0;
-                              final hasCredits = (c.credits ?? 0) > 0;
-                              final willShowProgressBar =
-                                  showProgress &&
-                                  (hasCredits || customGoalHours > 0);
-                              final isMinimal =
-                                  !showSummary && !willShowProgressBar;
-
-                              if (isMinimal) {
-                                final courseTheme = Theme.of(context);
-                                return ListTile(
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 6,
-                                  ),
-                                  leading: CircleAvatar(
-                                    backgroundColor: c.color,
-                                  ),
-                                  title: Text(
-                                    c.name,
-                                    style: courseTheme.textTheme.titleLarge
-                                        ?.copyWith(fontWeight: FontWeight.w500),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: Icon(
-                                    Icons.more_horiz,
-                                    color: courseTheme
-                                        .colorScheme
-                                        .onSurfaceVariant,
-                                  ),
-                                  onTap: () => _openCourseTimeMenu(context, c),
-                                );
-                              }
-
-                              return ListTile(
-                                leading: CircleAvatar(backgroundColor: c.color),
-                                title: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        c.name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if ((c.credits ?? 0) > 0 && showProgress)
-                                      Padding(
-                                        padding: const EdgeInsets.only(left: 8),
-                                        child: _CreditsBadge(
-                                          credits: c.credits!,
-                                          onTap: () =>
-                                              _openCreditsPopup(context, c),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                subtitle: Builder(
-                                  builder: (context) {
-                                    final showProgressBar =
-                                        hasCredits || customGoalHours > 0;
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (showSummary)
-                                          FutureBuilder<Map<String, int>>(
-                                            future: _loadCourseSeconds(
-                                              context,
-                                              c.id,
-                                            ),
-                                            builder: (context, snap) {
-                                              final secs =
-                                                  snap.data?[c.id] ?? 0;
-                                              final label = state
-                                                  .homeSummaryLabel(context);
-                                              return Text(
-                                                '$label: ${_fmtHMS(secs)}',
-                                              );
-                                            },
-                                          ),
-                                        if (showProgressBar && showProgress)
-                                          FutureBuilder<int>(
-                                            future:
-                                                state.progressView ==
-                                                    ProgressView.day
-                                                ? Future<int>.value(
-                                                    state.todaySecondsFor(c.id),
-                                                  )
-                                                : _weeklyElapsedForCourse(
-                                                    context,
-                                                    c.id,
-                                                  ),
-                                            builder: (context, snap) {
-                                              final elapsed = (snap.data ?? 0);
-                                              final level = c.expLevel ?? 3;
-                                              final weeklyHoursGoal =
-                                                  customGoalHours > 0
-                                                  ? customGoalHours
-                                                  : hasCredits
-                                                  ? c.credits! *
-                                                        _hoursPerCreditForLevel(
-                                                          level,
-                                                        )
-                                                  : 0;
-                                              if (weeklyHoursGoal <= 0) {
-                                                return const SizedBox.shrink();
-                                              }
-                                              final weeklyGoalSecs =
-                                                  (weeklyHoursGoal * 3600)
-                                                      .clamp(1, 1 << 31)
-                                                      .toInt();
-                                              final targetSecs =
-                                                  state.progressView ==
-                                                      ProgressView.day
-                                                  ? (weeklyGoalSecs / 7)
-                                                        .round()
-                                                        .clamp(1, 1 << 31)
-                                                  : weeklyGoalSecs;
-                                              final progress = targetSecs <= 0
-                                                  ? 0.0
-                                                  : (elapsed / targetSecs)
-                                                        .clamp(0.0, 1.0);
-                                              final labelPrefix =
-                                                  state.progressView ==
-                                                      ProgressView.day
-                                                  ? AppLocalizations.of(
-                                                      context,
-                                                    )!.dailyGoal
-                                                  : AppLocalizations.of(
-                                                      context,
-                                                    )!.weeklyGoal;
-                                              final targetHoursLabel =
-                                                  state.progressView ==
-                                                      ProgressView.day
-                                                  ? (weeklyHoursGoal / 7)
-                                                        .toStringAsFixed(1)
-                                                  : weeklyHoursGoal
-                                                        .toStringAsFixed(1);
-
-                                              return Padding(
-                                                padding: const EdgeInsets.only(
-                                                  top: 6,
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    TweenAnimationBuilder<
-                                                      double
-                                                    >(
-                                                      duration: const Duration(
-                                                        milliseconds: 350,
-                                                      ),
-                                                      curve:
-                                                          Curves.easeOutCubic,
-                                                      tween: Tween(
-                                                        begin: 0,
-                                                        end: progress,
-                                                      ),
-                                                      builder: (context, v, _) {
-                                                        return ClipRRect(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                6,
-                                                              ),
-                                                          child:
-                                                              LinearProgressIndicator(
-                                                                value: v,
-                                                                minHeight: 8,
-                                                              ),
-                                                        );
-                                                      },
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      '$labelPrefix: ${_fmtHMS(elapsed)} / $targetHoursLabel${AppLocalizations.of(context)!.hUnit}',
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            color: Colors.grey,
-                                                          ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                      ],
-                                    );
-                                  },
-                                ),
-                                trailing: const Icon(Icons.more_horiz),
-                                onTap: () => _openCourseTimeMenu(context, c),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+              CourseListSliver(
+                onOpenCourse: (c) => showCourseTimeSheet(context, c),
               ),
             SliverPadding(
               padding: EdgeInsets.only(
@@ -511,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _IosLiquidActionPill(
                           icon: Icons.add,
                           label: AppLocalizations.of(context)!.addCourse,
-                          onPressed: () => _openAddCourse(context),
+                          onPressed: () => showAddCourseSheet(context),
                         ),
                       ],
                     ),
@@ -548,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 16),
                       FloatingActionButton(
                         heroTag: 'add-fab',
-                        onPressed: () => _openAddCourse(context),
+                        onPressed: () => showAddCourseSheet(context),
                         child: const Icon(Icons.add),
                       ),
                     ],
@@ -557,30 +217,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
     );
-  }
-
-  void _openAddCourse(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _AddCourseSheet(),
-    );
-  }
-
-  void _openCourseTimeMenu(BuildContext context, Course course) {
-    showCourseTimeSheet(context, course);
-  }
-
-  Future<Map<String, int>> _loadCourseSeconds(
-    BuildContext context,
-    String id,
-  ) async {
-    final state = context.read<AppState>();
-    final (start, end) = state.homeSummaryBoundsNow();
-    final s = state;
-    final bounds = (start, end);
-    final map = await s.secondsByCourseBetween(bounds.$1, bounds.$2);
-    return {id: map[id] ?? 0};
   }
 }
 
@@ -727,577 +363,6 @@ class _SyncStatusChip extends StatelessWidget {
   }
 }
 
-class _AddCourseSheet extends StatefulWidget {
-  const _AddCourseSheet();
-
-  @override
-  State<_AddCourseSheet> createState() => _AddCourseSheetState();
-}
-
-class _AddCourseSheetState extends State<_AddCourseSheet> {
-  final _form = GlobalKey<FormState>();
-  final _name = TextEditingController();
-  Color _picked = _colorChoices.first;
-
-  final _credits = TextEditingController();
-  int _expLevel = 3;
-
-  bool _showCustomPicker = false;
-
-  bool get _hasCredits {
-    final v = double.tryParse(_credits.text.trim());
-    return v != null && v > 0;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _credits.addListener(() => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _credits.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final pad = EdgeInsets.only(
-      bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-      left: 16,
-      right: 16,
-      top: 16,
-    );
-
-    return Padding(
-      padding: pad,
-      child: Form(
-        key: _form,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.addCourse,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _name,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.courseName,
-                  hintText: AppLocalizations.of(context)!.courseNameHint,
-                ),
-                textCapitalization: TextCapitalization.words,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(32),
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N} ]', unicode: true),
-                  ),
-                ],
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? AppLocalizations.of(context)!.required
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  AppLocalizations.of(context)!.color,
-                  style: Theme.of(context).textTheme.labelLarge,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final c in _colorChoices.take(13))
-                    GestureDetector(
-                      onTap: () => setState(() {
-                        _picked = c;
-                        _showCustomPicker = false;
-                      }),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: c,
-                          shape: BoxShape.circle,
-                          border: _picked.toARGB32() == c.toARGB32()
-                              ? Border.all(width: 3, color: Colors.black54)
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ColorPickerButton(
-                    color: _picked,
-                    onCustomTap: () {
-                      FocusManager.instance.primaryFocus?.unfocus();
-                      setState(() => _showCustomPicker = !_showCustomPicker);
-                    },
-                    onColorPicked: (color) => setState(() => _picked = color),
-                  ),
-                ],
-              ),
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 220),
-                crossFadeState: _showCustomPicker
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                firstChild: const SizedBox.shrink(),
-                secondChild: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    CustomColorPicker(
-                      initial: _picked,
-                      onChanged: (c) => setState(() => _picked = c),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _credits,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) return null;
-                  final val = double.tryParse(v);
-                  if (val == null) return 'Invalid number';
-                  if (val > 64) return 'Max 64';
-                  return null;
-                },
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(2),
-                  FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
-                ],
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.creditsOptional,
-                  hintText: AppLocalizations.of(context)!.creditsHint,
-                  helperText: AppLocalizations.of(context)!.creditsHelper,
-                ),
-              ),
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 220),
-                crossFadeState: _hasCredits
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                firstChild: const SizedBox.shrink(),
-                secondChild: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 12),
-                    Text(
-                      AppLocalizations.of(context)!.experienceLevel,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    Slider(
-                      min: 1,
-                      max: 5,
-                      divisions: 4,
-                      label: '$_expLevel',
-                      value: _expLevel.toDouble(),
-                      onChanged: (v) => setState(() => _expLevel = v.round()),
-                    ),
-                    Text(
-                      '${_expShortLabel(context, _expLevel)} ',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  if (!_form.currentState!.validate()) return;
-
-                  final id =
-                      '${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(9999)}';
-                  final creditsVal = double.tryParse(_credits.text.trim());
-                  final course = Course(
-                    id: id,
-                    name: _name.text.trim(),
-                    day: 'Mon',
-                    start: '09:00',
-                    end: '10:00',
-                    colorValue: _picked.toARGB32(),
-                    credits: creditsVal,
-                    expLevel: _hasCredits ? _expLevel : null,
-                  );
-
-                  final appState = context.read<AppState>();
-                  final navigator = Navigator.of(context);
-
-                  await appState.addCourse(course);
-
-                  if (!mounted) return;
-                  navigator.pop();
-                },
-                child: Text(AppLocalizations.of(context)!.save),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-Future<int> _weeklyElapsedForCourse(BuildContext context, String id) async {
-  final s = context.read<AppState>();
-  final now = DateTime.now();
-  final midnight = DateTime(now.year, now.month, now.day);
-  final offset = s.weekStart == WeekStart.monday
-      ? (midnight.weekday - DateTime.monday).clamp(0, 6)
-      : (midnight.weekday % 7);
-  final DateTime weekStart = midnight.subtract(Duration(days: offset));
-  final DateTime weekEnd = weekStart.add(const Duration(days: 7));
-  final map = await s.secondsByCourseBetween(weekStart, weekEnd);
-  return map[id] ?? 0;
-}
-
-void _openCreditsPopup(BuildContext context, Course c) async {
-  final appState = context.read<AppState>();
-  final savedGoal = appState.goalHoursForCourse(c.id);
-  final level = c.expLevel ?? 3;
-  final perCred = _hoursPerCreditForLevel(level);
-  final credits = c.credits!;
-  final defaultWeekly = credits * perCred;
-  final weekly = savedGoal ?? defaultWeekly;
-
-  if (!context.mounted) return;
-
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: Theme.of(context).colorScheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (ctx) {
-      double customWeekly = weekly;
-      final sliderMin = math.min(defaultWeekly * 0.5, customWeekly);
-      final sliderMax = math.max(defaultWeekly * 1.5, customWeekly);
-      final tt = Theme.of(ctx).textTheme;
-      final scheme = Theme.of(ctx).colorScheme;
-
-      return StatefulBuilder(
-        builder: (ctx, setLocal) {
-          final semester = customWeekly * _kDefaultSemesterWeeks;
-
-          return Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
-              left: 20,
-              right: 20,
-              top: 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.setGoals,
-                      style: tt.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(ctx),
-                      icon: const Icon(Icons.close),
-                      style: IconButton.styleFrom(
-                        backgroundColor: scheme.surfaceContainerHighest
-                            .withValues(alpha: 0.3),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                // Course Info
-                Row(
-                  children: [
-                    CircleAvatar(backgroundColor: c.color, radius: 6),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        c.name,
-                        style: tt.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _expShortLabel(context, level),
-                        style: tt.labelSmall,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Stats Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: scheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      _popupRow(
-                        AppLocalizations.of(
-                          context,
-                        )!.semester(_kDefaultSemesterWeeks),
-                        _fmtHours(semester, context),
-                      ),
-                      Divider(
-                        height: 16,
-                        color: scheme.outlineVariant.withValues(alpha: 0.5),
-                      ),
-                      _popupRow(
-                        AppLocalizations.of(context)!.targetPerWeek,
-                        _fmtHours(customWeekly, context),
-                        isBold: true,
-                      ),
-                      Divider(
-                        height: 16,
-                        color: scheme.outlineVariant.withValues(alpha: 0.5),
-                      ),
-                      _popupRow(
-                        AppLocalizations.of(context)!.targetPerDay,
-                        _fmtHours(customWeekly / 7, context),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Slider
-                Text(
-                  AppLocalizations.of(context)!.adjustWeeklyGoal,
-                  style: tt.labelLarge?.copyWith(color: scheme.primary),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(
-                    context,
-                  )!.hPerWeek(customWeekly.toStringAsFixed(1)),
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Slider(
-                  min: sliderMin,
-                  max: sliderMax,
-                  divisions: ((sliderMax - sliderMin) * 2).round(), // 0.5 steps
-                  value: customWeekly,
-                  onChanged: (v) => setLocal(() => customWeekly = v),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Save Button
-                FilledButton(
-                  onPressed: () async {
-                    final navigator = Navigator.of(context);
-                    final l10n = AppLocalizations.of(context)!;
-                    await appState.setCourseGoalHours(c.id, customWeekly);
-
-                    if (!navigator.mounted) return;
-                    navigator.pop();
-                    showAppMessage(navigator.context, l10n.goalsUpdated);
-                  },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    AppLocalizations.of(context)!.save,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          );
-        },
-      );
-    },
-  );
-}
-
-Widget _popupRow(String label, String value, {bool isBold = false}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 2),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 14,
-            fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w500,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _CreditsBadge extends StatelessWidget {
-  final double credits;
-  final VoidCallback onTap;
-  const _CreditsBadge({required this.credits, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context);
-    final bg = t.colorScheme.surfaceContainerHighest.withAlpha(
-      (0.7 * 255).round(),
-    );
-    final fg = t.colorScheme.onSurface.withAlpha((0.9 * 255).round());
-    final text = credits == 1
-        ? '1 ${AppLocalizations.of(context)!.credits}'
-        : '${credits % 1 == 0 ? credits.toInt() : credits.toStringAsFixed(1)} ${AppLocalizations.of(context)!.credits_plural}';
-
-    return Material(
-      color: bg,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Text(
-            text,
-            style: t.textTheme.labelSmall?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.2,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _FirstRunCreditsGate extends StatefulWidget {
-  const _FirstRunCreditsGate();
-
-  @override
-  State<_FirstRunCreditsGate> createState() => _FirstRunCreditsGateState();
-}
-
-class _FirstRunCreditsGateState extends State<_FirstRunCreditsGate> {
-  bool _ran = false;
-  bool _checking = false;
-  late final AppState _appState;
-
-  @override
-  void initState() {
-    super.initState();
-    _appState = context.read<AppState>();
-    _appState.addListener(_handleStateChange);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShow());
-  }
-
-  void _handleStateChange() {
-    if (!_ran) {
-      _maybeShow();
-    }
-  }
-
-  @override
-  void dispose() {
-    _appState.removeListener(_handleStateChange);
-    super.dispose();
-  }
-
-  Future<void> _maybeShow() async {
-    if (!mounted || _ran || _checking) return;
-    if (_appState.requiresProfileSetup) return;
-    if (!_appState.hasProfile) return;
-    if (_appState.courses.isNotEmpty) {
-      _ran = true;
-      return;
-    }
-
-    _checking = true;
-    try {
-      final pendingAddCourse = await Storage.getPendingCoursePrompt();
-      final prefs = await SharedPreferences.getInstance();
-
-      if (pendingAddCourse) {
-        _ran = true;
-        if (!mounted) return;
-        await _openAddCourseSheet();
-        await Storage.setPendingCoursePrompt(false);
-        await prefs.setBool('onboarded_credits_v1', true);
-        return;
-      }
-
-      _ran = true;
-      await prefs.setBool('onboarded_credits_v1', true);
-      return;
-    } finally {
-      _checking = false;
-    }
-  }
-
-  Future<void> _openAddCourseSheet() {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => const _AddCourseSheet(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
 class _AutoFinishWatcher extends StatefulWidget {
   const _AutoFinishWatcher();
 
@@ -1392,7 +457,7 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
             context,
             AppLocalizations.of(
               context,
-            )!.timeSavedMessage(_courseNameWithoutParentheses(courseName)),
+            )!.timeSavedMessage(courseNameWithoutParentheses(courseName)),
           );
           _activeId = null;
           _plannedSecs = null;
@@ -1407,7 +472,7 @@ class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
             context,
             AppLocalizations.of(
               context,
-            )!.timeSavedMessage(_courseNameWithoutParentheses(courseName)),
+            )!.timeSavedMessage(courseNameWithoutParentheses(courseName)),
           );
           _activeId = null;
           _plannedSecs = null;
@@ -1600,7 +665,7 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
                   if (kind == 'timer') {
                     snackMessage = AppLocalizations.of(context)!
                         .timeSavedMessage(
-                          _courseNameWithoutParentheses(course.name),
+                          courseNameWithoutParentheses(course.name),
                         );
                     seconds = await state.stopTimer(courseId);
                     final prefs = await SharedPreferences.getInstance();
@@ -1608,13 +673,13 @@ class _ActiveSessionBarState extends State<_ActiveSessionBar> {
                   } else if (kind == 'stopwatch') {
                     snackMessage = AppLocalizations.of(context)!
                         .timeSavedMessage(
-                          _courseNameWithoutParentheses(course.name),
+                          courseNameWithoutParentheses(course.name),
                         );
                     seconds = await state.stopStopwatch(courseId);
                   } else {
                     await state.resetPomodoro(courseId);
                     snackMessage =
-                        'Pomodoro for "${_courseNameWithoutParentheses(course.name)}" reset.';
+                        'Pomodoro for "${courseNameWithoutParentheses(course.name)}" reset.';
                   }
 
                   if (kind != 'pomodoro' && seconds > 0) {
@@ -1785,7 +850,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           showAppMessage(
             context,
             AppLocalizations.of(context)!.timeSavedMessage(
-              _courseNameWithoutParentheses(widget.course.name),
+              courseNameWithoutParentheses(widget.course.name),
             ),
           );
         }
@@ -1799,7 +864,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
           showAppMessage(
             context,
             AppLocalizations.of(context)!.timeSavedMessage(
-              _courseNameWithoutParentheses(widget.course.name),
+              courseNameWithoutParentheses(widget.course.name),
             ),
           );
         }
@@ -1867,7 +932,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     _updateCondensedMode();
   }
 
-  String _fmt(int s) => _fmtHMS(s);
+  String _fmt(int s) => formatHms(s);
 
   void _snack(String msg, {bool isError = false}) {
     if (!mounted) return;
@@ -2020,7 +1085,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
     showAppMessage(
       navigator.context,
-      l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
+      l10n.timeSavedMessage(courseNameWithoutParentheses(widget.course.name)),
     );
   }
 
@@ -2081,7 +1146,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
     showAppMessage(
       navigator.context,
-      l10n.timeSavedMessage(_courseNameWithoutParentheses(widget.course.name)),
+      l10n.timeSavedMessage(courseNameWithoutParentheses(widget.course.name)),
     );
   }
 
@@ -2130,147 +1195,9 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     if (mounted) setState(() {});
   }
 
-  void _openEditCourseDialog(BuildContext context) {
-    final state = context.read<AppState>();
-
-    final course = state.courses.firstWhere(
-      (c) => c.id == widget.course.id,
-      orElse: () => widget.course,
-    );
-
-    final nameCtrl = TextEditingController(text: course.name);
-    Color selected = course.color;
-
-    showDialog<void>(
-      context: context,
-      builder: (ctx) {
-        bool showCustomPicker = false;
-        return StatefulBuilder(
-          builder: (ctx, setLocal) {
-            return AlertDialog(
-              title: Text(AppLocalizations.of(context)!.editCourse),
-              content: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextField(
-                        controller: nameCtrl,
-                        autofocus: true,
-                        textCapitalization: TextCapitalization.words,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(32),
-                          FilteringTextInputFormatter.allow(
-                            RegExp(r'[\p{L}\p{N} ]', unicode: true),
-                          ),
-                        ],
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)!.courseName,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          AppLocalizations.of(context)!.color,
-                          style: Theme.of(ctx).textTheme.labelLarge,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          for (final c in _colorChoices.take(9))
-                            GestureDetector(
-                              onTap: () => setLocal(() {
-                                selected = c;
-                                showCustomPicker = false;
-                              }),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: c,
-                                  shape: BoxShape.circle,
-                                  border: selected.toARGB32() == c.toARGB32()
-                                      ? Border.all(
-                                          width: 3,
-                                          color: Colors.black54,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ),
-                          ColorPickerButton(
-                            color: selected,
-                            onCustomTap: () {
-                              FocusManager.instance.primaryFocus?.unfocus();
-                              setLocal(
-                                () => showCustomPicker = !showCustomPicker,
-                              );
-                            },
-                            onColorPicked: (color) =>
-                                setLocal(() => selected = color),
-                          ),
-                        ],
-                      ),
-                      AnimatedCrossFade(
-                        duration: const Duration(milliseconds: 220),
-                        crossFadeState: showCustomPicker
-                            ? CrossFadeState.showSecond
-                            : CrossFadeState.showFirst,
-                        firstChild: const SizedBox.shrink(),
-                        secondChild: Column(
-                          children: [
-                            const SizedBox(height: 16),
-                            CustomColorPicker(
-                              initial: selected,
-                              onChanged: (c) => setLocal(() => selected = c),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Cancel'),
-                ),
-                FilledButton(
-                  onPressed: () async {
-                    final newName = nameCtrl.text.trim();
-                    if (newName.isEmpty) return;
-
-                    final updated = course.copyWith(
-                      name: newName,
-                      colorValue: selected.toARGB32(),
-                    );
-
-                    final navigator = Navigator.of(ctx);
-                    final appState = ctx.read<AppState>();
-
-                    await appState.updateCourse(updated);
-
-                    if (!mounted) {
-                      return;
-                    }
-                    navigator.pop();
-                    setState(() {});
-                  },
-                  child: const Text('Save'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+  Future<void> _editCourse() async {
+    await showEditCourseDialog(context, widget.course);
+    if (mounted) setState(() {});
   }
 
   Widget _buildTimerTab() {
@@ -2872,9 +1799,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
                             ? Colors.grey
                             : Colors.blueGrey,
                       ),
-                      onPressed: isAnyRunningCombined
-                          ? null
-                          : () => _openEditCourseDialog(context),
+                      onPressed: isAnyRunningCombined ? null : _editCourse,
                     ),
                     IconButton(
                       icon: Icon(
