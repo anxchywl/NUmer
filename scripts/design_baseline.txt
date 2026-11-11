@@ -185,12 +185,15 @@ text_literal	lib/features/sessions/screens/timer.dart	4
 button	lib/features/sessions/screens/timer.dart	1
 spinner	lib/features/sessions/widgets/reflection_bottom_sheet.dart	1
 snackbar	lib/features/sessions/widgets/reflection_bottom_sheet.dart	1
-text_literal	lib/features/stats/screens/stats.dart	3
-weight	lib/features/stats/screens/stats.dart	2
-button	lib/features/stats/screens/stats.dart	4
 shadow	lib/features/stats/widgets/chart_tooltip.dart	1
 text_literal	lib/features/stats/widgets/chart_tooltip.dart	3
 weight	lib/features/stats/widgets/chart_tooltip.dart	1
+text_literal	lib/features/stats/widgets/day_selector.dart	1
+weight	lib/features/stats/widgets/day_selector.dart	1
+button	lib/features/stats/widgets/day_selector.dart	2
+text_literal	lib/features/stats/widgets/day_stats_section.dart	1
+weight	lib/features/stats/widgets/day_stats_section.dart	1
+button	lib/features/stats/widgets/day_stats_section.dart	2
 chip	lib/features/stats/widgets/habit_report_selection_view.dart	2
 text_literal	lib/features/stats/widgets/habit_report_selection_view.dart	3
 weight	lib/features/stats/widgets/habit_report_selection_view.dart	2
@@ -205,6 +208,7 @@ text_literal	lib/features/stats/widgets/habit_stats_card.dart	6
 spinner	lib/features/stats/widgets/habit_stats_card.dart	1
 color_literal	lib/features/stats/widgets/heatmap_calendar.dart	9
 weight	lib/features/stats/widgets/heatmap_calendar.dart	1
+text_literal	lib/features/stats/widgets/period_range_selector.dart	1
 shadow	lib/features/stats/widgets/pie_chart_with_tooltip.dart	1
 color_literal	lib/features/stats/widgets/pie_chart_with_tooltip.dart	2
 text_literal	lib/features/stats/widgets/pie_chart_with_tooltip.dart	8
