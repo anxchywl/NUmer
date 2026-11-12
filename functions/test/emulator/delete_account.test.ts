@@ -4,7 +4,10 @@ import { auth, db } from '../../src/shared/admin';
 import { normalizeEmail, sha256Hex } from '../../src/auth/codes';
 import { deleteAccountCallable } from '../../src/account/delete_account';
 import { onUserDeletionRequested, purgeUser, sweepPurgedUsers } from '../../src/account/purge_user';
+import * as functions from 'firebase-functions/v1';
 import { onStudySessionWrite } from '../../src/aggregates/triggers';
+import { createAggregateHandlers } from '../../src/aggregates/handlers';
+import { syncPublicProfile } from '../../src/profiles/public_profile';
 import { deleteGroupCascade } from '../../src/groups/cleanup';
 import { onGroupMemberWrite } from '../../src/groups/membership_index';
 import { onGroupMemberDelete } from '../../src/groups/triggers';
@@ -15,6 +18,11 @@ const deliverSession = test.wrap(onStudySessionWrite);
 const deliverMemberWrite = test.wrap(onGroupMemberWrite);
 const deliverMemberDelete = test.wrap(onGroupMemberDelete);
 const deliverMarker = test.wrap(onUserDeletionRequested);
+const incrementalSession = test.wrap(
+  functions.firestore
+    .document('users/{userId}/sessions/{sessionId}')
+    .onWrite(createAggregateHandlers({ mode: 'on', shadowPercent: 0 }).onSession),
+);
 
 const subcollections = [
   'courses', 'studyTimes', 'courseGoals', 'courseProgress', 'sessions', 'studySessions', 'goals',
@@ -288,6 +296,121 @@ describe('account deletion', () => {
       await expect(callDelete({}, caller(uid, undefined))).resolves.toEqual({ success: true });
       await purgeUser(uid);
     });
+  });
+});
+
+describe('writes racing a deletion', () => {
+  async function deliverSessionCreate(trigger: typeof deliverSession, uid: string) {
+    const path = `users/${uid}/sessions/s1`;
+    const session = (await db.doc(path).get()).data()!;
+    await trigger(test.makeChange(snapshot(path, {}), snapshot(path, session)), {
+      params: { userId: uid, sessionId: 's1' },
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  async function clearAggregates({ uid, owned, joined }: Seeded) {
+    await Promise.all([
+      db.doc(`groups/${owned}/aggregates/${uid}`).delete(),
+      db.doc(`groups/${joined}/aggregates/${uid}`).delete(),
+    ]);
+  }
+
+  async function aggregatesOf({ uid, owned, joined }: Seeded) {
+    return Promise.all([
+      exists(`groups/${owned}/aggregates/${uid}`),
+      exists(`groups/${joined}/aggregates/${uid}`),
+      exists(`users/${uid}/aggregates/statistics`),
+    ]);
+  }
+
+  it('skips the legacy aggregate write once the user is marked, before the purge starts', async () => {
+    const seeded = await seed('legacy-race');
+    await clearAggregates(seeded);
+    await callDelete({}, caller(seeded.uid, emailOf(seeded.uid)));
+
+    await deliverSessionCreate(deliverSession, seeded.uid);
+
+    expect(await aggregatesOf(seeded)).toEqual([false, false, false]);
+    expect(await exists(`users/${seeded.uid}/groupMemberships/${seeded.joined}`)).toBe(true);
+  });
+
+  it('skips the incremental aggregate write once the user is marked', async () => {
+    const seeded = await seed('incremental-race');
+    await clearAggregates(seeded);
+    await callDelete({}, caller(seeded.uid, emailOf(seeded.uid)));
+
+    await deliverSessionCreate(incrementalSession, seeded.uid);
+
+    expect(await aggregatesOf(seeded)).toEqual([false, false, false]);
+  });
+
+  it('still writes aggregates for an unmarked user', async () => {
+    const seeded = await seed('unmarked');
+    await clearAggregates(seeded);
+
+    await deliverSessionCreate(deliverSession, seeded.uid);
+
+    expect(await aggregatesOf(seeded)).toEqual([true, true, true]);
+    await callDelete({}, caller(seeded.uid, emailOf(seeded.uid)));
+    await purgeUser(seeded.uid);
+  });
+
+  it('removes group documents written back after the groups step, in the purge and in the sweep', async () => {
+    const seeded = await seed('leftovers');
+    const { uid, joined } = seeded;
+    await callDelete({}, caller(uid, emailOf(uid)));
+    await purgeUser(uid);
+    const marker = db.doc(`deletedUsers/${uid}`);
+    expect((await marker.get()).get('groupIds')).toEqual(expect.arrayContaining([seeded.owned, joined]));
+
+    const writeBack = () => Promise.all([
+      db.doc(`groups/${joined}/aggregates/${uid}`).set({ name: 'Ann' }),
+      db.doc(`groups/${joined}/members/${uid}`).set({ role: 'member' }),
+    ]);
+    await writeBack();
+    await marker.update({ status: 'pending' });
+    await purgeUser(uid);
+    expect(await exists(`groups/${joined}/aggregates/${uid}`)).toBe(false);
+    expect(await exists(`groups/${joined}/members/${uid}`)).toBe(false);
+
+    await writeBack();
+    await marker.update({ completedAt: admin.firestore.Timestamp.fromMillis(Date.now() - 3 * 3600 * 1000) });
+    await sweepPurgedUsers();
+    expect(await exists(`groups/${joined}/aggregates/${uid}`)).toBe(false);
+    expect(await exists(`groups/${joined}/members/${uid}`)).toBe(false);
+    await expectPurged(seeded);
+  });
+
+  it('writes no group index or public profile for a marked user', async () => {
+    const seeded = await seed('mirrors');
+    const { uid, joined } = seeded;
+    await callDelete({}, caller(uid, emailOf(uid)));
+    await db.doc(`groupIndex/${uid}`).delete();
+
+    const memberPath = `groups/${joined}/members/${uid}`;
+    await deliverMemberWrite(
+      test.makeChange(snapshot(memberPath, {}), snapshot(memberPath, { role: 'member' })),
+      { params: { groupId: joined, memberId: uid } },
+    );
+    await syncPublicProfile(uid);
+
+    expect(await exists(`groupIndex/${uid}`)).toBe(false);
+    expect(await exists(`publicProfiles/${uid}`)).toBe(false);
+    expect(await exists(`users/${uid}`)).toBe(true);
+  });
+
+  it('leaves a marker to purge from when disabling the user fails', async () => {
+    const uid = 'u'.repeat(129);
+
+    await expect(callDelete({}, caller(uid, undefined))).rejects.toMatchObject({
+      code: 'auth/invalid-uid',
+    });
+
+    const marker = await db.doc(`deletedUsers/${uid}`).get();
+    expect(marker.get('status')).toBe('pending');
+    await purgeUser(uid);
+    expect((await db.doc(`deletedUsers/${uid}`).get()).get('status')).toBe('done');
   });
 });
 

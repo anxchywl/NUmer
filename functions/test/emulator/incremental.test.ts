@@ -246,7 +246,7 @@ describe('incremental aggregates', () => {
 
     const reads = eventLogs(info, incrementalUid).map(l => l.reads);
     expect(reads.length).toBeGreaterThanOrEqual(40);
-    expect(Math.max(...reads.slice(1))).toBeLessThanOrEqual(6);
+    expect(Math.max(...reads.slice(1))).toBeLessThanOrEqual(7);
   }, 180000);
 
   it('changes nothing when an event is delivered twice', async () => {
@@ -336,7 +336,7 @@ describe('incremental aggregates', () => {
     expect((await db.doc(`users/${incrementalUid}/aggState/v1`).get()).data()?.tz).toBe(-420);
   });
 
-  it('reads at most 5 documents per event after the first', async () => {
+  it('reads at most 6 documents per event after the first', async () => {
     const uid = uniqueUser('reads');
     await seedUser(uid, 1, seedSessions(6));
     await sessionEvent(incremental.session, uid, 's1', { courseId: 'c0', seconds: 300, startUtc: Timestamp.now() });
@@ -345,7 +345,7 @@ describe('incremental aggregates', () => {
 
     const reads = eventLogs(info, uid).map(l => l.reads);
     expect(reads[0]).toBeGreaterThan(50);
-    expect(reads.slice(1)).toEqual([5, 5]);
+    expect(reads.slice(1)).toEqual([6, 6]);
   });
 
   it('logs a shadow mismatch only when the derived payload differs', async () => {
