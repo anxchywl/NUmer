@@ -72,27 +72,13 @@ void openCourseGoalPopup(BuildContext context, Course c) async {
 
                 const SizedBox(height: 24),
 
-                // Slider
-                Text(
-                  AppLocalizations.of(context)!.adjustWeeklyGoal,
-                  style: tt.labelLarge?.copyWith(color: scheme.primary),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLocalizations.of(
-                    context,
-                  )!.hPerWeek(customWeekly.toStringAsFixed(1)),
-                  style: tt.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: scheme.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                Slider(
+                ..._goalSlider(
+                  context,
+                  tt,
+                  scheme,
+                  value: customWeekly,
                   min: sliderMin,
                   max: sliderMax,
-                  divisions: ((sliderMax - sliderMin) * 2).round(), // 0.5 steps
-                  value: customWeekly,
                   onChanged: (v) => setLocal(() => customWeekly = v),
                 ),
 
@@ -206,6 +192,40 @@ Widget _goalStats(
       ],
     ),
   );
+}
+
+List<Widget> _goalSlider(
+  BuildContext context,
+  TextTheme tt,
+  ColorScheme scheme, {
+  required double value,
+  required double min,
+  required double max,
+  required ValueChanged<double> onChanged,
+}) {
+  return [
+    // Slider
+    Text(
+      AppLocalizations.of(context)!.adjustWeeklyGoal,
+      style: tt.labelLarge?.copyWith(color: scheme.primary),
+    ),
+    const SizedBox(height: 8),
+    Text(
+      AppLocalizations.of(context)!.hPerWeek(value.toStringAsFixed(1)),
+      style: tt.headlineMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: scheme.primary,
+      ),
+      textAlign: TextAlign.center,
+    ),
+    Slider(
+      min: min,
+      max: max,
+      divisions: ((max - min) * 2).round(), // 0.5 steps
+      value: value,
+      onChanged: onChanged,
+    ),
+  ];
 }
 
 Widget _goalSaveButton(
