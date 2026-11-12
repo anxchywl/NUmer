@@ -277,6 +277,8 @@ class LocalDatabase {
     await Hive.deleteBoxFromDisk('${uid}_meta');
     await Hive.deleteBoxFromDisk('${uid}_peer_sessions');
     await Hive.deleteBoxFromDisk('${uid}_peer_courses');
+    await Hive.deleteBoxFromDisk('${uid}_habits');
+    await Hive.deleteBoxFromDisk('${uid}_habit_history');
   }
 
   dynamic getMeta(String key) => _metaBox?.get(key);
