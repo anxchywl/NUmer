@@ -1,4 +1,8 @@
+import { db } from './admin';
+
 const notFoundCode = 5;
+
+export const deletionMarkerRef = (uid: string) => db.collection('deletedUsers').doc(uid);
 
 export function isNotFound(err: unknown): boolean {
   return (err as { code?: unknown } | null)?.code === notFoundCode;
