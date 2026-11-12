@@ -7,4 +7,5 @@ export 'screens/timer.dart';
 export 'screens/alarms.dart';
 export 'widgets/active_session_bar.dart';
 export 'widgets/auto_finish_watcher.dart';
+export 'widgets/course_time_sheet/course_time_sheet.dart';
 export 'widgets/reflection_bottom_sheet.dart';
