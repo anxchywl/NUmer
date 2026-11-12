@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { db } from '../shared/admin';
+import { deletionMarkerRef } from '../shared/user_writes';
 
 const memberRef = (groupId: string, uid: string) =>
   db.collection('groups').doc(groupId).collection('members').doc(uid);
@@ -18,7 +19,12 @@ export const onGroupMemberWrite = functions
 
     // events arrive late or twice, and the transaction stops a change landing between read and write
     await db.runTransaction(async (txn) => {
-      const [member, index] = await txn.getAll(memberRef(groupId, memberId), indexRef(memberId));
+      const [member, index, marker] = await txn.getAll(
+        memberRef(groupId, memberId),
+        indexRef(memberId),
+        deletionMarkerRef(memberId),
+      );
+      if (marker.exists) return;
       const { arrayUnion, arrayRemove, serverTimestamp } = admin.firestore.FieldValue;
       if (index.exists) {
         txn.update(index.ref, {
