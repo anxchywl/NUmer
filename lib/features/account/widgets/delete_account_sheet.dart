@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
@@ -72,6 +73,42 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
     }
   }
 
+  Widget _passwordField(String hint) {
+    return TextField(
+      controller: _password,
+      obscureText: true,
+      autofocus: true,
+      enabled: !_loading,
+      autofillHints: const [AutofillHints.password],
+      textInputAction: TextInputAction.done,
+      onSubmitted: (_) => _submit(),
+      decoration: InputDecoration(
+        hintText: hint,
+        filled: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+
+  Widget _deleteButton(String label, ColorScheme scheme) {
+    return SizedBox(
+      height: 48,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.error,
+          foregroundColor: scheme.onError,
+          disabledBackgroundColor: scheme.error,
+          disabledForegroundColor: scheme.onError,
+        ),
+        onPressed: _loading ? null : _submit,
+        child: NumerButtonChild(label: label, loading: _loading),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -101,23 +138,7 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextField(
-                controller: _password,
-                obscureText: true,
-                autofocus: true,
-                enabled: !_loading,
-                autofillHints: const [AutofillHints.password],
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _submit(),
-                decoration: InputDecoration(
-                  hintText: l10n.password,
-                  filled: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
+              _passwordField(l10n.password),
               if (failure != null) ...[
                 const SizedBox(height: 8),
                 Text(
@@ -128,34 +149,7 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
                 ),
               ],
               const SizedBox(height: 16),
-              SizedBox(
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: scheme.error,
-                    foregroundColor: scheme.onError,
-                    disabledBackgroundColor: scheme.error,
-                    disabledForegroundColor: scheme.onError,
-                  ),
-                  onPressed: _loading ? null : _submit,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_loading) ...[
-                        SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: scheme.onError,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                      ],
-                      Text(l10n.delete),
-                    ],
-                  ),
-                ),
-              ),
+              _deleteButton(l10n.delete, scheme),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: _loading
