@@ -173,7 +173,7 @@ script writes no entry.
 
 `AGG_INCREMENTAL` (`on` or `off`, default `off`) switches the two aggregate triggers from the
 full recompute to a per-user ledger in the private `users/{uid}/aggState/v1`, which costs about
-3 reads per event instead of about 111. With the switch `off`, `AGG_SHADOW_PERCENT` (0 to 100,
+4 reads per event instead of about 111. With the switch `off`, `AGG_SHADOW_PERCENT` (0 to 100,
 default 0) also runs that share of users through the ledger without publishing and logs
 `aggregate_shadow_mismatch` when its payload differs; both are set in `functions/.env`
 (see `functions/.env.example`).
