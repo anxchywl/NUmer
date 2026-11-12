@@ -10,6 +10,7 @@ import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/features/ai_analysis/ai_analysis.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 Future<void> showCourseTimeSheet(BuildContext context, Course course) {
@@ -32,8 +33,6 @@ Future<void> showCourseTimeSheet(BuildContext context, Course course) {
     },
   ).whenComplete(() => appState.setCourseSheetOpen(false));
 }
-
-const int _kMaxSecs = 10800;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -97,8 +96,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   FirstRunCreditsGate(),
-                  _AutoFinishWatcher(),
-                  _ActiveSessionBar(),
+                  AutoFinishWatcher(),
+                  ActiveSessionBar(),
                 ],
               ),
             ),
@@ -363,360 +362,6 @@ class _SyncStatusChip extends StatelessWidget {
   }
 }
 
-class _AutoFinishWatcher extends StatefulWidget {
-  const _AutoFinishWatcher();
-
-  @override
-  State<_AutoFinishWatcher> createState() => _AutoFinishWatcherState();
-}
-
-class _AutoFinishWatcherState extends State<_AutoFinishWatcher> {
-  Timer? _ticker;
-  String? _activeId;
-  int? _plannedSecs;
-
-  @override
-  void initState() {
-    super.initState();
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) async {
-      if (!mounted) return;
-      final state = context.read<AppState>();
-
-      final timerEntry = state.timerRunning.entries.firstWhere(
-        (e) => e.value == true,
-        orElse: () => const MapEntry<String, bool>('', false),
-      );
-      final swEntry = state.stopwatchRunning.entries.firstWhere(
-        (e) => e.value == true,
-        orElse: () => const MapEntry<String, bool>('', false),
-      );
-      final pomoEntry = state.pomodoroRunning.entries.firstWhere(
-        (e) => e.value == true,
-        orElse: () => const MapEntry<String, bool>('', false),
-      );
-
-      String? kind;
-      String? id;
-      if (timerEntry.value == true) {
-        kind = 'timer';
-        id = timerEntry.key;
-      } else if (swEntry.value == true) {
-        kind = 'stopwatch';
-        id = swEntry.key;
-      } else if (pomoEntry.value == true) {
-        kind = 'pomodoro';
-        id = pomoEntry.key;
-      }
-
-      if (kind == null || id == null) {
-        _activeId = null;
-        _plannedSecs = null;
-        return;
-      }
-
-      if (_activeId != id) {
-        _activeId = id;
-        _plannedSecs = null;
-        if (kind == 'timer') {
-          final p = await SharedPreferences.getInstance();
-          _plannedSecs = p.getInt('timer_planned_$id');
-        }
-      }
-
-      final courseName = state.courses
-          .firstWhere(
-            (c) => c.id == id,
-            orElse: () => Course(
-              id: id!,
-              name: 'Course',
-              day: '',
-              start: '',
-              end: '',
-              colorValue: 0xFF94A3B8,
-            ),
-          )
-          .name;
-
-      if (kind == 'timer') {
-        final elapsed = state.currentElapsedTimer(id).inSeconds;
-        if (_plannedSecs != null &&
-            _plannedSecs! > 0 &&
-            elapsed >= _plannedSecs!) {
-          final start = state.timerStart[id];
-          DateTime? forcedEnd;
-          if (start != null) {
-            forcedEnd = start.add(Duration(seconds: _plannedSecs!));
-          }
-
-          await state.stopTimer(id, forcedEnd: forcedEnd);
-          final p = await SharedPreferences.getInstance();
-          await p.remove('timer_planned_$id');
-
-          if (!mounted) return;
-          showAppMessage(
-            context,
-            AppLocalizations.of(
-              context,
-            )!.timeSavedMessage(courseNameWithoutParentheses(courseName)),
-          );
-          _activeId = null;
-          _plannedSecs = null;
-        }
-      } else if (kind == 'stopwatch') {
-        final e = state.currentElapsedStopwatch(id).inSeconds;
-        if (e >= _kMaxSecs) {
-          await state.stopStopwatch(id);
-
-          if (!mounted) return;
-          showAppMessage(
-            context,
-            AppLocalizations.of(
-              context,
-            )!.timeSavedMessage(courseNameWithoutParentheses(courseName)),
-          );
-          _activeId = null;
-          _plannedSecs = null;
-        }
-      } else if (kind == 'pomodoro') {}
-
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
-}
-
-class _ActiveSessionBar extends StatefulWidget {
-  const _ActiveSessionBar();
-
-  @override
-  State<_ActiveSessionBar> createState() => _ActiveSessionBarState();
-}
-
-class _ActiveSessionBarState extends State<_ActiveSessionBar> {
-  Timer? _ticker;
-  String? _cachedCourseId;
-  int? _plannedSecs;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  Future<void> _loadPlannedIfNeeded(String courseId) async {
-    if (_cachedCourseId == courseId) return;
-    _cachedCourseId = courseId;
-    final prefs = await SharedPreferences.getInstance();
-    _plannedSecs = prefs.getInt('timer_planned_$courseId');
-    if (mounted) setState(() {});
-  }
-
-  String _fmtHMSLocal(int s) {
-    final h = (s ~/ 3600).toString().padLeft(2, '0');
-    final m = ((s % 3600) ~/ 60).toString().padLeft(2, '0');
-    final sec = (s % 60).toString().padLeft(2, '0');
-    return '$h:$m:$sec';
-  }
-
-  bool _hasAnyActive(AppState s) =>
-      s.timerRunning.values.any((v) => v == true) ||
-      s.stopwatchRunning.values.any((v) => v == true) ||
-      s.pomodoroRunning.values.any((v) => v == true);
-
-  ({String kind, String id})? _activeInfo(AppState s) {
-    final t = s.timerRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (t.value == true) return (kind: 'timer', id: t.key);
-    final p = s.pomodoroRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (p.value == true) return (kind: 'pomodoro', id: p.key);
-    final sw = s.stopwatchRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (sw.value == true) return (kind: 'stopwatch', id: sw.key);
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<AppState>();
-    if (!_hasAnyActive(state)) {
-      return const SizedBox.shrink();
-    }
-
-    final info = _activeInfo(state)!;
-    final courseId = info.id;
-    final kind = info.kind;
-    final course = state.courses.firstWhere(
-      (c) => c.id == courseId,
-      orElse: () => Course(
-        id: courseId,
-        name: 'Unknown',
-        day: '',
-        start: '',
-        end: '',
-        colorValue: 0xFF94A3B8,
-      ),
-    );
-
-    if (kind == 'timer') {
-      _loadPlannedIfNeeded(courseId);
-    } else {
-      _plannedSecs = null;
-      _cachedCourseId = null;
-    }
-
-    String timeText;
-    String subtitleKind;
-    if (kind == 'timer') {
-      final elapsed = state.currentElapsedTimer(courseId).inSeconds;
-      if (_plannedSecs != null && _plannedSecs! > 0) {
-        final remaining = (_plannedSecs! - elapsed).clamp(0, _kMaxSecs);
-        timeText = '${_fmtHMSLocal(remaining)} remaining';
-      } else {
-        timeText = '${_fmtHMSLocal(elapsed)} elapsed';
-      }
-      subtitleKind = 'Timer';
-    } else if (kind == 'stopwatch') {
-      final elapsed = state.currentElapsedStopwatch(courseId).inSeconds;
-      timeText = _fmtHMSLocal(elapsed);
-      subtitleKind = 'Stopwatch';
-    } else {
-      final remaining = state.currentPomodoroRemaining(courseId).inSeconds;
-      final phase = state.pomodoroPhase[courseId] ?? PomodoroPhase.work;
-      final paused = state.pomodoroPaused[courseId] ?? false;
-      timeText =
-          '${_pomodoroPhaseLabel(phase)} • ${_fmtHMSLocal(remaining)} remaining${paused ? ' (paused)' : ''}';
-      subtitleKind = 'Pomodoro';
-    }
-
-    final theme = Theme.of(context);
-    final bg = theme.colorScheme.primaryContainer;
-    final fg = theme.colorScheme.onPrimaryContainer;
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      child: Material(
-        key: ValueKey('$courseId-$kind'),
-        color: bg,
-        elevation: 0,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-          child: Row(
-            children: [
-              CircleAvatar(radius: 12, backgroundColor: course.color),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      course.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: fg,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$subtitleKind • $timeText',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(color: fg),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              FilledButton.tonalIcon(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  final navigator = Navigator.of(context);
-
-                  int seconds = 0;
-                  String? snackMessage;
-
-                  if (kind == 'timer') {
-                    snackMessage = AppLocalizations.of(context)!
-                        .timeSavedMessage(
-                          courseNameWithoutParentheses(course.name),
-                        );
-                    seconds = await state.stopTimer(courseId);
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.remove('timer_planned_$courseId');
-                  } else if (kind == 'stopwatch') {
-                    snackMessage = AppLocalizations.of(context)!
-                        .timeSavedMessage(
-                          courseNameWithoutParentheses(course.name),
-                        );
-                    seconds = await state.stopStopwatch(courseId);
-                  } else {
-                    await state.resetPomodoro(courseId);
-                    snackMessage =
-                        'Pomodoro for "${courseNameWithoutParentheses(course.name)}" reset.';
-                  }
-
-                  if (kind != 'pomodoro' && seconds > 0) {
-                    // Global listener handles reflection now
-                  }
-
-                  if (messenger.mounted) {
-                    showAppMessage(navigator.context, snackMessage);
-                  }
-                },
-                icon: const Icon(Icons.stop_circle_outlined),
-                label: Text(
-                  kind == 'timer'
-                      ? 'Done'
-                      : (kind == 'stopwatch' ? 'Stop' : 'Reset'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _pomodoroPhaseLabel(PomodoroPhase phase) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (phase) {
-      case PomodoroPhase.work:
-        return l10n.work;
-      case PomodoroPhase.shortBreak:
-        return l10n.shortBreak;
-      case PomodoroPhase.longBreak:
-        return l10n.longBreak;
-    }
-  }
-}
-
 class _CourseTimeMenu extends StatefulWidget {
   final Course course;
   const _CourseTimeMenu({required this.course});
@@ -764,30 +409,6 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Future<void> _clearPlannedSecs() async {
     final p = await SharedPreferences.getInstance();
     await p.remove(_plannedKey);
-  }
-
-  bool _hasAnyActive(AppState s) =>
-      s.timerRunning.values.any((v) => v == true) ||
-      s.stopwatchRunning.values.any((v) => v == true) ||
-      s.pomodoroRunning.values.any((v) => v == true);
-
-  ({String kind, String id})? _activeInfo(AppState s) {
-    final t = s.timerRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (t.value == true) return (kind: 'timer', id: t.key);
-    final p = s.pomodoroRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (p.value == true) return (kind: 'pomodoro', id: p.key);
-    final sw = s.stopwatchRunning.entries.firstWhere(
-      (e) => e.value == true,
-      orElse: () => const MapEntry<String, bool>('', false),
-    );
-    if (sw.value == true) return (kind: 'stopwatch', id: sw.key);
-    return null;
   }
 
   @override
@@ -858,7 +479,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
 
       if (state.stopwatchRunning[widget.course.id] ?? false) {
         final e = state.currentElapsedStopwatch(widget.course.id).inSeconds;
-        if (e >= _kMaxSecs) {
+        if (e >= kMaxSessionSeconds) {
           await state.stopStopwatch(widget.course.id);
           if (!mounted) return;
           showAppMessage(
@@ -1016,8 +637,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Future<void> _startTimer() async {
     final state = context.read<AppState>();
 
-    if (_hasAnyActive(state)) {
-      final info = _activeInfo(state);
+    if (hasAnyActiveSessionIn(state)) {
+      final info = activeSessionInfo(state);
       final otherId = info?.id;
       final kind = info?.kind ?? 'session';
       if (otherId != null) {
@@ -1056,8 +677,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
       _snack(AppLocalizations.of(context)!.enterTimeFirst, isError: true);
       return;
     }
-    if (total > _kMaxSecs) {
-      total = _kMaxSecs;
+    if (total > kMaxSessionSeconds) {
+      total = kMaxSessionSeconds;
       _snack(AppLocalizations.of(context)!.maxTimeCapped, isError: true);
     }
 
@@ -1092,8 +713,8 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
   Future<void> _startStopwatch() async {
     final state = context.read<AppState>();
 
-    if (_hasAnyActive(state)) {
-      final info = _activeInfo(state);
+    if (hasAnyActiveSessionIn(state)) {
+      final info = activeSessionInfo(state);
       final otherId = info?.id;
       final kind = info?.kind ?? 'session';
       if (otherId != null) {
@@ -1155,7 +776,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final begun = state.startPomodoro(widget.course.id);
     if (!begun) {
       final l10n = AppLocalizations.of(context)!;
-      final info = _activeInfo(state);
+      final info = activeSessionInfo(state);
       final kind = info?.kind ?? 'session';
       final kindLabel = switch (kind) {
         'timer' => l10n.timer,
@@ -1206,7 +827,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     return FutureBuilder<int?>(
       future: _loadPlannedSecs(),
       builder: (context, snap) {
-        final planned = (snap.data ?? 0).clamp(0, _kMaxSecs);
+        final planned = (snap.data ?? 0).clamp(0, kMaxSessionSeconds);
         final runningForThisCourse =
             state.timerRunning[widget.course.id] ?? false;
 
@@ -1214,7 +835,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
             ? state.currentElapsedTimer(widget.course.id).inSeconds
             : 0;
         final remaining = runningForThisCourse
-            ? (planned - elapsed).clamp(0, _kMaxSecs)
+            ? (planned - elapsed).clamp(0, kMaxSessionSeconds)
             : _readInputsCapped();
 
         return LayoutBuilder(
@@ -1342,7 +963,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final elapsed = state
         .currentElapsedStopwatch(widget.course.id)
         .inSeconds
-        .clamp(0, _kMaxSecs);
+        .clamp(0, kMaxSessionSeconds);
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1595,7 +1216,7 @@ class _CourseTimeMenuState extends State<_CourseTimeMenu>
     final m = int.tryParse(_mCtrl.text) ?? 0;
     final s = int.tryParse(_sCtrl.text) ?? 0;
     int total = h * 3600 + m * 60 + s;
-    if (total > _kMaxSecs) total = _kMaxSecs;
+    if (total > kMaxSessionSeconds) total = kMaxSessionSeconds;
     if (total < 0) total = 0;
     return total;
   }
