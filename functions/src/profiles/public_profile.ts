@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { db } from '../shared/admin';
+import { deletionMarkerRef } from '../shared/user_writes';
 
 export interface PublicProfile {
   profileName: string;
@@ -102,9 +103,9 @@ export async function syncPublicProfile(userId: string): Promise<void> {
   const mirrorRef = db.collection('publicProfiles').doc(userId);
 
   await db.runTransaction(async (txn) => {
-    const [user, mirror] = await txn.getAll(userRef, mirrorRef);
+    const [user, mirror, marker] = await txn.getAll(userRef, mirrorRef, deletionMarkerRef(userId));
     const profile = toPublicProfile(user.data());
-    if (profile === null) {
+    if (profile === null || marker.exists) {
       txn.delete(mirrorRef);
       return;
     }
