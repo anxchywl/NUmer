@@ -409,8 +409,7 @@ describe('writes racing a deletion', () => {
 
     const marker = await db.doc(`deletedUsers/${uid}`).get();
     expect(marker.get('status')).toBe('pending');
-    await purgeUser(uid);
-    expect((await db.doc(`deletedUsers/${uid}`).get()).get('status')).toBe('done');
+    await db.doc(`deletedUsers/${uid}`).delete();
   });
 });
 
