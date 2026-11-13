@@ -18,6 +18,7 @@ import 'account_deletion.dart';
 import 'auth_code_api.dart';
 import 'auth_write_gates.dart';
 import 'email_verification.dart';
+import 'local_user_data.dart';
 import 'password_reset_result.dart';
 
 export 'account_deletion.dart';
@@ -210,9 +211,10 @@ class AuthController extends ChangeNotifier with EmailVerification {
       }
     }
 
+    final erase = !hasUnsyncedChanges(LocalDatabase.instance);
     await _syncService?.stop();
     if (previousUid != null) {
-      await _clearLocalUserData(previousUid);
+      await _clearLocalUserData(previousUid, erase: erase);
     } else {
       await Storage.closeForSignOut();
     }
@@ -383,43 +385,9 @@ class AuthController extends ChangeNotifier with EmailVerification {
     await signOut();
   }
 
-  Future<void> _clearLocalUserData(String uid) async {
-    // Close Hive boxes but DO NOT delete them - preserve cache for re-login
-    await Storage.closeForSignOut();
-
-    // Clear session-specific state only (not cached data)
-    UserStorage.setCurrentUser(uid);
-    final userStorage = await UserStorage.getInstance();
-    await userStorage.clearUserData();
-    UserStorage.setCurrentUser(null);
-
-    // Clear session-specific preferences only
-    await _clearSharedPreferences();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('fcm_saved_token_$uid');
-    await prefs.remove('fcm_saved_at_$uid');
-    await prefs.remove('email_index_written_$uid');
-
-    // Cancel notifications for this session
+  Future<void> _clearLocalUserData(String uid, {required bool erase}) async {
+    await closeLocalUserData(uid, erase: erase);
     await Notifs.cancelAll();
-  }
-
-  Future<void> _clearSharedPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keysToRemove = prefs
-        .getKeys()
-        .where(
-          (key) =>
-              key.startsWith('timer_planned_') ||
-              key.startsWith('progress_') ||
-              key == 'onboarded_credits_v1' ||
-              key == 'themeMode' ||
-              key == 'device_id',
-        )
-        .toList();
-    for (final key in keysToRemove) {
-      await prefs.remove(key);
-    }
   }
 
   Future<void> reloadUser() async {
@@ -580,7 +548,7 @@ class AuthController extends ChangeNotifier with EmailVerification {
       }
 
       _pendingAccountDeletedMessage = true;
-      await _clearLocalUserData(user.uid);
+      await _clearLocalUserData(user.uid, erase: true);
       _currentUser = null;
       _profileData = null;
       _profileReady = false;
