@@ -19,10 +19,9 @@ import 'auth_code_api.dart';
 import 'auth_write_gates.dart';
 import 'email_verification.dart';
 import 'local_user_data.dart';
-import 'password_reset_result.dart';
+import 'password_reset.dart';
 
 export 'account_deletion.dart';
-export 'password_reset_result.dart';
 
 class AuthFailure implements Exception {
   final String message;
@@ -32,7 +31,8 @@ class AuthFailure implements Exception {
   String toString() => message;
 }
 
-class AuthController extends ChangeNotifier with EmailVerification {
+class AuthController extends ChangeNotifier
+    with EmailVerification, PasswordReset {
   AuthController({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
@@ -69,7 +69,6 @@ class AuthController extends ChangeNotifier with EmailVerification {
   bool _pendingAccountDeletedMessage = false;
   bool _isBootstrapping = false;
   bool _isSigningOut = false;
-  int _lastResetRequestMs = 0;
 
   User? get currentUser => _currentUser;
   @override
@@ -99,25 +98,6 @@ class AuthController extends ChangeNotifier with EmailVerification {
     if (_forcedLoggedOut) {
       _forcedLoggedOut = false;
       notifyListeners();
-    }
-  }
-
-  Future<String?> sendEmailVerification() async {
-    final user = _currentUser;
-    if (user == null) {
-      return 'Not logged in';
-    }
-    if (user.emailVerified) {
-      return 'Email already verified';
-    }
-
-    try {
-      await user.sendEmailVerification();
-      return null;
-    } on FirebaseAuthException catch (e) {
-      return _messageForAuthCode(e.code);
-    } catch (_) {
-      return 'Failed to send verification email. Please try again later.';
     }
   }
 
@@ -724,115 +704,6 @@ class AuthController extends ChangeNotifier with EmailVerification {
     if (!shouldUpsertEmailIndex(normalized, prefs.getString(key))) return;
     await _upsertEmailIndex(email, user.uid);
     await prefs.setString(key, normalized);
-  }
-
-  Future<PasswordResetResult> sendPasswordResetSecure(String email) async {
-    final trimmed = _normalizeEmail(email);
-    if (trimmed.isEmpty || !trimmed.contains('@')) {
-      return PasswordResetResult(
-        success: false,
-        verificationRequired: false,
-        verificationEmailSent: false,
-        message: 'Enter a valid email address.',
-        code: 'invalid-email',
-      );
-    }
-
-    final nowMs = DateTime.now().millisecondsSinceEpoch;
-    if (nowMs - _lastResetRequestMs < 15000) {
-      return PasswordResetResult(
-        success: false,
-        verificationRequired: false,
-        verificationEmailSent: false,
-        message: 'Please wait a moment before trying again.',
-        code: 'rate-limited',
-      );
-    }
-
-    bool requiresVerification = false;
-    bool verificationSent = false;
-
-    try {
-      final idxSnap = await _firestore
-          .collection('email_index')
-          .doc(trimmed)
-          .get();
-      final uid = idxSnap.data()?['uid'] as String?;
-      if (uid != null && uid.isNotEmpty) {
-        final profileSnap = await _firestore.collection('users').doc(uid).get();
-        final verified = profileSnap.data()?['emailVerified'] == true;
-        if (!verified) {
-          requiresVerification = true;
-          final current = _auth.currentUser;
-          if (current != null &&
-              _normalizeEmail(current.email ?? '') == trimmed) {
-            try {
-              await current.sendEmailVerification();
-              verificationSent = true;
-            } catch (_) {}
-          }
-        }
-      }
-    } catch (_) {}
-
-    if (requiresVerification) {
-      return PasswordResetResult(
-        success: false,
-        verificationRequired: true,
-        verificationEmailSent: verificationSent,
-        message:
-            'Please verify your email first. We sent you a verification email.',
-        code: 'verification-required',
-      );
-    }
-
-    try {
-      await _auth.sendPasswordResetEmail(email: trimmed);
-      _lastResetRequestMs = nowMs;
-      return const PasswordResetResult(
-        success: true,
-        verificationRequired: false,
-        verificationEmailSent: false,
-        message: 'If an account exists for this email, we sent a reset link.',
-        code: 'sent',
-      );
-    } on FirebaseAuthException catch (e) {
-      String message;
-      String? code;
-      switch (e.code) {
-        case 'invalid-email':
-          message = 'Enter a valid email address.';
-          code = 'invalid-email';
-          break;
-        case 'too-many-requests':
-          message = 'Too many attempts. Please wait and try again.';
-          code = 'too-many-requests';
-          break;
-        case 'network-request-failed':
-          message = 'Network error. Check your connection and try again.';
-          code = 'network';
-          break;
-        default:
-          message =
-              'If an account exists for this email, we sent a reset link.';
-          code = 'sent';
-      }
-      return PasswordResetResult(
-        success: false,
-        verificationRequired: false,
-        verificationEmailSent: false,
-        message: message,
-        code: code,
-      );
-    } catch (_) {
-      return const PasswordResetResult(
-        success: false,
-        verificationRequired: false,
-        verificationEmailSent: false,
-        message: 'Something went wrong. Please try again.',
-        code: 'unknown',
-      );
-    }
   }
 
   @override
