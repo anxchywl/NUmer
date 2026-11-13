@@ -40,14 +40,14 @@ class AuthController extends ChangeNotifier with EmailVerification {
     AuthCodeApi? codeApi,
   }) : _auth = auth ?? FirebaseAuth.instance,
        _firestore = firestore ?? FirebaseFirestore.instance,
-       _functions = functions ?? FirebaseFunctions.instance,
+       _functionsOverride = functions,
        codeApi = codeApi ?? FunctionsAuthCodeApi() {
     _subscription = _auth.authStateChanges().listen(_handleAuthState);
   }
 
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
-  final FirebaseFunctions _functions;
+  final FirebaseFunctions? _functionsOverride;
   @override
   final AuthCodeApi codeApi;
   SyncService? _syncService;
@@ -540,9 +540,7 @@ class AuthController extends ChangeNotifier with EmailVerification {
       _initializingUser = null;
       await _syncService?.stop();
 
-      try {
-        await _functions.httpsCallable('deleteAccountCallable').call();
-      } on FirebaseFunctionsException {
+      if (!await requestServerDeletion(_functionsOverride)) {
         _startPreparation(user);
         return DeleteAccountFailure.failed;
       }
