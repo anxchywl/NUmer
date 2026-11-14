@@ -1359,9 +1359,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'After creating an account, you\'ll need to verify your email to start using the app.';
 
   @override
-  String get verificationEmailSent => 'Verification email sent!';
-
-  @override
   String get signedInSuccessfully => 'Signed in successfully';
 
   @override
@@ -1404,42 +1401,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get resetPasswordSubtitle =>
-      'Enter your account email. We’ll send a reset link.';
-
-  @override
-  String get sendResetLink => 'Send reset link';
-
-  @override
-  String get resetLinkSent =>
-      'If an account exists for this email, we sent a reset link.';
+      'Enter your email. We will send a 6-digit code.';
 
   @override
   String get backToSignIn => 'Back to sign in';
 
   @override
-  String get verifyEmailFirst =>
-      'Please verify your email first. We sent you a verification email.';
-
-  @override
-  String get resendVerificationEmail => 'Resend verification email';
-
-  @override
   String get invalidEmailFormat => 'Enter a valid email address.';
-
-  @override
-  String get resetRateLimited => 'Please wait a moment before trying again.';
-
-  @override
-  String get networkRequestFailed =>
-      'Network error. Check your connection and try again.';
-
-  @override
-  String get signInToResend => 'Sign in to resend the verification email.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return 'Try again in ${seconds}s';
-  }
 
   @override
   String get sessionNotes => 'Session notes';
@@ -2242,4 +2210,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get emailVerifiedMessage => 'Email verified.';
+
+  @override
+  String get sendResetCode => 'Send code';
+
+  @override
+  String resetCodeSentGeneric(String email) {
+    return 'If an account exists for $email, a code is on its way.';
+  }
+
+  @override
+  String get newPasswordTitle => 'Set a new password';
+
+  @override
+  String get newPasswordLabel => 'New password';
+
+  @override
+  String get confirmPasswordLabel => 'Repeat the password';
+
+  @override
+  String get passwordsDontMatch => 'The passwords do not match.';
+
+  @override
+  String get savePasswordButton => 'Save password';
+
+  @override
+  String get passwordResetSuccess =>
+      'Password changed. Sign in with the new password.';
+
+  @override
+  String get resetSessionExpired => 'This reset expired. Start again.';
+
+  @override
+  String get resetStartOver => 'Start again';
+
+  @override
+  String get resetRequestFailed => 'Could not send the request. Try again.';
+
+  @override
+  String get passwordSaveFailed => 'Could not save the password. Try again.';
 }

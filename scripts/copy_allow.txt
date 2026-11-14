@@ -10,7 +10,6 @@ app_en.arb:leaderboardHintMessage:bullet
 app_en.arb:maxTimeCapped:em_dash
 app_en.arb:passwordInvalidChars:en_dash
 app_en.arb:rankLabel:hash
-app_en.arb:verificationEmailSent:exclamation
 app_kk.arb:chartTip:bullet
 app_kk.arb:dayStatsTipLine1:bullet
 app_kk.arb:dayStatsTipLine2:bullet
@@ -23,7 +22,6 @@ app_kk.arb:leaderboardHintMessage:bullet
 app_kk.arb:maxTimeCapped:em_dash
 app_kk.arb:passwordInvalidChars:en_dash
 app_kk.arb:rankLabel:hash
-app_kk.arb:verificationEmailSent:exclamation
 app_ru.arb:chartTip:bullet
 app_ru.arb:dayStatsTipLine1:bullet
 app_ru.arb:dayStatsTipLine2:bullet
@@ -37,4 +35,3 @@ app_ru.arb:maxTimeCapped:em_dash
 app_ru.arb:passwordInvalidChars:en_dash
 app_ru.arb:rankLabel:hash
 app_ru.arb:sessionNotificationBody:exclamation
-app_ru.arb:verificationEmailSent:exclamation

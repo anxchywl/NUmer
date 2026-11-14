@@ -16,7 +16,7 @@ Each capability below maps to a feature folder under `lib/features/` (see
 ## Capabilities
 
 ### Onboarding & profile — `auth`, `account`
-Sign-up/sign-in with email verification by a 6-digit code, guided onboarding, and a
+Sign-up/sign-in with email verification and password reset by a 6-digit code, guided onboarding, and a
 profile (avatar, name, major, study goals, accent color, preferred language).
 
 ### Courses & goals — `courses`

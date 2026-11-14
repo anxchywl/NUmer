@@ -2608,12 +2608,6 @@ abstract class AppLocalizations {
   /// **'After creating an account, you\'ll need to verify your email to start using the app.'**
   String get afterCreatingAccount;
 
-  /// No description provided for @verificationEmailSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification email sent!'**
-  String get verificationEmailSent;
-
   /// No description provided for @signedInSuccessfully.
   ///
   /// In en, this message translates to:
@@ -2695,20 +2689,8 @@ abstract class AppLocalizations {
   /// No description provided for @resetPasswordSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your account email. We’ll send a reset link.'**
+  /// **'Enter your email. We will send a 6-digit code.'**
   String get resetPasswordSubtitle;
-
-  /// No description provided for @sendResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Send reset link'**
-  String get sendResetLink;
-
-  /// No description provided for @resetLinkSent.
-  ///
-  /// In en, this message translates to:
-  /// **'If an account exists for this email, we sent a reset link.'**
-  String get resetLinkSent;
 
   /// No description provided for @backToSignIn.
   ///
@@ -2716,47 +2698,11 @@ abstract class AppLocalizations {
   /// **'Back to sign in'**
   String get backToSignIn;
 
-  /// No description provided for @verifyEmailFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Please verify your email first. We sent you a verification email.'**
-  String get verifyEmailFirst;
-
-  /// No description provided for @resendVerificationEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend verification email'**
-  String get resendVerificationEmail;
-
   /// No description provided for @invalidEmailFormat.
   ///
   /// In en, this message translates to:
   /// **'Enter a valid email address.'**
   String get invalidEmailFormat;
-
-  /// No description provided for @resetRateLimited.
-  ///
-  /// In en, this message translates to:
-  /// **'Please wait a moment before trying again.'**
-  String get resetRateLimited;
-
-  /// No description provided for @networkRequestFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Network error. Check your connection and try again.'**
-  String get networkRequestFailed;
-
-  /// No description provided for @signInToResend.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to resend the verification email.'**
-  String get signInToResend;
-
-  /// No description provided for @tryAgainInSeconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again in {seconds}s'**
-  String tryAgainInSeconds(int seconds);
 
   /// No description provided for @sessionNotes.
   ///
@@ -4137,6 +4083,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email verified.'**
   String get emailVerifiedMessage;
+
+  /// No description provided for @sendResetCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send code'**
+  String get sendResetCode;
+
+  /// No description provided for @resetCodeSentGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for {email}, a code is on its way.'**
+  String resetCodeSentGeneric(String email);
+
+  /// No description provided for @newPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a new password'**
+  String get newPasswordTitle;
+
+  /// No description provided for @newPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get newPasswordLabel;
+
+  /// No description provided for @confirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat the password'**
+  String get confirmPasswordLabel;
+
+  /// No description provided for @passwordsDontMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The passwords do not match.'**
+  String get passwordsDontMatch;
+
+  /// No description provided for @savePasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Save password'**
+  String get savePasswordButton;
+
+  /// No description provided for @passwordResetSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Sign in with the new password.'**
+  String get passwordResetSuccess;
+
+  /// No description provided for @resetSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This reset expired. Start again.'**
+  String get resetSessionExpired;
+
+  /// No description provided for @resetStartOver.
+  ///
+  /// In en, this message translates to:
+  /// **'Start again'**
+  String get resetStartOver;
+
+  /// No description provided for @resetRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the request. Try again.'**
+  String get resetRequestFailed;
+
+  /// No description provided for @passwordSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the password. Try again.'**
+  String get passwordSaveFailed;
 }
 
 class _AppLocalizationsDelegate

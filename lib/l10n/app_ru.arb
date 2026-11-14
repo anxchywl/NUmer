@@ -482,7 +482,6 @@
   "displayName": "Отображаемое имя",
   "createAccount": "Создать аккаунт",
   "afterCreatingAccount": "После создания аккаунта вам нужно будет подтвердить эл. почту, чтобы начать пользоваться приложением.",
-  "verificationEmailSent": "Письмо с подтверждением отправлено!",
   "signedInSuccessfully": "Вход выполнен успешно",
   "enterEmail": "Пожалуйста, введите адрес эл. почты.",
   "invalidEmail": "Пожалуйста, введите корректный адрес эл. почты.",
@@ -496,24 +495,9 @@
   "loggingOut": "Выход из аккаунта...",
   "forgotPassword": "Забыли пароль?",
   "resetPasswordTitle": "Сброс пароля",
-  "resetPasswordSubtitle": "Укажите почту аккаунта. Мы отправим ссылку для сброса.",
-  "sendResetLink": "Отправить ссылку",
-  "resetLinkSent": "Если аккаунт существует, мы отправили ссылку для сброса.",
+  "resetPasswordSubtitle": "Введите почту. Мы отправим 6-значный код.",
   "backToSignIn": "Назад к входу",
-  "verifyEmailFirst": "Сначала подтвердите почту. Мы отправили письмо для подтверждения.",
-  "resendVerificationEmail": "Отправить письмо повторно",
   "invalidEmailFormat": "Введите корректный email.",
-  "resetRateLimited": "Подождите немного перед следующей попыткой.",
-  "networkRequestFailed": "Ошибка сети. Проверьте соединение и повторите.",
-  "signInToResend": "Войдите, чтобы отправить письмо повторно.",
-  "tryAgainInSeconds": "Повторите через {seconds} с",
-  "@tryAgainInSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
   "sessionNotes": "Заметки к сессии",
   "sessionNotesHint": "Добавьте заметки к этой сессии",
   "sendNotes": "Отправить заметки",
@@ -964,5 +948,24 @@
   "codeDeliveryFailed": "Не удалось отправить письмо. Попробуйте ещё раз.",
   "codeCheckFailed": "Не удалось проверить код. Попробуйте ещё раз.",
   "codeOffline": "Нет соединения. Проверьте сеть и повторите.",
-  "emailVerifiedMessage": "Почта подтверждена."
+  "emailVerifiedMessage": "Почта подтверждена.",
+  "sendResetCode": "Отправить код",
+  "resetCodeSentGeneric": "Если аккаунт с адресом {email} существует, код уже отправлен.",
+  "@resetCodeSentGeneric": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "newPasswordTitle": "Задайте новый пароль",
+  "newPasswordLabel": "Новый пароль",
+  "confirmPasswordLabel": "Повторите пароль",
+  "passwordsDontMatch": "Пароли не совпадают.",
+  "savePasswordButton": "Сохранить пароль",
+  "passwordResetSuccess": "Пароль изменён. Войдите с новым паролем.",
+  "resetSessionExpired": "Время сброса истекло. Начните заново.",
+  "resetStartOver": "Начать заново",
+  "resetRequestFailed": "Не удалось отправить запрос. Попробуйте ещё раз.",
+  "passwordSaveFailed": "Не удалось сохранить пароль. Попробуйте ещё раз."
 }

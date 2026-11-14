@@ -7,8 +7,8 @@
 1308 lib/features/account/screens/account.dart
 411 lib/features/account/widgets/accent_color_picker.dart
 568 lib/features/account/widgets/profile_form.dart
-846 lib/features/auth/data/auth_service.dart
-1053 lib/features/auth/screens/auth_screen.dart
+717 lib/features/auth/data/auth_service.dart
+791 lib/features/auth/screens/auth_screen.dart
 503 lib/features/connections/data/connections_service.dart
 496 lib/features/connections/screens/add_person_sheet.dart
 513 lib/features/connections/screens/connections_screen.dart
