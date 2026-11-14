@@ -49,7 +49,9 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
    on `FirebaseAuthException` or `SignedOutException` calls `signOut()` once and returns
    null. Concurrent calls share one in-flight future (keep it in a field, clear it when it
    completes), so ten modules hitting a 401 at the same moment cause one refresh.
-3. `lib/app/modules/module_descriptor.dart`:
+3. `lib/core/modules/module_descriptor.dart` (in `core` so that the Study and Campus roots,
+   which are features, can take descriptors; it imports only Flutter, `numer_ui` and
+   `lib/l10n/app_localizations.dart`):
    - `enum ModuleSection { study, campus }`
    - `@immutable class ModuleDescriptor` with `const` constructor and final fields `String
      id`, `String Function(AppLocalizations l10n) title`, `String Function(AppLocalizations
@@ -101,7 +103,7 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
 - Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`. (This task adds none.)
-- Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`. `lib/core/identity/` imports nothing from `lib/features/` or `lib/app/`.
+- Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`. `lib/core/identity/` and `lib/core/modules/` import nothing from `lib/features/` or `lib/app/`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.
 - UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
@@ -110,12 +112,12 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
 - No unrequested features, abstractions, dependencies or error handling. Edit existing files rather than creating new ones where possible.
 - No secrets in code, in committed files or in `--dart-define`. Never write a server address into a file.
 - Do not deploy, do not push, do not connect to any server or production project.
-- If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit (add `core/identity/` to the `core/` line and `modules/` to the `app/` line of `AGENTS.md`).
+- If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit (add `identity/` and `modules/` to the `core/` line and `modules/` to the `app/` line of `AGENTS.md`).
 
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0.
 - [ ] The three test files above exist and pass; the concurrency case asserts exactly one refresh.
-- [ ] `grep -rn "features/" lib/core/identity` prints nothing.
+- [ ] `grep -rn "features/\|numer_app/app/" lib/core/identity lib/core/modules` prints nothing.
 - [ ] `grep -rn "moduleRegistry" lib` shows the declaration and its use in `visibleModules` only.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).
 - [ ] Docs touched by this change are updated, or the report states "no docs affected".
