@@ -125,24 +125,13 @@
     }
   },
 
+  "aiAnalysisComingSoon": "Course analysis is coming soon.",
   "courseAnalysis": "Course analysis",
   "noCoursesAvailable": "No courses available.",
   "selectCourse": "Select course",
-  "timePeriod": "Time period",
-  "oneMonth": "1 month",
-  "twoMonths": "2 months",
-  "threeMonths": "3 months",
   "sixMonths": "6 months",
-  "limitOneAnalysisPerPeriod": "Limit: 1 analysis per selected period.",
   "analysisUpdatesEveryPeriod": "Your analysis updates every new period.",
   "analysisAlreadyGenerated": "You've already generated an analysis for this period.",
-  "minNotesRequired": "Minimum notes required: {current}/{total}. More notes give better insights.",
-  "@minNotesRequired": {
-    "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
   "@notesRequiredCount": {
     "placeholders": {
       "count": {
@@ -150,17 +139,9 @@
       }
     }
   },
-  "generateInsight": "Generate insight",
-  "analyzing": "Analyzing...",
-  "analysisPlaceholder": "Select a course and time period, then get AI-powered feedback of your studies.",
   "dayStatsTipLine1": "• The calendar highlights your study activity. The greener the day, the more you studied.",
   "dayStatsTipLine2": "• You can edit session time and notes in the History screen.",
   "dayStatsTipLine3": "• You can tap on any course, and the history screen will show only the sessions for that course.",
-  "overview": "Overview",
-  "scrollUpHint": "Scroll up",
-  "topTopics": "Top topics",
-  "insights": "Insights",
-  "recommendations": "Recommendations",
 
   "syncOffline": "Offline",
   "syncSyncing": "Syncing…",
