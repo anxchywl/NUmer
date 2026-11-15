@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
+// lightbulb button that toggles a floating help bubble anchored to itself
 class TipIcon extends StatefulWidget {
   final String title;
   final String message;
@@ -42,6 +43,8 @@ class _TipIconState extends State<TipIcon> {
     });
   }
 
+  // builds the help bubble overlay, positioned relative to the icon and
+  // dismissed on a tap outside its shared tap region
   OverlayEntry _createOverlayEntry() {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;

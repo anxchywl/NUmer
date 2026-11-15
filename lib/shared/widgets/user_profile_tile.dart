@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:numer_app/shared/widgets/universal_avatar.dart';
 
+// list tile that streams a user's live profile (avatar, name, major/goal) by id
 class UserProfileTile extends StatelessWidget {
   const UserProfileTile({
     super.key, 
@@ -58,6 +59,7 @@ class UserProfileTile extends StatelessWidget {
     );
   }
 
+  // placeholder tile shown before the profile loads or when it is unavailable
   Widget _fallbackTile(BuildContext context, {required bool showSpinner}) {
     return ListTile(
       leading: UniversalAvatar(
@@ -89,6 +91,7 @@ class UserProfileTile extends StatelessWidget {
     );
   }
 
+  // composes major, goal and any custom subtitle, or null when there is nothing to show
   Widget? _buildSubtitle(String? goal, String? major, Widget? subtitle, BuildContext context) {
     final hasGoal = goal != null && goal.isNotEmpty;
     final hasMajor = major != null && major.isNotEmpty;
