@@ -1,8 +1,8 @@
 # NUmer
 
 > A collaborative study-group and personal-productivity app for students — focus timers,
-> habit tracking, courses, social study groups with leaderboards, and AI insights, all
-> offline-first.
+> habit tracking, courses, and social study groups with leaderboards, all offline-first.
+> AI insights are paused.
 
 ![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20macOS-blue)
 ![Flutter](https://img.shields.io/badge/Flutter-Dart%20%E2%89%A5%203.4-02569B?logo=flutter)
