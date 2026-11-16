@@ -15,7 +15,8 @@ import 'package:numer_app/shared/widgets/app_toast.dart';
 const int _emailMaxLength = 254;
 const int _passwordMaxLength = 64;
 // Allowed password chars: A-Z, a-z, 0-9, and specified symbols
-final _allowedPasswordCharsRegex = RegExp(r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]*$');
+final _allowedPasswordCharsRegex =
+    RegExp(r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:' "'" r'",.<>/?\\|~]*$');
 final _passwordInputFormatters = <TextInputFormatter>[
   LengthLimitingTextInputFormatter(_passwordMaxLength),
   FilteringTextInputFormatter.allow(
@@ -67,9 +68,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              colors.primaryContainer.withAlpha((
-                (theme.brightness == Brightness.dark ? 0.2 : 0.9) * 255
-              ).round()),
+              colors.primaryContainer.withAlpha(
+                  ((theme.brightness == Brightness.dark ? 0.2 : 0.9) * 255)
+                      .round()),
               colors.surface,
             ],
           ),
@@ -79,7 +80,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 520),
                     child: Column(
@@ -118,7 +120,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           child: Text(
                             _showLogin
                                 ? AppLocalizations.of(context)!.loginSubtitle
-                                : AppLocalizations.of(context)!.registerSubtitle,
+                                : AppLocalizations.of(context)!
+                                    .registerSubtitle,
                             key: ValueKey<bool>(_showLogin),
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -134,9 +137,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                             border: Border.all(color: colors.outlineVariant),
                             boxShadow: [
                               BoxShadow(
-                                color: colors.shadow.withAlpha((
-                                  (theme.brightness == Brightness.dark ? 0.5 : 0.08) * 255
-                                ).round()),
+                                color: colors.shadow.withAlpha(
+                                    ((theme.brightness == Brightness.dark
+                                                ? 0.5
+                                                : 0.08) *
+                                            255)
+                                        .round()),
                                 blurRadius: 40,
                                 offset: const Offset(0, 18),
                               ),
@@ -153,10 +159,14 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                 SegmentedButton<bool>(
                                   key: ValueKey(_showLogin),
                                   style: SegmentedButton.styleFrom(
-                                    backgroundColor:
-                                        colors.surfaceContainerHighest.withAlpha((
-                                      (theme.brightness == Brightness.dark ? 0.25 : 0.5) * 255
-                                    ).round()),
+                                    backgroundColor: colors
+                                        .surfaceContainerHighest
+                                        .withAlpha(((theme.brightness ==
+                                                        Brightness.dark
+                                                    ? 0.25
+                                                    : 0.5) *
+                                                255)
+                                            .round()),
                                   ),
                                   segments: [
                                     ButtonSegment(
@@ -164,22 +174,29 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                       icon: const Icon(Icons.login_outlined),
                                       label: FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(AppLocalizations.of(context)!.signIn),
+                                        child: Text(
+                                            AppLocalizations.of(context)!
+                                                .signIn),
                                       ),
                                     ),
                                     ButtonSegment(
                                       value: false,
-                                      icon: const Icon(Icons.person_add_alt_1_outlined),
+                                      icon: const Icon(
+                                          Icons.person_add_alt_1_outlined),
                                       label: FittedBox(
                                         fit: BoxFit.scaleDown,
-                                        child: Text(AppLocalizations.of(context)!.register),
+                                        child: Text(
+                                            AppLocalizations.of(context)!
+                                                .register),
                                       ),
                                     ),
                                   ],
                                   selected: {_showLogin},
                                   onSelectionChanged: (selection) {
-                                    FocusManager.instance.primaryFocus?.unfocus();
-                                    setState(() => _showLogin = selection.first);
+                                    FocusManager.instance.primaryFocus
+                                        ?.unfocus();
+                                    setState(
+                                        () => _showLogin = selection.first);
                                   },
                                 ),
                                 const SizedBox(height: 28),
@@ -194,43 +211,55 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                         _horizontalDragDistance = 0;
                                       },
                                       onHorizontalDragUpdate: (details) {
-                                        _horizontalDragDistance += details.delta.dx;
+                                        _horizontalDragDistance +=
+                                            details.delta.dx;
                                       },
                                       onHorizontalDragEnd: (details) {
-                                        final velocity = details.velocity.pixelsPerSecond.dx;
+                                        final velocity =
+                                            details.velocity.pixelsPerSecond.dx;
                                         final isSwipe =
-                                            _horizontalDragDistance.abs() >= swipeThreshold ||
-                                            velocity.abs() > 800;
+                                            _horizontalDragDistance.abs() >=
+                                                    swipeThreshold ||
+                                                velocity.abs() > 800;
                                         if (!isSwipe) return;
 
                                         final shouldShowLogin = velocity > 0 ||
                                             _horizontalDragDistance > 0;
-                                        if (shouldShowLogin == _showLogin) return;
+                                        if (shouldShowLogin == _showLogin)
+                                          return;
 
-                                        FocusManager.instance.primaryFocus?.unfocus();
-                                        setState(() => _showLogin = shouldShowLogin);
+                                        FocusManager.instance.primaryFocus
+                                            ?.unfocus();
+                                        setState(
+                                            () => _showLogin = shouldShowLogin);
                                       },
                                       onHorizontalDragCancel: () {
                                         _horizontalDragDistance = 0;
                                       },
                                       child: AnimatedSize(
-                                        duration: const Duration(milliseconds: 260),
+                                        duration:
+                                            const Duration(milliseconds: 260),
                                         curve: Curves.easeOutCubic,
                                         alignment: Alignment.topCenter,
                                         clipBehavior: Clip.none,
                                         child: AnimatedSwitcher(
-                                          duration: const Duration(milliseconds: 220),
+                                          duration:
+                                              const Duration(milliseconds: 220),
                                           switchInCurve: Curves.easeOutCubic,
                                           switchOutCurve: Curves.easeInCubic,
-                                          transitionBuilder: (child, animation) {
+                                          transitionBuilder:
+                                              (child, animation) {
                                             final slideTween = Tween<Offset>(
-                                              begin: Offset(0, _showLogin ? 0.06 : -0.06),
+                                              begin: Offset(
+                                                  0, _showLogin ? 0.06 : -0.06),
                                               end: Offset.zero,
-                                            ).chain(CurveTween(curve: Curves.easeOutCubic));
+                                            ).chain(CurveTween(
+                                                curve: Curves.easeOutCubic));
                                             return FadeTransition(
                                               opacity: animation,
                                               child: SlideTransition(
-                                                position: animation.drive(slideTween),
+                                                position:
+                                                    animation.drive(slideTween),
                                                 child: child,
                                               ),
                                             );
@@ -241,7 +270,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                                                   isBusy: auth.isBusy,
                                                 )
                                               : _RegisterForm(
-                                                  key: const ValueKey('register'),
+                                                  key: const ValueKey(
+                                                      'register'),
                                                   isBusy: auth.isBusy,
                                                 ),
                                         ),
@@ -261,18 +291,24 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           child: _showLogin
                               ? const SizedBox.shrink()
                               : Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     const SizedBox(height: 8),
                                     AnimatedSwitcher(
-                                      duration: const Duration(milliseconds: 200),
+                                      duration:
+                                          const Duration(milliseconds: 200),
                                       transitionBuilder: (child, animation) =>
-                                          FadeTransition(opacity: animation, child: child),
+                                          FadeTransition(
+                                              opacity: animation, child: child),
                                       child: Text(
-                                        AppLocalizations.of(context)!.afterCreatingAccount,
-                                        key: const ValueKey('afterCreatingAccount'),
+                                        AppLocalizations.of(context)!
+                                            .afterCreatingAccount,
+                                        key: const ValueKey(
+                                            'afterCreatingAccount'),
                                         textAlign: TextAlign.center,
-                                        style: theme.textTheme.bodySmall?.copyWith(
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
                                           color: colors.onSurfaceVariant,
                                         ),
                                       ),
@@ -438,10 +474,11 @@ class _LoginFormState extends State<_LoginForm> {
 
     if (!mounted) return;
     if (error == null) {
-      showAppMessage(context, AppLocalizations.of(context)!.signedInSuccessfully);
+      showAppMessage(
+          context, AppLocalizations.of(context)!.signedInSuccessfully);
       return;
     }
-    
+
     if (error.contains('verify your email')) {
       showAppMessage(
         context,
@@ -451,9 +488,10 @@ class _LoginFormState extends State<_LoginForm> {
         onAction: () async {
           final result = await auth.sendEmailVerification();
           if (!mounted) return;
-          
+
           if (result == null) {
-            showAppMessage(context, AppLocalizations.of(context)!.verificationEmailSent);
+            showAppMessage(
+                context, AppLocalizations.of(context)!.verificationEmailSent);
           } else {
             showAppMessage(context, result, isError: true);
           }
@@ -629,23 +667,21 @@ class _RegisterFormState extends State<_RegisterForm> {
     );
 
     if (!mounted) return;
-    
+
     if (error != null) {
       showAppMessage(context, error, isError: true);
       return;
     }
 
-    
     final verified = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (_) => const EmailVerificationDialog(),
     );
-    
+
     if (!mounted) return;
 
     if (verified == true) {
-      
       final loginError = await auth.signIn(
         email: _loginController.text,
         password: _passwordController.text,
@@ -656,8 +692,7 @@ class _RegisterFormState extends State<_RegisterForm> {
       if (loginError != null) {
         showAppMessage(context, loginError, isError: true);
       }
-      
-      
+
       setState(() {
         _autoValidate = false;
         _loginController.clear();
@@ -665,12 +700,10 @@ class _RegisterFormState extends State<_RegisterForm> {
         _passwordController.clear();
       });
     } else {
-      
       await auth.signOut();
-      
+
       if (!mounted) return;
-      
-      
+
       final parent = context.findAncestorStateOfType<_AuthScreenState>();
       parent?.setState(() {
         parent._showLogin = true;
@@ -708,9 +741,8 @@ InputDecoration _filledFieldDecoration(
     floatingLabelBehavior: FloatingLabelBehavior.auto,
     contentPadding: const EdgeInsets.fromLTRB(16, 22, 16, 16),
     filled: true,
-    fillColor: colors.surfaceContainerHighest.withAlpha((
-      (theme.brightness == Brightness.dark ? 0.35 : 0.55) * 255
-    ).round()),
+    fillColor: colors.surfaceContainerHighest.withAlpha(
+        ((theme.brightness == Brightness.dark ? 0.35 : 0.55) * 255).round()),
     border: baseBorder,
     enabledBorder: baseBorder,
     focusedBorder: baseBorder.copyWith(
@@ -759,7 +791,8 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   Future<void> _send() async {
     FocusScope.of(context).unfocus();
     if (!_isValidEmail) {
-      setState(() => _errorText = AppLocalizations.of(context)!.invalidEmailFormat);
+      setState(
+          () => _errorText = AppLocalizations.of(context)!.invalidEmailFormat);
       return;
     }
     setState(() {
@@ -813,7 +846,8 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
     if (result == null) {
       setState(() => _verificationSent = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.verificationEmailSent)),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.verificationEmailSent)),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -877,12 +911,14 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
             children: [
               Text(
                 l10n.resetPasswordTitle,
-                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                style: theme.textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
                 l10n.resetPasswordSubtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: colors.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               TextField(
@@ -950,7 +986,8 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
               if (_verificationRequired) ...[
                 Text(
                   l10n.verifyEmailFirst,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: colors.error),
+                  style:
+                      theme.textTheme.bodyMedium?.copyWith(color: colors.error),
                 ),
                 const SizedBox(height: 8),
                 FilledButton.tonal(
@@ -986,9 +1023,8 @@ class _LanguageToggle extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
         const languages = ['en', 'ru', 'kk'];
         final currentIndex = languages.indexOf(languageCode);
-        final nextIndex = currentIndex == -1
-            ? 0
-            : (currentIndex + 1) % languages.length;
+        final nextIndex =
+            currentIndex == -1 ? 0 : (currentIndex + 1) % languages.length;
         context.read<AppState>().setLocale(Locale(languages[nextIndex]));
       },
       child: Container(
@@ -1010,18 +1046,13 @@ class _LanguageToggle extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.language, 
-              size: 16, 
-              color: Theme.of(context).colorScheme.primary.withAlpha(180)
-            ),
+            Icon(Icons.language,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary.withAlpha(180)),
             const SizedBox(width: 8),
             Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .labelLarge
-                  ?.copyWith(
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,
                   ),
