@@ -575,9 +575,24 @@ NUmer's rules come first; the module repos' rules are merged in where NUmer had 
 Decisions taken while expanding the phase 3 outlines into prompts, from the code on `main`
 at `5a6359c`.
 
+### D-33 File size limit. New (owner, 2026-11-27).
+
+- **Decision:** a source file stays under 400 lines and a function under about 60 (`AGENTS.md`
+  "Size"). `scripts/check_file_size.sh`, run by `verify.sh`, enforces it. The 33 files in
+  `scripts/file_size_baseline.txt` predate the rule and may only shrink; a commit that shrinks
+  one lowers its entry, and a commit that splits one away removes it.
+- **Why:** the largest files (`home.dart` 3098, `stats.dart` 3228, `add_habit_sheet.dart`
+  2462) cannot be reviewed or changed by an executor in one session, and every phase 3 task
+  touches them.
+- **Consequences:** phase 3 gains three pure splits, P3-14 (`stats.dart`), P3-15
+  (`add_habit_sheet.dart`) and P3-16 (`habits_screen.dart`); P3-04 and P3-05 end with the
+  files they touch under the limit. A split keeps the big `State` class at its original path,
+  so when a class cannot get under 400 lines without changing how its state is shared, the
+  file stays in the baseline at its new, lower size. A new path is never added to the
+  baseline; if a split needs that, the executor stops and asks.
+
 | # | Decision | Why |
 |---|---|---|
-| D-33 | P3-04 moves `_CourseTimeMenuState` (about 1400 lines) whole into `sessions/widgets/course_time_sheet.dart`; the 700-line cap applies to every other new file | a Dart class cannot span files; splitting it would change behaviour in a no-behaviour-change task |
 | D-34 | Homes: course list, add, edit, goal popup in `courses/widgets/`; time sheet, active session bar, auto-finish watcher in `sessions/widgets/`; new features `study`, `campus`, `news`; `ModuleDescriptor` in `lib/core/modules/` (features cannot import `lib/app/`); the Upcoming store in `lib/core/upcoming/`; `ShellHeader` in `account` | feature-first layout and the boundary test |
 | D-35 | Until P3-06 the Study root is two rows (Statistics, History) pushing the existing screens, not the Statistics content under a new header | `StatsScreen` works unchanged as a pushed screen; no temporary mode in it |
 | D-36 | P3-05 deletes the timer and alarm screens and the alarm code in `AppState`; on load it cancels the notifications of any stored alarm and clears `alarms_v1` once | nothing in this repository's history navigates to alarms; a stored alarm would fire with no way to remove it |
