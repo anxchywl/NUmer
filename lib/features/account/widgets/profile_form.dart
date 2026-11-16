@@ -80,8 +80,6 @@ class _ProfileFormState extends State<ProfileForm> {
     _goalCtrl = TextEditingController(text: widget.initialGoal ?? '');
     _avatarIndex = widget.initialAvatarIndex;
     _avatarColorValue = widget.initialAvatarColorValue;
-    
-
 
     _nameCtrl.addListener(_handleFieldChange);
     _majorCtrl.addListener(_handleFieldChange);
@@ -96,8 +94,9 @@ class _ProfileFormState extends State<ProfileForm> {
       final viewportWidth = MediaQuery.of(context).size.width -
           72; // Padding: 16(screen) + 20(card) * 2
       final itemWidth = 68.0;
-      final offset =
-          ((_avatarIndex ?? 0) * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
+      final offset = ((_avatarIndex ?? 0) * itemWidth) -
+          (viewportWidth / 2) +
+          (itemWidth / 2);
       _scrollController =
           ScrollController(initialScrollOffset: offset < 0 ? 0 : offset);
     }
@@ -107,8 +106,7 @@ class _ProfileFormState extends State<ProfileForm> {
     if (_scrollController == null || !_scrollController!.hasClients) return;
     final viewportWidth = _scrollController!.position.viewportDimension;
     final itemWidth = 68.0;
-    final offset =
-        (index * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
+    final offset = (index * itemWidth) - (viewportWidth / 2) + (itemWidth / 2);
     _scrollController!.animateTo(
       offset,
       duration: const Duration(milliseconds: 300),
@@ -177,8 +175,6 @@ class _ProfileFormState extends State<ProfileForm> {
     if (mounted) setState(() {});
   }
 
-
-
   bool get _isNameValid => _nameCtrl.text.trim().isNotEmpty;
 
   Future<void> _submit() async {
@@ -193,7 +189,8 @@ class _ProfileFormState extends State<ProfileForm> {
     final data = ProfileFormData(
       name: _nameCtrl.text.trim(),
       major: _majorCtrl.text.trim().isEmpty ? null : _majorCtrl.text.trim(),
-      contact: _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
+      contact:
+          _contactCtrl.text.trim().isEmpty ? null : _contactCtrl.text.trim(),
       goal: _goalCtrl.text.trim().isEmpty ? null : _goalCtrl.text.trim(),
       avatarIndex: _avatarIndex,
       avatarColorValue: _avatarColorValue,
@@ -236,9 +233,9 @@ class _ProfileFormState extends State<ProfileForm> {
     final effectiveBgColor = (_avatarColorValue != null)
         ? Color(_avatarColorValue!)
         : (option?.background ?? theme.colorScheme.primaryContainer);
-    final isDark = ThemeData.estimateBrightnessForColor(effectiveBgColor) == Brightness.dark;
+    final isDark = ThemeData.estimateBrightnessForColor(effectiveBgColor) ==
+        Brightness.dark;
     final optionIconColor = isDark ? Colors.white : Colors.black87;
-
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -332,8 +329,10 @@ class _ProfileFormState extends State<ProfileForm> {
                   if (trimmed.length < 2) {
                     return AppLocalizations.of(context)!.displayNameLength;
                   }
-                  if (!RegExp(r'^[\p{L}\p{N} ]+$', unicode: true).hasMatch(trimmed)) {
-                    return AppLocalizations.of(context)!.displayNameInvalidChars;
+                  if (!RegExp(r'^[\p{L}\p{N} ]+$', unicode: true)
+                      .hasMatch(trimmed)) {
+                    return AppLocalizations.of(context)!
+                        .displayNameInvalidChars;
                   }
                   return null;
                 },
@@ -436,7 +435,8 @@ class _ProfileFormState extends State<ProfileForm> {
                   padding: const EdgeInsets.only(top: 24),
                   child: _ColorChooser(
                     selectedColorValue: _avatarColorValue,
-                    onColorChanged: (cv) => setState(() => _avatarColorValue = cv),
+                    onColorChanged: (cv) =>
+                        setState(() => _avatarColorValue = cv),
                   ),
                 )
               : const SizedBox.shrink(),
@@ -482,8 +482,6 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 }
 
-
-
 class _AvatarChip extends StatelessWidget {
   const _AvatarChip({
     required this.option,
@@ -499,12 +497,13 @@ class _AvatarChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = ThemeData.estimateBrightnessForColor(backgroundColor) == Brightness.dark;
+    final isDark = ThemeData.estimateBrightnessForColor(backgroundColor) ==
+        Brightness.dark;
     final iconColor = isDark ? Colors.white : Colors.black87;
     final borderColor = selected
         ? backgroundColor
         : Theme.of(context).colorScheme.outlineVariant;
-        
+
     return AnimatedScale(
       duration: const Duration(milliseconds: 200),
       scale: selected ? 1.05 : 1.0,
@@ -514,8 +513,9 @@ class _AvatarChip extends StatelessWidget {
         child: Container(
           width: 56,
           height: 56,
-            decoration: BoxDecoration(
-            color: backgroundColor.withAlpha(((selected ? 1 : 0.7) * 255).round()),
+          decoration: BoxDecoration(
+            color:
+                backgroundColor.withAlpha(((selected ? 1 : 0.7) * 255).round()),
             shape: BoxShape.circle,
             border: Border.all(color: borderColor, width: selected ? 3 : 1),
           ),
