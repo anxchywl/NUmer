@@ -2218,6 +2218,10 @@ class AppLocalizationsKk extends AppLocalizations {
       'Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.';
 
   @override
+  String get passwordResetUnconfirmed =>
+      'Жаңа құпиясөзбен кіріңіз. Кіре алмасаңыз, оны қайта қалпына келтіріңіз.';
+
+  @override
   String get resetSessionExpired =>
       'Қалпына келтіру уақыты өтті. Қайта бастаңыз.';
 

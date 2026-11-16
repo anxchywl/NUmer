@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -85,16 +86,21 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
     });
   }
 
-  void _finish() {
+  void _finish({required bool confirmed}) {
     unawaited(HapticFeedback.lightImpact());
-    showAppMessage(context, AppLocalizations.of(context)!.passwordResetSuccess);
+    final l10n = AppLocalizations.of(context)!;
+    showAppMessage(
+      context,
+      confirmed ? l10n.passwordResetSuccess : l10n.passwordResetUnconfirmed,
+    );
     // a sheet that is already closing must not pop the screen under it
     if (ModalRoute.of(context)?.isCurrent ?? false) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    // ios can report an inset below zero while the keyboard springs closed
+    final keyboard = math.max(0.0, MediaQuery.viewInsetsOf(context).bottom);
 
     return Padding(
       padding: EdgeInsets.only(bottom: keyboard),

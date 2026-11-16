@@ -111,6 +111,12 @@ Future<void> _savePassword(
 FilledButton _button(WidgetTester tester) =>
     tester.widget(find.byType(FilledButton));
 
+List<bool> _finishedAutofill(WidgetTester tester) => [
+  for (final call in tester.testTextInput.log)
+    if (call.method == 'TextInput.finishAutofillContext')
+      call.arguments as bool,
+];
+
 List<String> _visibleTexts(WidgetTester tester) => [
   for (final text in tester.widgetList<Text>(find.byType(Text)))
     text.data ?? '',
@@ -221,6 +227,84 @@ void main() {
     expect(_button(tester).onPressed, isNotNull);
   });
 
+  testWidgets('keeps the floating label inside a 56 high field', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+
+    final field = tester.getRect(find.byType(TextField));
+    final label = tester.getRect(find.text('Email address'));
+
+    expect(field.height, 56);
+    expect(label.top, greaterThan(field.top));
+  });
+
+  testWidgets('offers the email and both passwords for autofill', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    tester.testTextInput.log.clear();
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    final client = tester.testTextInput.log.lastWhere(
+      (call) => call.method == 'TextInput.setClient',
+    );
+    final config = (client.arguments as List<dynamic>)[1] as Map;
+    final fields = [
+      for (final field in config['fields'] as List<dynamic>)
+        (field as Map)['autofill'] as Map,
+    ];
+    expect([
+      for (final field in fields) (field['hints'] as List<dynamic>).single,
+    ], unorderedEquals(['email', 'newPassword', 'newPassword']));
+    expect([
+      for (final field in fields) (field['editingValue'] as Map)['text'],
+    ], contains(_email));
+  });
+
+  testWidgets('keeps the keyboard moving between the visible fields', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+
+    final confirmation = tester.widget<EditableText>(
+      find.byType(EditableText).last,
+    );
+    expect(confirmation.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('saves the autofill context only after a success', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    tester.testTextInput.log.clear();
+
+    await _savePassword(tester);
+
+    expect(_finishedAutofill(tester).first, isTrue);
+  });
+
+  testWidgets('drops the autofill context when starting again', (tester) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    await tester.enterText(find.byType(TextField).first, _password);
+    tester.testTextInput.log.clear();
+
+    await _tap(tester, find.text('Start again'));
+
+    expect(_finishedAutofill(tester), [false]);
+  });
+
   testWidgets('does not call for mismatched passwords', (tester) async {
     final api = _api();
     await _openSheet(tester, api);
@@ -300,6 +384,48 @@ void main() {
     });
   }
 
+  testWidgets('asks to sign in when the reply to a save was lost', (
+    tester,
+  ) async {
+    final api = _api()
+      ..confirmResult = const CodeFailure(CodeFailureReason.offline);
+    await _openSheet(tester, api);
+    await _reachPasswordStep(tester);
+    await _savePassword(tester);
+    api.confirmResult = const CodeFailure(
+      CodeFailureReason.invalidOrExpiredTicket,
+    );
+    tester.testTextInput.log.clear();
+
+    await _tap(tester, find.byType(FilledButton));
+
+    expect(find.byType(ResetPasswordSheet), findsNothing);
+    expect(
+      find.text(
+        'Sign in with the new password. If that fails, reset it again.',
+      ),
+      findsOneWidget,
+    );
+    expect(_finishedAutofill(tester).first, isTrue);
+  });
+
+  testWidgets('forgets a lost reply when starting again', (tester) async {
+    final api = _api()
+      ..confirmResult = const CodeFailure(CodeFailureReason.offline);
+    await _openSheet(tester, api);
+    await _reachPasswordStep(tester);
+    await _savePassword(tester);
+    await _tap(tester, find.text('Start again'));
+    api.confirmResult = const CodeFailure(
+      CodeFailureReason.invalidOrExpiredTicket,
+    );
+    await _reachPasswordStep(tester);
+
+    await _savePassword(tester);
+
+    expect(find.text('This reset expired. Start again.'), findsOneWidget);
+  });
+
   testWidgets('starts again from the code step', (tester) async {
     await _openSheet(tester, _api());
     await _sendCode(tester);
@@ -318,6 +444,16 @@ void main() {
 
     expect(find.text('Reset password'), findsOneWidget);
     expect(find.textContaining('expired'), findsNothing);
+  });
+
+  testWidgets('survives a keyboard inset below zero', (tester) async {
+    addTearDown(tester.view.reset);
+    await _openSheet(tester, _api());
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: -1);
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
   });
 
   for (final language in ['en', 'ru', 'kk']) {

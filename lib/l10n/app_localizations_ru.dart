@@ -2242,6 +2242,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get passwordResetSuccess => 'Пароль изменён. Войдите с новым паролем.';
 
   @override
+  String get passwordResetUnconfirmed =>
+      'Войдите с новым паролем. Если не получится, сбросьте его ещё раз.';
+
+  @override
   String get resetSessionExpired => 'Время сброса истекло. Начните заново.';
 
   @override

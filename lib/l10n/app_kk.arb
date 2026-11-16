@@ -1061,6 +1061,7 @@
   "passwordsDontMatch": "Құпиясөздер сәйкес келмейді.",
   "savePasswordButton": "Құпиясөзді сақтау",
   "passwordResetSuccess": "Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.",
+  "passwordResetUnconfirmed": "Жаңа құпиясөзбен кіріңіз. Кіре алмасаңыз, оны қайта қалпына келтіріңіз.",
   "resetSessionExpired": "Қалпына келтіру уақыты өтті. Қайта бастаңыз.",
   "resetStartOver": "Қайта бастау",
   "resetRequestFailed": "Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.",

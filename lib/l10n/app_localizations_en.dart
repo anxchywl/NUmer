@@ -2239,6 +2239,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password changed. Sign in with the new password.';
 
   @override
+  String get passwordResetUnconfirmed =>
+      'Sign in with the new password. If that fails, reset it again.';
+
+  @override
   String get resetSessionExpired => 'This reset expired. Start again.';
 
   @override

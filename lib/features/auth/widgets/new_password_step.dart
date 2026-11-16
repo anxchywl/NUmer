@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +22,7 @@ class NewPasswordStep extends StatefulWidget {
 
   final String email;
   final String ticket;
-  final VoidCallback onSaved;
+  final void Function({required bool confirmed}) onSaved;
   final VoidCallback onExpired;
   final VoidCallback onStartOver;
 
@@ -30,11 +31,14 @@ class NewPasswordStep extends StatefulWidget {
 }
 
 class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
+  late final _email = TextEditingController(text: widget.email);
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
+  bool _replyLost = false;
 
   @override
   void dispose() {
+    _email.dispose();
     _password.dispose();
     _confirmation.dispose();
     super.dispose();
@@ -53,10 +57,16 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
     if (result == null) return;
     switch (result) {
       case CodeOk():
-        widget.onSaved();
+        _finish(confirmed: true);
       case CodeFailure():
         _showFailure(result);
     }
+  }
+
+  void _finish({required bool confirmed}) {
+    // asks the password manager to keep the new password
+    TextInput.finishAutofillContext();
+    widget.onSaved(confirmed: confirmed);
   }
 
   bool _validate() {
@@ -75,6 +85,9 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
 
   void _showFailure(CodeFailure failure) {
     switch (failure.reason) {
+      // the unanswered call most likely changed the password and used up the ticket
+      case CodeFailureReason.invalidOrExpiredTicket when _replyLost:
+        _finish(confirmed: false);
       case CodeFailureReason.invalidOrExpiredTicket:
       case CodeFailureReason.malformedInput:
         widget.onExpired();
@@ -83,6 +96,7 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
       case CodeFailureReason.rateLimited:
         startRetryCountdown(failure);
       case CodeFailureReason.offline:
+        _replyLost = true;
         showProblem((l10n) => l10n.codeOffline);
       default:
         showProblem((l10n) => l10n.passwordSaveFailed);
@@ -100,13 +114,7 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
         children: [
           Text(l10n.newPasswordTitle, style: context.text.sectionTitle),
           const SizedBox(height: NumerSpace.lg),
-          _buildField(_password, l10n.newPasswordLabel, TextInputAction.next),
-          const SizedBox(height: NumerSpace.md),
-          _buildField(
-            _confirmation,
-            l10n.confirmPasswordLabel,
-            TextInputAction.done,
-          ),
+          _buildPasswordFields(l10n),
           const SizedBox(height: NumerSpace.sm),
           ResetStateLine(message?.call(l10n) ?? ''),
           const SizedBox(height: NumerSpace.xl),
@@ -118,6 +126,39 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
           const SizedBox(height: NumerSpace.sm),
           ResetStartOverButton(onPressed: loading ? null : widget.onStartOver),
         ],
+      ),
+    );
+  }
+
+  // leaving the step any other way must not offer to save an unused password
+  Widget _buildPasswordFields(AppLocalizations l10n) {
+    return AutofillGroup(
+      onDisposeAction: AutofillContextAction.cancel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildAccountField(),
+          _buildField(_password, l10n.newPasswordLabel, TextInputAction.next),
+          const SizedBox(height: NumerSpace.md),
+          _buildField(
+            _confirmation,
+            l10n.confirmPasswordLabel,
+            TextInputAction.done,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // tells the password manager which account the new password belongs to
+  Widget _buildAccountField() {
+    return Offstage(
+      child: ExcludeFocus(
+        child: TextField(
+          controller: _email,
+          readOnly: true,
+          autofillHints: const [AutofillHints.email],
+        ),
       ),
     );
   }

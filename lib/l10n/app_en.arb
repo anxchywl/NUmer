@@ -1070,6 +1070,7 @@
   "passwordsDontMatch": "The passwords do not match.",
   "savePasswordButton": "Save password",
   "passwordResetSuccess": "Password changed. Sign in with the new password.",
+  "passwordResetUnconfirmed": "Sign in with the new password. If that fails, reset it again.",
   "resetSessionExpired": "This reset expired. Start again.",
   "resetStartOver": "Start again",
   "resetRequestFailed": "Could not send the request. Try again.",
