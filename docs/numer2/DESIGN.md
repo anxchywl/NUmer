@@ -640,6 +640,19 @@ module code uses the `Numer*` names.
 | `error`, `errorText`, `errorTextDark` | `colorScheme.error` |
 | `info`, `lightBlue`, `socialTelegram` | `colorScheme.primary` for text and links; `onSurfaceVariant` for a brand icon |
 | `primaryGradient`, `goldGradient`, `gold` | removed; use the flat role of the element |
+| `grey`, `iconSecondary` | `colorScheme.onSurfaceVariant` |
+| `iconPrimary`, `black` | `colorScheme.onSurface` |
+| `iconDisabled` | `onSurface` at alpha 0.38 |
+| `white` | `colorScheme.onPrimary` |
+| `lightGrey` | `colorScheme.outlineVariant` |
+| `transparent` | `Colors.transparent` |
+| `orange` | `NumerColors.warning` |
+| `green` | `NumerColors.success` |
+| `blue` | `colorScheme.primary` |
+| `blueLight`, `infoLight` | `colorScheme.primaryContainer` |
+| `errorLight` | `colorScheme.errorContainer` |
+| `successLight`, `warningLight` | `colorScheme.surfaceContainerHighest` |
+| `socialWhatsapp` | `colorScheme.onSurfaceVariant` |
 
 Because scheme colours need a `BuildContext`, the compatibility layer exposes them as
 `AppColors.of(context).primary`. Static brand constants are deleted; the call sites change.
