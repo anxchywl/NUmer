@@ -59,7 +59,8 @@ size limit (D-33) as far as its structure allows. Nothing a user can see or do c
 6. `dart run scripts/check_design.dart --write-baseline`; no total rises.
 7. Add `test/features/habits/add_habit_sheet_test.dart`: with fakes for `AuthController`
    (`currentUser` uid) and `HabitService` (`createHabit` records its argument), pump the
-   sheet, type a name, go through the steps with the same taps a user makes, submit, and
+   sheet (also with a fake `AppState` exposing `weekStart` and `courses`, which the sheet
+   reads at lines 2176 and 2388), type a name, go through the steps with the same taps a user makes, submit, and
    assert the recorded habit's name, type and frequency (characterisation of today's
    behaviour; write the test first, against the unsplit file, and keep it passing).
 8. Run `./scripts/verify.sh`. Report `wc -l` of every new file and of the sheet.

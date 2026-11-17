@@ -57,8 +57,9 @@ can see or do changes.
    - `lib/features/stats/models/stats_models.dart`: the data classes, the two enums and
      `_HabitStatsResult`.
    - `lib/features/stats/stats_format.dart`: the format helpers 3003-3215.
-   - `lib/features/stats/data/stats_loader.dart`: `_loadPieForDay`, `_loadBucketsForRange`
-     and the habit stats computation (`_computeHabitStats`, 195-312) as top-level functions
+   - `lib/features/stats/data/stats_loader.dart`: `_loadPieForDay`, `_loadBucketsForRange`,
+     `_buildAnimatedGroups` (1145), `_rangeBounds` (1213), the label helpers 1243-1329 when
+     they do not call `setState`, and the habit stats computation (`_computeHabitStats`, 195-312) as top-level functions
      that take what they read today (`AppState`, the course list, dates) as parameters. A
      method that calls `setState` stays in the state.
    - `lib/features/stats/widgets/`: `chart_tooltip.dart` (`_extractLocal`,

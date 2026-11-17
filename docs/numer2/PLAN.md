@@ -507,7 +507,7 @@ them. Every task marked **approval** touches the owner's existing server project
 | P3-09 | News on Home and the News screen | P3-07, P3-08 | med | sonnet, high | publish a test announcement |
 | P3-10 | Local "Upcoming" store | P3-07 | low | sonnet, medium | none |
 | P3-11 | Campus root | P3-05 | low | sonnet, medium | none |
-| P3-12 | Design pass: glass, gradients, chips, raw toasts | P3-05, P3-14, P3-15 | med | sonnet, high | review screenshots |
+| P3-12 | Design pass: glass, gradients, chips, raw toasts | P3-06, P3-14, P3-15 | med | sonnet, high | review screenshots |
 | P3-13 | Docs after shell | P3-17 | low | sonnet, low | none |
 | P3-14 | Split `stats.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-15 | Split `add_habit_sheet.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |

@@ -23,7 +23,8 @@ centred spinners of list screens become `NumerSkeleton` with its 300 ms delay
   actions (cancel and confirm). Only those become `showNumerConfirm`. A dialog that holds a
   text field, a list, a picker or more than one sentence stays an `AlertDialog` in this task
   and is listed in the report (for example the typed delete-account confirmation and the
-  join-private-group code dialog).
+  join-private-group code dialog). When unsure whether a dialog qualifies, leave it and list
+  it in the report.
 - `showNumerConfirm` returns `Future<bool>`; a destructive confirm (delete, remove, leave)
   uses `destructive: true`. Its confirm label is the existing action string of the dialog
   (`delete`, `remove`); "Cancel" comes from `MaterialLocalizations`.
@@ -45,7 +46,8 @@ centred spinners of list screens become `NumerSkeleton` with its 300 ms delay
    <the existing busy flag>)`, with the button disabled while loading as today.
 5. `dart run scripts/check_design.dart --write-baseline`; `alert` and `spinner` totals fall,
    none rises. Lower size baseline entries of shortened files.
-6. Tests: for two representative sites (the course delete confirmation in the course list,
+6. Update `test/features/courses/course_list_test.dart` (P3-04): its delete cases find the
+   confirm sheet's buttons instead of an `AlertDialog`. Tests: for two representative sites (the course delete confirmation in the course list,
    and the groups screen loading state), widget tests that the confirm sheet returns the
    same result as the dialog did, and that nothing shows for 299 ms and the skeleton after
    300 ms.

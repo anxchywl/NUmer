@@ -2,7 +2,7 @@
 
 **Recommended model:** sonnet   **Effort:** high
 **Risk:** med   **Est.:** 6 h
-**Repo / working dir:** NUmer (`anxchywl/NUmer`) @ `main`   **Depends on:** P3-05, P3-14, P3-15
+**Repo / working dir:** NUmer (`anxchywl/NUmer`) @ `main`   **Depends on:** P3-05, P3-06, P3-14, P3-15
 
 ## Goal
 Remove from existing screens the patterns `DESIGN.md` section 11 bans that a token or a
@@ -82,7 +82,11 @@ loading spinners are P3-17 (D-41).
 11. Tests: extend or add widget tests that find a `SegmentedButton` (and no `ChoiceChip`)
     for the habit type, the statistics range and the leaderboard period, and that selecting
     a segment calls the same callback as before; the Habits screen has one
-    `FloatingActionButton` labelled "Add habit".
+    `FloatingActionButton` labelled "Add habit" (pump `HabitsScreen` under `MultiProvider`
+    with fakes for `AuthController` (`currentUser.uid`), `HabitService` (`habitsStream`
+    returns `Stream.value(const [])`) and `AppState` (`weekStart`,
+    `eisenhowerMatrixEnabled` false, the header's avatar fields), each `noSuchMethod`-based
+    as in `test/app/update_required_screen_test.dart`).
 12. Run `./scripts/verify.sh`.
 13. Screenshots, before and after, light and dark, EN: Habits (with the action), the add
     habit type step, Statistics (range control and a section card), the habit report sheet,
@@ -109,7 +113,7 @@ loading spinners are P3-17 (D-41).
 
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0.
-- [ ] `grep -rn "IosLiquidActionPill\|_createNewLabel\|_SegChip\|== 'kk'" lib` prints nothing.
+- [ ] `grep -rn "IosLiquidActionPill\|_createNewLabel\|_SegChip" lib` and `grep -rn "== 'kk'" lib/features/stats` print nothing (the language toggle in `auth_screen.dart` compares `'kk'` legitimately and stays).
 - [ ] `grep -rn "SnackBar(" lib` prints nothing; `grep -rn "Gradient" lib` lists only the colour picker and the iOS tab bar.
 - [ ] `grep -rn "ChoiceChip" lib` prints nothing.
 - [ ] The design totals diff (before and after per pattern) is in the report; no total rose.
