@@ -63,10 +63,11 @@ class _GroupsScreenState extends State<GroupsScreen> {
         builder: (context, membershipSnap) {
           if (membershipSnap.hasError) {
             return Center(
-              child: Text(AppLocalizations.of(context)!.errorLoadingMemberships(membershipSnap.error.toString())),
+              child: Text(AppLocalizations.of(context)!
+                  .errorLoadingMemberships(membershipSnap.error.toString())),
             );
           }
-          
+
           if (membershipSnap.connectionState == ConnectionState.waiting &&
               !membershipSnap.hasData) {
             return const Center(child: CircularProgressIndicator());
@@ -97,7 +98,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   if (hasMemberships)
                     TipIcon(
                       title: AppLocalizations.of(context)!.tip,
-                      message: AppLocalizations.of(context)!.leaderboardHintMessage,
+                      message:
+                          AppLocalizations.of(context)!.leaderboardHintMessage,
                     ),
                 ],
               ),
@@ -110,7 +112,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 ),
               ),
               if (showSearchSection) ...[
-                
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -118,15 +119,20 @@ class _GroupsScreenState extends State<GroupsScreen> {
                       controller: _searchController,
                       focusNode: _searchFocusNode,
                       decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.findPublicGroupHint,
+                        hintText:
+                            AppLocalizations.of(context)!.findPublicGroupHint,
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
                       ),
                       onChanged: (val) {
                         setState(() {
@@ -140,7 +146,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                     child: Text(
-                      _searchQuery.isEmpty ? AppLocalizations.of(context)!.publicGroups : AppLocalizations.of(context)!.searchResults,
+                      _searchQuery.isEmpty
+                          ? AppLocalizations.of(context)!.publicGroups
+                          : AppLocalizations.of(context)!.searchResults,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -157,7 +165,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                           child: Padding(
                             padding: const EdgeInsets.all(16),
                             child: Center(
-                              child: Text(AppLocalizations.of(context)!.errorLoadingGroups(groupSnap.error.toString())),
+                              child: Text(AppLocalizations.of(context)!
+                                  .errorLoadingGroups(
+                                      groupSnap.error.toString())),
                             ),
                           ),
                         );
@@ -171,9 +181,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
                             child: Center(
                               child: Text(
                                 AppLocalizations.of(context)!.noSearchResults,
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                ),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
                                 textAlign: TextAlign.center,
                               ),
                             ),
@@ -185,8 +200,9 @@ class _GroupsScreenState extends State<GroupsScreen> {
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
                             final group = groups[index];
-                            final isJoined = memberships.any((m) => m.groupId == group.id);
-                            
+                            final isJoined =
+                                memberships.any((m) => m.groupId == group.id);
+
                             return Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -196,7 +212,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
                                 group: group,
                                 isJoining: _joining.contains(group.id),
                                 onJoin: isJoined
-                                    ? null 
+                                    ? null
                                     : () => _handleJoinGroup(group),
                               ),
                             );
@@ -208,7 +224,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
                   ),
               ],
               SliverPadding(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 24),
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).padding.bottom + 24),
               ),
             ],
           );
@@ -222,35 +239,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
       context: context,
       builder: (_) => _JoinPrivateGroupDialog(
         groupName: AppLocalizations.of(context)!.private,
-        onJoin: (code) {
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-             
-        }, 
+        onJoin: (code) {},
       ),
     );
   }
@@ -259,12 +248,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
     if (_joining.contains(group.id)) return;
 
     if (group.isPublic) {
-      
       setState(() => _joining.add(group.id));
       try {
         await context.read<GroupService>().joinGroup(group.id);
         if (!mounted) return;
-        showAppMessage(context, AppLocalizations.of(context)!.joinedSuccessfully);
+        showAppMessage(
+            context, AppLocalizations.of(context)!.joinedSuccessfully);
       } catch (error) {
         if (!mounted) return;
         showAppMessage(
@@ -278,7 +267,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
         }
       }
     } else {
-      
       await showDialog(
         context: context,
         builder: (_) => _JoinPrivateGroupDialog(
@@ -294,7 +282,8 @@ class _GroupsScreenState extends State<GroupsScreen> {
     try {
       await context.read<GroupService>().joinPrivateGroup(groupId, code);
       if (!mounted) return;
-      showAppMessage(context, AppLocalizations.of(context)!.joinedPrivateSuccessfully);
+      showAppMessage(
+          context, AppLocalizations.of(context)!.joinedPrivateSuccessfully);
     } catch (error) {
       if (!mounted) return;
       showAppMessage(
@@ -314,8 +303,6 @@ class _GroupsScreenState extends State<GroupsScreen> {
       MaterialPageRoute(builder: (_) => const CreateGroupScreen()),
     );
   }
-
-
 }
 
 class _GroupCard extends StatelessWidget {
@@ -471,7 +458,7 @@ class _NoGroupView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
       child: Column(
@@ -521,8 +508,6 @@ class _NoGroupView extends StatelessWidget {
               label: Text(AppLocalizations.of(context)!.createGroup),
             ),
           ),
-          
-          
         ],
       ),
     );
@@ -549,48 +534,50 @@ class _MembershipCard extends StatelessWidget {
           return const SizedBox.shrink();
         }
 
-      final theme = Theme.of(context);
-      final isDark = theme.brightness == Brightness.dark;
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
 
-      return Container(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ListTile(
+            leading: Icon(
+              group.isPublic ? Icons.groups_outlined : Icons.lock_outline,
+              color: theme.colorScheme.primary,
             ),
-          ],
-        ),
-        child: ListTile(
-          leading: Icon(
-            group.isPublic ? Icons.groups_outlined : Icons.lock_outline,
-            color: theme.colorScheme.primary,
+            title: Text(
+              group.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              group.createdBy == currentUserId
+                  ? AppLocalizations.of(context)!.owner
+                  : (membership.isAdmin
+                      ? AppLocalizations.of(context)!.administrator
+                      : AppLocalizations.of(context)!.memberLabel),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: AppLocalizations.of(context)!.groupSettings,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ManageGroupScreen(groupId: group.id),
+                  ),
+                );
+              },
+            ),
           ),
-          title: Text(
-            group.name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          subtitle: Text(
-            group.createdBy == currentUserId 
-              ? AppLocalizations.of(context)!.owner 
-              : (membership.isAdmin ? AppLocalizations.of(context)!.administrator : AppLocalizations.of(context)!.memberLabel),
-          ),
-          trailing: IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: AppLocalizations.of(context)!.groupSettings,
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ManageGroupScreen(groupId: group.id),
-                ),
-              );
-            },
-          ),
-        ),
-      );
+        );
       },
     );
   }
@@ -606,7 +593,8 @@ class _JoinPrivateGroupDialog extends StatefulWidget {
   final ValueChanged<String> onJoin;
 
   @override
-  State<_JoinPrivateGroupDialog> createState() => _JoinPrivateGroupDialogState();
+  State<_JoinPrivateGroupDialog> createState() =>
+      _JoinPrivateGroupDialogState();
 }
 
 class _JoinPrivateGroupDialogState extends State<_JoinPrivateGroupDialog> {
@@ -630,7 +618,8 @@ class _JoinPrivateGroupDialogState extends State<_JoinPrivateGroupDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(AppLocalizations.of(context)!.joinGroupDialogTitle(widget.groupName)),
+      title: Text(
+          AppLocalizations.of(context)!.joinGroupDialogTitle(widget.groupName)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -644,7 +633,7 @@ class _JoinPrivateGroupDialogState extends State<_JoinPrivateGroupDialog> {
               hintText: AppLocalizations.of(context)!.joinCodeHint,
             ),
             inputFormatters: [
-               FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
             ],
             onChanged: (_) => _validate(),
           ),
