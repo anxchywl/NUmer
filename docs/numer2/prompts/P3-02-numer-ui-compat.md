@@ -96,8 +96,10 @@ layer; this task only builds it.
    | `successLight`, `warningLight` | `scheme.surfaceContainerHighest` |
    | `socialWhatsapp` | `scheme.onSurfaceVariant` |
 
-   No other member. `primaryGradient`, `goldGradient`, `gold`, the avatar colours and the
-   remaining social colours are removed (listed in `MIGRATION.md`).
+   No other member. Removed, and listed in `MIGRATION.md`: `primaryGradient`, `goldGradient`,
+   `gold`, the avatar colours, the remaining social colours, `secondary`, `overlay`, `red`,
+   `yellow`, `cyan`, `purple`, `purpleLight`, `deepPurple`, `deepPurpleLight`,
+   `orangeLight`, `promotedBlue` (no module uses them).
 3. `src/compat/app_text_styles.dart`: `final class AppTextStyles` with `static AppTextStyles
    of(BuildContext context)` and one `TextStyle get` per name in the Context list, resolved
    from `context.text` by `DESIGN.md` 9.2: size 22 and above, `screenTitle`; 16 to 20 at 600
@@ -130,8 +132,10 @@ layer; this task only builds it.
    `NumerRadius.lg`, `button` at `md`, `pill` at `full` (open the Muto copy for each
    member's type), and `abstract final class HomeShadows` with `navBar` returning `const
    []`.
-5. `src/compat/app_icons.dart`: `sealed class AppIconData` with one subclass
-   `MaterialIcon(IconData data)` and the getter `IconData get asIconData`; `abstract final
+5. `src/compat/app_icons.dart`: `sealed class AppIconData` with the getter `IconData?
+   get asIconData` (nullable, as in the Gradus copy) and one subclass
+   `MaterialIcon(this.iconData)` whose `asIconData` returns `iconData` (the Gradus field
+   name); `abstract final
    class AppIcons` with one `static const AppIconData` per row below, and `static const
    List<AppIconData> clockHours` of 12 entries, each `MaterialIcon(Icons.schedule_outlined)`,
    so `clockHours[i]` call sites compile. `src/compat/app_icon.dart`: `AppIcon(AppIconData
@@ -240,7 +244,20 @@ layer; this task only builds it.
    exist), `sparkles` (`DESIGN.md` 2.6 bans it), the `avatar*Path` strings. Every entry of
    the Gradus and Muto copies is either in the table or in this list; if you find one that is
    in neither, stop and ask. Copy both tables into the report.
-6. `src/compat/app_buttons.dart`: `enum AppButtonSize { small, medium, large }`, `enum
+6. Parameters, for every widget of steps 7 to 11: keep every parameter that at least one
+   call site outside the `app_ui` folders passes. Find them with `grep -rn "<Widget>(" -A12
+   ~/gradus ~/Clavis ~/muto ~/events_bot --include='*.dart' | grep -v '/app_ui/\|/.claude/'`.
+   Drop only parameters that set a colour, a radius, a border, a shadow or an elevation, and
+   list each dropped one with its call-site count in `MIGRATION.md`. The parameter lists
+   below are the minimum; the call sites win where they name more (known today:
+   `AppProgressBar` takes `progress`, `label`, `showPercentage`; `AppAppBar` takes
+   `showBackButton`, `onBackPressed`, `titleWidget`, `showDivider`, `centerTitle`;
+   `AppBottomSheet.show` takes `maxHeightFraction`, `isDismissible`, `enableDrag`;
+   `AppTextField` takes `validator`, `readOnly`, `textInputAction`, `textCapitalization`,
+   `onTap`; `AppCard` takes `height`, `clipBehavior`, and `borderRadius` and
+   `backgroundColor`, which are accepted and ignored so call sites compile, and listed in
+   `MIGRATION.md` for removal).
+7. `src/compat/app_buttons.dart`: `enum AppButtonSize { small, medium, large }`, `enum
    AppIconButtonSize { small, medium, large }`; `AppPrimaryButton` (`FilledButton`),
    `AppSecondaryButton` (`FilledButton.tonal`), `AppTextButton` (`TextButton`) with the
    Gradus parameters `text`, `onPressed`, `isLoading`, `isEnabled`, `icon`, `width`, `size`,
@@ -252,36 +269,39 @@ layer; this task only builds it.
    AppIconData icon, required String tooltip, required VoidCallback? onPressed,
    AppIconButtonSize size = medium})` is an `IconButton`; `tooltip` is required (the copies
    had it optional).
-7. `src/compat/app_inputs.dart`: `AppTextField` as a `TextField` with the theme's filled
+8. `src/compat/app_inputs.dart`: `AppTextField` as a `TextField` with the theme's filled
    decoration, keeping the Gradus parameter names that set label, hint, helper, error,
    controller, focus node, keyboard type, obscure text, formatters, max length, max lines,
    enabled, `onChanged`, `onSubmitted`, prefix and suffix; drop parameters that set colours,
    radii or borders. `GlobalSearchBar` keeps the Gradus parameters plus Muto's
    `clearTooltip` and `filterTooltip`, now required whenever the clear or filter button can
    show.
-8. `src/compat/app_containers.dart`: `AppCard({required Widget child, VoidCallback? onTap,
-   EdgeInsetsGeometry? padding})` is `NumerBlock(children: [<child padded by padding ??
-   EdgeInsets.all(NumerSpace.lg), inside an InkWell when onTap>])`. `AppLoader({bool
+9. `src/compat/app_containers.dart`: `AppCard({required Widget child, VoidCallback? onTap,
+   EdgeInsetsGeometry? padding, ...})` draws the block surface itself, without
+   `NumerBlock`'s side margin (module screens already pad themselves): a
+   `Material(color: scheme.surfaceContainerHighest, borderRadius:
+   BorderRadius.circular(NumerRadius.lg), clipBehavior: Clip.antiAlias)` around the child
+   padded by `padding ?? EdgeInsets.all(NumerSpace.lg)`, inside an `InkWell` when `onTap`. `AppLoader({bool
    page = false})` is `NumerSkeleton()` when `page`, else `const SizedBox.shrink()`; record
    in `MIGRATION.md` that an action's loading state is the button's `isLoading`.
    `AppProgressBar({required double value})` is a `ClipRRect(radius: NumerRadius.full)` around
    a `LinearProgressIndicator(value, color: primary, backgroundColor:
    surfaceContainerHighest)`.
-9. `src/compat/app_app_bars.dart`: `AppAppBar` (a `PreferredSizeWidget` around `AppBar`) and
-   `AppSliverAppBar` (a `SliverAppBar`) with the Gradus parameters `title`, `actions`,
-   `leading`, `bottom`, `automaticallyImplyLeading`, and Clavis's `toolbarHeight` (default
+10. `src/compat/app_app_bars.dart`: `AppAppBar` (a `PreferredSizeWidget` around `AppBar`) and
+   `AppSliverAppBar` (a `SliverAppBar`) with the Gradus parameters (`title`, `actions`,
+   `leading`, `bottom` and those of step 6), and Clavis's `toolbarHeight` (default
    `kToolbarHeight`). Titles use the theme's app bar title style; colour and elevation
    parameters are removed. Assert at most two actions.
-10. `src/compat/app_sheets.dart`: `AppBottomSheet.show<T>({required BuildContext context,
-    required Widget child, String? title, bool isScrollControlled, bool useRootNavigator =
-    true})` over `showNumerSheet` (root navigator by default, as `DESIGN.md` 5.7 requires;
+11. `src/compat/app_sheets.dart`: `AppBottomSheet.show<T>({required BuildContext context,
+    required Widget child, String? title, bool useRootNavigator = true, ...the parameters of
+    step 6})` over `showNumerSheet` (root navigator by default, as `DESIGN.md` 5.7 requires;
     the parameter exists so Muto call sites compile), keeping the Gradus safe-area bottom
     padding; `AppBottomSheet.showSelection<T>` with `AppBottomSheetOption<T>` rendering each
     option as a `NumerRow` inside the sheet, a selected option showing
     `Icon(Icons.check)` as trailing. `AppToast.showSuccess`, `showInfo`, `showWarning` call
     `showNumerMessage(context, message)`; `AppToast.showError` calls it with `isError:
     true`.
-11. `packages/numer_ui/MIGRATION.md`: the steps a module performs, in order: replace
+12. `packages/numer_ui/MIGRATION.md`: the steps a module performs, in order: replace
     `package:app_ui/app_ui.dart` with `package:numer_ui/compat.dart`; replace
     `AppColors.<name>` with `AppColors.of(context).<name>` and remove the `const` that no
     longer compiles; replace `AppTextStyles.<name>` with `AppTextStyles.of(context).<name>`;
@@ -290,12 +310,14 @@ layer; this task only builds it.
     `NumerTheme.build(seed: <a seed the dev host declares>, brightness: ...)`;
     `AppPrimaryButton.color` and `.backgroundColor`: `destructive: true` when the colour was
     an error colour, otherwise remove); the colour, text style and icon tables of steps 2, 3
-    and 5; a grep the module runs afterwards: `grep -rn "app_ui\|AppColors\.[a-z]\|
+    and 5 and the dropped parameters of step 6; a grep the module runs afterwards: `grep -rn "app_ui\|AppColors\.[a-z]\|
     AppTextStyles\.[a-z]\|lucide\|google_fonts\|flutter_svg\|Geist"` must print nothing
     outside `AppColors.of` and `AppTextStyles.of` calls.
-12. Tests under `packages/numer_ui/test/compat/`:
+13. Tests under `packages/numer_ui/test/compat/` (no test file may spell
+    `CircularProgressIndicator`: `check_design.dart` scans `packages/numer_ui/test/`; use
+    `find.bySubtype<ProgressIndicator>()`):
     - `parity_test.dart`: a list of every name in the colour, text style, spacing and icon
-      tables and the widget names of steps 6 to 10; for each, build a widget that reads it
+      tables and the widget names of steps 7 to 11; for each, build a widget that reads it
       (`AppColors.of(context).primary`, `AppIcons.flag`, `AppSpacing.df`) so a missing name
       fails to compile, and assert a sample of resolutions (`AppColors.of(context).primary ==
       scheme.primary`, `AppColors.of(context).white == scheme.onPrimary`, `AppSpacing.lg ==
@@ -312,7 +334,7 @@ layer; this task only builds it.
       pads the bottom safe area; `showSelection` returns the tapped value.
     - `dependencies_test.dart`: reads `packages/numer_ui/pubspec.yaml` and asserts the only
       entry under `dependencies` is `flutter`.
-13. Run `./scripts/verify.sh`.
+14. Run `./scripts/verify.sh`.
 
 ## Non-goals
 - Do not edit any module repo (phase 4). Do not copy a module's `app_ui` tests that test

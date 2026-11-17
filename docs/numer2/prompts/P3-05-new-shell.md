@@ -96,10 +96,12 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
    - The bottom clearance: the screen is pushed above the tab bar, so `_bottomScrollClearance`
      returns `MediaQuery.of(context).padding.bottom + NumerSpace.xl` on both platforms;
      delete `_iosBottomNavClearance` and `_isIos` if nothing else uses them.
-   - Sign-out (around line 253): capture `final navigator = Navigator.of(context,
-     rootNavigator: true);` before the first `await`, and replace
-     `navigator.pushReplacementNamed('/auth')` with `navigator.popUntil((route) =>
-     route.isFirst)`. Keep the rest of the sequence.
+   - Sign-out (around line 253): the closure stays in `SettingsScreen`'s state and is passed
+     to the identity card as `onSignOut`, because the card unmounts as soon as the user
+     becomes null. In it, capture `final navigator = Navigator.of(context, rootNavigator:
+     true);` before the first `await`, call `await signOutAndReset(context)` (P3-03, which
+     already resets `AppState`), then `navigator.popUntil((route) => route.isFirst)` with no
+     `mounted` check in between. `navigator.pushReplacementNamed('/auth')` goes.
    - About section: insert, after the export-to-calendar card and before the divider above
      "Delete account", `NumerSection(title: l10n.aboutTitle, child: NumerBlock(children:
      [...]))` with three `NumerRow`s: `privacyPolicy` (`showChevron: true`, opens the
@@ -127,10 +129,11 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
      529-638), `settings_display_section.dart` (home summary and progress view, 639-669,
      with `_HomeSummarySwipeSelector` and `_ProgressViewSelector`, 1119-1331, which may go
      to their own files if the section exceeds 400 lines), `settings_switches_section.dart`
-     (670-819), `settings_about_section.dart` (the new About section and its two
-     constants), and `settings_delete_section.dart` (the export-to-calendar card, 820-854,
-     stays in the switches file; the delete tile 855-880, `_confirmDeleteAccount`, 39-150,
-     `_HoldToConfirmButton`, 891-1022, and `_DeleteAccountTextConfirmDialog`, 1023-1118). If
+     (670-854, the export-to-calendar card included), `settings_about_section.dart` (the
+     new About section and its two constants), `settings_delete_confirm.dart`
+     (`_HoldToConfirmButton`, 891-1022, and `_DeleteAccountTextConfirmDialog`, 1023-1118,
+     made public), and `settings_delete_section.dart` (the delete tile, 855-880, and
+     `_confirmDeleteAccount`, 39-150, importing the two from `settings_delete_confirm.dart`). If
      P1-07 has changed the delete flow, move what is there now. Export only `SettingsScreen`
      from the barrel. Remove the `account.dart` line from `scripts/file_size_baseline.txt`.
    - The two constants go at the top of `settings_about_section.dart`: `const _privacyPolicyUrl =
@@ -141,8 +144,8 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
    NumerBlock(children: [NumerRow(title: l10n.statistics, showChevron: true, onTap: push
    StatsScreen), NumerRow(title: l10n.history, showChevron: true, onTap: push
    HistoryScreen())]))` with `NumerSpace.sm` above the block, then a bottom
-   `SliverPadding` equal to the iOS tab bar clearance used by `StatsScreen` today
-   (`stats.dart:319-327`). Push with `Navigator.of(context, rootNavigator: true)`.
+   `SliverPadding` whose height is the whole expression `StatsScreen` uses today
+   (`stats.dart:319-327`: `isIOS ? navHeight + navBottomOffset + extra : 24.0`). Push with `Navigator.of(context, rootNavigator: true)`.
 4. `lib/features/campus/campus.dart` (barrel) and `lib/features/campus/campus_screen.dart`:
    `CampusScreen({required List<ModuleDescriptor> modules, required void
    Function(ModuleDescriptor) onOpen})`, a `Scaffold` with `ShellHeader(title: Text(
@@ -175,10 +178,8 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
      [const SyncStatusChip()])` in place of its `SliverAppBar`. The chip stays until P3-07.
    - `HabitsScreen` (`habits_screen.dart:196-240`): `ShellHeader(title: Text(
      l10n.habitsNavLabel, style: context.text.screenTitle), actions: [the archive and
-     calendar `IconButton`s, each given a tooltip: reuse an existing ARB key if one names
-     the screen, else add `archivedHabitsTooltip` "Archived habits" / "Архив привычек" /
-     "Мұрағаттағы әдеттер" and `habitsCalendarTooltip` "Calendar" / "Календарь" /
-     "Күнтізбе"])`. Directly below it, `SliverToBoxAdapter(Padding(horizontal:
+     calendar `IconButton`s, with the tooltips `l10n.archivedHabitsTitle` and
+     `l10n.habitsCalendarTitle` (existing keys)])`. Directly below it, `SliverToBoxAdapter(Padding(horizontal:
      NumerSpace.lg, vertical: NumerSpace.sm, child: SegmentedButton<int>(segments: [0:
      l10n.habitsTabProgress, 1: l10n.habitsTabList], selected: {_selectedTabIndex},
      showSelectedIcon: false, onSelectionChanged: <the body of the old `_buildTabItem`
@@ -199,7 +200,9 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
      cancelStoredAlarms((results[9] as List<AlarmItem>).map((a) => a.id), cancel:
      Notifs.cancel, clear: () => Storage.saveAlarms(const []))`. Keep `Storage.getAlarms`
      and `Storage.saveAlarms`.
-   - `test/boundaries/allowlist.txt`: remove the `sessions/screens/timer.dart` line.
+   - `test/boundaries/allowlist.txt`: remove the `sessions/screens/timer.dart` line, and the
+     two `account/screens/account.dart` lines (the new files import `auth.dart` and
+     `history.dart`, the barrels). Add none.
 10. Tests:
     - `test/app/shell/shell_tabs_test.dart`: with fakes for `AppConfigService` (cached config
       as in `update_required_screen_test.dart`) and `AuthController` (`currentUser` returns a
@@ -218,10 +221,11 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
     - `test/features/study/study_screen_test.dart`: with a fake `AppState` for the header,
       both rows show with a chevron and a non-null `onTap`. Do not push `StatsScreen` or
       `HistoryScreen` in a test (they need the full `AppState`); the screenshots cover it.
-11. `grep -rln "ShellHeader(" lib/features` must list `home_screen.dart`,
-    `habits_screen.dart`, `study_screen.dart`, `groups_screen.dart`, `campus_screen.dart`.
-12. Run `./scripts/verify.sh`. Regenerate the design baseline only if a count fell
-    (`dart run scripts/check_design.dart --write-baseline`); no count may rise.
+11. `grep -rln "ShellHeader(" lib/features | grep -v shell_header.dart` must list the files
+    holding the Home, Habits, Study, Groups and Campus headers (five files).
+12. Record the design totals before you start, as in P3-04 step 1; at the end run `dart run
+    scripts/check_design.dart --write-baseline` (the split moves counts to new paths) and
+    compare: no total rises. Then run `./scripts/verify.sh`.
 13. Screenshots (`DESIGN.md` 12): each tab root (Home, Habits with both segments, Study,
     Groups) and Settings scrolled to About, light and dark, EN and RU; Habits in KK; Settings
     at text scale 1.3. The Campus tab cannot appear with an empty registry; show it with a
@@ -234,7 +238,7 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
 - Do not change the delete-account flow.
 - `habits_screen.dart` and `groups_screen.dart` are in the size baseline: the header edits
   must leave each file no longer than before (replacing `_buildTabItem` shrinks Habits), and
-  their baseline entries are lowered to the new sizes. P3-16 has split `habits_screen.dart`
+  their baseline entries, if still present, are lowered to the new sizes. P3-16 has split `habits_screen.dart`
   before this task; edit the file that now holds the header.
 
 ## Constraints

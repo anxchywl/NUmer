@@ -15,8 +15,9 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
 - `docs/numer2/DECISIONS.md` D-05, D-23, D-24, D-34
 - `lib/core/config/app_config.dart` (94 lines), `lib/core/config/app_config_service.dart`
   (59 lines)
-- `lib/app/bootstrap.dart:145-195` (the provider list), `lib/app/routes.dart` (7 lines)
-- `lib/features/auth/data/auth_service.dart:545-556` (`AuthController.signOut`)
+- `lib/app/bootstrap.dart:217-260` (the provider list), `lib/app/routes.dart` (7 lines)
+- `lib/features/auth/data/auth_service.dart` (`AuthController.signOut`), and the full sign-out
+  sequence in `lib/features/account/screens/account.dart:253-263`
 - `packages/numer_ui/lib/src/components/numer_module_scaffold.dart` (from P3-01)
 - `test/app/update_required_screen_test.dart` (the fake and provider pattern)
 
@@ -68,10 +69,19 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
    ModuleDescriptor descriptor)`: `Navigator.of(context, rootNavigator: true).push(
    MaterialPageRoute<void>(settings: RouteSettings(name: '/module/${descriptor.id}'),
    builder: descriptor.builder))`. The builder runs only inside the route.
-6. `lib/app/bootstrap.dart`: after the `AuthController` provider add
-   `ProxyProvider<AuthController, ModuleSession>(update: (_, auth, previous) => previous ??
-   ModuleSession(idToken: firebaseIdTokenProvider(FirebaseAuth.instance), signOut:
-   auth.signOut))`. Import `firebase_auth` if the file does not already.
+6. One sign-out for the whole host. `AuthController.signOut` alone leaves the previous user's
+   `AppState` in memory; Settings runs a longer sequence (`account.dart:253-263`). Create
+   `lib/features/account/data/sign_out.dart` with `Future<void> signOutAndReset(BuildContext
+   context)`: read `AppState`, `SyncService` and `AuthController` from `context` before the
+   first `await`, then `await appState.stopAndSaveAllActiveSessions(); await
+   appState.waitForPendingReflections(); await sync.pushNow(); await auth.signOut();
+   appState.reset();`, with no `mounted` check between. Export it from `account.dart`, and
+   make the Settings sign-out button call it (the button keeps its navigation after it).
+   In `lib/app/bootstrap.dart`, after the `AuthController` provider add
+   `Provider<ModuleSession>(create: (context) => ModuleSession(idToken:
+   firebaseIdTokenProvider(FirebaseAuth.instance), signOut: () =>
+   signOutAndReset(context)))`; that `context` sits above every screen and lives as long as
+   the app. Import `firebase_auth` if the file does not already.
 7. Tests:
    - `test/core/identity/module_session_test.dart` with a hand-written counting token
      function: a successful refresh returns the new token and never signs out; a refresh
@@ -81,8 +91,8 @@ modules one way to get a Firebase ID token and to recover from an expired sessio
      after the first completed makes a second refresh.
    - `test/app/modules/module_registry_test.dart`: an `AppConfigService` built from
      `SharedPreferences.setMockInitialValues` with a cached config (as in
-     `update_required_screen_test.dart`) where module `a` is `enabled` with `allow: ['u1']`
-     and module `b` is disabled; two fake descriptors in section `campus` and one in
+     `update_required_screen_test.dart`) where module `a` is `enabled` with `allow: ['u1']`,
+     `rollout: 0`, `minBuild: 0` and module `b` is disabled; two fake descriptors in section `campus` and one in
      `study`, each with a builder that increments a counter and returns
      `NumerModuleScaffold(title: 'x', body: const SizedBox())`. Assert: `visibleModules`
      returns only `a` for `u1` and nothing for `u2`; it keeps registry order; it filters by
