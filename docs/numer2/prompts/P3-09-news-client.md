@@ -15,7 +15,8 @@ refresh at most every 30 minutes (D-21).
 - `docs/numer2/DECISIONS.md` D-21, D-37, D-40
 - `functions/src/feed/types.ts` and `compose.ts` (from P3-08: the item shape)
 - `lib/core/config/app_config_service.dart` (the cache-first pattern to copy),
-  `lib/app/bootstrap.dart:96-102` (`_fetchAppConfig`, a server read) and the provider list
+  `lib/app/bootstrap.dart:139-145` (`_fetchAppConfig`, a server read) and the provider list
+  (from line 217)
 - `lib/features/home/home_screen.dart` (after P3-07)
 - `lib/features/ai_analysis/ai_analysis_screen.dart` (a plain pushed screen)
 
@@ -28,7 +29,8 @@ refresh at most every 30 minutes (D-21).
 - Rules allow a signed-in `get` of `feed/current` only.
 - Dates: `intl` 0.20.2 has `en`, `ru` and `kk` date symbols, loaded by
   `GlobalMaterialLocalizations`; pass `l10n.localeName` as the locale (as
-  `habit_logging_sheet.dart:510` does).
+  `habit_logging_sheet.dart:510` does). `DateFormat.MMMd` follows the locale: `Nov 27` in EN,
+  `27 нояб.` in RU. That is the intended output (`DESIGN.md` 8.1 rule 11).
 - The cache is JSON in `SharedPreferences` (Hive is not needed), key `news_feed_v1`:
   `{"fetchedAt": <ms>, "items": [...]}` with timestamps as epoch milliseconds.
 - Refresh: at most every 30 minutes unless forced; forced by pull to refresh and by the
@@ -101,8 +103,9 @@ refresh at most every 30 minutes (D-21).
 7. `lib/features/news/screens/news_screen.dart`: `NewsScreen({required bool Function(
    BuildContext, FeedItem) openInModule})`: `Scaffold(appBar: AppBar(title:
    Text(l10n.newsTitle)), body: RefreshIndicator(onRefresh: () => repo.refresh(force: true),
-   child: ...))` showing the four states of step 9 with a `ListView.builder` (key
-   `PageStorageKey('news')`) of all items (at most 30) when there are items.
+   child: ListView(key: const PageStorageKey('news'), physics: const
+   AlwaysScrollableScrollPhysics(), children: [NewsStates(limit: 30, onOpen: ...)])))`.
+   At most 30 rows, so a plain `ListView` is enough.
 8. `lib/features/news/screens/announcement_screen.dart`: `AnnouncementScreen(FeedItem
    item)`: `AppBar(title: Text(localized title))`, body a `ListView(padding:
    EdgeInsets.all(NumerSpace.lg))` of the date (`DateFormat.yMMMd(locale)`, `meta`),
@@ -113,25 +116,33 @@ refresh at most every 30 minutes (D-21).
    `lib/features/news/screens/event_detail_screen.dart`: `EventDetailScreen(FeedItem item)`:
    `AppBar(title: Text(item.title['en']!))`, body the meta line of step 5 in `body` style,
    padded `NumerSpace.lg`. Both screens are text only.
-9. States, the same on the Home section and on the News screen (`DESIGN.md` 6):
-   - items present: the list; when `lastRefreshFailed`, the stale line from `fetchedAt`;
-   - no items, loading, no cache: `NumerSkeleton(rows: 3)` (it waits 300 ms itself);
+9. `lib/features/news/widgets/news_section.dart`: `NewsStates({required int limit, required
+   void Function(FeedItem) onOpen})`, a box widget that watches `FeedRepository` and draws
+   one of the four states below; both the Home section and the News screen use it (the
+   screen with `limit: 30` inside its scroll view). States (`DESIGN.md` 6), checked in this
+   order:
+   - items present: `NewsList`; when `lastRefreshFailed`, with the stale line from
+     `fetchedAt`;
+   - no items and `fetchedAt == null` (never refreshed on this device) and not
+     `lastRefreshFailed`: `NumerSkeleton(rows: 3)` (it waits 300 ms itself), so the empty
+     state never flashes before the first refresh;
    - no items, last refresh failed, no cache: `NumerErrorState(message: l10n.newsLoadError,
      retryLabel: l10n.retry, onRetry: () => repo.refresh(force: true))`;
-   - no items after a successful refresh: `NumerEmptyState(message: l10n.newsEmpty,
+   - no items and `fetchedAt != null`: `NumerEmptyState(message: l10n.newsEmpty,
      actionLabel: l10n.newsRefresh, onAction: () => repo.refresh(force: true))`.
    Tap: an announcement pushes `AnnouncementScreen`; an event first calls
    `openInModule(context, item)` and, when it returns false, pushes `EventDetailScreen`.
    Push on the root navigator.
 10. Home (`home_screen.dart`): after the Today section, `NumerSection(title: l10n.newsTitle,
-    actionLabel: l10n.newsAll, onAction: <push NewsScreen>, child: <step 9 with
-    NewsList(limit: 5)>)`. `HomeScreen` gains `required bool Function(BuildContext,
+    actionLabel: l10n.newsAll, onAction: <push NewsScreen>, child: NewsStates(limit: 5,
+    onOpen: ...))`. `HomeScreen` gains `required bool Function(BuildContext,
     FeedItem) openInModule`, passed on to `NewsScreen`; `shell_tabs.dart` passes `(_, _) =>
-    false`. In `initState`, after the first frame, call
+    false`. Update `home_screen_test.dart` (P3-07) and the shell tabs test for the new
+    parameter and provide a fake `FeedRepository` there. In `initState`, after the first frame, call
     `context.read<FeedRepository>().refresh()`. Pull to refresh runs
     `Future.wait([syncNow(), feed.refresh(force: true)])`.
-11. Barrel `lib/features/news/news.dart` exporting the model, repository, `NewsScreen` and
-    `NewsList`. Strings: add the table's keys to the three ARB files; run `flutter gen-l10n`.
+11. Barrel `lib/features/news/news.dart` exporting the model, repository, `NewsScreen`,
+    `NewsList` and `NewsStates`. Strings: add the table's keys to the three ARB files; run `flutter gen-l10n`.
 12. Tests under `test/features/news/`:
     - `feed_repository_test.dart` (counting fake `fetch`, fake clock, mock
       `SharedPreferences`): a cached feed is available before any refresh; a refresh calls
@@ -141,10 +152,12 @@ refresh at most every 30 minutes (D-21).
       refreshes make one call; a malformed item is skipped.
     - `feed_item_test.dart`: locale `ru` with a `ru` title returns it; `kk` without one
       returns `en`; round trip through JSON keeps every field.
-    - `news_meta_test.dart`: `NUmer, 27 Nov` for an announcement in EN; `Event, 12 Dec, 18:00,
-      Block C3` in EN; a missing place is dropped; RU uses the locale's short month;
+    - `news_meta_test.dart` (call `initializeDateFormatting()` from
+      `package:intl/date_symbol_data_local.dart` in `setUpAll`; there is no `MaterialApp`):
+      `NUmer, Nov 27` for an announcement in EN; `Event, Dec 12, 18:00, Block C3` in EN; a missing place is dropped; RU uses the locale's short month;
       `Updated 10 min ago`, `Updated 2 h ago`.
-    - `news_section_test.dart` (Home section in isolation, a fake repository): cached then
+    - `news_section_test.dart` (`NewsStates` in isolation, a fake repository): never refreshed
+      shows the skeleton after 300 ms and no empty text; cached then
       fresh (cache shows, then the new items after refresh); stale line with a failed
       refresh and a cache; empty; error without cache; skeleton only after 300 ms; pinned
       label only on pinned items; at most five rows; "All" opens `NewsScreen`; an event tap

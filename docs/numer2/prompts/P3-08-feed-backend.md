@@ -54,8 +54,10 @@ app then reads one document per refresh (P3-09).
    LocalizedText; body?: LocalizedText; startsAt?: Timestamp; place?: string; publishedAt:
    Timestamp; pinned: boolean; link?: string }`; `type EventSourceItem = { token: string;
    title: string; date: string; time: string; location: string; is_ended: boolean }`.
-2. `functions/src/feed/announcements.ts`:
-   - `parseLocalized(value, name, maxLength)`: an object with a non-empty `en` string and
+2. `functions/src/feed/localized.ts` imports nothing from `shared/admin` (that module runs
+   `admin.initializeApp()` on import, which would break the owner script and the unit test)
+   and holds only `parseLocalized`. `functions/src/feed/announcements.ts` imports it:
+   - `parseLocalized(value, name, maxLength)` (in `localized.ts`): an object with a non-empty `en` string and
      optional `ru` and `kk` strings, each trimmed and at most `maxLength` characters, no
      other keys; otherwise `invalid-argument`.
    - `publishAnnouncement = functions.https.onCall(async (data, context) => ...)`:
@@ -77,11 +79,13 @@ app then reads one document per refresh (P3-09).
      `?sort=time_asc&relevance=active&limit=30` appended; a non-2xx status, a body that is
      not an array, or an item missing a string field throws. Map only the fields of
      `EventSourceItem`.
-   - `eventStartsAt(date, time)`: `Date.parse(`${date}T${time}:00+05:00`)`; `NaN` drops the
+   - `eventStartsAt(date, time)` (in `localized.ts` too, so the unit test can import it
+     without `shared/admin`): `Date.parse(`${date}T${time}:00+05:00`)`; `NaN` drops the
      item.
-   - `composeFeed(deps)`: read `feed/current` (may not exist) and the announcements with
-     `retracted == false` ordered by `publishedAt` descending, limit 60. Drop announcements
-     whose `expiresAt` has passed. Events: when `eventsUrl` is set, call `fetchEvents`; on
+   - `composeFeed(deps)`: read `feed/current` (may not exist) and the announcements ordered
+     by `publishedAt` descending, limit 100 (one `orderBy`, so no composite index is needed;
+     do not add a `where`). Drop, in memory, retracted announcements and those whose
+     `expiresAt` has passed. An announcement item's `id` is its document id. Events: when `eventsUrl` is set, call `fetchEvents`; on
      any error keep the previous document's event items and set `eventsOk: false`; when
      unset, no events and `eventsOk: true`. Drop events with `is_ended` or `startsAt` before
      now. Event item: `id: 'event_' + token`, `kind: 'event'`, `title: {en: title}`,
@@ -97,17 +101,19 @@ app then reads one document per refresh (P3-09).
      composeFeed(defaultDeps()))`;
    - `defaultDeps()` reads `process.env.FEED_EVENTS_URL` at call time and uses
      `fetchEventsOverHttp`.
-   Export the four functions from `functions/src/index.ts`.
+   Export the four functions from `functions/src/index.ts`, and add their names to the
+   sorted list in `functions/test/unit/exports.test.ts`, which asserts the exact exports.
 5. `functions/.env.example`: add the line `# url of the events public list, empty means
    announcements only` and `FEED_EVENTS_URL=` (empty).
 6. `functions/scripts/publish_announcement.js` (same shape as `set_roles.js`, needs `npm run
    build` and `GOOGLE_APPLICATION_CREDENTIALS`): options `--file <json>` (an object with
    `title`, `body`, `pinned`, `expiresAt`, `link` as the callable takes them), `--retract
    <id>`, `--dry-run`. It validates with the same `parseLocalized` (import from `../lib/feed/
-   announcements`), writes or retracts with the Admin SDK and prints the id; the trigger
+   localized`), writes or retracts with the Admin SDK and prints the id; the trigger
    composes the feed. Add `"feed:publish": "tsc && node scripts/publish_announcement.js"`
    to `package.json` scripts.
-7. Unit tests, `functions/test/unit/feed_compose.test.ts` (pure functions only): `parseLocalized`
+7. Unit tests, `functions/test/unit/feed_compose.test.ts` (pure functions only; import
+   `src/feed/localized` and a pure `eventStartsAt`, never a module that imports `shared/admin`): `parseLocalized`
    accepts `{en}` and `{en, ru, kk}`, rejects a missing `en`, an extra key, an over-long
    string; `eventStartsAt('2026-12-12', '18:00')` equals `Date.UTC(2026, 11, 12, 13, 0)`.
 8. Emulator tests, `functions/test/emulator/feed.test.ts`, calling `composeFeed` with a fake

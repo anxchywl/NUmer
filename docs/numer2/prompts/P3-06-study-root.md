@@ -101,7 +101,11 @@ list, the add buttons and the AI button off Home.
    - The header add button has the tooltip "Add course".
    - The reorder and swipe-to-delete cases of `course_list_test.dart` still pass unchanged.
 6. `test/features/home/home_screen_test.dart`: Home has no `FloatingActionButton` and no
-   `CourseListSliver`.
+   `CourseListSliver`. Pump it under `MultiProvider` with the fake `AppState` of step 5
+   (plus `requiresProfileSetup` false, `hasProfile` true, `courses`, `streakCount`,
+   `hasStudyToday`, the active session maps empty), a `SyncService` fake (`status`,
+   `lastError`) and `SharedPreferences.setMockInitialValues({})`; `Storage` is not reached
+   when `hasProfile` and courses exist (`FirstRunCreditsGate` returns early).
 7. Run `dart run scripts/check_design.dart --write-baseline` (removing the pill lowers the
    counts for `home_screen.dart`) and `./scripts/verify.sh`. No count may rise.
 8. Screenshots (`DESIGN.md` 12): Study with no courses, with three courses, with a running
