@@ -1,8 +1,8 @@
 # NUmer 2.0 plan
 
-Seven phases, 83 tasks. One task is one pull request that a mid-tier model finishes in one
+Seven phases, 84 tasks. One task is one pull request that a mid-tier model finishes in one
 session. Every task has an execution prompt in `prompts/`; phases 0 to 3 are complete
-prompts (except P3-12 and P3-13), later phases are outlines to be expanded when their phase
+prompts, later phases are outlines to be expanded when their phase
 starts.
 
 Read with: `DECISIONS.md` (why), `DESIGN.md` (how UI looks), `USER_ACTIONS.md` (what only the
@@ -508,10 +508,11 @@ them. Every task marked **approval** touches the owner's existing server project
 | P3-10 | Local "Upcoming" store | P3-07 | low | sonnet, medium | none |
 | P3-11 | Campus root | P3-05 | low | sonnet, medium | none |
 | P3-12 | Design pass: glass, gradients, chips, raw toasts | P3-05, P3-14, P3-15 | med | sonnet, high | review screenshots |
-| P3-13 | Docs after shell | P3-12 | low | sonnet, low | none |
+| P3-13 | Docs after shell | P3-17 | low | sonnet, low | none |
 | P3-14 | Split `stats.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-15 | Split `add_habit_sheet.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-16 | Split `habits_screen.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
+| P3-17 | States pass: confirm sheets and skeletons | P3-12 | med | sonnet, high | review screenshots |
 
 Can run together: P3-01, P3-04, P3-08, P3-14, P3-15 and P3-16 (disjoint files); P3-09, P3-10
 and P3-11 after P3-07.
@@ -526,7 +527,7 @@ Acceptance, common to the UI tasks: the deliverables of `DESIGN.md` section 12, 
 - P3-07: Home performs zero module network calls (counting fake).
 - P3-08: one composed document of at most 30 items; rules tests for `feed` and
   `announcements`.
-- P3-12: `scripts/design_baseline.txt` shrinks; no pattern count rises.
+- P3-12, P3-17: `scripts/design_baseline.txt` shrinks; no pattern count rises.
 
 Releasable at the end: 2.0.0 with the new shell and news, no module visible.
 
@@ -628,19 +629,20 @@ prompts/P0-16-docs-after-foundation.md        prompts/P2-06-events-firebase-brid
 Phase 3, complete:
 
 ```
-prompts/P3-01-numer-ui-theme-components.md    prompts/P3-08-feed-backend.md
-prompts/P3-02-numer-ui-compat.md              prompts/P3-09-news-client.md
-prompts/P3-03-module-registry.md              prompts/P3-10-upcoming-store.md
-prompts/P3-04-split-home.md                   prompts/P3-11-campus-root.md
+prompts/P3-01-numer-ui-theme-components.md    prompts/P3-10-upcoming-store.md
+prompts/P3-02-numer-ui-compat.md              prompts/P3-11-campus-root.md
+prompts/P3-03-module-registry.md              prompts/P3-12-design-pass.md
+prompts/P3-04-split-home.md                   prompts/P3-13-docs-after-shell.md
 prompts/P3-05-new-shell.md                    prompts/P3-14-split-stats.md
 prompts/P3-06-study-root.md                   prompts/P3-15-split-add-habit-sheet.md
 prompts/P3-07-home-today.md                   prompts/P3-16-split-habits-screen.md
+prompts/P3-08-feed-backend.md                 prompts/P3-17-states-pass.md
+prompts/P3-09-news-client.md
 ```
 
-Outlines still to expand: P3-12 and P3-13 in `prompts/P3-outlines.md`, phases 4 to 6 in
-`prompts/P4-outlines.md` and `prompts/P5-P6-outlines.md`. Each outline is expanded into a
-full prompt with the template in `prompts/TEMPLATE.md` when its phase starts, because the
-files it must cite will have moved by then.
+Phases 4 to 6, outlines: `prompts/P4-outlines.md`, `prompts/P5-P6-outlines.md`. Each outline
+is expanded into a full prompt with the template in `prompts/TEMPLATE.md` when its phase
+starts, because the files it must cite will have moved by then.
 
 ## The smoke list
 
