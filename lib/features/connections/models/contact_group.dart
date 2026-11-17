@@ -28,7 +28,7 @@ class ContactGroup {
   Color get color => colorValue != null ? Color(colorValue!) : Colors.blue;
 
   /// Get the icon for this group, with fallback
-  IconData get icon => iconCodePoint != null 
+  IconData get icon => iconCodePoint != null
       ? IconData(iconCodePoint!, fontFamily: 'MaterialIcons')
       : Icons.group;
 
