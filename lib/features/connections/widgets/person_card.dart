@@ -28,7 +28,8 @@ class PersonCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final hasQuickActions = onCall != null || onMessage != null || onEmail != null;
+    final hasQuickActions =
+        onCall != null || onMessage != null || onEmail != null;
 
     return Material(
       color: colorScheme.surface,
@@ -43,7 +44,7 @@ class PersonCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark 
+              color: isDark
                   ? colorScheme.outlineVariant.withAlpha(77)
                   : Colors.transparent,
             ),
@@ -59,7 +60,9 @@ class PersonCard extends StatelessWidget {
                     radius: 20,
                     backgroundColor: colorScheme.primaryContainer,
                     child: Text(
-                      person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
+                      person.name.isNotEmpty
+                          ? person.name[0].toUpperCase()
+                          : '?',
                       style: TextStyle(
                         color: colorScheme.onPrimaryContainer,
                         fontWeight: FontWeight.bold,
@@ -68,7 +71,7 @@ class PersonCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  
+
                   // Name
                   Expanded(
                     child: Column(
@@ -96,26 +99,29 @@ class PersonCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   // Quick Action Icons
                   if (hasQuickActions) ...[
                     if (onCall != null)
                       IconButton(
-                        icon: Icon(Icons.phone_outlined, color: colorScheme.primary),
+                        icon: Icon(Icons.phone_outlined,
+                            color: colorScheme.primary),
                         onPressed: onCall,
                         tooltip: 'Call',
                         visualDensity: VisualDensity.compact,
                       ),
                     if (onMessage != null)
                       IconButton(
-                        icon: Icon(Icons.message_outlined, color: colorScheme.primary),
+                        icon: Icon(Icons.message_outlined,
+                            color: colorScheme.primary),
                         onPressed: onMessage,
                         tooltip: 'Message',
                         visualDensity: VisualDensity.compact,
                       ),
                     if (onEmail != null)
                       IconButton(
-                        icon: Icon(Icons.email_outlined, color: colorScheme.primary),
+                        icon: Icon(Icons.email_outlined,
+                            color: colorScheme.primary),
                         onPressed: onEmail,
                         tooltip: 'Email',
                         visualDensity: VisualDensity.compact,
@@ -123,39 +129,44 @@ class PersonCard extends StatelessWidget {
                   ],
                 ],
               ),
-              
+
               // Group Chips
               if (groups.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: groups.map((group) => _GroupChip(group: group)).toList(),
+                  children:
+                      groups.map((group) => _GroupChip(group: group)).toList(),
                 ),
               ],
-              
+
               // Tags (if any)
               if (person.tags.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 4,
                   runSpacing: 4,
-                  children: person.tags.take(5).map((tag) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '#$tag',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  )).toList(),
+                  children: person.tags
+                      .take(5)
+                      .map((tag) => Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '#$tag',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ))
+                      .toList(),
                 ),
               ],
-              
+
               // Needs Follow-up Indicator
               if (person.needsFollowUp) ...[
                 const SizedBox(height: 8),
@@ -186,7 +197,7 @@ class PersonCard extends StatelessWidget {
   String _formatLastContacted(DateTime date) {
     final now = DateTime.now();
     final diff = now.difference(date);
-    
+
     if (diff.inDays == 0) {
       return 'Contacted today';
     } else if (diff.inDays == 1) {

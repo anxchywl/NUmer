@@ -29,8 +29,8 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
               SliverToBoxAdapter(
                 child: _buildHeatmapCalendar(context, service),
               ),
-              if(_selectedDay != null)
-                 _buildDayDetails(context, service, _selectedDay!),
+              if (_selectedDay != null)
+                _buildDayDetails(context, service, _selectedDay!),
             ],
           );
         },
@@ -38,13 +38,15 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
     );
   }
 
-  Widget _buildHeatmapCalendar(BuildContext context, ConnectionsService service) {
+  Widget _buildHeatmapCalendar(
+      BuildContext context, ConnectionsService service) {
     // 1. Pre-calculate interaction counts per day
     final interactionsPerDay = <DateTime, int>{};
     for (final person in service.people) {
       for (final interaction in person.interactionLog) {
-         final dateKey = DateTime(interaction.date.year, interaction.date.month, interaction.date.day);
-         interactionsPerDay[dateKey] = (interactionsPerDay[dateKey] ?? 0) + 1;
+        final dateKey = DateTime(interaction.date.year, interaction.date.month,
+            interaction.date.day);
+        interactionsPerDay[dateKey] = (interactionsPerDay[dateKey] ?? 0) + 1;
       }
     }
 
@@ -77,10 +79,12 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
               return _buildCalendarCell(context, day, interactionsPerDay);
             },
             todayBuilder: (context, day, focusedDay) {
-               return _buildCalendarCell(context, day, interactionsPerDay, isToday: true);
+              return _buildCalendarCell(context, day, interactionsPerDay,
+                  isToday: true);
             },
-             selectedBuilder: (context, day, focusedDay) {
-               return _buildCalendarCell(context, day, interactionsPerDay, isSelected: true);
+            selectedBuilder: (context, day, focusedDay) {
+              return _buildCalendarCell(context, day, interactionsPerDay,
+                  isSelected: true);
             },
           ),
         ),
@@ -89,109 +93,111 @@ class _PeopleCalendarScreenState extends State<PeopleCalendarScreen> {
   }
 
   Widget _buildCalendarCell(
-    BuildContext context, 
-    DateTime day, 
-    Map<DateTime, int> interactions, 
-    {bool isToday = false, bool isSelected = false}
-  ) {
-      final dateKey = DateTime(day.year, day.month, day.day);
-      final count = interactions[dateKey] ?? 0;
-      final hasInteractions = count > 0;
-      
-      Color? cellColor;
-      if (hasInteractions) {
-         // Visualize intensity
-         final alpha = ((0.2 + (count * 0.15)).clamp(0.2, 1.0) * 255).toInt();
-         cellColor = Theme.of(context).colorScheme.primary.withAlpha(alpha);
-      }
+      BuildContext context, DateTime day, Map<DateTime, int> interactions,
+      {bool isToday = false, bool isSelected = false}) {
+    final dateKey = DateTime(day.year, day.month, day.day);
+    final count = interactions[dateKey] ?? 0;
+    final hasInteractions = count > 0;
 
-      BoxDecoration decoration = BoxDecoration(
-        color: isSelected ? Theme.of(context).colorScheme.primary : cellColor,
-        shape: BoxShape.circle,
-        border: isToday && !isSelected 
-          ? Border.all(color: Theme.of(context).colorScheme.primary) 
+    Color? cellColor;
+    if (hasInteractions) {
+      // Visualize intensity
+      final alpha = ((0.2 + (count * 0.15)).clamp(0.2, 1.0) * 255).toInt();
+      cellColor = Theme.of(context).colorScheme.primary.withAlpha(alpha);
+    }
+
+    BoxDecoration decoration = BoxDecoration(
+      color: isSelected ? Theme.of(context).colorScheme.primary : cellColor,
+      shape: BoxShape.circle,
+      border: isToday && !isSelected
+          ? Border.all(color: Theme.of(context).colorScheme.primary)
           : null,
-      );
+    );
 
-      TextStyle? textStyle = Theme.of(context).textTheme.bodyMedium;
-       if (isSelected || (hasInteractions && count > 3)) { // Ensure contrast
-        textStyle = textStyle?.copyWith(color: Theme.of(context).colorScheme.onPrimary);
-      }
+    TextStyle? textStyle = Theme.of(context).textTheme.bodyMedium;
+    if (isSelected || (hasInteractions && count > 3)) {
+      // Ensure contrast
+      textStyle =
+          textStyle?.copyWith(color: Theme.of(context).colorScheme.onPrimary);
+    }
 
-      return Center(
-        child: Container(
-          margin: const EdgeInsets.all(6.0),
-          alignment: Alignment.center,
-          decoration: decoration,
-          child: Text(
-            '${day.day}',
-            style: textStyle,
-          ),
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.all(6.0),
+        alignment: Alignment.center,
+        decoration: decoration,
+        child: Text(
+          '${day.day}',
+          style: textStyle,
         ),
-      );
+      ),
+    );
   }
 
-  Widget _buildDayDetails(BuildContext context, ConnectionsService service, DateTime date) {
-      
-      // Find interactions for this day
-      final dailyInteractions = <Map<String, dynamic>>[];
-      
-      for (final person in service.people) {
-        for (final interaction in person.interactionLog) {
-           if (isSameDay(interaction.date, date)) {
-             dailyInteractions.add({
-               'person': person,
-               'interaction': interaction,
-             });
-           }
+  Widget _buildDayDetails(
+      BuildContext context, ConnectionsService service, DateTime date) {
+    // Find interactions for this day
+    final dailyInteractions = <Map<String, dynamic>>[];
+
+    for (final person in service.people) {
+      for (final interaction in person.interactionLog) {
+        if (isSameDay(interaction.date, date)) {
+          dailyInteractions.add({
+            'person': person,
+            'interaction': interaction,
+          });
         }
       }
+    }
 
-      if (dailyInteractions.isEmpty) {
-         return SliverToBoxAdapter(
-           child: Padding(
-             padding: const EdgeInsets.all(32),
-             child: Center(
-               child: Text(
-                 'No interactions on this day',
-                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                   color: Theme.of(context).colorScheme.onSurfaceVariant,
-                 ),
-               ),
-             ),
-           ),
-         );
-      }
-
-      return SliverPadding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-        sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final item = dailyInteractions[index];
-              final person = item['person'] as Person;
-              final interaction = item['interaction'] as InteractionEntry;
-
-              return Card(
-                elevation: 0,
-                color: Theme.of(context).colorScheme.surfaceContainer,
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  title: Text(
-                    person.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+    if (dailyInteractions.isEmpty) {
+      return SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Center(
+            child: Text(
+              'No interactions on this day',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  subtitle: Text(interaction.note.isNotEmpty ? interaction.note : 'Contacted'),
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                     child: Text(person.name.substring(0,1).toUpperCase()),
-                  ),
-                ),
-              );
-            },
-            childCount: dailyInteractions.length,
+            ),
           ),
         ),
       );
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final item = dailyInteractions[index];
+            final person = item['person'] as Person;
+            final interaction = item['interaction'] as InteractionEntry;
+
+            return Card(
+              elevation: 0,
+              color: Theme.of(context).colorScheme.surfaceContainer,
+              margin: const EdgeInsets.only(bottom: 12),
+              child: ListTile(
+                title: Text(
+                  person.name,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: Text(interaction.note.isNotEmpty
+                    ? interaction.note
+                    : 'Contacted'),
+                leading: CircleAvatar(
+                  backgroundColor:
+                      Theme.of(context).colorScheme.primaryContainer,
+                  child: Text(person.name.substring(0, 1).toUpperCase()),
+                ),
+              ),
+            );
+          },
+          childCount: dailyInteractions.length,
+        ),
+      ),
+    );
   }
 }
