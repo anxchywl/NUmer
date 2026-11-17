@@ -17,8 +17,7 @@ for study and habits, and one button that gets the user back into studying in on
   (after P3-06)
 - `lib/app/shell/shell_tabs.dart`, `lib/app/shell/app_shell.dart` (after P3-05)
 - `lib/app/app_state.dart`: `courses`, `hasAnyActiveSession` (139), `progressView` (170),
-  `goalHoursForCourse` (234), `todaySecondsFor` (882) and the private
-  `_todayByCourseSeconds` behind it, `weekStart` (168)
+  `goalHoursForCourse` (234), `todayTotalSeconds()` (884), `weekStart` (168)
 - `lib/features/courses/course_format.dart` (`hoursPerCreditForLevel`) and the goal logic in
   `lib/features/courses/widgets/course_list.dart` (the weekly goal: custom hours, else
   credits times `hoursPerCreditForLevel(expLevel ?? 3)`)
@@ -39,9 +38,9 @@ for study and habits, and one button that gets the user back into studying in on
 - `DESIGN.md` 3.5: the sync pill becomes one `meta` line under the header, only when offline
   or failing; hidden when up to date. `SyncService.status` is `offline`, `syncing` or
   `upToDate`; `lastError` is non-null after a failed sync.
-- Today's studied time per course is `AppState.todaySecondsFor(id)`; the total is the sum of
-  the private map behind it. Add a getter rather than summing over `courses`, which would
-  miss deleted courses.
+- Today's studied time is `AppState.todayTotalSeconds()` (`app_state.dart:884`), the sum over
+  every course including deleted ones. `app_state.dart` is in the size baseline and must not
+  grow; this task does not edit it.
 - "Goals are on" means `state.progressView != ProgressView.off` (the Settings option that
   shows goal bars on course rows). A course's daily goal is its weekly goal divided by 7,
   as the course row computes it.
@@ -71,8 +70,7 @@ for study and habits, and one button that gets the user back into studying in on
   of type `String` for `done`, `goal`, `course`; `int` where marked.
 
 ## Steps
-1. `AppState`: add `int get todayTotalSeconds => _todayByCourseSeconds.values.fold(0, (a, b)
-   => a + b);`. No new state, so nothing to hydrate or persist.
+1. (No `AppState` change.)
 2. `lib/features/sessions/data/last_course_store.dart`: `class LastCourseStore extends
    ChangeNotifier` with `LastCourseStore(SharedPreferences prefs)`, `String? get id`, and
    `Future<void> save(String courseId)` (writes the key of the Context, notifies when the
@@ -111,8 +109,8 @@ for study and habits, and one button that gets the user back into studying in on
    - `NumerSection(title: l10n.today, child: Column(children: [block, button]))`:
      - the block: `NumerBlock(children: [studyRow, if (habits.total > 0) habitsRow])`.
        `studyRow` is `NumerRow(title: l10n.navStudy, value: formatStudyDuration(l10n,
-       state.todayTotalSeconds), subtitle: goal > 0 ? l10n.homeGoalProgress(
-       formatStudyDuration(l10n, state.todayTotalSeconds), formatStudyDuration(l10n, goal))
+       state.todayTotalSeconds()), subtitle: goal > 0 ? l10n.homeGoalProgress(
+       formatStudyDuration(l10n, state.todayTotalSeconds()), formatStudyDuration(l10n, goal))
        : null, showChevron: true, onTap: onOpenStudy)` with `goal = dailyGoalSeconds(state)`.
        `habitsRow` is `NumerRow(title: l10n.habitsNavLabel, value:
        l10n.habitsDoneSummary(done, total), showChevron: true, onTap: onOpenHabits)`. The
@@ -182,6 +180,7 @@ for study and habits, and one button that gets the user back into studying in on
 - Development mechanisms are refused when `APP_ENV=production`.
 - UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
+- Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.
 - No unrequested features, abstractions, dependencies or error handling. Edit existing files rather than creating new ones where possible.
 - No secrets in code, in committed files or in `--dart-define`. Never write a server address into a file.
@@ -206,7 +205,6 @@ Branch `numer2/p3-07-home-today`, one commit, message `feat: rebuild home as the
 Report: files changed, test output, screenshots, the section 11 answers, user actions still pending.
 
 ## Stop and ask if
-- `_todayByCourseSeconds` does not hold today's saved seconds per course.
 - `habitsStream` reads Firestore before it emits the local list (then Home would make a
   network call on open; report what you found).
 - A start call in the time sheet does not return whether it started.

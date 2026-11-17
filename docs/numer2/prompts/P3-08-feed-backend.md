@@ -146,6 +146,7 @@ app then reads one document per refresh (P3-09).
 - No secrets in code, in committed files or in `--dart-define`. Never write a server address into a file: `FEED_EVENTS_URL` stays empty in `.env.example`, and tests use `https://events.test/api/events`.
 - Tests use hand-written fakes. No mocking package. Functions and rules are tested against the emulator.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
+- Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error. The one deliberate catch is the Events fetch in `composeFeed`, which keeps the previous items; it rethrows nothing and records `eventsOk: false`.
 - No unrequested features, abstractions, dependencies or error handling. Edit existing files rather than creating new ones where possible. No new npm dependency.
 - Do not deploy, do not push, do not connect to any server or production project.

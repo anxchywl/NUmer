@@ -169,6 +169,7 @@ refresh at most every 30 minutes (D-21).
 - Development mechanisms are refused when `APP_ENV=production`.
 - UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
+- Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.
 - No unrequested features, abstractions, dependencies or error handling. Edit existing files rather than creating new ones where possible.
 - No secrets in code, in committed files or in `--dart-define`. Never write a server address into a file.

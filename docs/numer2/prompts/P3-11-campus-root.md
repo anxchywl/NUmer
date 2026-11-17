@@ -54,6 +54,7 @@ field once there are more than eight, and the four states covered by tests.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
+- Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - No unrequested features, abstractions, dependencies or error handling.
 - Do not deploy, do not push, do not connect to any server or production project.
 - If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit.

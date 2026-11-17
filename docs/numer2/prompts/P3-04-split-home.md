@@ -11,7 +11,8 @@ user can see or do changes.
 
 ## Read first
 - `AGENTS.md` (feature layout, barrels, the dependency rule)
-- `docs/numer2/DECISIONS.md` D-33 and D-34
+- `docs/numer2/DECISIONS.md` D-33 (file size) and D-34
+- `scripts/check_file_size.sh`, `scripts/file_size_baseline.txt`
 - `lib/features/home/home.dart` (all of it)
 - `lib/features/courses/courses.dart`, `lib/features/sessions/sessions.dart`,
   `lib/features/ai_analysis/ai_analysis.dart` (barrels)
@@ -50,10 +51,24 @@ user can see or do changes.
   | 1655-3051 | `_CourseTimeMenu` and its state; `_openEditCourseDialog` is 2133-2274 | `showCourseTimeSheet` |
   | 3053-3098 | `_StreakTitle` | `HomeScreen` |
 
-- `_CourseTimeMenuState` alone is about 1400 lines. A Dart class cannot span files, and
-  splitting it would mean changing how its methods reach its state. It moves whole into one
-  file; only the edit course dialog leaves it (D-33). Every other new file stays under 700
-  lines.
+- `_CourseTimeMenuState` alone is about 1400 lines and must end under 400 per file (D-33).
+  The split keeps every field, timer and controller in one state object and moves code
+  around it without changing who owns what:
+  - an `abstract class _CourseTimeMenuBase extends State<_CourseTimeMenu> with
+    TickerProviderStateMixin, WidgetsBindingObserver` holds all fields (lines 1665-1686) and
+    the planned-seconds helpers (1688-1702);
+  - a `mixin _CourseTimeActions on _CourseTimeMenuBase` in a `part` file holds the actions
+    (`_snack`, `_shouldConfirmPomodoroSwitch`, `_confirmLeavePomodoro`, `_handleWillPop`,
+    `_startTimer` to `_resetPomodoroCycle`, `_readInputsCapped`, lines 1872-2132 and
+    2666-2675). A mixin `on` a `State` subclass may call `setState`; an extension may not,
+    so do not use extensions;
+  - `class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions` keeps
+    `initState`, `dispose`, the focus and keyboard handlers, `_handleTabChange` and `build`;
+  - the tab bodies and the header become widgets that receive values and callbacks through
+    their constructors and never see the state object. Where the old code called
+    `setState(() {})` inside a tab, the widget calls an `onChanged` callback and the state
+    calls `setState`.
+  Only the edit course dialog leaves for the `courses` feature.
 - `_openEditCourseDialog` uses `widget.course`, `_colorChoices`, `mounted` and ends with
   `setState(() {})` after saving (line 2264). As a top-level function it takes the course
   as a parameter, uses `context.mounted`, and the time sheet calls `setState` after it
@@ -101,8 +116,38 @@ user can see or do changes.
      `_FirstRunCreditsGate`).
    - `lib/features/sessions/models/session_limits.dart`: `const int kMaxSessionSeconds =
      10800;` (was `_kMaxSecs`).
-   - `lib/features/sessions/widgets/course_time_sheet.dart`: `showCourseTimeSheet` and
-     `_CourseTimeMenu` with its state (stays private).
+   - The time sheet, in `lib/features/sessions/widgets/course_time_sheet/` (every file under
+     400 lines):
+     - `course_time_sheet.dart`: `showCourseTimeSheet`, `_CourseTimeMenu`,
+       `_CourseTimeMenuBase`, `_CourseTimeMenuState`, and `part 'course_time_actions.dart';`.
+       `build` (2763-3051) only assembles the widgets below and stays under about 60 lines.
+     - `course_time_actions.dart`: `part of 'course_time_sheet.dart';` and
+       `_CourseTimeActions`. If an action calls a method that is left in
+       `_CourseTimeMenuState`, move that method into `_CourseTimeMenuBase`.
+     - `course_time_header.dart`: `CourseTimeHeader`, the drag handle and the course header
+       of `build` (about 2806-2933), with the course, the running flags and the callbacks it
+       triggers (edit opens `showEditCourseDialog`, through a callback) as parameters.
+     - `course_time_tab_bar.dart`: `CourseTimeTabBar`, the `SizedBox` with the `TabBar`
+       (about 2935-2978), taking the `TabController` and the flags it reads.
+     - `timer_tab.dart`: `TimerTab` from `_buildTimerTab` (2276-2412), taking the course,
+       the three controllers and focus nodes, the three animations, `isCondensed`,
+       `Future<int?> Function() loadPlanned`, `onStart`, `onDone` and `onChanged`.
+     - `stopwatch_tab.dart`: `StopwatchTab` from `_buildStopwatchTab` (2413-2437).
+     - `pomodoro_tab.dart`: `PomodoroTab` from `_buildPomodoroTab` (2438-2552). It is a
+       `StatefulWidget` that owns `_pendingLongBreak`, which only this code uses (lines
+       1684, 2449, 2528, 2538); delete the field from the state.
+     - `pomodoro_controls.dart`: `PomodoroControls` from `_buildPomodoroControls`
+       (2553-2614) and the shared `pomodoroPhaseLabel(l10n, phase)` (was
+       `_pomodoroPhaseLabel`, 2615-2626).
+     - `time_inputs_row.dart`: `TimeInputsRow` from `_timeInputsRow`, `_focusNumericField`
+       and `_numField` (2627-2761), with `onChanged` replacing the `setState(() {})` at
+       2730.
+     - The sheet's `_hasAnyActive` and `_activeInfo` (1704-1726) are textually the same as
+       the ones in `_ActiveSessionBarState` (1473-1495). Move one copy to
+       `lib/features/sessions/models/active_session_info.dart` as `bool
+       hasAnyActiveSessionIn(AppState s)` and `({String kind, String id})?
+       activeSessionInfo(AppState s)` and use it in both; diff the two bodies first, and if
+       they differ keep both private copies.
    - `lib/features/sessions/widgets/active_session_bar.dart`: `ActiveSessionBar` (was
      `_ActiveSessionBar`).
    - `lib/features/sessions/widgets/auto_finish_watcher.dart`: `AutoFinishWatcher` (was
@@ -118,7 +163,10 @@ user can see or do changes.
    feature.` comment line, then `export 'home_screen.dart';`.
 4. Barrels: `lib/features/courses/courses.dart` adds exports for `course_format.dart` and
    the five files under `widgets/`; `lib/features/sessions/sessions.dart` adds
-   `models/session_limits.dart` and the three new widget files. Keep existing exports.
+   `models/session_limits.dart`, `models/active_session_info.dart`,
+   `widgets/course_time_sheet/course_time_sheet.dart`, `widgets/active_session_bar.dart` and
+   `widgets/auto_finish_watcher.dart`. The tab widgets stay internal to the feature. Keep
+   existing exports.
 5. Imports: every file imports another feature only through its barrel
    (`package:numer_app/features/<name>/<name>.dart`) and its own feature relatively.
    `home_screen.dart` imports `ai_analysis.dart`, `courses.dart`, `sessions.dart`.
@@ -141,15 +189,19 @@ user can see or do changes.
    tapping the first row calls `onOpenCourse` with it; swiping a row shows the delete
    dialog and confirming calls `removeCourse` with its id, cancelling does not; a
    long-press drag of the first row below the second calls `reorderCourses`.
-9. Run `./scripts/verify.sh`.
-10. Check line counts: `wc -l lib/features/home/*.dart lib/features/courses/*.dart
+9. `scripts/file_size_baseline.txt`: remove the `lib/features/home/home.dart` line. Add no
+    line. Run `bash scripts/check_file_size.sh`.
+10. Run `./scripts/verify.sh`.
+11. Check line counts: `wc -l lib/features/home/*.dart lib/features/courses/*.dart
     lib/features/courses/widgets/*.dart lib/features/sessions/models/session_limits.dart
-    lib/features/sessions/widgets/*.dart`. Put the output in the report.
+    lib/features/sessions/widgets/*.dart
+    lib/features/sessions/widgets/course_time_sheet/*.dart`. Put the output in the report.
 
 ## Non-goals
 - No redesign, no renamed string, no changed duration, no fixed bug. A bug you notice goes in
   the report, not in the diff.
-- Do not split `_CourseTimeMenuState`. Do not touch `habits_screen.dart`.
+- Do not change how the time sheet's state is owned beyond the moves of step 2. Do not touch
+  `habits_screen.dart`.
 - Do not change `swipeable_course_item.dart`, `course.dart`, `AppState` or any other feature.
 
 ## Constraints
@@ -160,6 +212,7 @@ user can see or do changes.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji. Existing comments move with their code unchanged; fix only the one named in step 2.
+- Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.
 - No unrequested features, abstractions, dependencies or error handling. Edit existing files rather than creating new ones where possible.
 - No secrets in code, in committed files or in `--dart-define`. Never write a server address into a file.
@@ -168,7 +221,8 @@ user can see or do changes.
 
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0 (boundary test, design check and the new test included).
-- [ ] `lib/features/home/home_screen.dart` is under 400 lines; every new file except `course_time_sheet.dart` is under 700 lines.
+- [ ] Every new or edited file is under 400 lines and `bash scripts/check_file_size.sh` passes; `scripts/file_size_baseline.txt` lost the `home.dart` line and gained none.
+- [ ] `build` of `_CourseTimeMenuState` and every extracted widget's `build` are under about 60 lines, or the report names each one that is not and why.
 - [ ] `grep -rn "features/home/home.dart" test/boundaries/allowlist.txt` prints nothing, and the allowlist gained no line.
 - [ ] `grep -rn "_kMaxSecs\|_fmtHMS\b\|_colorChoices" lib` prints nothing.
 - [ ] The design totals diff shows no total higher than before.
@@ -186,6 +240,7 @@ Report: files changed with line counts, the design totals diff, test output, any
 
 ## Stop and ask if
 - Moving a piece needs a change to its logic beyond the renames and the edits named in step 2.
-- A private member of `_CourseTimeMenuState` is used outside the class (then the class cannot
-  move whole as described).
+- A file still exceeds 400 lines after the moves of step 2 (report its size and what is in
+  it; do not add it to the baseline).
+- An extracted widget would need to call a method of the state object rather than a callback.
 - A design total rises.
