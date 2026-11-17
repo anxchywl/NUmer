@@ -2,7 +2,7 @@
 
 **Recommended model:** sonnet   **Effort:** high
 **Risk:** high   **Est.:** 8 h
-**Repo / working dir:** NUmer (`anxchywl/NUmer`) @ `main`   **Depends on:** P3-03, P3-04
+**Repo / working dir:** NUmer (`anxchywl/NUmer`) @ `main`   **Depends on:** P3-03, P3-04, P3-16
 
 ## Goal
 Switch the tab bar to Home, Habits, Study, Groups and (only when a campus module is visible)
@@ -116,7 +116,24 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
      clipBehavior: Clip.antiAlias)` holding the three `NumerRow`s with `Divider(height: 1,
      thickness: 1, indent: NumerSpace.lg, color: scheme.outlineVariant)` between them, then
      `SizedBox(height: NumerSpace.xl)`. It lines up with the cards above it.
-   - The two constants go at the top of `settings_screen.dart`: `const _privacyPolicyUrl =
+   - Split the screen so every file ends under 400 lines (D-33). `settings_screen.dart`
+     keeps `SettingsScreen`, its state, the signed-out branch and a `build` that lists the
+     sections; each section moves, unchanged apart from the edits above, into a widget under
+     `lib/features/account/widgets/settings/` that reads `AppState`, `AuthController` and
+     `SyncService` from the context itself. By the lines of today's `account.dart`:
+     `settings_identity_card.dart` (the card with avatar, sign-out and sync, 213-324),
+     `settings_profile_section.dart` (325-377), `settings_appearance_section.dart` (theme
+     and accent colour, 378-528), `settings_language_section.dart` (language and week start,
+     529-638), `settings_display_section.dart` (home summary and progress view, 639-669,
+     with `_HomeSummarySwipeSelector` and `_ProgressViewSelector`, 1119-1331, which may go
+     to their own files if the section exceeds 400 lines), `settings_switches_section.dart`
+     (670-819), `settings_about_section.dart` (the new About section and its two
+     constants), and `settings_delete_section.dart` (the export-to-calendar card, 820-854,
+     stays in the switches file; the delete tile 855-880, `_confirmDeleteAccount`, 39-150,
+     `_HoldToConfirmButton`, 891-1022, and `_DeleteAccountTextConfirmDialog`, 1023-1118). If
+     P1-07 has changed the delete flow, move what is there now. Export only `SettingsScreen`
+     from the barrel. Remove the `account.dart` line from `scripts/file_size_baseline.txt`.
+   - The two constants go at the top of `settings_about_section.dart`: `const _privacyPolicyUrl =
      '<from the task message>';` and `const _supportEmail = '<from the task message>';`.
 3. `lib/features/study/study.dart` (barrel) and `lib/features/study/study_screen.dart`:
    `StudyScreen`, a `Scaffold` with a `CustomScrollView`: `ShellHeader(title: Text(
@@ -215,6 +232,10 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
   (P3-11), restyling the rows of Settings, any change to the two tab bars' look.
 - Do not touch the connections feature or its hidden-tab comment.
 - Do not change the delete-account flow.
+- `habits_screen.dart` and `groups_screen.dart` are in the size baseline: the header edits
+  must leave each file no longer than before (replacing `_buildTabItem` shrinks Habits), and
+  their baseline entries are lowered to the new sizes. P3-16 has split `habits_screen.dart`
+  before this task; edit the file that now holds the header.
 
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
@@ -239,6 +260,7 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
 - [ ] `grep -rn "onThemeChange\|pushReplacementNamed('/auth')" lib` prints nothing.
 - [ ] The four test files of step 10 exist and pass; four tabs with no module visible, five with one.
 - [ ] Step 11's grep lists the five files.
+- [ ] Every file under `lib/features/account/` is under 400 lines; `bash scripts/check_file_size.sh` passes and the baseline lost the `account.dart` line.
 - [ ] Screenshots of step 13 are attached, and the report answers each review item of `DESIGN.md` section 11 with yes or no.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).
 - [ ] Docs touched by this change are updated, or the report states "no docs affected".
