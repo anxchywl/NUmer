@@ -70,7 +70,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ⏳ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (0 of 16; prompts being written now)
+## Phase 3: Superapp shell (0 of 16; prompts written except P3-12 and P3-13)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
@@ -79,7 +79,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ⏳ | P3-01 Theme and components | Shared buttons, rows, sheets built on the design tokens |
 | ⏳ | P3-02 Compatibility layer | Lets module code use the shared design without rewrites |
 | ⏳ | P3-03 Module registry | One list of modules; each loads only when opened |
-| ⏳ | P3-04 Split `home.dart` | Break up the 2,982-line home screen (no visible change) |
+| ⏳ | P3-04 Split `home.dart` | Break up the 3,098-line home screen (no visible change) |
 | ⏳ | P3-05 New shell | The new tabs, avatar menu, Settings and About screens |
 | ⏳ | P3-06 Study tab | Courses with timer, statistics, history, GPA in one place |
 | ⏳ | P3-07 Home today | Home shows streak, running session, today, upcoming, news |

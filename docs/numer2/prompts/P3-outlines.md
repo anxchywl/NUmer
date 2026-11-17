@@ -262,7 +262,7 @@ nine); screenshots with two fake modules.
 ---
 
 ## P3-12 Design pass: glass, gradients, chips, raw toasts
-**Depends on:** P3-05. **Executor:** sonnet, high. **Risk:** med. May be split per feature.
+**Depends on:** P3-05, P3-14, P3-15. **Executor:** sonnet, high. **Risk:** med. May be split per feature.
 
 **Goal:** remove what DESIGN section 11 bans from existing screens, without redesigning them.
 
