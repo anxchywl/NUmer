@@ -225,8 +225,9 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
                                         final shouldShowLogin = velocity > 0 ||
                                             _horizontalDragDistance > 0;
-                                        if (shouldShowLogin == _showLogin)
+                                        if (shouldShowLogin == _showLogin) {
                                           return;
+                                        }
 
                                         FocusManager.instance.primaryFocus
                                             ?.unfocus();
