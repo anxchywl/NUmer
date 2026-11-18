@@ -361,8 +361,9 @@ class _InlineNamingRow extends StatelessWidget {
                 validator: (v) {
                   if (v == null || v.isEmpty) return ""; // Subtle error
                   if (v.startsWith(' ')) return "";
-                  if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(v))
+                  if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(v)) {
                     return "";
+                  }
                   return null;
                 },
                 onFieldSubmitted: (_) => onConfirm(),
