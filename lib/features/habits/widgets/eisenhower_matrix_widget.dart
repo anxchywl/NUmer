@@ -30,7 +30,7 @@ class _QuadrantPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final borderColor = colorAccent ?? theme.colorScheme.outlineVariant;
-    
+
     return DragTarget<Habit>(
       onWillAcceptWithDetails: (details) => true,
       onAcceptWithDetails: (details) {
@@ -42,7 +42,7 @@ class _QuadrantPanel extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           margin: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: isHovering 
+            color: isHovering
                 ? theme.colorScheme.primaryContainer.withAlpha(100)
                 : theme.colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
@@ -57,8 +57,10 @@ class _QuadrantPanel extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: colorAccent?.withAlpha(30) ?? theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                  color: colorAccent?.withAlpha(30) ??
+                      theme.colorScheme.surfaceContainerHighest,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(15)),
                 ),
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -121,7 +123,7 @@ class _MatrixHabitChip extends StatelessWidget {
     final theme = Theme.of(context);
     final habitColor = habit.color;
     final isComplete = habit.isGoalMetForPeriod(
-      habit.last7, 
+      habit.last7,
       selectedDate,
       mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
     );
@@ -148,7 +150,8 @@ class _MatrixHabitChip extends StatelessWidget {
               const SizedBox(width: 6),
               Text(
                 habit.name,
-                style: theme.textTheme.labelMedium?.copyWith(color: Colors.white),
+                style:
+                    theme.textTheme.labelMedium?.copyWith(color: Colors.white),
               ),
             ],
           ),
@@ -169,13 +172,13 @@ class _MatrixHabitChip extends StatelessWidget {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Widget _buildChipContent(BuildContext context, ThemeData theme, Color habitColor, bool isComplete) { // isComplete param deprecated by new logic but keeping for signature compat if needed, will recalculate
+  Widget _buildChipContent(BuildContext context, ThemeData theme,
+      Color habitColor, bool isComplete) {
+    // isComplete param deprecated by new logic but keeping for signature compat if needed, will recalculate
     final dateKeyStr = _dateKey(selectedDate);
     final currentValue = habit.last7[dateKeyStr] ?? 0.0;
     final isDoneToday = currentValue >= habit.targetValue;
-    
 
-    
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
@@ -183,7 +186,9 @@ class _MatrixHabitChip extends StatelessWidget {
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDoneToday ? habitColor.withAlpha(100) : theme.colorScheme.outlineVariant.withAlpha(80),
+          color: isDoneToday
+              ? habitColor.withAlpha(100)
+              : theme.colorScheme.outlineVariant.withAlpha(80),
           width: 1,
         ),
         boxShadow: [
@@ -200,7 +205,9 @@ class _MatrixHabitChip extends StatelessWidget {
             child: Text(
               habit.name,
               style: theme.textTheme.labelMedium?.copyWith(
-                color: isDoneToday ? theme.colorScheme.onSurface.withAlpha(150) : theme.colorScheme.onSurface,
+                color: isDoneToday
+                    ? theme.colorScheme.onSurface.withAlpha(150)
+                    : theme.colorScheme.onSurface,
                 decoration: isDoneToday ? TextDecoration.lineThrough : null,
                 fontWeight: isDoneToday ? FontWeight.normal : FontWeight.w500,
               ),
@@ -211,7 +218,7 @@ class _MatrixHabitChip extends StatelessWidget {
           const SizedBox(width: 8),
           // Checkmark / Progress Control
           InkWell(
-            onTap: onTap, 
+            onTap: onTap,
             borderRadius: BorderRadius.circular(12),
             child: HabitCompletionIndicator(
               habit: habit,
@@ -269,10 +276,10 @@ class _EisenhowerMatrixWidgetState extends State<EisenhowerMatrixWidget> {
 
     // Define quadrant colors
     final quadrantColors = [
-      Colors.red.shade400,     // Urgent & Important
-      Colors.blue.shade400,    // Not urgent & Important
-      Colors.orange.shade400,  // Urgent & Not important
-      Colors.grey.shade400,    // Not urgent & Not important
+      Colors.red.shade400, // Urgent & Important
+      Colors.blue.shade400, // Not urgent & Important
+      Colors.orange.shade400, // Urgent & Not important
+      Colors.grey.shade400, // Not urgent & Not important
     ];
 
     final quadrantTitles = [
