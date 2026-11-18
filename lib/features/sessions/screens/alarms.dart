@@ -21,7 +21,8 @@ class _AlarmsScreenState extends State<AlarmsScreen> {
       appBar: AppBar(title: const Text('Alarms & Reminders')),
       body: NotificationListener<UserScrollNotification>(
         onNotification: (notification) {
-          if (notification.direction == ScrollDirection.reverse && _fabVisible) {
+          if (notification.direction == ScrollDirection.reverse &&
+              _fabVisible) {
             setState(() => _fabVisible = false);
           } else if (notification.direction == ScrollDirection.forward &&
               !_fabVisible) {
@@ -113,7 +114,8 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
             TextFormField(
               controller: _title,
               decoration: const InputDecoration(labelText: 'Title'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
             ),
             const SizedBox(height: 8),
             Row(
@@ -146,7 +148,8 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   child: OutlinedButton(
                     onPressed: () async {
                       final t = await showTimePicker(
-                          context: context, initialTime: TimeOfDay.fromDateTime(_date));
+                          context: context,
+                          initialTime: TimeOfDay.fromDateTime(_date));
                       if (t != null) {
                         setState(() => _date = DateTime(
                               _date.year,

@@ -8,8 +8,6 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class TimerScreen extends StatefulWidget {
-  
-  
   final String? courseId;
 
   const TimerScreen({super.key, this.courseId});
@@ -89,9 +87,8 @@ class _TimerScreenState extends State<TimerScreen> {
     final d = state.currentElapsedTimer(cid);
     final isRunning = state.timerRunning[cid] ?? false;
 
-    
     final hasAnyActive = state.hasAnyActiveSession;
-    final activeKind = state.activeSessionKind; 
+    final activeKind = state.activeSessionKind;
 
     String two(int n) => n.toString().padLeft(2, '0');
     final h = two(d.inHours);
@@ -115,7 +112,6 @@ class _TimerScreenState extends State<TimerScreen> {
       ),
       body: Column(
         children: [
-          
           if (hasAnyActive && !(isRunning))
             MaterialBanner(
               elevation: 0,
@@ -125,7 +121,8 @@ class _TimerScreenState extends State<TimerScreen> {
                 color: Theme.of(context).colorScheme.onErrorContainer,
               ),
               content: Text(
-                AppLocalizations.of(context)!.anotherSessionRunningSilly(activeKind ?? AppLocalizations.of(context)!.session),
+                AppLocalizations.of(context)!.anotherSessionRunningSilly(
+                    activeKind ?? AppLocalizations.of(context)!.session),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
@@ -133,7 +130,7 @@ class _TimerScreenState extends State<TimerScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
                   },
                   child: Text(
                     AppLocalizations.of(context)!.ok,
@@ -160,18 +157,20 @@ class _TimerScreenState extends State<TimerScreen> {
                   Wrap(
                     spacing: 12,
                     children: [
-                      
                       FilledButton.icon(
                         onPressed: isRunning
                             ? null
                             : () {
-                                final ok = context.read<AppState>().startTimer(cid);
+                                final ok =
+                                    context.read<AppState>().startTimer(cid);
                                 if (!ok) {
                                   final st = context.read<AppState>();
-                                  final kind = st.activeSessionKind ?? 'session';
+                                  final kind =
+                                      st.activeSessionKind ?? 'session';
                                   showAppMessage(
                                     context,
-                                    AppLocalizations.of(context)!.anotherSessionRunningSilly(kind),
+                                    AppLocalizations.of(context)!
+                                        .anotherSessionRunningSilly(kind),
                                     isError: true,
                                   );
                                 }
@@ -179,8 +178,6 @@ class _TimerScreenState extends State<TimerScreen> {
                         icon: const Icon(Icons.play_arrow),
                         label: Text(AppLocalizations.of(context)!.start),
                       ),
-
-                      
                       FilledButton.icon(
                         onPressed: isRunning
                             ? () async {
@@ -191,25 +188,24 @@ class _TimerScreenState extends State<TimerScreen> {
                         icon: const Icon(Icons.stop),
                         label: Text(AppLocalizations.of(context)!.stop),
                       ),
-
-                      
                       OutlinedButton.icon(
                         onPressed: () async {
-                          
-                          final st = context.read<AppState>(); 
+                          final st = context.read<AppState>();
                           final running = st.timerRunning[cid] == true;
 
                           if (running) {
                             await st.stopTimer(cid);
 
-                            
                             if (!context.mounted) return;
 
-                            showAppMessage(context, AppLocalizations.of(context)!.timerStoppedAndSaved);
+                            showAppMessage(
+                                context,
+                                AppLocalizations.of(context)!
+                                    .timerStoppedAndSaved);
                           } else {
-                            
                             if (!context.mounted) return;
-                            showAppMessage(context, AppLocalizations.of(context)!.nothingToReset);
+                            showAppMessage(context,
+                                AppLocalizations.of(context)!.nothingToReset);
                           }
                         },
                         icon: const Icon(Icons.refresh),

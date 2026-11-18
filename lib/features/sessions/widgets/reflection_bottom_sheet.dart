@@ -46,7 +46,9 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.failedToSaveReflection(e.toString()))),
+          SnackBar(
+              content: Text(AppLocalizations.of(context)!
+                  .failedToSaveReflection(e.toString()))),
         );
       }
     }
@@ -58,14 +60,6 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    
-    
-    
-    
-    
-    
-    
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -85,25 +79,25 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
-            TextField(
-              controller: _controller,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: AppLocalizations.of(context)!.whatDidYouWorkOn,
-                border: const OutlineInputBorder(),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              ),
-              minLines: 1,
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-              inputFormatters: [
-                LengthLimitingTextInputFormatter(160),
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
-                ),
-              ],
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.whatDidYouWorkOn,
+              border: const OutlineInputBorder(),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             ),
+            minLines: 1,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(160),
+              FilteringTextInputFormatter.allow(
+                RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
