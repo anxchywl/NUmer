@@ -1159,8 +1159,9 @@ class GroupService {
       final memberRef = groupRef.collection('members').doc(memberId);
       final memberSnap = await txn.get(memberRef);
 
-      if (!memberSnap.exists)
+      if (!memberSnap.exists) {
         throw StateError('User is not a member of this group');
+      }
 
       txn.update(memberRef, {'role': newRole.label});
       txn.update(userMembershipRef, {'role': newRole.label});
