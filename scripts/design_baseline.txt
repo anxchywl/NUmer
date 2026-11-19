@@ -109,8 +109,7 @@ text_literal	lib/features/habits/screens/habits_calendar_screen.dart	1
 weight	lib/features/habits/screens/habits_calendar_screen.dart	3
 spinner	lib/features/habits/screens/habits_calendar_screen.dart	1
 shadow	lib/features/habits/screens/habits_screen.dart	1
-color_literal	lib/features/habits/screens/habits_screen.dart	1
-text_literal	lib/features/habits/screens/habits_screen.dart	3
+text_literal	lib/features/habits/screens/habits_screen.dart	1
 shadow	lib/features/habits/widgets/eisenhower_matrix_widget.dart	2
 color_literal	lib/features/habits/widgets/eisenhower_matrix_widget.dart	7
 text_literal	lib/features/habits/widgets/eisenhower_matrix_widget.dart	1
@@ -139,6 +138,8 @@ color_literal	lib/features/habits/widgets/habit_week_day.dart	1
 text_literal	lib/features/habits/widgets/habit_week_day.dart	2
 weight	lib/features/habits/widgets/habit_week_strip.dart	1
 text_literal	lib/features/habits/widgets/habits_date_picker.dart	4
+color_literal	lib/features/habits/widgets/habits_list_tab.dart	1
+text_literal	lib/features/habits/widgets/habits_list_tab.dart	2
 gradient	lib/features/habits/widgets/ios_liquid_action_pill.dart	1
 blur	lib/features/habits/widgets/ios_liquid_action_pill.dart	2
 shadow	lib/features/habits/widgets/ios_liquid_action_pill.dart	1
