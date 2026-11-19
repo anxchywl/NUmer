@@ -420,9 +420,11 @@ Three kinds only.
 - Full width at the bottom of sheets and forms; intrinsic width inline.
 - Destructive: the same widgets with `error` as the fill or text colour, only inside a
   confirm sheet.
-- Loading: the label stays and a 16 pt spinner appears before it; the button is disabled.
-  This is the only place a spinner is allowed. The button's child is
-  `NumerButtonChild(label: ..., loading: ...)`, which draws that row.
+- Loading (owner rule): the label disappears and only a spinner shows, centred, about the
+  label's height (20 pt, stroke 2, in the label colour); the button keeps its size because the
+  label stays in the layout invisibly, and it is disabled. Screen readers still hear the label
+  plus "loading". This is the only place a spinner is allowed. The button's child is
+  `NumerButtonChild(label: ..., loading: ...)`, which draws that.
 - No `OutlinedButton`, no `ElevatedButton` in new UI.
 
 ### 5.5 Inputs and choices
