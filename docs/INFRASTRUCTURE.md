@@ -129,6 +129,8 @@ by a flag yet.
 | Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles`, retried on failure |
 | Firestore trigger | `onUserDeletionRequested` | Purge a user marked in `deletedUsers`, retried on failure |
 | Scheduled | `sweepDeletedUsers` | Daily: remove what a signed-in device wrote after a purge |
+| Firestore trigger | `onAccountEventCreated` | Deliver a new account event to the module backends |
+| Scheduled | `retryAccountEvents` | Every 15 minutes: retry account events that are due |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Disable the auth user and mark it in `deletedUsers` for the purge |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
@@ -193,6 +195,37 @@ the last 5 minutes; it stays `off` while older app versions cannot re-authentica
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
+
+## Account events
+
+A deleted NUmer account must be deleted in every module backend too
+(`functions/src/account/`). The purge creates `accountEvents/deleted_{uid}`
+(`{type, issuer, subject, occurredAt, status}`), and the functions deliver it to each target.
+
+- Targets: `ACCOUNT_EVENT_TARGETS` in the git-ignored `functions/.env.<project id>`, a JSON
+  list of `{"module": ..., "url": ...}` with `module` one of `clavis`, `events` or `muto` and
+  an `https` URL (`http` to `127.0.0.1` or `localhost` in the emulator only). An invalid value
+  fails the deploy.
+- Secrets: `ACCOUNT_EVENTS_SECRET_<MODULE>`, one per module. The two functions declare only the
+  secrets of listed modules, so create a module's secret before listing it, then deploy
+  functions. A deploy fails while a declared secret is missing.
+- Request: `POST <url>` with `{"id", "type", "issuer", "subject", "occurredAt"}` (ISO 8601)
+  and the header `X-Numer-Signature: t=<unix seconds>,v1=<hex>`, where the hex is
+  `HMAC-SHA256(secret, "<t>.<raw body>")`. `type` is `account.deleted`; `account.disabled` is
+  defined but not sent yet.
+- Any 2xx answer within 10 seconds is success. A redirect is not followed and counts as a
+  failure.
+- Retries wait 15 minutes, 30 minutes, 1 hour, 2 hours, 4 hours, then 6 hours, rounded up to
+  the 15 minute schedule. At the first failed attempt 72 hours or more after `occurredAt` the
+  target and the event become `failed` and `account_event_delivery_failed` is logged once
+  per target. A failed event is not retried.
+- Progress is kept per module under `deliveries.<module>`. An event processed while no target
+  is listed becomes `delivered`, so a module added later does not receive it.
+
+A module handler must verify the signature over the raw body with
+`numer_identity.verify_account_event` (5 minute tolerance), treat `id` as an idempotency key,
+answer 2xx for an event it has already processed, and delete the data of that `issuer` and
+`subject`.
 
 ## Environments
 
@@ -315,7 +348,7 @@ Emulators and deploys are covered in [Environments](#environments).
 - Performance budgets and measuring scripts: [PERFORMANCE.md](PERFORMANCE.md)
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
-- Module backend token verification: `backend/numer_identity/` (see its README)
+- Module backend token and account event verification: `backend/numer_identity/` (see its README)
 
 ## Known follow-ups (technical debt)
 

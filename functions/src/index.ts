@@ -3,6 +3,7 @@ export { onGroupMemberDelete } from './groups/triggers';
 export { deleteGroupCallable, joinPrivateGroup } from './groups/callables';
 export { deleteAccountCallable } from './account/delete_account';
 export { onUserDeletionRequested, sweepDeletedUsers } from './account/purge_user';
+export { onAccountEventCreated, retryAccountEvents } from './account/events';
 export { sendNudge } from './nudges/send_nudge';
 export { onMailQueued } from './mail/queue';
 export { onGroupMemberWrite } from './groups/membership_index';
