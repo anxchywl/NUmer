@@ -283,7 +283,9 @@ layer; this task only builds it.
    BorderRadius.circular(NumerRadius.lg), clipBehavior: Clip.antiAlias)` around the child
    padded by `padding ?? EdgeInsets.all(NumerSpace.lg)`, inside an `InkWell` when `onTap`. `AppLoader({bool
    page = false})` is `NumerSkeleton()` when `page`, else `const SizedBox.shrink()`; record
-   in `MIGRATION.md` that an action's loading state is the button's `isLoading`.
+   in `MIGRATION.md` that an action's loading state is the button's `isLoading`, and that
+   `AppLoader`'s `size`, `color`, `strokeWidth`, `AppLoaderSize` and its statics (`centered`,
+   `overlay`, `showDialog`) are dropped (no module call site uses them).
    `AppProgressBar({required double value})` is a `ClipRRect(radius: NumerRadius.full)` around
    a `LinearProgressIndicator(value, color: primary, backgroundColor:
    surfaceContainerHighest)`.
