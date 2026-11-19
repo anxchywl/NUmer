@@ -8,6 +8,7 @@ List<Habit> habitsDueOn(
   DateTime date,
   WeekStart weekStart,
 ) {
+  // Filter: Hide habits if period goal is met AND not done today
   return habits.where((h) {
     if (!h.isScheduledFor(date)) return false;
 
@@ -16,6 +17,7 @@ List<Habit> habitsDueOn(
     final currentValue = h.last7[key] ?? 0.0;
     final isCompletedOnDate = currentValue >= h.targetValue;
 
+    // Show if completed on this date OR period goal NOT met.
     // RULE: Show if completed on this date OR period goal NOT met.
     // This allows users to see/edit their progress today even if the goal was just met,
     // and ensures the habit reappears if progress drops below the threshold.
