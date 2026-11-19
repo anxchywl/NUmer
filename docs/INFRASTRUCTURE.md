@@ -200,7 +200,8 @@ screen.
 
 A deleted NUmer account must be deleted in every module backend too
 (`functions/src/account/`). The purge creates `accountEvents/deleted_{uid}`
-(`{type, issuer, subject, occurredAt, status}`), and the functions deliver it to each target.
+(`{type, issuer, subject, occurredAt, status, nextAttemptAt}`), and the functions deliver it to
+each target. The scheduled run also takes `pending` events that have no `nextAttemptAt`.
 
 - Targets: `ACCOUNT_EVENT_TARGETS` in the git-ignored `functions/.env.<project id>`, a JSON
   list of `{"module": ..., "url": ...}` with `module` one of `clavis`, `events` or `muto` and
@@ -211,7 +212,7 @@ A deleted NUmer account must be deleted in every module backend too
   functions. A deploy fails while a declared secret is missing.
 - Request: `POST <url>` with `{"id", "type", "issuer", "subject", "occurredAt"}` (ISO 8601)
   and the header `X-Numer-Signature: t=<unix seconds>,v1=<hex>`, where the hex is
-  `HMAC-SHA256(secret, "<t>.<raw body>")`. `type` is `account.deleted`; `account.disabled` is
+  `HMAC-SHA256(secret, "<t>.<raw body>")` and `t` is the time of that attempt. `type` is `account.deleted`; `account.disabled` is
   defined but not sent yet.
 - Any 2xx answer within 10 seconds is success. A redirect is not followed and counts as a
   failure.
@@ -220,12 +221,14 @@ A deleted NUmer account must be deleted in every module backend too
   target and the event become `failed` and `account_event_delivery_failed` is logged once
   per target. A failed event is not retried.
 - Progress is kept per module under `deliveries.<module>`. An event processed while no target
-  is listed becomes `delivered`, so a module added later does not receive it.
+  is listed becomes `unrouted` and `account_event_unrouted` is logged. It is kept but never sent
+  automatically, so list a module before it stores user data. An event already `delivered` to
+  other modules is not sent to a module added later.
 
 A module handler must verify the signature over the raw body with
 `numer_identity.verify_account_event` (5 minute tolerance), treat `id` as an idempotency key,
-answer 2xx for an event it has already processed, and delete the data of that `issuer` and
-`subject`.
+answer 2xx for an event it has already processed, and for that `issuer` and `subject` delete
+the data on `account.deleted` and only block access on `account.disabled`.
 
 ## Environments
 
