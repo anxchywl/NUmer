@@ -17,6 +17,8 @@ import 'package:numer_app/features/stats/widgets/heatmap_calendar.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/history/screens/history.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import '../models/stats_models.dart';
+import '../stats_format.dart';
 import 'package:numer_app/shared/widgets/tip_icon.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -29,7 +31,7 @@ class _StatsScreenState extends State<StatsScreen> {
   DateTime _day = _strip(DateTime.now());
   static DateTime _strip(DateTime d) => DateTime(d.year, d.month, d.day);
   bool get _isToday => _strip(DateTime.now()) == _day;
-  _SliceTooltip? _sliceTooltip;
+  SliceTooltip? _sliceTooltip;
 
   void _prevDay() {
     final minDate = DateTime(2025, 1, 1);
@@ -94,7 +96,7 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  _Range _range = _Range.week;
+  Range _range = Range.week;
   int _shift = 0;
 
   void _prevRange() {
@@ -123,18 +125,18 @@ class _StatsScreenState extends State<StatsScreen> {
     });
   }
 
-  void _setRange(_Range r) => setState(() {
+  void _setRange(Range r) => setState(() {
     _range = r;
     _shift = 0;
     _tooltip = null;
   });
 
-  _BucketTooltip? _tooltip;
+  BucketTooltip? _tooltip;
 
   // -- Habit Stats State --
   String? _selectedHabitId;
 
-  Map<String, _HabitStatsResult>? _allHabitsStatsCache;
+  Map<String, HabitStatsResult>? _allHabitsStatsCache;
   bool _loadingHabitsStats = false;
   StreamSubscription<void>? _historyUpdatesSub;
 
@@ -176,7 +178,7 @@ class _StatsScreenState extends State<StatsScreen> {
     setState(() => _loadingHabitsStats = true);
 
     final service = context.read<HabitService>();
-    final results = <String, _HabitStatsResult>{};
+    final results = <String, HabitStatsResult>{};
 
     for (final habit in habits) {
       if (habit.archived) continue;
@@ -192,7 +194,7 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  Future<_HabitStatsResult> _computeHabitStats(
+  Future<HabitStatsResult> _computeHabitStats(
     Habit habit,
     HabitService service,
     String uid,
@@ -208,7 +210,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
     // If future start date, no stats
     if (start.isAfter(today)) {
-      return const _HabitStatsResult(0, 0, 0, 0.0);
+      return const HabitStatsResult(0, 0, 0, 0.0);
     }
 
     // End date: habit.endDate or Today
@@ -306,7 +308,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final notCompleted = required - completed;
     final rate = required > 0 ? (completed / required * 100) : 0.0;
 
-    return _HabitStatsResult(required, completed, notCompleted, rate);
+    return HabitStatsResult(required, completed, notCompleted, rate);
   }
 
   @override
@@ -387,7 +389,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                   label: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      _fmtDateLong(_day, context),
+                                      fmtDateLong(_day, context),
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -435,11 +437,11 @@ class _StatsScreenState extends State<StatsScreen> {
                       ],
                     ),
                   ),
-                  FutureBuilder<_PiePayload>(
+                  FutureBuilder<PiePayload>(
                     future: pieFuture,
                     builder: (context, snap) {
                       final total = snap.data?.totalSeconds ?? 0;
-                      final slices = snap.data?.slices ?? const <_Slice>[];
+                      final slices = snap.data?.slices ?? const <Slice>[];
                       return Padding(
                         padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                         child: _PieChartWithTooltip(
@@ -513,18 +515,18 @@ class _StatsScreenState extends State<StatsScreen> {
                       children: [
                         _SegChip(
                           label: AppLocalizations.of(context)!.week,
-                          selected: _range == _Range.week,
-                          onTap: () => _setRange(_Range.week),
+                          selected: _range == Range.week,
+                          onTap: () => _setRange(Range.week),
                         ),
                         _SegChip(
                           label: AppLocalizations.of(context)!.month,
-                          selected: _range == _Range.month,
-                          onTap: () => _setRange(_Range.month),
+                          selected: _range == Range.month,
+                          onTap: () => _setRange(Range.month),
                         ),
                         _SegChip(
                           label: AppLocalizations.of(context)!.year,
-                          selected: _range == _Range.year,
-                          onTap: () => _setRange(_Range.year),
+                          selected: _range == Range.year,
+                          onTap: () => _setRange(Range.year),
                         ),
                       ],
                     ),
@@ -537,7 +539,7 @@ class _StatsScreenState extends State<StatsScreen> {
                     child: Row(
                       children: [
                         IconButton(
-                          tooltip: _prevLabel(context, _range),
+                          tooltip: prevLabel(context, _range),
                           onPressed: _prevRange,
                           icon: const Icon(Icons.chevron_left),
                         ),
@@ -568,23 +570,22 @@ class _StatsScreenState extends State<StatsScreen> {
                           ),
                         ),
                         IconButton(
-                          tooltip: _nextLabel(context, _range),
+                          tooltip: nextLabel(context, _range),
                           onPressed: _shift >= 0 ? null : _nextRange,
                           icon: const Icon(Icons.chevron_right),
                         ),
                       ],
                     ),
                   ),
-                  FutureBuilder<_BucketsPayload>(
+                  FutureBuilder<BucketsPayload>(
                     future: bucketsFuture,
                     builder: (context, snap) {
-                      final payload =
-                          snap.data ?? const _BucketsPayload.empty();
+                      final payload = snap.data ?? const BucketsPayload.empty();
                       final buckets = payload.buckets;
                       final totalSecs = payload.totalSeconds;
 
-                      final unit = _pickUnit(totalSecs);
-                      final unitScale = _scaleForUnit(unit);
+                      final unit = pickUnit(totalSecs);
+                      final unitScale = scaleForUnit(unit);
 
                       double maxYFinal = 0;
                       for (final b in buckets) {
@@ -594,7 +595,7 @@ class _StatsScreenState extends State<StatsScreen> {
                         }
                         if (sum > maxYFinal) maxYFinal = sum;
                       }
-                      final interval = _niceInterval(maxYFinal);
+                      final interval = niceInterval(maxYFinal);
                       final maxYAdjusted = (maxYFinal == 0
                           ? 1.0
                           : (maxYFinal / interval).ceil() * interval);
@@ -669,7 +670,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                                         bottom: 6,
                                                       ),
                                                   child: Text(
-                                                    _unitLabel(unit, context),
+                                                    unitLabel(unit, context),
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .bodySmall
@@ -693,7 +694,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                                           right: 8,
                                                         ),
                                                     child: Text(
-                                                      _fmtAxisTick(v, unit),
+                                                      fmtAxisTick(v, unit),
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .bodySmall
@@ -800,7 +801,7 @@ class _StatsScreenState extends State<StatsScreen> {
                                                       courses,
                                                     );
                                                 setState(() {
-                                                  _tooltip = _BucketTooltip(
+                                                  _tooltip = BucketTooltip(
                                                     anchor: anchor,
                                                     title: _tooltipTitle(
                                                       bucket,
@@ -859,16 +860,16 @@ class _StatsScreenState extends State<StatsScreen> {
           SliverToBoxAdapter(
             child: _buildSectionContainer(
               context,
-              title: (_range == _Range.week)
+              title: (_range == Range.week)
                   ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisWeek}'
-                  : (_range == _Range.month)
+                  : (_range == Range.month)
                   ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisMonth}'
                   : '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisYear}',
               useCard: false,
-              child: FutureBuilder<_BucketsPayload>(
+              child: FutureBuilder<BucketsPayload>(
                 future: bucketsFuture,
                 builder: (context, snap) {
-                  final payload = snap.data ?? const _BucketsPayload.empty();
+                  final payload = snap.data ?? const BucketsPayload.empty();
                   final buckets = payload.buckets;
                   final totalSecs = payload.totalSeconds;
 
@@ -909,7 +910,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   }
 
                   Widget content;
-                  if (_range == _Range.year) {
+                  if (_range == Range.year) {
                     final (start, end) = _rangeBounds(
                       DateTime.now(),
                       _range,
@@ -1036,14 +1037,14 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Future<_PiePayload> _loadPieForDay(DateTime day, List<Course> courses) async {
+  Future<PiePayload> _loadPieForDay(DateTime day, List<Course> courses) async {
     final valid = courses.map((c) => c.id).toSet();
     final start = _strip(day);
     final isToday = _strip(day) == _strip(DateTime.now());
     final end = isToday ? DateTime.now() : start.add(const Duration(days: 1));
     final perCourse = await Storage.secondsByCourseBetween(start, end);
 
-    final slices = <_Slice>[];
+    final slices = <Slice>[];
     int total = 0;
     perCourse.forEach((courseId, secs0) {
       if (!valid.contains(courseId)) return;
@@ -1051,7 +1052,7 @@ class _StatsScreenState extends State<StatsScreen> {
       if (secs <= 0) return;
       final course = courses.firstWhere((c) => c.id == courseId);
       slices.add(
-        _Slice(
+        Slice(
           id: courseId,
           name: course.name,
           color: course.color,
@@ -1062,20 +1063,20 @@ class _StatsScreenState extends State<StatsScreen> {
     });
 
     slices.sort((a, b) => b.seconds.compareTo(a.seconds));
-    return _PiePayload(slices: slices, totalSeconds: total);
+    return PiePayload(slices: slices, totalSeconds: total);
   }
 
-  Future<_BucketsPayload> _loadBucketsForRange(
+  Future<BucketsPayload> _loadBucketsForRange(
     DateTime start,
     DateTime end,
-    _Range r,
+    Range r,
     List<Course> courses,
   ) async {
     final valid = courses.map((c) => c.id).toSet();
-    final buckets = <_Bucket>[];
+    final buckets = <Bucket>[];
     int totalSecs = 0;
 
-    if (r == _Range.week || r == _Range.month) {
+    if (r == Range.week || r == Range.month) {
       final days = end.difference(start).inDays;
       final now = DateTime.now();
       final todayKey = DateTime(now.year, now.month, now.day);
@@ -1106,7 +1107,7 @@ class _StatsScreenState extends State<StatsScreen> {
           cleaned.putIfAbsent(c.id, () => 0);
         }
 
-        buckets.add(_Bucket(date: dayStart, secondsByCourse: cleaned));
+        buckets.add(Bucket(date: dayStart, secondsByCourse: cleaned));
       }
     } else {
       for (var month = 1; month <= 12; month++) {
@@ -1134,16 +1135,16 @@ class _StatsScreenState extends State<StatsScreen> {
           cleaned.putIfAbsent(c.id, () => 0);
         }
         buckets.add(
-          _Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true),
+          Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true),
         );
       }
     }
 
-    return _BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
+    return BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
   }
 
   (List<BarChartGroupData>, double) _buildAnimatedGroups(
-    List<_Bucket> buckets,
+    List<Bucket> buckets,
     List<Course> courses,
     double unitScale,
     double t,
@@ -1212,12 +1213,12 @@ class _StatsScreenState extends State<StatsScreen> {
 
   (DateTime, DateTime) _rangeBounds(
     DateTime base,
-    _Range r,
+    Range r,
     int shift,
     WeekStart weekStart,
   ) {
     switch (r) {
-      case _Range.week:
+      case Range.week:
         final int delta = (weekStart == WeekStart.monday)
             ? (base.weekday - DateTime.monday)
             : (base.weekday % 7);
@@ -1226,13 +1227,13 @@ class _StatsScreenState extends State<StatsScreen> {
         final end = start.add(const Duration(days: 7));
         return (start, end);
 
-      case _Range.month:
+      case Range.month:
         final start0 = DateTime(base.year, base.month, 1);
         final start = DateTime(start0.year, start0.month + shift, 1);
         final end = DateTime(start.year, start.month + 1, 1);
         return (_strip(start), _strip(end));
 
-      case _Range.year:
+      case Range.year:
         final start0 = DateTime(base.year, 1, 1);
         final start = DateTime(start0.year + shift, 1, 1);
         final end = DateTime(start.year + 1, 1, 1);
@@ -1240,9 +1241,9 @@ class _StatsScreenState extends State<StatsScreen> {
     }
   }
 
-  String _xLabel(_Bucket b, _Range r, WeekStart weekStart) {
+  String _xLabel(Bucket b, Range r, WeekStart weekStart) {
     switch (r) {
-      case _Range.week:
+      case Range.week:
         final l10n = AppLocalizations.of(context)!;
         final w = (weekStart == WeekStart.sunday)
             ? [
@@ -1269,41 +1270,41 @@ class _StatsScreenState extends State<StatsScreen> {
         final safe = idx.clamp(0, 6);
         return w[safe];
 
-      case _Range.month:
+      case Range.month:
         const marks = {5, 10, 15, 20, 25, 30};
         return marks.contains(b.date.day) ? '${b.date.day}' : '';
 
-      case _Range.year:
+      case Range.year:
         return '${b.date.month}';
     }
   }
 
-  String _periodLabel(DateTime start, DateTime end, _Range r) {
+  String _periodLabel(DateTime start, DateTime end, Range r) {
     switch (r) {
-      case _Range.week:
-        final s = _fmtDateShort(start, context);
-        final e = _fmtDateShort(end.subtract(const Duration(days: 1)), context);
+      case Range.week:
+        final s = fmtDateShort(start, context);
+        final e = fmtDateShort(end.subtract(const Duration(days: 1)), context);
         return '$s – $e';
-      case _Range.month:
-        return '${_monthName(context, start.month)} ${start.year}';
-      case _Range.year:
+      case Range.month:
+        return '${monthName(context, start.month)} ${start.year}';
+      case Range.year:
         return '${start.year}';
     }
   }
 
-  String _tooltipTitle(_Bucket b, _Range r) {
+  String _tooltipTitle(Bucket b, Range r) {
     switch (r) {
-      case _Range.week:
-      case _Range.month:
-        return _fmtDateLong(b.date, context);
-      case _Range.year:
-        return '${_monthName(context, b.date.month)} ${b.date.year}';
+      case Range.week:
+      case Range.month:
+        return fmtDateLong(b.date, context);
+      case Range.year:
+        return '${monthName(context, b.date.month)} ${b.date.year}';
     }
   }
 
-  List<_TooltipItem> _buildTooltipDetails(_Bucket b, List<Course> courses) {
+  List<TooltipItem> _buildTooltipDetails(Bucket b, List<Course> courses) {
     final courseById = {for (final c in courses) c.id: c};
-    final items = <_TooltipItem>[];
+    final items = <TooltipItem>[];
     final sortedEntries = b.secondsByCourse.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     for (final entry in sortedEntries) {
@@ -1312,12 +1313,12 @@ class _StatsScreenState extends State<StatsScreen> {
       final c = courseById[entry.key];
       if (c == null) continue;
       items.add(
-        _TooltipItem(color: c.color, label: c.name, valueHms: _fmtHMS(secs)),
+        TooltipItem(color: c.color, label: c.name, valueHms: fmtHMS(secs)),
       );
     }
     if (items.isEmpty) {
       items.add(
-        _TooltipItem(
+        TooltipItem(
           color: Theme.of(context).colorScheme.outline,
           label: 'No study',
           valueHms: '00:00:00',
@@ -1895,7 +1896,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    "${_monthName(context, selectedMonth.month)} ${selectedMonth.year}",
+                    "${monthName(context, selectedMonth.month)} ${selectedMonth.year}",
                     style: TextStyle(
                       fontWeight: FontWeight.w700,
                       color: theme.colorScheme.onSurface,
@@ -2060,7 +2061,7 @@ class _StatsScreenState extends State<StatsScreen> {
     // Removed "Generating CSV..." snackbar message
     final l10n = AppLocalizations.of(context)!;
     // Calculate month name early to avoid async gap usage of context
-    final monthName = _monthName(context, monthDate.month);
+    final localizedMonth = monthName(context, monthDate.month);
 
     try {
       final start = DateTime(monthDate.year, monthDate.month, 1);
@@ -2181,7 +2182,7 @@ class _StatsScreenState extends State<StatsScreen> {
       // Localized filename: habits_MonthName_YYYY.{format}
       final fileExtension = format == 'excel' ? 'xlsx' : 'csv';
       final fileName =
-          "${l10n.habitReportFileName(monthName, monthDate.year)}.$fileExtension";
+          "${l10n.habitReportFileName(localizedMonth, monthDate.year)}.$fileExtension";
 
       final String path;
       if (format == 'excel') {
@@ -2215,7 +2216,7 @@ Offset? _extractLocal(FlTouchEvent e) {
 }
 
 class _ChartWithTooltipOverlay extends StatelessWidget {
-  final _BucketTooltip? tooltip;
+  final BucketTooltip? tooltip;
   final VoidCallback onDismiss;
   final Widget child;
   const _ChartWithTooltipOverlay({
@@ -2254,7 +2255,7 @@ class _ChartWithTooltipOverlay extends StatelessWidget {
 }
 
 class _TooltipBubble extends StatelessWidget {
-  final _BucketTooltip data;
+  final BucketTooltip data;
   const _TooltipBubble({required this.data});
 
   @override
@@ -2392,7 +2393,7 @@ class _StatsBlock extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                _fmtTotalVerbose(
+                fmtTotalVerbose(
                   totalSecs,
                   context,
                 ).replaceFirst(' ${l10n.total.toLowerCase()}', ''),
@@ -2411,7 +2412,7 @@ class _StatsBlock extends StatelessWidget {
               child: _DetailStatCard(
                 title: l10n.mostStudied,
                 value: mostName,
-                subValue: mostSecs > 0 ? _fmtHMS(mostSecs) : null,
+                subValue: mostSecs > 0 ? fmtHMS(mostSecs) : null,
                 accentColor: mostColor,
                 icon: Icons.trending_up,
               ),
@@ -2422,7 +2423,7 @@ class _StatsBlock extends StatelessWidget {
                 title: l10n.leastStudied,
                 value: leastName,
                 subValue: (leastSecs > 0 && mostSecs > 0)
-                    ? _fmtHMS(leastSecs)
+                    ? fmtHMS(leastSecs)
                     : null,
                 accentColor: leastColor,
                 icon: Icons.trending_down,
@@ -2455,7 +2456,7 @@ class _StatsBlock extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                _fmtHMS(avgSecs),
+                fmtHMS(avgSecs),
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -2600,9 +2601,9 @@ class _SegChip extends StatelessWidget {
 
 class _PieChartWithTooltip extends StatefulWidget {
   final int totalSeconds;
-  final List<_Slice> slices;
-  final _SliceTooltip? tooltip;
-  final void Function(_SliceTooltip)? onSliceTap;
+  final List<Slice> slices;
+  final SliceTooltip? tooltip;
+  final void Function(SliceTooltip)? onSliceTap;
   final VoidCallback onDismiss;
 
   const _PieChartWithTooltip({
@@ -2683,7 +2684,7 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                                         : s.seconds / widget.totalSeconds;
                                     final showTitle = percent >= 0.03;
                                     final label = showTitle
-                                        ? _pieSectionTitle(
+                                        ? pieSectionTitle(
                                             s.name,
                                             s.seconds,
                                             context,
@@ -2721,7 +2722,7 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                             final local = event.localPosition;
 
                             widget.onSliceTap?.call(
-                              _SliceTooltip(
+                              SliceTooltip(
                                 local: local,
                                 id: s.id,
                                 name: s.name,
@@ -2765,7 +2766,7 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _fmtHMS(widget.totalSeconds),
+                            fmtHMS(widget.totalSeconds),
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
@@ -2803,7 +2804,7 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
 }
 
 class _FadeInTooltipCard extends StatefulWidget {
-  final _SliceTooltip data;
+  final SliceTooltip data;
   const _FadeInTooltipCard({required this.data});
 
   @override
@@ -2854,7 +2855,7 @@ class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
               ),
               const SizedBox(height: 2),
               Text(
-                _fmtHMS(widget.data.seconds),
+                fmtHMS(widget.data.seconds),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -2868,85 +2869,6 @@ class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
     );
   }
 }
-
-class _SliceTooltip {
-  final Offset local;
-  final String id;
-  final String name;
-  final int seconds;
-  _SliceTooltip({
-    required this.local,
-    required this.id,
-    required this.name,
-    required this.seconds,
-  });
-}
-
-class _Bucket {
-  final DateTime date;
-  final Map<String, int> secondsByCourse;
-  final bool isMonth;
-  _Bucket({
-    required this.date,
-    required this.secondsByCourse,
-    this.isMonth = false,
-  });
-
-  int get totalSeconds =>
-      secondsByCourse.values.fold<int>(0, (a, b) => a + (b < 0 ? 0 : b));
-}
-
-class _BucketTooltip {
-  final Offset anchor;
-  final String title;
-  final List<_TooltipItem> items;
-  _BucketTooltip({
-    required this.anchor,
-    required this.title,
-    required this.items,
-  });
-}
-
-class _TooltipItem {
-  final Color color;
-  final String label;
-  final String valueHms;
-  _TooltipItem({
-    required this.color,
-    required this.label,
-    required this.valueHms,
-  });
-}
-
-class _Slice {
-  final String id;
-  final String name;
-  final Color color;
-  final int seconds;
-  const _Slice({
-    required this.id,
-    required this.name,
-    required this.color,
-    required this.seconds,
-  });
-}
-
-class _PiePayload {
-  final List<_Slice> slices;
-  final int totalSeconds;
-  const _PiePayload({required this.slices, required this.totalSeconds});
-}
-
-class _BucketsPayload {
-  final List<_Bucket> buckets;
-  final int totalSeconds;
-  const _BucketsPayload({required this.buckets, required this.totalSeconds});
-  const _BucketsPayload.empty() : buckets = const [], totalSeconds = 0;
-}
-
-enum _Range { week, month, year }
-
-enum _TimeUnit { seconds, minutes, hours }
 
 class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
   final Offset anchor;
@@ -2998,231 +2920,4 @@ class _TooltipLayoutDelegate extends SingleChildLayoutDelegate {
   bool shouldRelayout(_TooltipLayoutDelegate oldDelegate) {
     return anchor != oldDelegate.anchor;
   }
-}
-
-_TimeUnit _pickUnit(int totalSeconds) {
-  if (totalSeconds < 60) return _TimeUnit.seconds;
-  if (totalSeconds < 3600) return _TimeUnit.minutes;
-  return _TimeUnit.hours;
-}
-
-double _scaleForUnit(_TimeUnit u) {
-  switch (u) {
-    case _TimeUnit.seconds:
-      return 1;
-    case _TimeUnit.minutes:
-      return 60;
-    case _TimeUnit.hours:
-      return 3600;
-  }
-}
-
-String _unitLabel(_TimeUnit u, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  switch (u) {
-    case _TimeUnit.seconds:
-      return l10n.seconds_plural;
-    case _TimeUnit.minutes:
-      return l10n.minutes_plural;
-    case _TimeUnit.hours:
-      return l10n.hours_plural;
-  }
-}
-
-String _fmtAxisTick(double v, _TimeUnit u) {
-  String numStr;
-  if (v == 0 || v.abs() >= 10) {
-    numStr = v.toStringAsFixed(0);
-  } else if ((v * 10).round() % 10 == 0) {
-    numStr = v.toStringAsFixed(0);
-  } else if ((v * 2).round() % 2 == 0) {
-    numStr = v.toStringAsFixed(1);
-  } else {
-    numStr = v.toStringAsFixed(2);
-  }
-  return numStr;
-}
-
-double _niceInterval(double maxY) {
-  if (maxY <= 1) return 0.2;
-  if (maxY <= 2) return 0.5;
-  if (maxY <= 5) return 1.0;
-  if (maxY <= 10) return 2.0;
-  if (maxY <= 20) return 5.0;
-  if (maxY <= 50) return 10.0;
-  return 20.0;
-}
-
-String _fmtHMS(int s) {
-  final h = (s ~/ 3600).toString().padLeft(2, '0');
-  final m = ((s % 3600) ~/ 60).toString().padLeft(2, '0');
-  final sec = (s % 60).toString().padLeft(2, '0');
-  return '$h:$m:$sec';
-}
-
-String _shortTimeLabel(int seconds, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  if (seconds >= 3600) return '${(seconds / 3600).round()}${l10n.hUnit}';
-  if (seconds >= 60) return '${(seconds / 60).round()}${l10n.mUnit}';
-  return '$seconds${l10n.sUnit}';
-}
-
-String _pieSectionTitle(String name, int seconds, BuildContext context) {
-  final timeLabel = _shortTimeLabel(seconds, context);
-  final trimmed = name.trim();
-  if (trimmed.isEmpty) return timeLabel;
-
-  const maxLine = 12;
-  if (trimmed.length <= maxLine) return '$trimmed\n$timeLabel';
-
-  final split = _bestSplitIndex(trimmed);
-  String line1;
-  String line2;
-  if (split > 0 && split < trimmed.length - 1) {
-    line1 = trimmed.substring(0, split).trimRight();
-    line2 = trimmed.substring(split).trimLeft();
-  } else {
-    final mid = trimmed.length ~/ 2;
-    line1 = trimmed.substring(0, mid).trimRight();
-    line2 = trimmed.substring(mid).trimLeft();
-  }
-
-  if (line2.isEmpty) return '$line1\n$timeLabel';
-  return '$line1\n$line2\n$timeLabel';
-}
-
-int _bestSplitIndex(String value) {
-  final mid = value.length ~/ 2;
-  final left = value.lastIndexOf(' ', mid);
-  final right = value.indexOf(' ', mid + 1);
-  if (left == -1 && right == -1) return mid;
-  if (left == -1) return right;
-  if (right == -1) return left;
-  return (mid - left) <= (right - mid) ? left : right;
-}
-
-String _fmtTotalVerbose(int s, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final h = s ~/ 3600;
-  final m = (s % 3600) ~/ 60;
-  final sec = s % 60;
-  final parts = <String>[];
-  if (h > 0) parts.add('$h ${h == 1 ? l10n.hour : l10n.hours_plural}');
-  if (m > 0) parts.add('$m ${m == 1 ? l10n.minute : l10n.minutes_plural}');
-  if (sec > 0 || parts.isEmpty) {
-    parts.add('$sec ${sec == 1 ? l10n.second : l10n.seconds_plural}');
-  }
-  return '${parts.join(" ")} ${l10n.total.toLowerCase()}';
-}
-
-String _fmtDateShort(DateTime d, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final mo = [
-    l10n.jan,
-    l10n.feb,
-    l10n.mar,
-    l10n.apr,
-    l10n.may,
-    l10n.jun,
-    l10n.jul,
-    l10n.aug,
-    l10n.sep,
-    l10n.oct,
-    l10n.nov,
-    l10n.dec,
-  ];
-  final i = (d.month - 1);
-  final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
-  return '${mo[safe]} ${d.day}';
-}
-
-String _fmtDateLong(DateTime d, BuildContext context) {
-  final l10n = AppLocalizations.of(context)!;
-  final mo = [
-    l10n.jan,
-    l10n.feb,
-    l10n.mar,
-    l10n.apr,
-    l10n.may,
-    l10n.jun,
-    l10n.jul,
-    l10n.aug,
-    l10n.sep,
-    l10n.oct,
-    l10n.nov,
-    l10n.dec,
-  ];
-  final i = (d.month - 1);
-  final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
-  return '${mo[safe]} ${d.day}, ${d.year}';
-}
-
-String _monthName(BuildContext context, int m) {
-  final l10n = AppLocalizations.of(context)!;
-  switch (m) {
-    case 1:
-      return l10n.january;
-    case 2:
-      return l10n.february;
-    case 3:
-      return l10n.march;
-    case 4:
-      return l10n.april;
-    case 5:
-      return l10n.may;
-    case 6:
-      return l10n.june;
-    case 7:
-      return l10n.july;
-    case 8:
-      return l10n.august;
-    case 9:
-      return l10n.september;
-    case 10:
-      return l10n.october;
-    case 11:
-      return l10n.november;
-    case 12:
-      return l10n.december;
-    default:
-      return '';
-  }
-}
-
-String _prevLabel(BuildContext context, _Range r) {
-  final l10n = AppLocalizations.of(context)!;
-  switch (r) {
-    case _Range.week:
-      return l10n.previousWeek;
-    case _Range.month:
-      return l10n.previousMonth;
-    case _Range.year:
-      return l10n.previousYear;
-  }
-}
-
-String _nextLabel(BuildContext context, _Range r) {
-  final l10n = AppLocalizations.of(context)!;
-  switch (r) {
-    case _Range.week:
-      return l10n.nextWeek;
-    case _Range.month:
-      return l10n.nextMonth;
-    case _Range.year:
-      return l10n.nextYear;
-  }
-}
-
-class _HabitStatsResult {
-  final int required;
-  final int completed;
-  final int notCompleted;
-  final double completionRate;
-
-  const _HabitStatsResult(
-    this.required,
-    this.completed,
-    this.notCompleted,
-    this.completionRate,
-  );
 }
