@@ -5,12 +5,20 @@ import 'package:intl/intl.dart';
 import 'package:numer_app/features/habits/models/habit.dart';
 import 'package:numer_app/features/habits/models/habit_rule.dart';
 import 'package:numer_app/features/habits/models/habit_category.dart';
-import 'package:numer_app/features/auth/data/auth_service.dart';
+import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/habits/data/habit_service.dart';
 import 'package:numer_app/features/habits/screens/swipe_selector.dart';
 import 'package:numer_app/features/habits/widgets/habit_time_picker.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+
+import '../widgets/add_habit/add_habit_header.dart';
+import '../widgets/add_habit/course_selector.dart';
+import '../widgets/add_habit/day_selector.dart';
+import '../widgets/add_habit/frequency_option.dart';
+import '../widgets/add_habit/month_day_selector.dart';
+import '../widgets/add_habit/period_selector.dart';
+import '../widgets/add_habit/year_selector.dart';
 
 class AddHabitSheet extends StatefulWidget {
   final HabitCategory? initialCategory;
@@ -296,17 +304,6 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     }
   }
 
-  String _periodLabel(HabitPeriod period, AppLocalizations l10n) {
-    switch (period) {
-      case HabitPeriod.week:
-        return l10n.habitPeriodWeek;
-      case HabitPeriod.month:
-        return l10n.habitPeriodMonth;
-      case HabitPeriod.year:
-        return l10n.habitPeriodYear;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -333,7 +330,7 @@ class _AddHabitSheetState extends State<AddHabitSheet>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildHeader(theme, l10n),
+                AddHabitHeader(screen: _screen),
                 const SizedBox(height: 24),
                 if (_screen == 0) ...[
                   // -- Step 1: Details --
@@ -1171,7 +1168,12 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                   ],
 
                   const SizedBox(height: 16),
-                  _buildCourseSelector(theme),
+                  CourseSelector(
+                    courses: context.watch<AppState>().courses,
+                    type: _type,
+                    connectedIds: _connectedCourseIds,
+                    onSelected: _toggleCourse,
+                  ),
                   const SizedBox(height: 16),
 
                   // Navigation
@@ -1213,9 +1215,16 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                 ? const SizedBox.shrink()
                                 : Column(
                                     children: [
-                                      _buildFreqOption(
-                                        theme,
-                                        type: HabitFrequencyType.daily,
+                                      FrequencyOption(
+                                        selected:
+                                            _freq == HabitFrequencyType.daily,
+                                        disabled:
+                                            _isEditingHabit &&
+                                            _freq != HabitFrequencyType.daily,
+                                        onSelect: () => setState(
+                                          () =>
+                                              _freq = HabitFrequencyType.daily,
+                                        ),
                                         title: l10n.habitFrequencyEveryDay,
                                         child: Text(
                                           l10n.habitFrequencyDailyDescription,
@@ -1228,9 +1237,18 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      _buildFreqOption(
-                                        theme,
-                                        type: HabitFrequencyType.specificDays,
+                                      FrequencyOption(
+                                        selected:
+                                            _freq ==
+                                            HabitFrequencyType.specificDays,
+                                        disabled:
+                                            _isEditingHabit &&
+                                            _freq !=
+                                                HabitFrequencyType.specificDays,
+                                        onSelect: () => setState(
+                                          () => _freq =
+                                              HabitFrequencyType.specificDays,
+                                        ),
                                         title: l10n.habitFrequencySpecificTitle,
                                         child: Column(
                                           crossAxisAlignment:
@@ -1260,36 +1278,63 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                               padding: const EdgeInsets.all(4),
                                               child: Row(
                                                 children: [
-                                                  _buildPeriodTab(
-                                                    theme,
-                                                    l10n.habitFrequencyPeriodWeekLabel,
-                                                    HabitPeriod.week,
+                                                  PeriodTab(
+                                                    label: l10n
+                                                        .habitFrequencyPeriodWeekLabel,
+                                                    selected:
+                                                        _period ==
+                                                        HabitPeriod.week,
+                                                    onTap: () => _selectPeriod(
+                                                      HabitPeriod.week,
+                                                    ),
                                                   ),
-                                                  _buildPeriodTab(
-                                                    theme,
-                                                    l10n.habitFrequencyPeriodMonthLabel,
-                                                    HabitPeriod.month,
+                                                  PeriodTab(
+                                                    label: l10n
+                                                        .habitFrequencyPeriodMonthLabel,
+                                                    selected:
+                                                        _period ==
+                                                        HabitPeriod.month,
+                                                    onTap: () => _selectPeriod(
+                                                      HabitPeriod.month,
+                                                    ),
                                                   ),
-                                                  _buildPeriodTab(
-                                                    theme,
-                                                    l10n.habitFrequencyPeriodYearLabel,
-                                                    HabitPeriod.year,
+                                                  PeriodTab(
+                                                    label: l10n
+                                                        .habitFrequencyPeriodYearLabel,
+                                                    selected:
+                                                        _period ==
+                                                        HabitPeriod.year,
+                                                    onTap: () => _selectPeriod(
+                                                      HabitPeriod.year,
+                                                    ),
                                                   ),
                                                 ],
                                               ),
                                             ),
                                             const SizedBox(height: 16),
                                             if (_period == HabitPeriod.week)
-                                              _buildDaySelector(theme)
+                                              DaySelector(
+                                                weekStart: context
+                                                    .read<AppState>()
+                                                    .weekStart,
+                                                selectedDays: _weekDays,
+                                                onDayChanged: _setWeekDay,
+                                              )
                                             else if (_period ==
                                                 HabitPeriod.month)
-                                              _buildMonthDaySelector(
-                                                theme,
+                                              MonthDaySelector(
+                                                selectedDays: _weekDays,
+                                                onDayChanged: _setWeekDay,
                                               ) // New method
                                             else if (_period ==
                                                 HabitPeriod.year)
-                                              _buildYearSelector(
-                                                theme,
+                                              YearSelector(
+                                                selectedDates: _weekDays,
+                                                onRemove: (encoded) => setState(
+                                                  () =>
+                                                      _weekDays.remove(encoded),
+                                                ),
+                                                onAdd: _pickYearDate,
                                               ), // New method
                                           ],
                                         ),
@@ -1305,10 +1350,19 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                 ? const SizedBox.shrink()
                                 : Column(
                                     children: [
-                                      _buildFreqOption(
-                                        theme,
-                                        type:
+                                      FrequencyOption(
+                                        selected:
+                                            _freq ==
                                             HabitFrequencyType.repeatsInPeriod,
+                                        disabled:
+                                            _isEditingHabit &&
+                                            _freq !=
+                                                HabitFrequencyType
+                                                    .repeatsInPeriod,
+                                        onSelect: () => setState(
+                                          () => _freq = HabitFrequencyType
+                                              .repeatsInPeriod,
+                                        ),
                                         title: l10n
                                             .habitFrequencyTimesPerPeriodTitle,
                                         child: Column(
@@ -1492,9 +1546,8 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                                                       }
                                                     });
                                                   },
-                                                  child: _buildPeriodToggle(
-                                                    theme,
-                                                    _period,
+                                                  child: PeriodToggle(
+                                                    period: _period,
                                                   ),
                                                 ),
                                               ],
@@ -1511,9 +1564,15 @@ class _AddHabitSheetState extends State<AddHabitSheet>
                             curve: Curves.easeOutCubic,
                             child: _isFreqGoalFocused
                                 ? const SizedBox.shrink()
-                                : _buildFreqOption(
-                                    theme,
-                                    type: HabitFrequencyType.interval,
+                                : FrequencyOption(
+                                    selected:
+                                        _freq == HabitFrequencyType.interval,
+                                    disabled:
+                                        _isEditingHabit &&
+                                        _freq != HabitFrequencyType.interval,
+                                    onSelect: () => setState(
+                                      () => _freq = HabitFrequencyType.interval,
+                                    ),
                                     title: l10n.habitFrequencyWorkRestTitle,
                                     child: Column(
                                       crossAxisAlignment:
@@ -1900,315 +1959,50 @@ class _AddHabitSheetState extends State<AddHabitSheet>
     );
   }
 
-  Widget _buildFreqOption(
-    ThemeData theme, {
-    required HabitFrequencyType type,
-    required String title,
-    required Widget child,
-  }) {
-    final selected = _freq == type;
-    // If editing, disable switching to other types
-    final disabled = widget.habit != null && !selected;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: disabled ? null : () => setState(() => _freq = type),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: selected
-                  ? theme.colorScheme.secondaryContainer
-                  : (disabled
-                        ? theme.colorScheme.surfaceContainerHighest.withAlpha(
-                            20,
-                          )
-                        : theme.colorScheme.surfaceContainerHighest.withAlpha(
-                            50,
-                          )),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: selected
-                    ? theme.colorScheme.primary
-                    : Colors.transparent,
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.outline,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: selected
-                        ? theme.colorScheme.onSecondaryContainer
-                        : theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOutCubic,
-          alignment: Alignment.topCenter,
-          child: selected
-              ? Padding(
-                  padding: const EdgeInsets.only(
-                    top: 12,
-                    left: 16,
-                    bottom: 8,
-                  ), // Indent content below
-                  child: child,
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPeriodTab(ThemeData theme, String label, HabitPeriod p) {
-    final selected = _period == p;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (_period != p) {
-            setState(() {
-              _period = p;
-              // Clear weekDays when switching periods to avoid incompatible data
-              // Week uses 1-7, Month uses 1-31, Year uses MMDD encoding
-              _weekDays.clear();
-            });
-          }
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: selected ? theme.colorScheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: selected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPeriodToggle(ThemeData theme, HabitPeriod p) {
-    final l10n = AppLocalizations.of(context)!;
-    final label = _periodLabel(p, l10n);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        transitionBuilder: (child, anim) => FadeTransition(
-          opacity: anim,
-          child: ScaleTransition(scale: anim, child: child),
-        ),
-        child: Text(
-          label.toUpperCase(),
-          key: ValueKey(p),
-          style: TextStyle(
-            color: theme.colorScheme.onPrimaryContainer,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMonthDaySelector(ThemeData theme) {
-    // Display 1-31 in rows of 6, centered
-    final rows = <Widget>[];
-    for (int rowStart = 1; rowStart <= 31; rowStart += 6) {
-      final rowEnd = (rowStart + 5 > 31) ? 31 : rowStart + 5;
-      final rowDays = <Widget>[];
-      for (int day = rowStart; day <= rowEnd; day++) {
-        final selected = _weekDays.contains(day);
-        rowDays.add(
-          GestureDetector(
-            onTap: () => setState(() {
-              if (selected) {
-                _weekDays.remove(day);
-              } else {
-                _weekDays.add(day);
-              }
-            }),
-            child: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: selected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.surfaceContainerHighest,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                "$day",
-                style: TextStyle(
-                  color: selected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-        );
-        if (day < rowEnd) rowDays.add(const SizedBox(width: 8));
-      }
-      rows.add(
-        Row(mainAxisAlignment: MainAxisAlignment.center, children: rowDays),
-      );
-      if (rowEnd < 31) rows.add(const SizedBox(height: 8));
+  void _selectPeriod(HabitPeriod p) {
+    if (_period != p) {
+      setState(() {
+        _period = p;
+        // Clear weekDays when switching periods to avoid incompatible data
+        // Week uses 1-7, Month uses 1-31, Year uses MMDD encoding
+        _weekDays.clear();
+      });
     }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: rows,
-    );
   }
 
-  Widget _buildYearSelector(ThemeData theme) {
-    final localeName = AppLocalizations.of(context)!.localeName;
-    final months = List.generate(
-      12,
-      (i) => DateFormat.MMM(localeName).format(DateTime(2024, i + 1, 1)),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _weekDays
-              .where((encoded) {
-                // Validate: month should be 1-12, day should be 1-31
-                final m = encoded ~/ 100;
-                final d = encoded % 100;
-                return m >= 1 && m <= 12 && d >= 1 && d <= 31;
-              })
-              .map((encoded) {
-                final m = encoded ~/ 100;
-                final d = encoded % 100;
-                return Chip(
-                  label: Text("${months[m - 1]} $d"),
-                  onDeleted: () => setState(() => _weekDays.remove(encoded)),
-                );
-              })
-              .toList(),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () async {
-            // Custom picker or standard? Standard supports one date.
-            final now = DateTime.now();
-            final picked = await showDatePicker(
-              context: context,
-              initialDate: now,
-              firstDate: DateTime(now.year, 1, 1),
-              lastDate: DateTime(now.year, 12, 31),
-            );
-            if (picked != null) {
-              final encoded = picked.month * 100 + picked.day;
-              setState(() => _weekDays.add(encoded));
-            }
-          },
-          icon: const Icon(Icons.add),
-          label: Text(AppLocalizations.of(context)!.habitAddDateAction),
-        ),
-      ],
-    );
+  void _setWeekDay(int day, bool selected) {
+    setState(() {
+      if (selected) {
+        _weekDays.add(day);
+      } else {
+        _weekDays.remove(day);
+      }
+    });
   }
 
-  Widget _buildHeader(ThemeData theme, AppLocalizations l10n) {
-    return Row(
-      children: [
-        const SizedBox(width: 48),
-        Expanded(
-          child: Text(
-            switch (_screen) {
-              0 => l10n.habitCreateTitle,
-              1 => l10n.habitTrackingTitle,
-              2 => l10n.habitFrequencySectionTitle,
-              3 => l10n.habitSchedulingTitle,
-              _ => l10n.habitCreateTitle,
-            },
-            style: theme.textTheme.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(width: 48), // Balance close button
-      ],
+  Future<void> _pickYearDate() async {
+    // Custom picker or standard? Standard supports one date.
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now,
+      firstDate: DateTime(now.year, 1, 1),
+      lastDate: DateTime(now.year, 12, 31),
     );
+    if (picked != null) {
+      final encoded = picked.month * 100 + picked.day;
+      setState(() => _weekDays.add(encoded));
+    }
   }
 
-  Widget _buildDaySelector(ThemeData theme) {
-    final weekStart = context.read<AppState>().weekStart;
-    final narrowWeekdays = MaterialLocalizations.of(context).narrowWeekdays;
-    final days = weekStart == WeekStart.monday
-        ? [...narrowWeekdays.skip(1), narrowWeekdays.first]
-        : narrowWeekdays;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(7, (index) {
-        final dayNum = weekStart == WeekStart.monday
-            ? (index + 1)
-            : (index == 0 ? 7 : index);
-        final active = _weekDays.contains(dayNum);
-        return GestureDetector(
-          onTap: () => setState(() {
-            if (active) {
-              _weekDays.remove(dayNum);
-            } else {
-              _weekDays.add(dayNum);
-            }
-          }),
-          child: CircleAvatar(
-            radius: 18,
-            backgroundColor: active
-                ? theme.colorScheme.primary
-                : theme.colorScheme.surfaceContainerHighest,
-            foregroundColor: active
-                ? theme.colorScheme.onPrimary
-                : theme.colorScheme.onSurface,
-            child: Text(
-              days[index],
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-          ),
-        );
-      }),
-    );
+  void _toggleCourse(String courseId, bool selected) {
+    setState(() {
+      if (selected) {
+        _connectedCourseIds.add(courseId);
+      } else {
+        _connectedCourseIds.remove(courseId);
+      }
+    });
   }
 
   Future<void> _submit() async {
@@ -2382,81 +2176,5 @@ class _AddHabitSheetState extends State<AddHabitSheet>
         }
       }
     }
-  }
-
-  Widget _buildCourseSelector(ThemeData theme) {
-    final courses = context.watch<AppState>().courses;
-    if (courses.isEmpty) return const SizedBox.shrink();
-
-    // Only show for Yes/No and Time
-    if (_type != HabitType.yesNo && _type != HabitType.time) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context)!.habitConnectCourse,
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.primary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          AppLocalizations.of(context)!.habitCourseSyncHint,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 40,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: courses.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final c = courses[index];
-              final isSelected = _connectedCourseIds.contains(c.id);
-              return FilterChip(
-                label: Text(c.name),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _connectedCourseIds.add(c.id);
-                    } else {
-                      _connectedCourseIds.remove(c.id);
-                    }
-                  });
-                },
-                avatar: CircleAvatar(backgroundColor: c.color, radius: 8),
-                showCheckmark: false,
-                labelStyle: TextStyle(
-                  color: isSelected
-                      ? theme.colorScheme.onPrimary
-                      : theme.colorScheme.onSurface,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                selectedColor: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest
-                    .withAlpha(80),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: isSelected
-                        ? Colors.transparent
-                        : theme.colorScheme.outlineVariant,
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-              );
-            },
-          ),
-        ),
-      ],
-    );
   }
 }
