@@ -4,7 +4,7 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 30 done, 1 in progress, 53 to do (84 tasks). Staging deployed 2026-11-27.**
+**Total: 30 done, 1 in progress, 54 to do (85 tasks). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do
 
@@ -70,7 +70,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ⏳ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (0 of 17; all prompts written)
+## Phase 3: Superapp shell (0 of 18; all prompts written)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
@@ -93,6 +93,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ⏳ | P3-15 Split `add_habit_sheet.dart` | Break the 2,462-line add-habit sheet into small files |
 | ⏳ | P3-16 Split `habits_screen.dart` | Break the 1,610-line habits screen into small files |
 | ⏳ | P3-17 States pass | Confirmations become bottom sheets; loading spinners become quiet placeholders |
+| ⏳ | P3-18 Focus mode everywhere | While typing in any sheet, only the field and a Done button stay on screen |
 
 ## Phase 4: Module integration (0 of 15)
 

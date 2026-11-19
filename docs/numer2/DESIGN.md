@@ -458,6 +458,17 @@ safe area. It opens on the root navigator.
 primary or destructive button, and a text button "Cancel". Use it for every confirmation.
 `AlertDialog` is reserved for operating-system permission rationales.
 
+**Focus mode (owner rule, every sheet or dialog with a text field).** While the keyboard is up,
+the sheet keeps only the active field: its label and the field. Everything else (title,
+helper text, other fields, gaps, secondary actions) folds away, and the sheet's actions are
+replaced by one primary button, "Done" (or the form's own submit when only one field
+exists). Done dismisses the keyboard and the whole form returns. Folding and the button swap
+share one 240 ms ease-out animation; with reduce-motion they switch instantly. The keyboard
+signal is `MediaQuery.viewInsets.bottom > 0`, not focus alone. "Next" on the keyboard moves to
+the next field and opens its fold. Built from `NumerSheetFocusMode`, `NumerFocusFold`,
+`NumerFocusGap` and `NumerFocusActions` (ported from Gradus `focus_mode.dart`, which took
+it from Muto, so all of the owner's apps behave alike).
+
 ### 5.8 Status label
 
 Plain text in `status` style. No pill, no background, no border. Colours: neutral

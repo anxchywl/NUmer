@@ -508,11 +508,12 @@ them. Every task marked **approval** touches the owner's existing server project
 | P3-10 | Local "Upcoming" store | P3-07 | low | sonnet, medium | none |
 | P3-11 | Campus root | P3-05 | low | sonnet, medium | none |
 | P3-12 | Design pass: glass, gradients, chips, raw toasts | P3-06, P3-14, P3-15 | med | sonnet, high | review screenshots |
-| P3-13 | Docs after shell | P3-17 | low | sonnet, low | none |
+| P3-13 | Docs after shell | P3-18 | low | sonnet, low | none |
 | P3-14 | Split `stats.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-15 | Split `add_habit_sheet.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-16 | Split `habits_screen.dart` (no behaviour change) | P0-12 | med | sonnet, high | smoke list |
 | P3-17 | States pass: confirm sheets and skeletons | P3-12 | med | sonnet, high | review screenshots |
+| P3-18 | Focus mode in every input sheet | P3-01, P3-15, P3-17, P1-05 | med | sonnet, high | review screenshots |
 
 Can run together: P3-01, P3-04, P3-08, P3-14, P3-15 and P3-16 (disjoint files); P3-09, P3-10
 and P3-11 after P3-07.
@@ -636,7 +637,7 @@ prompts/P3-04-split-home.md                   prompts/P3-13-docs-after-shell.md
 prompts/P3-05-new-shell.md                    prompts/P3-14-split-stats.md
 prompts/P3-06-study-root.md                   prompts/P3-15-split-add-habit-sheet.md
 prompts/P3-07-home-today.md                   prompts/P3-16-split-habits-screen.md
-prompts/P3-08-feed-backend.md                 prompts/P3-17-states-pass.md
+prompts/P3-08-feed-backend.md                 prompts/P3-17-states-pass.md   prompts/P3-18-focus-mode.md
 prompts/P3-09-news-client.md
 ```
 
