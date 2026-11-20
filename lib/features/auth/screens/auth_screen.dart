@@ -10,44 +10,11 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
-// Validation patterns
-const int _emailMaxLength = 254;
-const int _passwordMaxLength = 64;
-// Allowed password chars: A-Z, a-z, 0-9, and specified symbols
-final _allowedPasswordCharsRegex = RegExp(
-  r'^[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
-  "'"
-  r'",.<>/?\\|~]*$',
-);
-final _passwordInputFormatters = <TextInputFormatter>[
-  LengthLimitingTextInputFormatter(_passwordMaxLength),
-  FilteringTextInputFormatter.allow(
-    RegExp(
-      r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
-      "'"
-      r'",.<>/?\\|~]',
-    ),
-  ),
-];
-final _emailInputFormatters = <TextInputFormatter>[
-  LengthLimitingTextInputFormatter(_emailMaxLength),
-  FilteringTextInputFormatter.allow(
-    RegExp(
-      r'[A-Za-z0-9!@#$%^&*()\-_=+\[\]{};:'
-      "'"
-      r'",.<>/?\\|~@.]',
-    ),
-  ),
-];
+import '../widgets/auth_validators.dart';
+
 final _displayNameInputFormatter = FilteringTextInputFormatter.allow(
   RegExp(r'[A-Za-z0-9 ]'),
 );
-final _emailRegex = RegExp(r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
-
-bool _hasInvalidPasswordChars(String value) {
-  return !_allowedPasswordCharsRegex.hasMatch(value);
-}
-
 bool _isValidDisplayName(String value) {
   if (value.length < 2 || value.length > 30) return false;
   // Allow letters, numbers, spaces, hyphens, and apostrophes
@@ -420,7 +387,7 @@ class _LoginFormState extends State<_LoginForm> {
               keyboardType: TextInputType.emailAddress,
               textAlignVertical: TextAlignVertical.center,
               autofillHints: const [AutofillHints.email],
-              inputFormatters: _emailInputFormatters,
+              inputFormatters: emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.emailAddress,
@@ -431,7 +398,7 @@ class _LoginFormState extends State<_LoginForm> {
                 if (trimmed.isEmpty) {
                   return AppLocalizations.of(context)!.enterEmail;
                 }
-                if (!_emailRegex.hasMatch(trimmed.toLowerCase())) {
+                if (!emailRegex.hasMatch(trimmed.toLowerCase())) {
                   return AppLocalizations.of(context)!.invalidEmail;
                 }
                 return null;
@@ -443,7 +410,7 @@ class _LoginFormState extends State<_LoginForm> {
               autofillHints: const [AutofillHints.password],
               obscureText: _obscurePassword,
               textAlignVertical: TextAlignVertical.center,
-              inputFormatters: _passwordInputFormatters,
+              inputFormatters: passwordInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.password,
@@ -463,7 +430,7 @@ class _LoginFormState extends State<_LoginForm> {
                 if (value == null || value.isEmpty) {
                   return AppLocalizations.of(context)!.enterPassword;
                 }
-                if (_hasInvalidPasswordChars(value)) {
+                if (hasInvalidPasswordChars(value)) {
                   return AppLocalizations.of(context)!.passwordInvalidChars;
                 }
                 return null;
@@ -595,7 +562,7 @@ class _RegisterFormState extends State<_RegisterForm> {
               keyboardType: TextInputType.emailAddress,
               textAlignVertical: TextAlignVertical.center,
               autofillHints: const [AutofillHints.email],
-              inputFormatters: _emailInputFormatters,
+              inputFormatters: emailInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.emailAddress,
@@ -606,7 +573,7 @@ class _RegisterFormState extends State<_RegisterForm> {
                 if (trimmed.isEmpty) {
                   return AppLocalizations.of(context)!.enterEmail;
                 }
-                if (!_emailRegex.hasMatch(trimmed.toLowerCase())) {
+                if (!emailRegex.hasMatch(trimmed.toLowerCase())) {
                   return AppLocalizations.of(context)!.invalidEmail;
                 }
                 return null;
@@ -618,7 +585,7 @@ class _RegisterFormState extends State<_RegisterForm> {
               autofillHints: const [AutofillHints.newPassword],
               obscureText: _obscurePassword,
               textAlignVertical: TextAlignVertical.center,
-              inputFormatters: _passwordInputFormatters,
+              inputFormatters: passwordInputFormatters,
               decoration: _filledFieldDecoration(
                 context,
                 label: AppLocalizations.of(context)!.password,
@@ -635,15 +602,8 @@ class _RegisterFormState extends State<_RegisterForm> {
                 ),
               ),
               onFieldSubmitted: (_) => _submit(),
-              validator: (value) {
-                if (value == null || value.length < 8) {
-                  return AppLocalizations.of(context)!.passwordLength;
-                }
-                if (_hasInvalidPasswordChars(value)) {
-                  return AppLocalizations.of(context)!.passwordInvalidChars;
-                }
-                return null;
-              },
+              validator: (value) =>
+                  newPasswordError(AppLocalizations.of(context)!, value),
             ),
             const SizedBox(height: 28),
             FilledButton.icon(
@@ -890,7 +850,7 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 autofillHints: const [AutofillHints.email],
-                inputFormatters: _emailInputFormatters,
+                inputFormatters: emailInputFormatters,
                 decoration: _filledFieldDecoration(
                   context,
                   label: l10n.emailAddress,
