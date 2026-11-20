@@ -8,7 +8,6 @@ import 'package:numer_app/app/shell/app_shell.dart';
 import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/courses/courses.dart';
-import 'package:numer_app/features/home/home.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 
 mixin ShellHooks on State<AppShell> {
