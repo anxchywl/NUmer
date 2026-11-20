@@ -45,6 +45,31 @@ class _PomodoroTabState extends State<PomodoroTab> {
         ? pomodoroPhaseLabel(AppLocalizations.of(context)!, phase)
         : AppLocalizations.of(context)!.start;
 
+    return _scrollable([
+      const Spacer(),
+      ..._status(
+        context,
+        phaseLabel: phaseLabel,
+        isPaused: isPaused,
+        remaining: remaining,
+        elapsed: elapsed,
+        total: total,
+        completed: completed,
+      ),
+      const SizedBox(height: 32),
+      const Spacer(),
+      ..._longBreak(
+        context,
+        value: sliderValue,
+        min: minLong,
+        max: maxLong,
+        enabled: sliderEnabled,
+      ),
+      const SizedBox(height: 8),
+    ]);
+  }
+
+  Widget _scrollable(List<Widget> children) {
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -57,30 +82,7 @@ class _PomodoroTabState extends State<PomodoroTab> {
                   horizontal: 24,
                   vertical: 20,
                 ),
-                child: Column(
-                  children: [
-                    const Spacer(),
-                    ..._status(
-                      context,
-                      phaseLabel: phaseLabel,
-                      isPaused: isPaused,
-                      remaining: remaining,
-                      elapsed: elapsed,
-                      total: total,
-                      completed: completed,
-                    ),
-                    const SizedBox(height: 32),
-                    const Spacer(),
-                    ..._longBreak(
-                      context,
-                      value: sliderValue,
-                      min: minLong,
-                      max: maxLong,
-                      enabled: sliderEnabled,
-                    ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
+                child: Column(children: children),
               ),
             ),
           ),

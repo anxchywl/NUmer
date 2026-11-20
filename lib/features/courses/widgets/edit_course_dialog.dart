@@ -28,52 +28,19 @@ Future<void> showEditCourseDialog(BuildContext context, Course course) {
         builder: (ctx, setLocal) {
           return AlertDialog(
             title: Text(AppLocalizations.of(context)!.editCourse),
-            content: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _editNameField(context, nameCtrl),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        AppLocalizations.of(context)!.color,
-                        style: Theme.of(ctx).textTheme.labelLarge,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _editSwatches(
-                      selected: selected,
-                      onSwatch: (c) => setLocal(() {
-                        selected = c;
-                        showCustomPicker = false;
-                      }),
-                      onToggleCustom: () =>
-                          setLocal(() => showCustomPicker = !showCustomPicker),
-                      onColorPicked: (color) =>
-                          setLocal(() => selected = color),
-                    ),
-                    AnimatedCrossFade(
-                      duration: const Duration(milliseconds: 220),
-                      crossFadeState: showCustomPicker
-                          ? CrossFadeState.showSecond
-                          : CrossFadeState.showFirst,
-                      firstChild: const SizedBox.shrink(),
-                      secondChild: Column(
-                        children: [
-                          const SizedBox(height: 16),
-                          CustomColorPicker(
-                            initial: selected,
-                            onChanged: (c) => setLocal(() => selected = c),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            content: _editContent(
+              context,
+              ctx,
+              nameCtrl,
+              selected: selected,
+              showCustomPicker: showCustomPicker,
+              onSwatch: (c) => setLocal(() {
+                selected = c;
+                showCustomPicker = false;
+              }),
+              onToggleCustom: () =>
+                  setLocal(() => showCustomPicker = !showCustomPicker),
+              onColorPicked: (color) => setLocal(() => selected = color),
             ),
             actions: [
               TextButton(
@@ -90,6 +57,57 @@ Future<void> showEditCourseDialog(BuildContext context, Course course) {
         },
       );
     },
+  );
+}
+
+Widget _editContent(
+  BuildContext context,
+  BuildContext ctx,
+  TextEditingController nameCtrl, {
+  required Color selected,
+  required bool showCustomPicker,
+  required ValueChanged<Color> onSwatch,
+  required VoidCallback onToggleCustom,
+  required ValueChanged<Color> onColorPicked,
+}) {
+  return SingleChildScrollView(
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _editNameField(context, nameCtrl),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              AppLocalizations.of(context)!.color,
+              style: Theme.of(ctx).textTheme.labelLarge,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _editSwatches(
+            selected: selected,
+            onSwatch: onSwatch,
+            onToggleCustom: onToggleCustom,
+            onColorPicked: onColorPicked,
+          ),
+          AnimatedCrossFade(
+            duration: const Duration(milliseconds: 220),
+            crossFadeState: showCustomPicker
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            firstChild: const SizedBox.shrink(),
+            secondChild: Column(
+              children: [
+                const SizedBox(height: 16),
+                CustomColorPicker(initial: selected, onChanged: onColorPicked),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ),
   );
 }
 
