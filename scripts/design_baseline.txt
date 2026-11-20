@@ -30,10 +30,8 @@ spinner	lib/features/account/widgets/profile_form.dart	1
 color_literal	lib/features/account/widgets/universal_avatar.dart	2
 print	lib/features/auth/data/auth_service.dart	5
 gradient	lib/features/auth/screens/auth_screen.dart	1
-shadow	lib/features/auth/screens/auth_screen.dart	4
+shadow	lib/features/auth/screens/auth_screen.dart	3
 color_literal	lib/features/auth/screens/auth_screen.dart	2
-spinner	lib/features/auth/screens/auth_screen.dart	1
-snackbar	lib/features/auth/screens/auth_screen.dart	4
 shadow	lib/features/auth/screens/profile_setup_screen.dart	1
 spinner	lib/features/auth/screens/profile_setup_screen.dart	1
 print	lib/features/connections/data/connections_service.dart	2
