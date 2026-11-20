@@ -22,7 +22,6 @@ lib/features/home/home.dart -> lib/features/ai_analysis/ai_analysis_screen.dart
 lib/features/home/home.dart -> lib/features/courses/course.dart
 lib/features/home/home.dart -> lib/features/courses/swipeable_course_item.dart
 lib/features/sessions/screens/timer.dart -> lib/features/courses/course.dart
-lib/features/stats/screens/stats.dart -> lib/features/courses/course.dart
 lib/features/stats/screens/stats.dart -> lib/features/habits/data/habit_service.dart
 lib/features/stats/screens/stats.dart -> lib/features/habits/models/habit.dart
 lib/features/stats/screens/stats.dart -> lib/features/history/screens/history.dart
