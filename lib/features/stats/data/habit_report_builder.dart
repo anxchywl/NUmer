@@ -45,20 +45,8 @@ Future<String> generateHabitReport(
     );
   }
 
-  // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
-  final totalLabel = format == 'csv'
-      ? 'Total completed'
-      : l10n.csvTotalCompleted;
-  final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
-  final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
-
   rows.addAll(
-    _summaryRows(
-      [totalLabel, targetLabel, rateLabel],
-      activeHabits,
-      habitCompletions,
-      habitTargets,
-    ),
+    _summaryRows(format, l10n, activeHabits, habitCompletions, habitTargets),
   );
 
   // 4. Generate File
@@ -67,6 +55,14 @@ Future<String> generateHabitReport(
   final fileName =
       "${l10n.habitReportFileName(localizedMonth, monthDate.year)}.$fileExtension";
 
+  return _writeReportFile(format, fileName, rows);
+}
+
+Future<String> _writeReportFile(
+  String format,
+  String fileName,
+  List<List<dynamic>> rows,
+) async {
   final String path;
   if (format == 'excel') {
     path = await ExportService.generateExcelFile(
@@ -158,14 +154,22 @@ List<dynamic> _dayRow(
 }
 
 List<List<dynamic>> _summaryRows(
-  List<String> labels,
+  String format,
+  AppLocalizations l10n,
   List<Habit> activeHabits,
   Map<String, int> habitCompletions,
   Map<String, int> habitTargets,
 ) {
-  final totalRow = <dynamic>[labels[0]];
-  final targetRow = <dynamic>[labels[1]];
-  final rateRow = <dynamic>[labels[2]];
+  // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
+  final totalLabel = format == 'csv'
+      ? 'Total completed'
+      : l10n.csvTotalCompleted;
+  final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
+  final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
+
+  final totalRow = <dynamic>[totalLabel];
+  final targetRow = <dynamic>[targetLabel];
+  final rateRow = <dynamic>[rateLabel];
 
   for (final h in activeHabits) {
     final comp = habitCompletions[h.id] ?? 0;

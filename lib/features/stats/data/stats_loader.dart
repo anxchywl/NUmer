@@ -41,9 +41,10 @@ Future<BucketsPayload> loadBucketsForRange(
   Range r,
   List<Course> courses,
 ) async {
+  final valid = courses.map((c) => c.id).toSet();
   final buckets = r == Range.week || r == Range.month
-      ? await _dayBuckets(start, end, courses)
-      : await _monthBuckets(start, courses);
+      ? await _dayBuckets(start, end, courses, valid)
+      : await _monthBuckets(start, courses, valid);
   final totalSecs = buckets.fold<int>(0, (sum, b) => sum + b.totalSeconds);
 
   return BucketsPayload(buckets: buckets, totalSeconds: totalSecs);
@@ -53,6 +54,7 @@ Future<List<Bucket>> _dayBuckets(
   DateTime start,
   DateTime end,
   List<Course> courses,
+  Set<String> valid,
 ) async {
   final buckets = <Bucket>[];
   final days = end.difference(start).inDays;
@@ -71,14 +73,18 @@ Future<List<Bucket>> _dayBuckets(
 
     final map = await Storage.secondsByCourseBetween(dayStart, dayEnd);
 
-    final cleaned = _cleanSeconds(map, courses);
+    final cleaned = _cleanSeconds(map, courses, valid);
 
     buckets.add(Bucket(date: dayStart, secondsByCourse: cleaned));
   }
   return buckets;
 }
 
-Future<List<Bucket>> _monthBuckets(DateTime start, List<Course> courses) async {
+Future<List<Bucket>> _monthBuckets(
+  DateTime start,
+  List<Course> courses,
+  Set<String> valid,
+) async {
   final buckets = <Bucket>[];
   for (var month = 1; month <= 12; month++) {
     final monthStart = DateTime(start.year, month, 1);
@@ -89,7 +95,7 @@ Future<List<Bucket>> _monthBuckets(DateTime start, List<Course> courses) async {
         : monthEnd;
 
     final map = await Storage.secondsByCourseBetween(monthStart, effectiveEnd);
-    final cleaned = _cleanSeconds(map, courses);
+    final cleaned = _cleanSeconds(map, courses, valid);
     buckets.add(
       Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true),
     );
@@ -97,9 +103,11 @@ Future<List<Bucket>> _monthBuckets(DateTime start, List<Course> courses) async {
   return buckets;
 }
 
-// every course gets an entry so the chart keeps one segment slot per course
-Map<String, int> _cleanSeconds(Map<String, int> map, List<Course> courses) {
-  final valid = courses.map((c) => c.id).toSet();
+Map<String, int> _cleanSeconds(
+  Map<String, int> map,
+  List<Course> courses,
+  Set<String> valid,
+) {
   final cleaned = <String, int>{};
   map.forEach((k, v) {
     if (!valid.contains(k)) return;
