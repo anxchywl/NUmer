@@ -91,6 +91,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coralPreset => 'Coral';
 
   @override
+  String get tealPreset => 'Teal';
+
+  @override
   String get createPreset => 'Create preset';
 
   @override
@@ -2138,4 +2141,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get copiedToClipboard => 'Copied to clipboard';
+
+  @override
+  String get sessionNotificationTitle => 'Session reminder';
+
+  @override
+  String sessionNotificationBody(String name) {
+    return 'It is time for your $name session.';
+  }
+
+  @override
+  String get sessionNotificationAction => 'Start session';
 }

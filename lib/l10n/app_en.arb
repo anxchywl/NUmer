@@ -26,6 +26,7 @@
   "emeraldPreset": "Emerald",
   "indigoPreset": "Indigo",
   "coralPreset": "Coral",
+  "tealPreset": "Teal",
   "createPreset": "Create preset",
   "presetName": "Preset name",
   "lettersOnly": "Letters and spaces only",
@@ -1007,5 +1008,15 @@
   "habitWeekLast": "Last week",
   "habitWeeksAgo": "weeks ago",
   "habitWeekCurrent": "This week",
-  "copiedToClipboard": "Copied to clipboard"
+  "copiedToClipboard": "Copied to clipboard",
+  "sessionNotificationTitle": "Session reminder",
+  "sessionNotificationBody": "It is time for your {name} session.",
+  "@sessionNotificationBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionNotificationAction": "Start session"
 }
