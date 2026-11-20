@@ -1359,9 +1359,6 @@ class AppLocalizationsKk extends AppLocalizations {
       'Есептік жазба жасағаннан кейін қолданбаны пайдалану үшін эл. поштаны растау қажет болады.';
 
   @override
-  String get verificationEmailSent => 'Растау хаты жіберілді!';
-
-  @override
   String get signedInSuccessfully => 'Сәтті кірдіңіз';
 
   @override
@@ -1405,41 +1402,13 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get resetPasswordSubtitle =>
-      'Аккаунт поштасын енгізіңіз. Біз сілтемені жібереміз.';
-
-  @override
-  String get sendResetLink => 'Сілтемені жіберу';
-
-  @override
-  String get resetLinkSent => 'Бұл поштаға аккаунт болса, сілтеме жіберілді.';
+      'Поштаңызды енгізіңіз. 6 таңбалы код жібереміз.';
 
   @override
   String get backToSignIn => 'Кіру бетіне оралу';
 
   @override
-  String get verifyEmailFirst =>
-      'Алдымен поштаны растаңыз. Растау хатын жібердік.';
-
-  @override
-  String get resendVerificationEmail => 'Растау хатын қайта жіберу';
-
-  @override
   String get invalidEmailFormat => 'Дұрыс email енгізіңіз.';
-
-  @override
-  String get resetRateLimited => 'Келесі әрекетке дейін сәл күтіңіз.';
-
-  @override
-  String get networkRequestFailed =>
-      'Желі қатесі. Байланысты тексеріп, қайталап көріңіз.';
-
-  @override
-  String get signInToResend => 'Қайта жіберу үшін жүйеге кіріңіз.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return '$seconds с кейін қайталап көріңіз';
-  }
 
   @override
   String get sessionNotes => 'Сессия жазбалары';
@@ -2220,4 +2189,46 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get emailVerifiedMessage => 'Пошта расталды.';
+
+  @override
+  String get sendResetCode => 'Код жіберу';
+
+  @override
+  String resetCodeSentGeneric(String email) {
+    return '$email мекенжайымен аккаунт бар болса, код жіберіледі.';
+  }
+
+  @override
+  String get newPasswordTitle => 'Жаңа құпиясөз орнатыңыз';
+
+  @override
+  String get newPasswordLabel => 'Жаңа құпиясөз';
+
+  @override
+  String get confirmPasswordLabel => 'Құпиясөзді қайталаңыз';
+
+  @override
+  String get passwordsDontMatch => 'Құпиясөздер сәйкес келмейді.';
+
+  @override
+  String get savePasswordButton => 'Құпиясөзді сақтау';
+
+  @override
+  String get passwordResetSuccess =>
+      'Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.';
+
+  @override
+  String get resetSessionExpired =>
+      'Қалпына келтіру уақыты өтті. Қайта бастаңыз.';
+
+  @override
+  String get resetStartOver => 'Қайта бастау';
+
+  @override
+  String get resetRequestFailed =>
+      'Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get passwordSaveFailed =>
+      'Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз.';
 }

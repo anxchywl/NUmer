@@ -593,7 +593,6 @@
   "displayName": "Көрсетілетін ат",
   "createAccount": "Есептік жазба жасау",
   "afterCreatingAccount": "Есептік жазба жасағаннан кейін қолданбаны пайдалану үшін эл. поштаны растау қажет болады.",
-  "verificationEmailSent": "Растау хаты жіберілді!",
   "signedInSuccessfully": "Сәтті кірдіңіз",
   "enterEmail": "Эл. поштаңызды енгізіңіз.",
   "invalidEmail": "Дұрыс эл. пошта мекенжайын енгізіңіз.",
@@ -607,24 +606,9 @@
   "loggingOut": "Аккаунттан шығу...",
   "forgotPassword": "Құпиясөзді ұмыттыңыз ба?",
   "resetPasswordTitle": "Құпиясөзді қалпына келтіру",
-  "resetPasswordSubtitle": "Аккаунт поштасын енгізіңіз. Біз сілтемені жібереміз.",
-  "sendResetLink": "Сілтемені жіберу",
-  "resetLinkSent": "Бұл поштаға аккаунт болса, сілтеме жіберілді.",
+  "resetPasswordSubtitle": "Поштаңызды енгізіңіз. 6 таңбалы код жібереміз.",
   "backToSignIn": "Кіру бетіне оралу",
-  "verifyEmailFirst": "Алдымен поштаны растаңыз. Растау хатын жібердік.",
-  "resendVerificationEmail": "Растау хатын қайта жіберу",
   "invalidEmailFormat": "Дұрыс email енгізіңіз.",
-  "resetRateLimited": "Келесі әрекетке дейін сәл күтіңіз.",
-  "networkRequestFailed": "Желі қатесі. Байланысты тексеріп, қайталап көріңіз.",
-  "signInToResend": "Қайта жіберу үшін жүйеге кіріңіз.",
-  "tryAgainInSeconds": "{seconds} с кейін қайталап көріңіз",
-  "@tryAgainInSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
   "sessionNotes": "Сессия жазбалары",
   "sessionNotesHint": "Осы сессияға жазба қосыңыз",
   "sendNotes": "Жазбаларды жіберу",
@@ -1061,5 +1045,24 @@
   "codeDeliveryFailed": "Хатты жіберу мүмкін болмады. Қайталап көріңіз.",
   "codeCheckFailed": "Кодты тексеру мүмкін болмады. Қайталап көріңіз.",
   "codeOffline": "Байланыс жоқ. Желіні тексеріп, қайталаңыз.",
-  "emailVerifiedMessage": "Пошта расталды."
+  "emailVerifiedMessage": "Пошта расталды.",
+  "sendResetCode": "Код жіберу",
+  "resetCodeSentGeneric": "{email} мекенжайымен аккаунт бар болса, код жіберіледі.",
+  "@resetCodeSentGeneric": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "newPasswordTitle": "Жаңа құпиясөз орнатыңыз",
+  "newPasswordLabel": "Жаңа құпиясөз",
+  "confirmPasswordLabel": "Құпиясөзді қайталаңыз",
+  "passwordsDontMatch": "Құпиясөздер сәйкес келмейді.",
+  "savePasswordButton": "Құпиясөзді сақтау",
+  "passwordResetSuccess": "Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.",
+  "resetSessionExpired": "Қалпына келтіру уақыты өтті. Қайта бастаңыз.",
+  "resetStartOver": "Қайта бастау",
+  "resetRequestFailed": "Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.",
+  "passwordSaveFailed": "Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз."
 }

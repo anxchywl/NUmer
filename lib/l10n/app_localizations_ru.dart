@@ -1362,9 +1362,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'После создания аккаунта вам нужно будет подтвердить эл. почту, чтобы начать пользоваться приложением.';
 
   @override
-  String get verificationEmailSent => 'Письмо с подтверждением отправлено!';
-
-  @override
   String get signedInSuccessfully => 'Вход выполнен успешно';
 
   @override
@@ -1407,42 +1404,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get resetPasswordSubtitle =>
-      'Укажите почту аккаунта. Мы отправим ссылку для сброса.';
-
-  @override
-  String get sendResetLink => 'Отправить ссылку';
-
-  @override
-  String get resetLinkSent =>
-      'Если аккаунт существует, мы отправили ссылку для сброса.';
+      'Введите почту. Мы отправим 6-значный код.';
 
   @override
   String get backToSignIn => 'Назад к входу';
 
   @override
-  String get verifyEmailFirst =>
-      'Сначала подтвердите почту. Мы отправили письмо для подтверждения.';
-
-  @override
-  String get resendVerificationEmail => 'Отправить письмо повторно';
-
-  @override
   String get invalidEmailFormat => 'Введите корректный email.';
-
-  @override
-  String get resetRateLimited => 'Подождите немного перед следующей попыткой.';
-
-  @override
-  String get networkRequestFailed =>
-      'Ошибка сети. Проверьте соединение и повторите.';
-
-  @override
-  String get signInToResend => 'Войдите, чтобы отправить письмо повторно.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return 'Повторите через $seconds с';
-  }
 
   @override
   String get sessionNotes => 'Заметки к сессии';
@@ -2246,4 +2214,44 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get emailVerifiedMessage => 'Почта подтверждена.';
+
+  @override
+  String get sendResetCode => 'Отправить код';
+
+  @override
+  String resetCodeSentGeneric(String email) {
+    return 'Если аккаунт с адресом $email существует, код уже отправлен.';
+  }
+
+  @override
+  String get newPasswordTitle => 'Задайте новый пароль';
+
+  @override
+  String get newPasswordLabel => 'Новый пароль';
+
+  @override
+  String get confirmPasswordLabel => 'Повторите пароль';
+
+  @override
+  String get passwordsDontMatch => 'Пароли не совпадают.';
+
+  @override
+  String get savePasswordButton => 'Сохранить пароль';
+
+  @override
+  String get passwordResetSuccess => 'Пароль изменён. Войдите с новым паролем.';
+
+  @override
+  String get resetSessionExpired => 'Время сброса истекло. Начните заново.';
+
+  @override
+  String get resetStartOver => 'Начать заново';
+
+  @override
+  String get resetRequestFailed =>
+      'Не удалось отправить запрос. Попробуйте ещё раз.';
+
+  @override
+  String get passwordSaveFailed =>
+      'Не удалось сохранить пароль. Попробуйте ещё раз.';
 }
