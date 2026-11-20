@@ -25,5 +25,4 @@ lib/features/sessions/screens/timer.dart -> lib/features/courses/course.dart
 lib/features/stats/screens/stats.dart -> lib/features/courses/course.dart
 lib/features/stats/screens/stats.dart -> lib/features/habits/data/habit_service.dart
 lib/features/stats/screens/stats.dart -> lib/features/habits/models/habit.dart
-lib/features/stats/screens/stats.dart -> lib/features/history/data/export_service.dart
 lib/features/stats/screens/stats.dart -> lib/features/history/screens/history.dart
