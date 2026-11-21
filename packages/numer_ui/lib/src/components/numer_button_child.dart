@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/numer_space.dart';
-
-const double _spinnerSize = 16;
+const double _spinnerSize = 20;
 const double _spinnerStrokeWidth = 2;
 
 class NumerButtonChild extends StatelessWidget {
@@ -10,36 +8,51 @@ class NumerButtonChild extends StatelessWidget {
     super.key,
     required this.label,
     this.loading = false,
+    this.loadingHint,
   });
 
   final String label;
   final bool loading;
 
+  // the caller's localized word for a screen reader, this package has none
+  final String? loadingHint;
+
   @override
   Widget build(BuildContext context) {
-    final text = Text(
-      label,
-      maxLines: 2,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.center,
+    return Semantics(
+      hint: loading ? loadingHint : null,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // laid out while hidden so the button keeps its size
+          Visibility(
+            visible: !loading,
+            maintainSize: true,
+            maintainAnimation: true,
+            maintainState: true,
+            maintainSemantics: true,
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          if (loading) Positioned.fill(child: Center(child: _spinner(context))),
+        ],
+      ),
     );
-    if (!loading) return text;
+  }
 
+  Widget _spinner(BuildContext context) {
     final color =
         IconTheme.of(context).color ?? DefaultTextStyle.of(context).style.color;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: NumerSpace.sm,
-      children: [
-        SizedBox.square(
-          dimension: _spinnerSize,
-          child: CircularProgressIndicator(
-            strokeWidth: _spinnerStrokeWidth,
-            color: color,
-          ),
-        ),
-        Flexible(child: text),
-      ],
+    return SizedBox.square(
+      dimension: _spinnerSize,
+      child: CircularProgressIndicator(
+        strokeWidth: _spinnerStrokeWidth,
+        color: color,
+      ),
     );
   }
 }
