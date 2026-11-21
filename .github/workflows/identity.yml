@@ -1,0 +1,26 @@
+name: identity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - backend/numer_identity/**
+  pull_request:
+    paths:
+      - backend/numer_identity/**
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d # v10.4.0
+      - run: backend/numer_identity/scripts/verify.sh
+        env:
+          UV_PYTHON: "3.12"
