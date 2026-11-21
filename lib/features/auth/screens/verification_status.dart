@@ -115,7 +115,7 @@ class _EmailVerificationStatusState extends State<EmailVerificationStatus> {
               final authController = context.read<AuthController>();
               await appState.stopAndSaveAllActiveSessions();
               await appState.waitForPendingReflections();
-              await syncService.syncNow();
+              await syncService.pushNow();
               await authController.signOut();
             },
             child: Text(
