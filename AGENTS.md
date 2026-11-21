@@ -41,9 +41,9 @@ backend/
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
 - **`packages/numer_ui/`** — the design language of
-  [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens
-  and components, depending only on `flutter`. New and changed UI takes them from
-  `package:numer_ui/numer_ui.dart`.
+  [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens,
+  the theme builder `NumerTheme` and the components, depending only on `flutter`. New and
+  changed UI takes them from `package:numer_ui/numer_ui.dart`.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
   token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`
   (see its README).
