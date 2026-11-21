@@ -12,6 +12,43 @@ const int _defaultRetrySeconds = 60;
 
 typedef StateMessage = String Function(AppLocalizations l10n);
 
+// a rounded border on all sides that keeps the floating label inside the fill
+class _FilledFieldBorder extends OutlineInputBorder {
+  const _FilledFieldBorder({super.borderSide, super.borderRadius});
+
+  @override
+  bool get isOutline => false;
+
+  // the decorator still reports a gap for a label that no longer sits on the edge
+  @override
+  void paint(
+    Canvas canvas,
+    Rect rect, {
+    double? gapStart,
+    double gapExtent = 0,
+    double gapPercentage = 0,
+    TextDirection? textDirection,
+  }) => super.paint(canvas, rect, textDirection: textDirection);
+
+  // the inherited lerps return a plain outline border, which brings the gap back
+  @override
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) =>
+      a is _FilledFieldBorder ? _lerp(a, this, t) : super.lerpFrom(a, t);
+
+  @override
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) =>
+      b is _FilledFieldBorder ? _lerp(this, b, t) : super.lerpTo(b, t);
+
+  static _FilledFieldBorder _lerp(
+    _FilledFieldBorder a,
+    _FilledFieldBorder b,
+    double t,
+  ) => _FilledFieldBorder(
+    borderSide: BorderSide.lerp(a.borderSide, b.borderSide, t),
+    borderRadius: b.borderRadius,
+  );
+}
+
 mixin ResetSubmit<T extends StatefulWidget> on State<T> {
   Timer? _countdown;
   int _retrySeconds = 0;
@@ -74,7 +111,7 @@ InputDecoration resetFieldDecoration(
   bool hasError = false,
 }) {
   final colors = Theme.of(context).colorScheme;
-  OutlineInputBorder border([Color? color]) => OutlineInputBorder(
+  InputBorder border([Color? color]) => _FilledFieldBorder(
     borderRadius: BorderRadius.circular(NumerRadius.md),
     borderSide: color == null
         ? BorderSide.none
