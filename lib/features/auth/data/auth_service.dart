@@ -23,6 +23,17 @@ class AuthFailure implements Exception {
   String toString() => message;
 }
 
+const _fcmResaveAfter = Duration(days: 7);
+
+bool shouldSaveFcmToken(
+    String token, String? savedToken, int? savedAtMs, int nowMs) {
+  if (savedToken != token || savedAtMs == null) return true;
+  return nowMs - savedAtMs >= _fcmResaveAfter.inMilliseconds;
+}
+
+bool shouldUpsertEmailIndex(String normalizedEmail, String? written) =>
+    normalizedEmail != written;
+
 class AuthController extends ChangeNotifier {
   AuthController({
     FirebaseAuth? auth,
@@ -142,7 +153,7 @@ class AuthController extends ChangeNotifier {
     _requiresEmailVerification = false;
     _isSigningOut = false;
     unawaited(_ensureProfileDocument(user));
-    unawaited(_upsertEmailIndex(user.email, user.uid));
+    unawaited(_upsertEmailIndexIfChanged(user));
     unawaited(_registerPushToken(user));
     _listenToProfile(user);
     _listenForPendingNudges(user.uid);
@@ -292,6 +303,14 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> _saveFcmToken(String uid, String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    final tokenKey = 'fcm_saved_token_$uid';
+    final savedAtKey = 'fcm_saved_at_$uid';
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (!shouldSaveFcmToken(
+        token, prefs.getString(tokenKey), prefs.getInt(savedAtKey), nowMs)) {
+      return;
+    }
     final platform =
         kIsWeb ? 'web' : defaultTargetPlatform.toString().split('.').last;
     final tokenRef = _firestore
@@ -314,6 +333,8 @@ class AuthController extends ChangeNotifier {
       },
       SetOptions(merge: true),
     );
+    await prefs.setString(tokenKey, token);
+    await prefs.setInt(savedAtKey, nowMs);
   }
 
   Future<String> _ensureDeviceId() async {
@@ -356,6 +377,11 @@ class AuthController extends ChangeNotifier {
 
     // Clear session-specific preferences only
     await _clearSharedPreferences();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('fcm_saved_token_$uid');
+    await prefs.remove('fcm_saved_at_$uid');
+    await prefs.remove('email_index_written_$uid');
+    await prefs.remove('active_session_sig_$uid');
 
     // Cancel notifications for this session
     await Notifs.cancelAll();
@@ -869,6 +895,17 @@ class AuthController extends ChangeNotifier {
       },
       SetOptions(merge: true),
     );
+  }
+
+  Future<void> _upsertEmailIndexIfChanged(User user) async {
+    final email = user.email;
+    if (email == null || email.isEmpty) return;
+    final normalized = _normalizeEmail(email);
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'email_index_written_${user.uid}';
+    if (!shouldUpsertEmailIndex(normalized, prefs.getString(key))) return;
+    await _upsertEmailIndex(email, user.uid);
+    await prefs.setString(key, normalized);
   }
 
   Future<PasswordResetResult> sendPasswordResetSecure(String email) async {
