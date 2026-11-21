@@ -221,6 +221,18 @@ void main() {
     expect(_button(tester).onPressed, isNotNull);
   });
 
+  testWidgets('keeps the floating label inside a 56 high field', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+
+    final field = tester.getRect(find.byType(TextField));
+    final label = tester.getRect(find.text('Email address'));
+
+    expect(field.height, 56);
+    expect(label.top, greaterThan(field.top));
+  });
+
   testWidgets('does not call for mismatched passwords', (tester) async {
     final api = _api();
     await _openSheet(tester, api);
@@ -318,6 +330,16 @@ void main() {
 
     expect(find.text('Reset password'), findsOneWidget);
     expect(find.textContaining('expired'), findsNothing);
+  });
+
+  testWidgets('survives a keyboard inset below zero', (tester) async {
+    addTearDown(tester.view.reset);
+    await _openSheet(tester, _api());
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: -1);
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
   });
 
   for (final language in ['en', 'ru', 'kk']) {

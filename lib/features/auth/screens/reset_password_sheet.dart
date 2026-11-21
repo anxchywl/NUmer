@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -94,7 +95,8 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    // ios can report an inset below zero while the keyboard springs closed
+    final keyboard = math.max(0.0, MediaQuery.viewInsetsOf(context).bottom);
 
     return Padding(
       padding: EdgeInsets.only(bottom: keyboard),
