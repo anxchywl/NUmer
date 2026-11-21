@@ -51,7 +51,8 @@ Project: **`numer-60744`** (see `.firebaserc`, `firebase.json`).
 - **Auth** — email/password with verification.
 - **Firestore** — primary cloud store (rules in `firestore/firestore.rules`, indexes in
   `firestore/firestore.indexes.json`; paths wired via `firebase.json`).
-- **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/index.ts`).
+- **Cloud Functions** — Node.js 20 / TypeScript in `functions/` (source `functions/src/`, one folder per area,
+  re-exported by `functions/src/index.ts`).
 - **Cloud Messaging (FCM)** — nudge push notifications.
 - **App Check** — enforced in release; debug provider in debug builds (`main.dart`).
 - Dart config generated at `lib/core/firebase_options.dart` (wired via the `flutter` block in
@@ -74,7 +75,7 @@ a group; see `firestore.rules` for exact access):
   habits (+ /history), habit_categories, connections, connectionGroups
 ```
 
-### Cloud Functions (`functions/src/index.ts`)
+### Cloud Functions (`functions/src/`)
 
 | Type | Name | Purpose |
 |------|------|---------|
@@ -129,7 +130,11 @@ flutter build android
 flutter build macos
 
 # Cloud Functions: local emulator
-(cd functions && npm run build) && firebase emulators:start --only functions,firestore
+(cd functions && npm run build) && firebase emulators:start --only functions,firestore,auth
+
+# Cloud Functions: unit tests, then rules and emulator tests (needs Java 21)
+(cd functions && npm test)
+(cd functions && npm run test:emulator)
 
 # deploy
 firebase deploy --only firestore:rules
@@ -144,7 +149,7 @@ firebase deploy --only functions
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Notifications: `lib/core/notifications/`
-- Backend: `functions/src/index.ts`, `firestore/firestore.rules`, `firebase.json`
+- Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
 
 ## Known follow-ups (technical debt)
 
