@@ -12,7 +12,6 @@ const int _defaultRetrySeconds = 60;
 
 typedef StateMessage = String Function(AppLocalizations l10n);
 
-// the state line, loading flag and retry countdown shared by the reset forms
 mixin ResetSubmit<T extends StatefulWidget> on State<T> {
   Timer? _countdown;
   int _retrySeconds = 0;
