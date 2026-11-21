@@ -111,6 +111,12 @@ Future<void> _savePassword(
 FilledButton _button(WidgetTester tester) =>
     tester.widget(find.byType(FilledButton));
 
+List<bool> _finishedAutofill(WidgetTester tester) => [
+  for (final call in tester.testTextInput.log)
+    if (call.method == 'TextInput.finishAutofillContext')
+      call.arguments as bool,
+];
+
 List<String> _visibleTexts(WidgetTester tester) => [
   for (final text in tester.widgetList<Text>(find.byType(Text)))
     text.data ?? '',
@@ -231,6 +237,72 @@ void main() {
 
     expect(field.height, 56);
     expect(label.top, greaterThan(field.top));
+  });
+
+  testWidgets('offers the email and both passwords for autofill', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    tester.testTextInput.log.clear();
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    final client = tester.testTextInput.log.lastWhere(
+      (call) => call.method == 'TextInput.setClient',
+    );
+    final config = (client.arguments as List<dynamic>)[1] as Map;
+    final fields = [
+      for (final field in config['fields'] as List<dynamic>)
+        (field as Map)['autofill'] as Map,
+    ];
+    expect([
+      for (final field in fields) (field['hints'] as List<dynamic>).single,
+    ], unorderedEquals(['email', 'newPassword', 'newPassword']));
+    expect([
+      for (final field in fields) (field['editingValue'] as Map)['text'],
+    ], contains(_email));
+  });
+
+  testWidgets('keeps the keyboard moving between the visible fields', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    await tester.tap(find.byType(TextField).first);
+    await tester.pump();
+
+    await tester.testTextInput.receiveAction(TextInputAction.next);
+    await tester.pump();
+
+    final confirmation = tester.widget<EditableText>(
+      find.byType(EditableText).last,
+    );
+    expect(confirmation.focusNode.hasFocus, isTrue);
+  });
+
+  testWidgets('saves the autofill context only after a success', (
+    tester,
+  ) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    tester.testTextInput.log.clear();
+
+    await _savePassword(tester);
+
+    expect(_finishedAutofill(tester).first, isTrue);
+  });
+
+  testWidgets('drops the autofill context when starting again', (tester) async {
+    await _openSheet(tester, _api());
+    await _reachPasswordStep(tester);
+    await tester.enterText(find.byType(TextField).first, _password);
+    tester.testTextInput.log.clear();
+
+    await _tap(tester, find.text('Start again'));
+
+    expect(_finishedAutofill(tester), [false]);
   });
 
   testWidgets('does not call for mismatched passwords', (tester) async {
