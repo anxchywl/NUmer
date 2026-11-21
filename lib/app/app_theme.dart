@@ -15,26 +15,5 @@ final ThemeData darkFallbackTheme = ThemeData(
 );
 
 ThemeData buildAppTheme(Color accent, Brightness brightness) {
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: accent,
-      brightness: brightness,
-    ),
-    extensions: [
-      brightness == Brightness.dark ? NumerColors.dark : NumerColors.light,
-    ],
-    switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) return accent;
-        return null;
-      }),
-      trackColor: WidgetStateProperty.resolveWith((states) {
-        if (states.contains(WidgetState.selected)) {
-          return accent.withValues(alpha: 0.5);
-        }
-        return null;
-      }),
-    ),
-  );
+  return NumerTheme.build(seed: accent, brightness: brightness);
 }
