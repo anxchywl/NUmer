@@ -275,6 +275,62 @@ void main() {
     expect(calls.submitted, ['123456', '123456']);
   });
 
+  testWidgets('a screen reader hears that verify is loading', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final answer = Completer<CodeResult>();
+    final calls = _Calls()..submitResult = answer.future;
+    await tester.pumpWidget(_app(calls, initialResult: _sent()));
+
+    await _type(tester, '123456');
+
+    expect(
+      tester.getSemantics(find.byType(FilledButton)),
+      containsSemantics(label: 'Verify', hint: 'Loading'),
+    );
+
+    answer.complete(const CodeFailure(CodeFailureReason.offline));
+    await tester.pump();
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byType(FilledButton)),
+      containsSemantics(label: 'Verify', hint: ''),
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('a screen reader hears that resend is loading', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final answer = Completer<CodeResult>();
+    final calls = _Calls();
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: CodeEntryBody(
+            subtitle: 'We sent a 6-digit code to a.student@nu.edu.kz',
+            initialResult: _sent(),
+            onSubmit: (_) => calls.submitResult,
+            onResend: () => answer.future,
+            onVerified: calls.verified.add,
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.byType(TextButton));
+    await tester.pump();
+
+    expect(
+      tester.getSemantics(find.byType(TextButton)),
+      containsSemantics(label: 'Resend code', hint: 'Loading'),
+    );
+
+    answer.complete(_sent());
+    await tester.pump();
+    semantics.dispose();
+  });
+
   testWidgets('counts the cooldown down and enables resend', (tester) async {
     final calls = _Calls();
     await tester.pumpWidget(

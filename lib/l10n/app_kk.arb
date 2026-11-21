@@ -56,7 +56,9 @@
   "exportWillStartIn": "Экспорт {seconds} секундтан кейін басталады",
   "@exportWillStartIn": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "exportToCalendarSubtitle": "Сеанстарыңызды күнтізбе оқиғалары ретінде сақтаңыз",
@@ -75,7 +77,9 @@
   "sessionsFound": "{count, plural, =0{Сессия табылмады} other{{count} сессия табылды}}",
   "@sessionsFound": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "fileSavedSuccessfully": "Файл сәтті жасалды",
@@ -99,7 +103,6 @@
   "home": "Басты бет",
   "statistics": "Статистика",
   "groups": "Топтар",
-
   "addCourse": "Курсты қосу",
   "addTime": "Уақыт қосу",
   "courseName": "Курс атауы",
@@ -123,7 +126,6 @@
       }
     }
   },
-
   "aiAnalysisComingSoon": "Курс талдауы жақында пайда болады.",
   "courseAnalysis": "Курс талдауы",
   "noCoursesAvailable": "Курстар жоқ.",
@@ -134,15 +136,12 @@
   "dayStatsTipLine1": "• Күнтізбе оқу белсенділігін көрсетеді. Күн неғұрлым жасыл болса, соғұрлым көп оқыдыңыз.",
   "dayStatsTipLine2": "• Сессия уақытын және жазбаларды Тарих бөлімінде өңдей аласыз.",
   "dayStatsTipLine3": "• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.",
-
   "syncOffline": "Офлайн",
   "syncSyncing": "Синхрондалып жатыр…",
   "syncUpToDate": "Жаңартылған",
-
   "setGoals": "Мақсат қою",
   "daily": "Күндік",
   "weekly": "Апталық",
-
   "studyTimer": "Оқу таймері",
   "noCoursesYet": "Әлі курс жоқ. Басты беттен курс қосыңыз.",
   "chooseACourse": "Курсты таңдаңыз",
@@ -165,7 +164,9 @@
   "anotherSessionRunningSilly": "Тағы бір {sessionType} қазір жұмыс істеп тұр, silly.",
   "@anotherSessionRunningSilly": {
     "placeholders": {
-      "sessionType": { "type": "String" }
+      "sessionType": {
+        "type": "String"
+      }
     }
   },
   "friendJoinPrompt": "Досыңыз іздеу жолағына тобыңыздың атын теру арқылы қосыла алады.",
@@ -184,20 +185,16 @@
   "nothingToSave": "Сақтайтын ештеңе жоқ",
   "maxTimeCapped": "Максимум 3:00:00 — шектелген",
   "studiedLabel": "Оқылды",
-
   "studiedToday": "Бүгін оқылды",
   "studiedThisWeek": "Осы аптада оқылды",
   "studiedThisMonth": "Осы айда оқылды",
   "studiedThisYear": "Осы жылы оқылды",
   "studiedOverall": "Жалпы оқылды",
-
   "timer": "таймер",
   "stopwatch": "секундомер",
   "pomodoro": "помодоро",
   "session": "сеанс",
-
   "editCourse": "Курсты өңдеу",
-  "courseName": "Курс атауы",
   "today": "Бүгін",
   "edit": "Өңдеу",
   "timerTab": "Таймер",
@@ -231,21 +228,17 @@
   "skipBreak": "Үзілісті өткізіп жіберу",
   "pomodoroExitWarning": "Помодоро сеансы жүріп жатыр. Шығасыз ба?",
   "exitAnyway": "Қалай болғанда да шығу",
-
   "expLevel1": "Мүлде бастаушы",
   "expLevel2": "Негіздерін білемін",
   "expLevel3": "Пәнді сенімді білемін",
   "expLevel4": "Жоғары деңгейдегі білім",
   "expLevel5": "Кең тәжірибе",
   "expLevelDefault": "Сенімді",
-
-  "statistics": "Статистика",
   "dayStatistics": "Күндік статистика",
   "periodStatistics": "Кезең статистикасы",
   "tip": "Кеңес",
   "chartTip": "• Графикте саусағыңызды ұстап тұрып, күндер немесе айлар арасында ауысу үшін солға немесе оңға сырғытыңыз.",
   "courseStatistics": "Курс статистикасы",
-  
   "previousDay": "Алдыңғы күн",
   "nextDay": "Келесі күн",
   "history": "Тарих",
@@ -272,7 +265,6 @@
   "avgPerDay": "Күніне орташа",
   "mostStudied": "Ең көп",
   "leastStudied": "Ең аз",
-
   "adjustWeeklyGoal": "Апталық мақсатты түзету",
   "targetPerWeek": "Апталық мақсат",
   "targetPerDay": "Күндік мақсат",
@@ -292,8 +284,6 @@
       }
     }
   },
-
-  "groups": "Топтар",
   "createGroup": "Топ құру",
   "joinGroup": "Топқа қосылу",
   "groupName": "Топ атауы",
@@ -313,7 +303,9 @@
   "errorLoadingMemberships": "Мүшелік жүктелмеді: {error}",
   "@errorLoadingMemberships": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "findPublicGroupHint": "Топты табу...",
@@ -321,7 +313,9 @@
   "errorLoadingGroups": "Топтарды жүктеу қатесі: {error}",
   "@errorLoadingGroups": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "joinedSuccessfully": "Топқа сәтті қосылдыңыз",
@@ -329,7 +323,9 @@
   "joinGroupDialogTitle": "{groupName} тобына қосылу",
   "@joinGroupDialogTitle": {
     "placeholders": {
-      "groupName": { "type": "String" }
+      "groupName": {
+        "type": "String"
+      }
     }
   },
   "joinGroupDialogMessage": "Осы жабық топқа кіру үшін қосылу кодын енгізіңіз.",
@@ -338,14 +334,18 @@
   "joinError": "Топқа қосылу мүмкін болмады: {error}",
   "@joinError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "noDescription": "Сипаттама жоқ.",
   "membersCount": "{count} қатысушы",
   "@membersCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "yourGroup": "Сіздің тобыңыз",
@@ -359,7 +359,7 @@
   "groupNotFound": "Топ табылмады немесе жойылды.",
   "signInToManage": "Бұл топты басқару үшін жүйеге кіру керек.",
   "noLongerMember": "Сіз бұл топтың мүшесі емессіз.",
-  "groupNameHint": "Топқа атау енгізіңіз",
+  "groupNameHint": "Топ атауын енгізіңіз",
   "visibility": "Көрінуі",
   "descriptionHint": "Тобыңызды бірнеше сөзбен сипаттаңыз",
   "codeRequired": "Код міндетті",
@@ -381,25 +381,33 @@
   "failedToUpdateGroup": "Топты жаңарту мүмкін болмады: {error}",
   "@failedToUpdateGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToDeleteGroup": "Топты жою мүмкін болмады: {error}",
   "@failedToDeleteGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToLeaveGroup": "Топтан шығу мүмкін болмады: {error}",
   "@failedToLeaveGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToRemoveMember": "Қатысушыны жою мүмкін болмады: {error}",
   "@failedToRemoveMember": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "groupCodeLabel": "Топ коды",
@@ -411,7 +419,9 @@
   "errorLoadingLeaderboard": "Көшбасшылар тақтасын жүктеу қатесі: {error}",
   "@errorLoadingLeaderboard": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "courseHiddenFromLeaderboard": "Курс көшбасшылар тақтасынан жасырылды",
@@ -423,16 +433,19 @@
   "rankLabel": "#{rank}",
   "@rankLabel": {
     "placeholders": {
-      "rank": { "type": "int" }
+      "rank": {
+        "type": "int"
+      }
     }
   },
   "failedToLoadUserData": "Пайдаланушы деректерін жүктеу қатесі: {error}",
   "@failedToLoadUserData": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
-
   "sun": "Жс",
   "mon": "Дс",
   "tue": "Сс",
@@ -447,7 +460,6 @@
   "thursday": "Бейсенбі",
   "friday": "Жұма",
   "saturday": "Сенбі",
-
   "january": "Қаңтар",
   "february": "Ақпан",
   "march": "Наурыз",
@@ -460,9 +472,7 @@
   "october": "Қазан",
   "november": "Қараша",
   "december": "Желтоқсан",
-
   "total": "Барлығы",
-
   "groupSummary": "Топ қорытындысы",
   "average": "Орташа",
   "leader": "Көшбасшы",
@@ -486,7 +496,6 @@
   "minutes_plural": "минут",
   "second": "секунд",
   "seconds_plural": "секунд",
-
   "jan": "Қаң",
   "feb": "Ақп",
   "mar": "Нау",
@@ -499,7 +508,6 @@
   "oct": "Қаз",
   "nov": "Қар",
   "dec": "Жел",
-
   "via": "арқылы",
   "viaTimer": "Таймер арқылы",
   "viaStopwatch": "Секундомер арқылы",
@@ -509,16 +517,12 @@
   "endTime": "Аяқтау",
   "duration": "Ұзақтығы",
   "reflection": "Ескертпе",
-
   "overThis": "осы",
   "credits": "Кредит",
   "credits_plural": "Кредиттер",
-  "save": "Сақтау",
   "deleteSession": "Сеансты жою керек пе?",
   "deleteSessionMessage": "Бұл сеансты тарих пен статистикадан алып тастайды.",
   "sessionDeleted": "Сеанс жойылды",
-  "deleteCourseTitle": "Курсты жою",
-  "deleteCourseMessage": "Сенімдісіз бе? Бұл курстың барлық деректері жойылады.",
   "leaveGroupTitle": "Топтан шығасыз ба?",
   "leaveGroupMessage": "Бұл топтан шығуды қалайсыз ба?",
   "leave": "Шығу",
@@ -541,7 +545,9 @@
   "timeAddedToCourse": "Уақыт {courseName} курсына қосылды",
   "@timeAddedToCourse": {
     "placeholders": {
-      "courseName": { "type": "String" }
+      "courseName": {
+        "type": "String"
+      }
     }
   },
   "currentDay": "ағымдағы күн",
@@ -581,7 +587,9 @@
   "invalidTimeFormat": "Уақытты {format} түрінде енгізіңіз",
   "@invalidTimeFormat": {
     "placeholders": {
-      "format": { "type": "String" }
+      "format": {
+        "type": "String"
+      }
     }
   },
   "signIn": "Кіру",
@@ -618,14 +626,18 @@
   "sessionFinished": "Сабақ аяқталды: {duration}",
   "@sessionFinished": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "whatDidYouWorkOn": "Сіз немен айналыстыңыз?",
   "failedToSaveReflection": "Жазбаны сақтау мүмкін болмады: {error}",
   "@failedToSaveReflection": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "skip": "Өткізіп жіберу",
@@ -641,13 +653,17 @@
   "nudgeWaitMinutes": "Қайта түртпес бұрын {minutes} минут күте тұрыңыз.",
   "@nudgeWaitMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "nudgeWaitSeconds": "Қайта түртпес бұрын {seconds} секунд күте тұрыңыз.",
   "@nudgeWaitSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "memberCannotReceiveNudges": "Бұл мүше әлі түртпелерді ала алмайды.",
@@ -655,7 +671,9 @@
   "failedToSendNudge": "Түртпе жіберу сәтсіз аяқталды: {error}",
   "@failedToSendNudge": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "cannotNudgeSelf": "Өзіңізді түртпелей алмайсыз.",
@@ -876,9 +894,11 @@
   "habitFrequencyEveryXDays": "Әр {count} күн",
   "habitDragToCategorize": "Санатқа бөлу үшін сүйреңіз",
   "@habitFrequencyEveryXDays": {
-     "placeholders": {
-        "count": {"type": "int"}
-     }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "habitStatsEmptyState": "Әдеттер табылмады. Прогрессті қадағалау үшін әдет қосыңыз. Бұл өте керемет, сеніңіз!",
   "habitStatsCompletionRate": "Орындалу пайызы",
@@ -900,7 +920,9 @@
   "habitReportDownloadCountdown": "Есепті дайындау {seconds} секундтан кейін басталады",
   "@habitReportDownloadCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "@habitReportFailed": {
@@ -920,7 +942,6 @@
   "exportSuccess": "Экспорт сәтті",
   "exportSuccessMessage": "Файл сәтті сақталды",
   "openFile": "Файлды ашу",
-  "done": "Дайын",
   "close": "Жабу",
   "habitWeekNext": "Келесі апта",
   "habitWeekLast": "Өткен апта",
@@ -930,8 +951,12 @@
   "habitReportFileName": "әдеттер_{month}_{year}",
   "@habitReportFileName": {
     "placeholders": {
-      "month": { "type": "String" },
-      "year": { "type": "int" }
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
     }
   },
   "habitUnarchived": "Әдет архивтен шығарылды",
@@ -960,21 +985,24 @@
   "deleteContactMessage": "\"{name}\" жойылсын ба?",
   "@deleteContactMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "deleteConnectionGroupTitle": "Топты жою керек пе?",
   "deleteConnectionGroupMessage": "Бұл \"{name}\" тобын барлық контактілерден өшіреді. Қайтару мүмкін емес.",
   "@deleteConnectionGroupMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "renameGroup": "Атын өзгерту",
   "newGroup": "Жаңа топ",
   "editGroup": "Топты өңдеу",
   "groupNameLabel": "Топ атауы",
-  "groupNameHint": "Топ атауын енгізіңіз",
   "noInteractionsYet": "Қарым-қатынас әлі жоқ",
   "addInteractionHint": "Не туралы сөйлестіңіздер?",
   "interactionCalendarTitle": "Қарым-қатынас күнтізбесі",
@@ -983,7 +1011,9 @@
   "errorSaving": "Сақтау қатесі: {error}",
   "@errorSaving": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "add": "Қосу",
@@ -1065,5 +1095,22 @@
   "resetSessionExpired": "Қалпына келтіру уақыты өтті. Қайта бастаңыз.",
   "resetStartOver": "Қайта бастау",
   "resetRequestFailed": "Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.",
-  "passwordSaveFailed": "Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз."
+  "passwordSaveFailed": "Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз.",
+  "verificationEmailSent": "Растау хаты жіберілді!",
+  "sendResetLink": "Сілтемені жіберу",
+  "resetLinkSent": "Бұл поштаға аккаунт болса, сілтеме жіберілді.",
+  "verifyEmailFirst": "Алдымен поштаны растаңыз. Растау хатын жібердік.",
+  "resendVerificationEmail": "Растау хатын қайта жіберу",
+  "resetRateLimited": "Келесі әрекетке дейін сәл күтіңіз.",
+  "networkRequestFailed": "Желі қатесі. Байланысты тексеріп, қайталап көріңіз.",
+  "signInToResend": "Қайта жіберу үшін жүйеге кіріңіз.",
+  "tryAgainInSeconds": "{seconds} с кейін қайталап көріңіз",
+  "@tryAgainInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "loadingHint": "Жүктелуде"
 }

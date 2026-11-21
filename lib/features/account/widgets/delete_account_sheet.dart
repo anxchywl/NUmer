@@ -104,7 +104,11 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
           disabledForegroundColor: scheme.onError,
         ),
         onPressed: _loading ? null : _submit,
-        child: NumerButtonChild(label: label, loading: _loading),
+        child: NumerButtonChild(
+          label: label,
+          loading: _loading,
+          loadingHint: AppLocalizations.of(context)!.loadingHint,
+        ),
       ),
     );
   }

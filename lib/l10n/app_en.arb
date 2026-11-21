@@ -56,7 +56,9 @@
   "exportWillStartIn": "Export will start in {seconds} seconds",
   "@exportWillStartIn": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "exportToCalendarSubtitle": "Save your sessions as calendar events",
@@ -75,13 +77,17 @@
   "sessionsFound": "{count, plural, =0{No sessions found} one{1 session found} other{{count} sessions found}}",
   "@sessionsFound": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "habitReportDownloadCountdown": "Report generation will start in {seconds} seconds",
   "@habitReportDownloadCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "fileSavedSuccessfully": "File generated successfully",
@@ -105,7 +111,6 @@
   "home": "Home",
   "statistics": "Statistics",
   "groups": "Groups",
-
   "addCourse": "Add course",
   "addTime": "Add time",
   "courseName": "Course name",
@@ -129,7 +134,6 @@
       }
     }
   },
-
   "aiAnalysisComingSoon": "Course analysis is coming soon.",
   "courseAnalysis": "Course analysis",
   "noCoursesAvailable": "No courses available.",
@@ -147,15 +151,12 @@
   "dayStatsTipLine1": "• The calendar highlights your study activity. The greener the day, the more you studied.",
   "dayStatsTipLine2": "• You can edit session time and notes in the History screen.",
   "dayStatsTipLine3": "• You can tap on any course, and the history screen will show only the sessions for that course.",
-
   "syncOffline": "Offline",
   "syncSyncing": "Syncing…",
   "syncUpToDate": "Up to date",
-
   "setGoals": "Set goals",
   "daily": "Daily",
   "weekly": "Weekly",
-
   "studyTimer": "Study timer",
   "noCoursesYet": "No courses yet. Add a course from Home.",
   "chooseACourse": "Choose a course",
@@ -187,7 +188,9 @@
   "anotherSessionRunningSilly": "Another {sessionType} is already running, silly.",
   "@anotherSessionRunningSilly": {
     "placeholders": {
-      "sessionType": { "type": "String" }
+      "sessionType": {
+        "type": "String"
+      }
     }
   },
   "alreadyStudiedThisPeriod": "You already studied during this time period.",
@@ -197,20 +200,16 @@
   "maxTimeCapped": "Max is 3:00:00 — capped",
   "studiedLabel": "Studied",
   "goalsUpdated": "Goals updated",
-
   "studiedToday": "Studied today",
   "studiedThisWeek": "Studied this week",
   "studiedThisMonth": "Studied this month",
   "studiedThisYear": "Studied this year",
   "studiedOverall": "Studied overall",
-
   "timer": "timer",
   "stopwatch": "stopwatch",
   "pomodoro": "pomodoro",
   "session": "session",
-
   "editCourse": "Edit course",
-  "courseName": "Course name",
   "today": "Today",
   "edit": "Edit",
   "timerTab": "Timer",
@@ -244,22 +243,17 @@
   "skipBreak": "Skip break",
   "pomodoroExitWarning": "A pomodoro session is running. Exit anyway?",
   "exitAnyway": "Exit anyway",
-
   "expLevel1": "Complete noob",
   "expLevel2": "Know some basics",
   "expLevel3": "Comfortable with the subject",
   "expLevel4": "Advanced level of knowledge",
   "expLevel5": "Broad experience",
   "expLevelDefault": "Comfortable",
-
-  "statistics": "Statistics",
   "dayStatistics": "Day statistics",
   "periodStatistics": "Period statistics",
   "tip": "Tip",
   "chartTip": "• Hold your finger on the chart and slide left or right to move between days or months.",
   "courseStatistics": "Course statistics",
-  
-  
   "previousDay": "Previous day",
   "nextDay": "Next day",
   "history": "History",
@@ -286,7 +280,6 @@
   "avgPerDay": "Average per day",
   "mostStudied": "Most studied",
   "leastStudied": "Least studied",
-
   "adjustWeeklyGoal": "Adjust weekly goal",
   "targetPerWeek": "Target per week",
   "targetPerDay": "Target per day",
@@ -306,8 +299,6 @@
       }
     }
   },
-
-  "groups": "Groups",
   "createGroup": "Create group",
   "joinGroup": "Join group",
   "groupName": "Group name",
@@ -327,7 +318,9 @@
   "errorLoadingMemberships": "Error loading memberships: {error}",
   "@errorLoadingMemberships": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "findPublicGroupHint": "Find a group...",
@@ -335,7 +328,9 @@
   "errorLoadingGroups": "Error loading groups: {error}",
   "@errorLoadingGroups": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "joinedSuccessfully": "Joined group successfully",
@@ -343,7 +338,9 @@
   "joinGroupDialogTitle": "Join {groupName}",
   "@joinGroupDialogTitle": {
     "placeholders": {
-      "groupName": { "type": "String" }
+      "groupName": {
+        "type": "String"
+      }
     }
   },
   "joinGroupDialogMessage": "Enter the join code to access this private group.",
@@ -352,14 +349,18 @@
   "joinError": "Could not join group: {error}",
   "@joinError": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "noDescription": "No description provided.",
   "membersCount": "{count} members",
   "@membersCount": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "yourGroup": "Your group",
@@ -373,7 +374,7 @@
   "groupNotFound": "Group not found or was deleted.",
   "signInToManage": "You need to be signed in to manage this group.",
   "noLongerMember": "You are no longer a member of this group.",
-  "groupNameHint": "Enter a name for your group",
+  "groupNameHint": "Enter group name",
   "visibility": "Visibility",
   "descriptionHint": "Describe your group in a few words",
   "codeRequired": "Code is required",
@@ -395,25 +396,33 @@
   "failedToUpdateGroup": "Failed to update group: {error}",
   "@failedToUpdateGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToDeleteGroup": "Failed to delete group: {error}",
   "@failedToDeleteGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToLeaveGroup": "Failed to leave group: {error}",
   "@failedToLeaveGroup": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "failedToRemoveMember": "Failed to remove member: {error}",
   "@failedToRemoveMember": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "groupCodeLabel": "Group code",
@@ -425,7 +434,9 @@
   "errorLoadingLeaderboard": "Error loading leaderboard: {error}",
   "@errorLoadingLeaderboard": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "courseHiddenFromLeaderboard": "Course is hidden from the leaderboard.",
@@ -437,16 +448,19 @@
   "rankLabel": "#{rank}",
   "@rankLabel": {
     "placeholders": {
-      "rank": { "type": "int" }
+      "rank": {
+        "type": "int"
+      }
     }
   },
   "failedToLoadUserData": "Failed to load user data: {error}",
   "@failedToLoadUserData": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
-
   "sun": "Sun",
   "mon": "Mon",
   "tue": "Tue",
@@ -461,7 +475,6 @@
   "thursday": "Thursday",
   "friday": "Friday",
   "saturday": "Saturday",
-
   "january": "January",
   "february": "February",
   "march": "March",
@@ -474,9 +487,7 @@
   "october": "October",
   "november": "November",
   "december": "December",
-
   "total": "Total",
-
   "groupSummary": "Group summary",
   "average": "Average",
   "leader": "Leader",
@@ -500,7 +511,6 @@
   "minutes_plural": "minutes",
   "second": "second",
   "seconds_plural": "seconds",
-
   "jan": "Jan",
   "feb": "Feb",
   "mar": "Mar",
@@ -513,7 +523,6 @@
   "oct": "Oct",
   "nov": "Nov",
   "dec": "Dec",
-
   "via": "via",
   "viaTimer": "via Timer",
   "viaStopwatch": "via Stopwatch",
@@ -523,16 +532,12 @@
   "endTime": "End",
   "duration": "Duration",
   "reflection": "Reflection",
-
   "overThis": "over this",
   "credits": "Credit",
   "credits_plural": "Credits",
-  "save": "Save",
   "deleteSession": "Delete session?",
   "deleteSessionMessage": "This will remove the session from your history and statistics.",
   "sessionDeleted": "Session deleted",
-  "deleteCourseTitle": "Delete course",
-  "deleteCourseMessage": "Are you sure? All data for this course will be deleted.",
   "leaveGroupTitle": "Leave group?",
   "leaveGroupMessage": "Are you sure you want to leave this group?",
   "leave": "Leave",
@@ -555,7 +560,9 @@
   "timeAddedToCourse": "Time added to {courseName}",
   "@timeAddedToCourse": {
     "placeholders": {
-      "courseName": { "type": "String" }
+      "courseName": {
+        "type": "String"
+      }
     }
   },
   "currentDay": "current day",
@@ -595,7 +602,9 @@
   "invalidTimeFormat": "Enter times as {format}",
   "@invalidTimeFormat": {
     "placeholders": {
-      "format": { "type": "String" }
+      "format": {
+        "type": "String"
+      }
     }
   },
   "signIn": "Sign in",
@@ -632,14 +641,18 @@
   "sessionFinished": "Session finished: {duration}",
   "@sessionFinished": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "whatDidYouWorkOn": "What did you work on?",
   "failedToSaveReflection": "Failed to save reflection: {error}",
   "@failedToSaveReflection": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "skip": "Skip",
@@ -655,13 +668,17 @@
   "nudgeWaitMinutes": "Please wait {minutes} {minutes, plural, one{minute} other{minutes}} before nudging again.",
   "@nudgeWaitMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "nudgeWaitSeconds": "Please wait {seconds} {seconds, plural, one{second} other{seconds}} before nudging again.",
   "@nudgeWaitSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "memberCannotReceiveNudges": "This member cannot receive nudges yet.",
@@ -669,7 +686,9 @@
   "failedToSendNudge": "Failed to send nudge: {error}",
   "@failedToSendNudge": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "cannotNudgeSelf": "You cannot nudge yourself.",
@@ -897,21 +916,24 @@
   "deleteContactMessage": "Are you sure you want to delete \"{name}\"?",
   "@deleteContactMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "deleteConnectionGroupTitle": "Delete Group?",
   "deleteConnectionGroupMessage": "This will remove \"{name}\" from all contacts. This action cannot be undone.",
   "@deleteConnectionGroupMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "renameGroup": "Rename",
   "newGroup": "New Group",
   "editGroup": "Edit Group",
   "groupNameLabel": "Group name",
-  "groupNameHint": "Enter group name",
   "noInteractionsYet": "No interactions recorded yet",
   "addInteractionHint": "What did you discuss?",
   "habitUnarchiveAction": "Unarchive",
@@ -933,11 +955,12 @@
   "habitFrequencyEveryXDays": "Every {count} days",
   "habitDragToCategorize": "Drag to categorize",
   "@habitFrequencyEveryXDays": {
-     "placeholders": {
-        "count": {"type": "int"}
-     }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "habitStatsEmptyState": "No habits found. Add a habit to start tracking your progress. It is cool trust me!",
   "habitStatsCompletionRate": "Completion rate",
   "habitStatsCompleted": "Completed",
@@ -957,8 +980,12 @@
   "habitReportFileName": "habits_{month}_{year}",
   "@habitReportFileName": {
     "placeholders": {
-      "month": { "type": "String" },
-      "year": { "type": "int" }
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
     }
   },
   "habitReportFailed": "Export failed: {error}",
@@ -979,7 +1006,6 @@
   "exportSuccess": "Export successful",
   "exportSuccessMessage": "Your file has been saved successfully",
   "openFile": "Open file",
-  "done": "Done",
   "close": "Close",
   "interactionCalendarTitle": "Interaction Calendar",
   "signInToViewConnections": "Please sign in to view your people.",
@@ -987,7 +1013,9 @@
   "errorSaving": "Error saving: {error}",
   "@errorSaving": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "add": "Add",
@@ -1074,5 +1102,22 @@
   "resetSessionExpired": "This reset expired. Start again.",
   "resetStartOver": "Start again",
   "resetRequestFailed": "Could not send the request. Try again.",
-  "passwordSaveFailed": "Could not save the password. Try again."
+  "passwordSaveFailed": "Could not save the password. Try again.",
+  "verificationEmailSent": "Verification email sent!",
+  "sendResetLink": "Send reset link",
+  "resetLinkSent": "If an account exists for this email, we sent a reset link.",
+  "verifyEmailFirst": "Please verify your email first. We sent you a verification email.",
+  "resendVerificationEmail": "Resend verification email",
+  "resetRateLimited": "Please wait a moment before trying again.",
+  "networkRequestFailed": "Network error. Check your connection and try again.",
+  "signInToResend": "Sign in to resend the verification email.",
+  "tryAgainInSeconds": "Try again in {seconds}s",
+  "@tryAgainInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "loadingHint": "Loading"
 }
