@@ -17,8 +17,10 @@ graph TD
 ```
 
 The app stores **everything locally in Hive first**. Local entities are marked `dirty` on
-change; `SyncService` pushes them to Firestore when online and pulls remote changes since the
-last sync timestamp. It also runs a heartbeat to claim/verify active timers across devices.
+change and `SyncService` pushes them to Firestore when online. A local change only pushes. Remote
+changes since the last sync timestamp are pulled when the app resumes more than 10 minutes after
+the last pull, on first bootstrap and on a manual sync; there is no background timer. It also runs
+a heartbeat to claim/verify active timers across devices.
 Data flow, end to end:
 
 1. User acts in a feature screen → mutates `AppState`.
