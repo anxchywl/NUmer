@@ -40,7 +40,8 @@ class SyncService extends ChangeNotifier {
   bool _hasPulledUser = false;
   bool _isRunning = false;
   bool _isSyncing = false;
-  bool _pushPending = false;
+  _FollowUp? _followUp;
+  int _generation = 0;
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? _activeSessionSub;
@@ -129,8 +130,8 @@ class SyncService extends ChangeNotifier {
         // new device or first login, block until the minimal data is fetched
         await syncNow(full: true, startup: true);
       } else {
-        // returning user with cache, no auto-sync on launch, we rely on manual or major-event triggers
-        // unawaited(syncNow(full: false, startup: true));
+        // pull early so edits on a stale cache dont overwrite newer remote records
+        unawaited(syncNow(startup: true));
       }
     } else {
       _setStatus(SyncStatus.offline);
@@ -146,6 +147,9 @@ class SyncService extends ChangeNotifier {
     _hasPulledUser = false;
     _isRunning = false;
     _isSyncing = false;
+    _generation++;
+    _followUp?.done.complete();
+    _followUp = null;
     await _connectivitySub?.cancel();
     await _activeSessionSub?.cancel();
     _connectivitySub = null;
@@ -163,6 +167,9 @@ class SyncService extends ChangeNotifier {
     bool startup = false,
     bool force = false,
   }) {
+    if (_isBusy) {
+      return _defer(pull: true, full: full, startup: startup, force: force);
+    }
     return _runGuarded(
       () async {
         if (startup) {
@@ -187,13 +194,38 @@ class SyncService extends ChangeNotifier {
     );
   }
 
-  Future<void> pushNow() async {
-    // the running sync may have already collected its dirty records
-    if (_isSyncing) {
-      _pushPending = true;
-      return;
-    }
-    await _runGuarded(pushDirty);
+  Future<void> pushNow() {
+    if (_isBusy) return _defer();
+    return _runGuarded(pushDirty);
+  }
+
+  bool get _isBusy => _isRunning && _online && _isSyncing;
+
+  // the running sync may have already collected its dirty records, so run again after it
+  Future<void> _defer({
+    bool pull = false,
+    bool full = false,
+    bool startup = false,
+    bool force = false,
+  }) {
+    final next = _followUp ??= _FollowUp();
+    next.pull |= pull;
+    next.full |= full;
+    next.startup |= startup;
+    next.force |= force;
+    return next.done.future;
+  }
+
+  void _release() {
+    _isSyncing = false;
+    final next = _followUp;
+    if (next == null) return;
+    _followUp = null;
+    next.done.complete(
+      next.pull
+          ? syncNow(full: next.full, startup: next.startup, force: next.force)
+          : pushNow(),
+    );
   }
 
   Future<void> _runGuarded(
@@ -203,6 +235,7 @@ class SyncService extends ChangeNotifier {
     if (!_isRunning || _isSyncing || !_online || _uid == null) {
       return;
     }
+    final generation = _generation;
     _isSyncing = true;
     _setStatus(SyncStatus.syncing);
     lastError = null;
@@ -217,11 +250,8 @@ class SyncService extends ChangeNotifier {
       lastError = err.toString();
       _setStatus(SyncStatus.offline);
     } finally {
-      _isSyncing = false;
-      if (_pushPending) {
-        _pushPending = false;
-        await pushNow();
-      }
+      // a run that outlived stop() must not release the next session's lock
+      if (generation == _generation) _release();
     }
   }
 
@@ -232,6 +262,7 @@ class SyncService extends ChangeNotifier {
 
     // only set status when not already inside a larger sync
     final rootCall = !_isSyncing;
+    final generation = _generation;
     if (rootCall) {
       _isSyncing = true;
       _setStatus(SyncStatus.syncing);
@@ -391,9 +422,7 @@ class SyncService extends ChangeNotifier {
       }
       rethrow;
     } finally {
-      if (rootCall) {
-        _isSyncing = false;
-      }
+      if (rootCall && generation == _generation) _release();
     }
   }
 
@@ -1357,4 +1386,12 @@ class SyncService extends ChangeNotifier {
       } catch (_) {}
     }
   }
+}
+
+class _FollowUp {
+  final done = Completer<void>();
+  bool pull = false;
+  bool full = false;
+  bool startup = false;
+  bool force = false;
 }
