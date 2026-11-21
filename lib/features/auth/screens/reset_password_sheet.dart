@@ -86,9 +86,13 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
     });
   }
 
-  void _finish() {
+  void _finish({required bool confirmed}) {
     unawaited(HapticFeedback.lightImpact());
-    showAppMessage(context, AppLocalizations.of(context)!.passwordResetSuccess);
+    final l10n = AppLocalizations.of(context)!;
+    showAppMessage(
+      context,
+      confirmed ? l10n.passwordResetSuccess : l10n.passwordResetUnconfirmed,
+    );
     // a sheet that is already closing must not pop the screen under it
     if (ModalRoute.of(context)?.isCurrent ?? false) Navigator.of(context).pop();
   }

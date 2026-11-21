@@ -22,7 +22,7 @@ class NewPasswordStep extends StatefulWidget {
 
   final String email;
   final String ticket;
-  final VoidCallback onSaved;
+  final void Function({required bool confirmed}) onSaved;
   final VoidCallback onExpired;
   final VoidCallback onStartOver;
 
@@ -34,6 +34,7 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
   late final _email = TextEditingController(text: widget.email);
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
+  bool _replyLost = false;
 
   @override
   void dispose() {
@@ -56,12 +57,16 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
     if (result == null) return;
     switch (result) {
       case CodeOk():
-        // asks the password manager to keep the new password
-        TextInput.finishAutofillContext();
-        widget.onSaved();
+        _finish(confirmed: true);
       case CodeFailure():
         _showFailure(result);
     }
+  }
+
+  void _finish({required bool confirmed}) {
+    // asks the password manager to keep the new password
+    TextInput.finishAutofillContext();
+    widget.onSaved(confirmed: confirmed);
   }
 
   bool _validate() {
@@ -80,6 +85,9 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
 
   void _showFailure(CodeFailure failure) {
     switch (failure.reason) {
+      // the unanswered call most likely changed the password and used up the ticket
+      case CodeFailureReason.invalidOrExpiredTicket when _replyLost:
+        _finish(confirmed: false);
       case CodeFailureReason.invalidOrExpiredTicket:
       case CodeFailureReason.malformedInput:
         widget.onExpired();
@@ -88,6 +96,7 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
       case CodeFailureReason.rateLimited:
         startRetryCountdown(failure);
       case CodeFailureReason.offline:
+        _replyLost = true;
         showProblem((l10n) => l10n.codeOffline);
       default:
         showProblem((l10n) => l10n.passwordSaveFailed);

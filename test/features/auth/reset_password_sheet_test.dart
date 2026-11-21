@@ -384,6 +384,48 @@ void main() {
     });
   }
 
+  testWidgets('asks to sign in when the reply to a save was lost', (
+    tester,
+  ) async {
+    final api = _api()
+      ..confirmResult = const CodeFailure(CodeFailureReason.offline);
+    await _openSheet(tester, api);
+    await _reachPasswordStep(tester);
+    await _savePassword(tester);
+    api.confirmResult = const CodeFailure(
+      CodeFailureReason.invalidOrExpiredTicket,
+    );
+    tester.testTextInput.log.clear();
+
+    await _tap(tester, find.byType(FilledButton));
+
+    expect(find.byType(ResetPasswordSheet), findsNothing);
+    expect(
+      find.text(
+        'Sign in with the new password. If that fails, reset it again.',
+      ),
+      findsOneWidget,
+    );
+    expect(_finishedAutofill(tester).first, isTrue);
+  });
+
+  testWidgets('forgets a lost reply when starting again', (tester) async {
+    final api = _api()
+      ..confirmResult = const CodeFailure(CodeFailureReason.offline);
+    await _openSheet(tester, api);
+    await _reachPasswordStep(tester);
+    await _savePassword(tester);
+    await _tap(tester, find.text('Start again'));
+    api.confirmResult = const CodeFailure(
+      CodeFailureReason.invalidOrExpiredTicket,
+    );
+    await _reachPasswordStep(tester);
+
+    await _savePassword(tester);
+
+    expect(find.text('This reset expired. Start again.'), findsOneWidget);
+  });
+
   testWidgets('starts again from the code step', (tester) async {
     await _openSheet(tester, _api());
     await _sendCode(tester);
