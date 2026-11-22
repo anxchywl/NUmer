@@ -4132,6 +4132,12 @@ abstract class AppLocalizations {
   /// **'Password changed. Sign in with the new password.'**
   String get passwordResetSuccess;
 
+  /// No description provided for @passwordResetUnconfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with the new password. If that fails, reset it again.'**
+  String get passwordResetUnconfirmed;
+
   /// No description provided for @resetSessionExpired.
   ///
   /// In en, this message translates to:

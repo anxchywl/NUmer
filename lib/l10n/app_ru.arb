@@ -964,6 +964,7 @@
   "passwordsDontMatch": "Пароли не совпадают.",
   "savePasswordButton": "Сохранить пароль",
   "passwordResetSuccess": "Пароль изменён. Войдите с новым паролем.",
+  "passwordResetUnconfirmed": "Войдите с новым паролем. Если не получится, сбросьте его ещё раз.",
   "resetSessionExpired": "Время сброса истекло. Начните заново.",
   "resetStartOver": "Начать заново",
   "resetRequestFailed": "Не удалось отправить запрос. Попробуйте ещё раз.",
