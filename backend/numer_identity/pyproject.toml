@@ -1,7 +1,7 @@
 [project]
 name = "numer-identity"
-version = "0.1.0"
-description = "Firebase ID token verification for NUmer module backends"
+version = "0.2.0"
+description = "Firebase ID token and account event verification for NUmer module backends"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

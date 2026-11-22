@@ -2,7 +2,8 @@
 
 Verifies the bearer token every NUmer campus module backend accepts: a Firebase ID token
 issued to a NUmer user. One library, so the module backends cannot drift apart on a
-security check (`docs/numer2/DECISIONS.md` D-05, D-07).
+security check (`docs/numer2/DECISIONS.md` D-05, D-07). It also checks the signature of
+[account events](#account-events) (D-08).
 
 It never calls Firebase and needs no service account. It only fetches Google's public
 signing certificates and checks the token itself.
@@ -40,7 +41,7 @@ lifetime, retrying no sooner than 30 seconds later. With no usable key it raises
 dependencies = ["numer-identity"]
 
 [tool.uv.sources]
-numer-identity = { git = "https://github.com/anxchywl/NUmer", subdirectory = "backend/numer_identity", tag = "identity-v0.1.0" }
+numer-identity = { git = "https://github.com/anxchywl/NUmer", subdirectory = "backend/numer_identity", tag = "identity-v0.2.0" }
 ```
 
 The Docker builder stage that runs `uv sync --frozen` needs `git`.
@@ -73,6 +74,31 @@ async def current_user(request: Request) -> FirebaseClaims:
 
 The project id is configuration the backend reads and passes in; the library reads no
 environment variables. Never log the token or the email address.
+
+## Account events
+
+NUmer posts `account.deleted` events to each module (the contract is in
+`docs/INFRASTRUCTURE.md`). `verify_account_event(secret=..., signature_header=...,
+raw_body=..., now=...)` returns an `AccountEvent`, or raises `SignatureInvalid` for a missing
+or malformed header, a timestamp more than 300 seconds from `now`, no matching `v1`, or a
+body that is not a known event. Pass the body bytes exactly as received. `occurred_at` stays
+the ISO 8601 string that was sent.
+
+```python
+verify = partial(verify_account_event, secret=settings.account_events_secret)
+
+
+@app.post("/internal/v1/account-events")
+async def account_events(request: Request) -> None:
+    body, sent = await request.body(), request.headers.get("x-numer-signature")
+    try:
+        event = verify(signature_header=sent, raw_body=body, now=time.time())
+    except SignatureInvalid as error:
+        raise HTTPException(401, "invalid signature") from error
+    if not await store.was_processed(event.id):
+        await store.delete_account(event.issuer, event.subject)
+        await store.mark_processed(event.id)
+```
 
 ## Test helpers
 
