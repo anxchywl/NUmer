@@ -9,6 +9,7 @@
     "build": "tsc",
     "test": "jest",
     "test:emulator": "firebase emulators:exec --only firestore,auth --project demo-numer \"jest --config jest.emulator.config.js --runInBand\"",
+    "mail:test": "node scripts/send_test_email.js",
     "deploy": "firebase deploy --only functions",
     "start": "firebase emulators:start --only functions,firestore",
     "backfill": "node scripts/backfill.js",
