@@ -78,6 +78,7 @@ functions/lib/
 functions/.env.local
 .env
 .env.*
+!functions/.env.example
 .env.local
 key.properties
 
