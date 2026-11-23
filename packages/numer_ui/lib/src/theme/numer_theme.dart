@@ -87,7 +87,7 @@ abstract final class NumerTheme {
 
   static InputDecorationThemeData _inputTheme(ColorScheme scheme) {
     OutlineInputBorder border([Color? color]) {
-      return OutlineInputBorder(
+      return _FilledInputBorder(
         borderRadius: BorderRadius.circular(NumerRadius.md),
         borderSide: color == null
             ? BorderSide.none
@@ -118,5 +118,59 @@ abstract final class NumerTheme {
         ),
       ),
     );
+  }
+}
+
+// material centres a floating label on an outline's top edge, half outside the fill
+class _FilledInputBorder extends OutlineInputBorder {
+  const _FilledInputBorder({super.borderSide, super.borderRadius});
+
+  static ShapeBorder? _keep(ShapeBorder? border) {
+    if (border is! OutlineInputBorder) return border;
+    return _FilledInputBorder(
+      borderSide: border.borderSide,
+      borderRadius: border.borderRadius,
+    );
+  }
+
+  @override
+  bool get isOutline => false;
+
+  @override
+  OutlineInputBorder copyWith({
+    BorderSide? borderSide,
+    BorderRadius? borderRadius,
+    double? gapPadding,
+  }) {
+    return _FilledInputBorder(
+      borderSide: borderSide ?? this.borderSide,
+      borderRadius: borderRadius ?? this.borderRadius,
+    );
+  }
+
+  @override
+  OutlineInputBorder scale(double t) => _FilledInputBorder(
+    borderSide: borderSide.scale(t),
+    borderRadius: borderRadius * t,
+  );
+
+  @override
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) =>
+      _keep(super.lerpFrom(a, t));
+
+  @override
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) => _keep(super.lerpTo(b, t));
+
+  // the label sits inside, so the stroke must not open a gap for it
+  @override
+  void paint(
+    Canvas canvas,
+    Rect rect, {
+    double? gapStart,
+    double gapExtent = 0.0,
+    double gapPercentage = 0.0,
+    TextDirection? textDirection,
+  }) {
+    super.paint(canvas, rect, textDirection: textDirection);
   }
 }

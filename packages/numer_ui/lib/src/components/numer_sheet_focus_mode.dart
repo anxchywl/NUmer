@@ -1,28 +1,23 @@
 import 'package:flutter/widgets.dart';
 
-// which field of a sheet holds the keyboard. a sheet on a phone gives up most
-// of its height to the keyboard, and what is left is usually the wrong half, so
-// while a field is being typed into everything else folds away
+// the keyboard leaves a phone sheet too little height, so all but the active field folds away
 class NumerSheetFocusMode extends ChangeNotifier {
   final Map<Object, FocusNode> _nodes = {};
   Object? _typingIn;
   bool _keyboardVisible = false;
 
-  // keyed on the keyboard being on screen, not on focus alone: a field can hold
-  // focus with no keyboard showing, as on a simulator with a hardware keyboard,
-  // and then there is no height to recover
+  // focus alone is not enough, a hardware keyboard takes no height
   bool get isTyping => _typingIn != null && _keyboardVisible;
 
   bool hides(Object id) => isTyping && _typingIn != id;
 
   bool get hidesChrome => isTyping;
 
-  // the view insets are the only honest signal that the keyboard is up
+  // does not notify: the caller reads the view insets during build and rebuilds anyway
   void setKeyboardVisible(bool value) {
     if (value == _keyboardVisible) return;
     _keyboardVisible = value;
-    // a field can keep focus while the keyboard is away, and no focus event
-    // announces its return
+    // no focus event fires when the keyboard returns to a field that kept focus
     _typingIn = value ? _typingIn ?? _focusedId() : null;
   }
 
@@ -33,7 +28,7 @@ class NumerSheetFocusMode extends ChangeNotifier {
     return null;
   }
 
-  // the same node every time, so a rebuilt field does not drop focus
+  // one node per id, so a rebuilt field does not drop focus
   FocusNode nodeFor(Object id) => _nodes.putIfAbsent(id, () {
     final node = FocusNode(debugLabel: 'NumerSheetFocusMode($id)');
     node.addListener(() => _focusChanged(id, node));
@@ -45,8 +40,7 @@ class NumerSheetFocusMode extends ChangeNotifier {
     if (node.hasFocus) {
       next = id;
     } else if (_typingIn == id && !_keyboardVisible) {
-      // a tap straight from one field to another can land the loss before the
-      // gain; while the keyboard stays up, focus mode holds rather than blinking
+      // with the keyboard up a loss may precede the next gain, so hold instead of blinking
       next = null;
     } else {
       next = _typingIn;
@@ -56,8 +50,7 @@ class NumerSheetFocusMode extends ChangeNotifier {
     notifyListeners();
   }
 
-  // a folded field is out of the tree, so the next-field key opens its fold
-  // first and asks for focus once it is back
+  // a folded field is out of the tree, so its fold opens before it can take focus
   void moveTo(Object id) {
     if (_typingIn == id) return;
     _typingIn = id;
@@ -67,8 +60,7 @@ class NumerSheetFocusMode extends ChangeNotifier {
     );
   }
 
-  // what Done does: the keyboard goes, and the whole form comes back with it
-  // at once rather than waiting for the keyboard to finish leaving
+  // the form returns at once rather than after the keyboard finishes leaving
   void release() {
     for (final node in _nodes.values) {
       if (node.hasFocus) node.unfocus();
