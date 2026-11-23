@@ -2237,36 +2237,5 @@ class AppLocalizationsKk extends AppLocalizations {
       'Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз.';
 
   @override
-  String get verificationEmailSent => 'Растау хаты жіберілді!';
-
-  @override
-  String get sendResetLink => 'Сілтемені жіберу';
-
-  @override
-  String get resetLinkSent => 'Бұл поштаға аккаунт болса, сілтеме жіберілді.';
-
-  @override
-  String get verifyEmailFirst =>
-      'Алдымен поштаны растаңыз. Растау хатын жібердік.';
-
-  @override
-  String get resendVerificationEmail => 'Растау хатын қайта жіберу';
-
-  @override
-  String get resetRateLimited => 'Келесі әрекетке дейін сәл күтіңіз.';
-
-  @override
-  String get networkRequestFailed =>
-      'Желі қатесі. Байланысты тексеріп, қайталап көріңіз.';
-
-  @override
-  String get signInToResend => 'Қайта жіберу үшін жүйеге кіріңіз.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return '$seconds с кейін қайталап көріңіз';
-  }
-
-  @override
   String get loadingHint => 'Жүктелуде';
 }

@@ -47,9 +47,30 @@ void main() {
       tester.getCenter(find.byType(FilledButton)),
     );
     final indicator = tester.widget<ProgressIndicator>(_spinner);
-    expect(indicator.color, IconTheme.of(tester.element(_spinner)).color);
+    final scheme = Theme.of(tester.element(_spinner)).colorScheme;
+    expect(
+      indicator.color,
+      isSameColorAs(scheme.onSurface.withValues(alpha: 0.38)),
+    );
     final dynamic circle = indicator;
     expect(circle.strokeWidth, 2);
+  });
+
+  testWidgets('a narrow label does not shrink the spinner', (tester) async {
+    await tester.pumpWidget(_app(loading: true, label: 'I'));
+
+    expect(tester.getSize(_spinner), const Size.square(20));
+    expect(
+      tester.getCenter(_spinner),
+      tester.getCenter(find.byType(FilledButton)),
+    );
+  });
+
+  test('loading without a hint is refused', () {
+    expect(
+      () => NumerButtonChild(label: 'Verify', loading: true),
+      throwsAssertionError,
+    );
   });
 
   for (final label in ['Go', 'Verify the code from the email ' * 3]) {

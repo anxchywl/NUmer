@@ -1096,21 +1096,5 @@
   "resetStartOver": "Қайта бастау",
   "resetRequestFailed": "Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.",
   "passwordSaveFailed": "Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз.",
-  "verificationEmailSent": "Растау хаты жіберілді!",
-  "sendResetLink": "Сілтемені жіберу",
-  "resetLinkSent": "Бұл поштаға аккаунт болса, сілтеме жіберілді.",
-  "verifyEmailFirst": "Алдымен поштаны растаңыз. Растау хатын жібердік.",
-  "resendVerificationEmail": "Растау хатын қайта жіберу",
-  "resetRateLimited": "Келесі әрекетке дейін сәл күтіңіз.",
-  "networkRequestFailed": "Желі қатесі. Байланысты тексеріп, қайталап көріңіз.",
-  "signInToResend": "Қайта жіберу үшін жүйеге кіріңіз.",
-  "tryAgainInSeconds": "{seconds} с кейін қайталап көріңіз",
-  "@tryAgainInSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
   "loadingHint": "Жүктелуде"
 }

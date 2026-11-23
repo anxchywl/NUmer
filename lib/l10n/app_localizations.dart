@@ -4162,60 +4162,6 @@ abstract class AppLocalizations {
   /// **'Could not save the password. Try again.'**
   String get passwordSaveFailed;
 
-  /// No description provided for @verificationEmailSent.
-  ///
-  /// In en, this message translates to:
-  /// **'Verification email sent!'**
-  String get verificationEmailSent;
-
-  /// No description provided for @sendResetLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Send reset link'**
-  String get sendResetLink;
-
-  /// No description provided for @resetLinkSent.
-  ///
-  /// In en, this message translates to:
-  /// **'If an account exists for this email, we sent a reset link.'**
-  String get resetLinkSent;
-
-  /// No description provided for @verifyEmailFirst.
-  ///
-  /// In en, this message translates to:
-  /// **'Please verify your email first. We sent you a verification email.'**
-  String get verifyEmailFirst;
-
-  /// No description provided for @resendVerificationEmail.
-  ///
-  /// In en, this message translates to:
-  /// **'Resend verification email'**
-  String get resendVerificationEmail;
-
-  /// No description provided for @resetRateLimited.
-  ///
-  /// In en, this message translates to:
-  /// **'Please wait a moment before trying again.'**
-  String get resetRateLimited;
-
-  /// No description provided for @networkRequestFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Network error. Check your connection and try again.'**
-  String get networkRequestFailed;
-
-  /// No description provided for @signInToResend.
-  ///
-  /// In en, this message translates to:
-  /// **'Sign in to resend the verification email.'**
-  String get signInToResend;
-
-  /// No description provided for @tryAgainInSeconds.
-  ///
-  /// In en, this message translates to:
-  /// **'Try again in {seconds}s'**
-  String tryAgainInSeconds(int seconds);
-
   /// No description provided for @loadingHint.
   ///
   /// In en, this message translates to:

@@ -2255,37 +2255,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get passwordSaveFailed => 'Could not save the password. Try again.';
 
   @override
-  String get verificationEmailSent => 'Verification email sent!';
-
-  @override
-  String get sendResetLink => 'Send reset link';
-
-  @override
-  String get resetLinkSent =>
-      'If an account exists for this email, we sent a reset link.';
-
-  @override
-  String get verifyEmailFirst =>
-      'Please verify your email first. We sent you a verification email.';
-
-  @override
-  String get resendVerificationEmail => 'Resend verification email';
-
-  @override
-  String get resetRateLimited => 'Please wait a moment before trying again.';
-
-  @override
-  String get networkRequestFailed =>
-      'Network error. Check your connection and try again.';
-
-  @override
-  String get signInToResend => 'Sign in to resend the verification email.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return 'Try again in ${seconds}s';
-  }
-
-  @override
   String get loadingHint => 'Loading';
 }

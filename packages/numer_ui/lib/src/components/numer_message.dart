@@ -5,7 +5,6 @@ import '../tokens/numer_space.dart';
 
 const Duration _duration = Duration(seconds: 4);
 
-// shows a floating snackbar for transient feedback, styled for normal or error state
 void showNumerMessage(
   BuildContext context,
   String message, {
