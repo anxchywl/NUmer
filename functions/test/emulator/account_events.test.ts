@@ -5,10 +5,11 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '../../src/shared/admin';
 import { deliverPending, EventTarget, ModuleName, retryDueEvents } from '../../src/account/event_delivery';
 import { signEvent } from '../../src/account/event_signature';
+import { purgeUser } from '../../src/account/purge_user';
 
 jest.mock('firebase-functions/v1', () => ({
   ...jest.requireActual('firebase-functions/v1'),
-  logger: { error: jest.fn() },
+  logger: { error: jest.fn(), warn: jest.fn() },
 }));
 
 const minuteMs = 60 * 1000;
@@ -66,6 +67,7 @@ describe('account event delivery', () => {
   let mutoTarget: EventTarget;
   let clavisTarget: EventTarget;
   const logged = functions.logger.error as jest.Mock;
+  const warned = functions.logger.warn as jest.Mock;
 
   beforeAll(async () => {
     process.env.ACCOUNT_EVENTS_SECRET_MUTO = 'muto-test-secret';
@@ -81,6 +83,7 @@ describe('account event delivery', () => {
       module.received.length = 0;
     }
     logged.mockClear();
+    warned.mockClear();
   });
 
   afterAll(async () => {
@@ -90,13 +93,12 @@ describe('account event delivery', () => {
   });
 
   it('posts a signed event and marks it delivered', async () => {
-    const now = new Date();
-
-    await deliverPending(await createEvent(), [mutoTarget], now);
+    await deliverPending(await createEvent(), [mutoTarget], new Date());
 
     const [{ headers, body }] = muto.received;
-    const seconds = Math.floor(now.getTime() / 1000);
-    expect(headers['x-numer-signature']).toBe(signEvent('muto-test-secret', seconds, body));
+    const header = headers['x-numer-signature'] as string;
+    const seconds = Number(header.slice(2, header.indexOf(',')));
+    expect(header).toBe(signEvent('muto-test-secret', seconds, body));
     expect(headers['content-type']).toBe('application/json');
     expect(JSON.parse(body)).toMatchObject({ id: 'deleted_user-1', subject: 'user-1' });
     const event = await read();
@@ -147,6 +149,41 @@ describe('account event delivery', () => {
     await retryDueEvents(db, later(16 * minuteMs), [mutoTarget]);
 
     expect((await read()).status).toBe('delivered');
+  });
+
+  it('signs with the send time rather than the clock of the run', async () => {
+    const started = Math.floor(Date.now() / 1000);
+
+    await deliverPending(await createEvent(), [mutoTarget], later(-10 * minuteMs));
+
+    const header = muto.received[0].headers['x-numer-signature'] as string;
+    expect(Number(header.slice(2, header.indexOf(',')))).toBeGreaterThanOrEqual(started);
+  });
+
+  it('picks up a pending event that was never scheduled', async () => {
+    await createEvent();
+    await events.doc('scheduled-later').set({
+      status: 'pending',
+      nextAttemptAt: Timestamp.fromDate(later(hourMs)),
+    });
+
+    await retryDueEvents(db, new Date(), [mutoTarget]);
+
+    expect((await read()).status).toBe('delivered');
+    expect(muto.received).toHaveLength(1);
+  });
+
+  it('delivers the event a purge writes when its first delivery never ran', async () => {
+    const uid = `purged-${Date.now()}`;
+    await db.collection('deletedUsers').doc(uid).set({ status: 'pending' });
+    await purgeUser(uid);
+    const ref = events.doc(`deleted_${uid}`);
+    expect((await ref.get()).get('nextAttemptAt')).toBeDefined();
+
+    await retryDueEvents(db, later(minuteMs), [mutoTarget]);
+
+    expect((await ref.get()).get('status')).toBe('delivered');
+    expect(JSON.parse(muto.received[0].body).subject).toBe(uid);
   });
 
   it('schedules the retry before it posts', async () => {
@@ -203,9 +240,10 @@ describe('account event delivery', () => {
     expect((await read()).deliveries.muto.status).toBe('delivered');
   });
 
-  it('is delivered at once without targets', async () => {
+  it('records and logs an event that has no target', async () => {
     await deliverPending(await createEvent(), [], new Date());
 
-    expect((await read()).status).toBe('delivered');
+    expect((await read()).status).toBe('unrouted');
+    expect(warned.mock.calls).toEqual([['account_event_unrouted', { id: 'deleted_user-1' }]]);
   });
 });
