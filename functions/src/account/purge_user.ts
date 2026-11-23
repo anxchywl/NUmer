@@ -92,6 +92,7 @@ async function recordEvent(uid: string) {
       subject: uid,
       occurredAt: admin.firestore.FieldValue.serverTimestamp(),
       status: 'pending',
+      nextAttemptAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   } catch (err) {
     if (!hasCode(err, alreadyExistsCode)) throw err;

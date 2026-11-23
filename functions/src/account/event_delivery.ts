@@ -66,10 +66,11 @@ function isTransportFailure(error: unknown): boolean {
 }
 
 // status 0 means no answer, and a redirect is not followed so it never counts as success
-async function post(target: EventTarget, body: string, now: Date, fetchImpl: typeof fetch): Promise<number> {
+async function post(target: EventTarget, body: string, fetchImpl: typeof fetch): Promise<number> {
   const secret = process.env[secretName(target.module)];
   if (!secret) return 0;
-  const signature = signEvent(secret, Math.floor(now.getTime() / 1000), body);
+  // the send time, since the run's clock can be minutes old and handlers reject a stale signature
+  const signature = signEvent(secret, Math.floor(Date.now() / 1000), body);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -116,6 +117,10 @@ function eventUpdate(event: DocumentData, targets: EventTarget[], attempts: Atte
     if (merged.status === 'failed' && stored?.status !== 'failed') newlyFailed.push(module);
     deliveries[module] = merged;
   }
+  // kept apart from delivered so that these deletions can still be found and sent
+  if (targets.length === 0) {
+    return { newlyFailed, changes: event.status === 'pending' ? { status: 'unrouted' } : {} };
+  }
   const records = targets.map(({ module }) => deliveries[module]);
   if (records.every((record) => record?.status === 'delivered')) {
     return { newlyFailed, changes: { deliveries, status: 'delivered' } };
@@ -130,14 +135,17 @@ function eventUpdate(event: DocumentData, targets: EventTarget[], attempts: Atte
 }
 
 async function recordAttempts(eventRef: DocumentReference, targets: EventTarget[], attempts: Attempt[], now: Date) {
-  const newlyFailed = await eventRef.firestore.runTransaction(async (transaction) => {
+  const update = await eventRef.firestore.runTransaction(async (transaction) => {
     const event = (await transaction.get(eventRef)).data();
-    if (!event) return [];
-    const update = eventUpdate(event, targets, attempts, now);
-    transaction.update(eventRef, update.changes);
-    return update.newlyFailed;
+    if (!event) return undefined;
+    const result = eventUpdate(event, targets, attempts, now);
+    transaction.update(eventRef, result.changes);
+    return result;
   });
-  for (const module of newlyFailed) {
+  if (update?.changes.status === 'unrouted') {
+    functions.logger.warn('account_event_unrouted', { id: eventRef.id });
+  }
+  for (const module of update?.newlyFailed ?? []) {
     functions.logger.error('account_event_delivery_failed', { id: eventRef.id, module });
   }
 }
@@ -162,7 +170,7 @@ export async function deliverPending(
   const results = await Promise.allSettled(
     open.map(async (target) => ({
       module: target.module,
-      httpStatus: await post(target, body, now, fetchImpl),
+      httpStatus: await post(target, body, fetchImpl),
     })),
   );
   const attempts = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
@@ -177,13 +185,14 @@ export async function retryDueEvents(
   targets: EventTarget[],
   fetchImpl: typeof fetch = fetch,
 ): Promise<void> {
-  const due = await db
-    .collection('accountEvents')
-    .where('status', '==', 'pending')
-    .where('nextAttemptAt', '<=', Timestamp.fromDate(now))
-    .limit(dueLimit)
-    .get();
-  for (const event of due.docs) {
+  const pending = db.collection('accountEvents').where('status', '==', 'pending');
+  // a query never matches a missing field, so unscheduled events are filtered here
+  const [all, due] = await Promise.all([
+    pending.select('nextAttemptAt').get(),
+    pending.where('nextAttemptAt', '<=', Timestamp.fromDate(now)).limit(dueLimit).get(),
+  ]);
+  const unscheduled = all.docs.filter((event) => !event.get('nextAttemptAt'));
+  for (const event of [...unscheduled, ...due.docs].slice(0, dueLimit)) {
     await deliverPending(event.ref, targets, now, fetchImpl);
   }
 }
