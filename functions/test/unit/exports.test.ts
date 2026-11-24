@@ -1,11 +1,13 @@
 describe('exports', () => {
   it('keeps the deployed function names', () => {
     expect(Object.keys(require('../../src/index')).sort()).toEqual([
+      'composeFeedScheduled',
       'confirmPasswordReset',
       'deleteAccountCallable',
       'deleteGroupCallable',
       'joinPrivateGroup',
       'onAccountEventCreated',
+      'onAnnouncementWrite',
       'onCourseWrite',
       'onGroupMemberDelete',
       'onGroupMemberWrite',
@@ -13,7 +15,9 @@ describe('exports', () => {
       'onStudySessionWrite',
       'onUserDeletionRequested',
       'onUserProfileWrite',
+      'publishAnnouncement',
       'requestPasswordResetCode',
+      'retractAnnouncement',
       'retryAccountEvents',
       'sendEmailVerificationCode',
       'sendNudge',

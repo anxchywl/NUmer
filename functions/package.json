@@ -13,6 +13,7 @@
     "deploy": "firebase deploy --only functions",
     "start": "bash ../scripts/start_emulators.sh",
     "roles:set": "tsc && node scripts/set_roles.js",
+    "feed:publish": "tsc && node scripts/publish_announcement.js",
     "backfill": "node scripts/backfill.js",
     "backfill:email": "FORCE_BACKFILL=1 node scripts/backfill_email_index.js",
     "backfill:group-index": "npm run build && node scripts/backfill_group_index.js",

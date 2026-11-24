@@ -131,11 +131,14 @@ by a flag yet.
 | Scheduled | `sweepDeletedUsers` | Daily: remove what a signed-in device wrote after a purge |
 | Firestore trigger | `onAccountEventCreated` | Deliver a new account event to the module backends |
 | Scheduled | `retryAccountEvents` | Every 15 minutes: retry account events that are due |
+| Scheduled | `composeFeedScheduled` | Every 30 minutes: rebuild `feed/current` |
+| Firestore trigger | `onAnnouncementWrite` | Rebuild `feed/current` when an announcement changes |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Disable the auth user and mark it in `deletedUsers` for the purge |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
 | Callable | `setUserRoles` | Administrator sets a user's module roles (see below) |
+| Callable | `publishAnnouncement`, `retractAnnouncement` | An editor publishes or retracts a news announcement (see below) |
 | Callable | `sendEmailVerificationCode`, `verifyEmailCode` | Email and verify a 6-digit code that marks the signed-in user's email verified |
 | Callable | `requestPasswordResetCode`, `verifyPasswordResetCode`, `confirmPasswordReset` | Queue a 6-digit reset code, trade it for a single-use ticket, set the new password |
 
@@ -192,6 +195,24 @@ and mirrors of users purged more than 2 hours earlier, because another device's 
 valid for up to an hour. Until the purge finishes the same email cannot sign up again.
 `DELETE_REQUIRES_RECENT_AUTH=on` in `functions/.env` makes the callable require a sign-in from
 the last 5 minutes; it stays `off` while older app versions cannot re-authenticate.
+
+News (`functions/src/feed/`): the callables require `numer:editor` in both the caller's token
+and their current claims, and write `announcements/{id}`, the source of truth: `title` (EN,
+optional RU and KK, at most 100 characters each), optional `body` (400 each), `pinned`,
+optional `link` (`https`) and `expiresAt` (at most 365 days ahead), `publishedAt`,
+`authorUid` and `retracted`. Without the app, `npm run feed:publish -- --file <json>` or
+`-- --retract <id>`, with an optional `--dry-run`, does the same in `functions/` (needs
+`GOOGLE_APPLICATION_CREDENTIALS`).
+
+The composer writes the one document clients read, `feed/current` (`items`, `composedAt`,
+`eventsOk`): at most 30 items, the newest two pinned announcements first, then newest first by
+`publishedAt`. Retracted and expired announcements are left out, and an expired one leaves on
+the next run. Events come from the Events backend's public list at `FEED_EVENTS_URL` in
+`functions/.env.<project id>`, a URL up to and including `/api/events`; empty means
+announcements only. Ended and past events are left out. An event's `publishedAt` is when the
+composer first saw it in the feed. If the list cannot be read, the previous events stay and
+`eventsOk` is `false`. `composeFeedScheduled` creates one Cloud Scheduler job on deploy, the
+third besides those of `sweepDeletedUsers` and `retryAccountEvents`.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.

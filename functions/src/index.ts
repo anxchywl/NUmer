@@ -11,3 +11,5 @@ export { onUserProfileWrite } from './profiles/public_profile';
 export { setUserRoles } from './roles/set_user_roles';
 export { sendEmailVerificationCode, verifyEmailCode } from './auth/email_verification';
 export { requestPasswordResetCode, verifyPasswordResetCode, confirmPasswordReset } from './auth/password_reset';
+export { publishAnnouncement, retractAnnouncement } from './feed/announcements';
+export { composeFeedScheduled, onAnnouncementWrite } from './feed/triggers';
