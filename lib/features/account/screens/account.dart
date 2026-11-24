@@ -10,6 +10,7 @@ import 'package:numer_app/features/history/widgets/export_session_dialog.dart';
 import 'package:numer_app/features/account/widgets/accent_color_picker.dart';
 import 'package:numer_app/features/account/widgets/universal_avatar.dart';
 import 'package:numer_app/features/account/widgets/delete_account_sheet.dart';
+import 'package:numer_app/features/account/data/sign_out.dart';
 
 class AccountScreen extends StatefulWidget {
   final Future<void> Function(ThemeMode)? onThemeChange;
@@ -222,22 +223,9 @@ class _AccountScreenState extends State<AccountScreen> {
                               onPressed: auth.isBusy
                                   ? null
                                   : () async {
-                                      final authController = context
-                                          .read<AuthController>();
-                                      final appState = context.read<AppState>();
-                                      final syncService = context
-                                          .read<SyncService>();
                                       final navigator = Navigator.of(context);
-
-                                      await appState
-                                          .stopAndSaveAllActiveSessions();
-                                      await appState
-                                          .waitForPendingReflections();
-                                      await syncService.pushNow();
-
-                                      await authController.signOut();
+                                      await signOutAndReset(context);
                                       if (!mounted) return;
-                                      appState.reset();
                                       navigator.pushReplacementNamed('/auth');
                                     },
                               style: TextButton.styleFrom(

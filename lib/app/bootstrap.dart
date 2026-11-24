@@ -22,10 +22,13 @@ import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/firebase_options.dart';
+import 'package:numer_app/core/identity/id_token_provider.dart';
+import 'package:numer_app/core/identity/module_session.dart';
 import 'package:numer_app/core/notifications/notifications.dart';
 import 'package:numer_app/core/notifications/recording_notification_service.dart';
 import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:numer_app/core/startup_metrics.dart';
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
@@ -263,6 +266,12 @@ class NumerBootstrapApp extends StatelessWidget {
                 create: (_) => AuthController(),
                 update: (_, syncService, authController) =>
                     authController!..attachSyncService(syncService),
+              ),
+              Provider<ModuleSession>(
+                create: (context) => ModuleSession(
+                  idToken: firebaseIdTokenProvider(FirebaseAuth.instance),
+                  signOut: () => signOutAndReset(context),
+                ),
               ),
             ],
             child: const AppRoot(),

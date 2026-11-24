@@ -32,11 +32,13 @@ backend/
 
 - **`app/`** — composition root: `bootstrap.dart` (startup and providers), `numer_app.dart`
   (root widget and `MaterialApp`), `app_theme.dart`, `auth_gate.dart`,
-  `update_required_screen.dart`, `routes.dart`, `shell/` (tab shell and navigation bars) and
-  `app_state.dart` (the global `ChangeNotifier`).
+  `update_required_screen.dart`, `routes.dart`, `shell/` (tab shell and navigation bars),
+  `modules/` (the module registry and `openModule`) and `app_state.dart` (the global
+  `ChangeNotifier`).
 - **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
   minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
-  `notifications/`, `observability/` (crash reporting), `firebase_options.dart`,
+  `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
+  contract), `notifications/`, `observability/` (crash reporting), `firebase_options.dart`,
   `startup_metrics.dart`. Core never imports a feature.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.

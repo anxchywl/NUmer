@@ -1,4 +1,5 @@
 // Public surface of the account feature (profile, settings).
+export 'data/sign_out.dart';
 export 'models/profile_avatar.dart';
 export 'screens/account.dart';
 export 'widgets/accent_color_picker.dart';
