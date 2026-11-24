@@ -73,6 +73,7 @@ a group; see `firestore.rules` for exact access):
   /members, /invites, /secrets, /aggregates, /stats, /leaderboard
 /users/{userId}                        profile (name, major, goals, prefs)
 /email_index/{emailId}                 email → uid lookup
+/mailQueue/{id}                        outgoing email, server only
 /users/{userId}/
   fcmTokens, aggregates, sessions, studySessions, courses, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
@@ -88,6 +89,7 @@ a group; see `firestore.rules` for exact access):
 | Firestore trigger | `onCourseWrite` | Recompute aggregates when course visibility changes |
 | Firestore trigger | `onGroupMemberDelete` | Clean up membership associations |
 | Firestore trigger | `deleteGroup` | Cascade group cleanup |
+| Firestore trigger | `onMailQueued` | Render and send a queued email |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
@@ -98,6 +100,11 @@ Callables enforce authentication. App Check is off by default and switched on pe
 list export names, comma-separated, in `APPCHECK_ENFORCED` in `functions/.env` (`*` means all;
 `functions/.env.example` shows the key), then deploy functions. A listed callable rejects a
 request without a valid App Check token with `failed-precondition` and reason `app-check`.
+
+Transactional email (`functions/src/mail/`) renders the `verify`, `reset` and
+`passwordChanged` templates in EN, RU and KK. Callers send through `MailSender`, or queue with
+`enqueueMail` when they must not wait for delivery. A delivered entry is deleted. A failed one
+is stripped of its address and code.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
@@ -159,6 +166,12 @@ firebase deploy --only functions
 ### Secrets & config
 - Platform Firebase config files (`google-services.json`, `GoogleService-Info.plist`) live in
   their platform dirs and are git-ignored.
+- `MAIL_API_KEY` is a Secret Manager secret bound to `onMailQueued`; it must exist in a
+  project before functions are deployed there.
+- `MAIL_FROM` and `MAIL_PROVIDER` (`resend`, or `console` outside production) come from a
+  git-ignored `functions/.env.<project id>`; `functions/.env.example` lists them.
+- Send a test email with `(cd functions && npm run build && npm run mail:test -- --to
+  <address> --template verify --locale en)`, with the three variables in the environment.
 
 ## Key files
 - App state: `lib/app/app_state.dart`
