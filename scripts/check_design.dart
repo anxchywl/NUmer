@@ -5,11 +5,15 @@ const _roots = ['lib', 'packages'];
 const _tokensPath = 'packages/numer_ui/lib/src/tokens/';
 const _buttonChildPath =
     'packages/numer_ui/lib/src/components/numer_button_child.dart';
+const _messagePath =
+    'packages/numer_ui/lib/src/components/numer_message.dart';
 
 const _exempt = {
-  'color_literal': _tokensPath,
-  'text_literal': _tokensPath,
-  'spinner': _buttonChildPath,
+  'color_literal': [_tokensPath],
+  'text_literal': [_tokensPath],
+  'spinner': [_buttonChildPath],
+  'snackbar': [_messagePath],
+  'shadow': [_messagePath],
 };
 
 final _patterns = {
@@ -69,8 +73,8 @@ Map<String, int> _countMatches() {
 }
 
 bool _isExempt(String id, String path) {
-  final prefix = _exempt[id];
-  return prefix != null && path.startsWith(prefix);
+  final prefixes = _exempt[id];
+  return prefixes != null && prefixes.any(path.startsWith);
 }
 
 List<String> _dartFiles() {
