@@ -429,8 +429,10 @@ Three kinds only.
 
 ### 5.5 Inputs and choices
 
-- Text field: filled, fill `surfaceContainerHighest`, radius `md`, no outline, floating
-  label, height 56, helper and error text below in `meta` (`error` colour for errors).
+- Text field: Material's filled style, fill `surfaceContainerHighest`, radius `md`, height 56,
+  the floating label inside the fill (never across its top edge). No visible border at rest; a
+  2 pt `primary` border only when focused, a 2 pt `error` border in the error state. Helper
+  and error text below in `meta` (`error` colour for errors).
 - A choice among 2 to 4 modes: Material `SegmentedButton`.
 - A choice among more options: a row showing the current value that opens a sheet with a
   list.
