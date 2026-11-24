@@ -303,6 +303,7 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
         child: NumerButtonChild(
           label: l10n.verifyCodeButton,
           loading: _call == _Call.verify,
+          loadingHint: l10n.loadingHint,
         ),
       ),
     );
@@ -320,6 +321,7 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
               ? l10n.resendCodeIn(_cooldownSeconds)
               : l10n.resendCode,
           loading: _call == _Call.resend,
+          loadingHint: l10n.loadingHint,
         ),
       ),
     );

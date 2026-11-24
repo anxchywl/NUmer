@@ -56,7 +56,9 @@
   "exportWillStartIn": "Экспорт начнется через {seconds} сек.",
   "@exportWillStartIn": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "exportToCalendarSubtitle": "Сохраните свои сессии как события календаря",
@@ -75,7 +77,9 @@
   "sessionsFound": "{count, plural, =0{Сессий не найдено} one{{count} сессия найдена} few{{count} сессии найдено} other{{count} сессий найдено}}",
   "@sessionsFound": {
     "placeholders": {
-      "count": { "type": "int" }
+      "count": {
+        "type": "int"
+      }
     }
   },
   "fileSavedSuccessfully": "Файл успешно создан",
@@ -99,7 +103,6 @@
   "home": "Главная",
   "statistics": "Статистика",
   "groups": "Группы",
-
   "addCourse": "Добавить курс",
   "addTime": "Добавить время",
   "courseName": "Название курса",
@@ -133,15 +136,12 @@
   "dayStatsTipLine1": "• Календарь показывает вашу учебную активность. Чем зеленее день, тем больше вы учились.",
   "dayStatsTipLine2": "• Вы можете редактировать время сессии и заметки в Истории.",
   "dayStatsTipLine3": "• Вы можете нажать на любой курс, и экран истории покажет сессии только по этому курсу.",
-
   "syncOffline": "Офлайн",
   "syncSyncing": "Синхронизация…",
   "syncUpToDate": "Обновлено",
-
   "setGoals": "Цели",
   "daily": "День",
   "weekly": "Неделя",
-
   "studyTimer": "Таймер учебы",
   "noCoursesYet": "Пока нет курсов. Добавьте курс на главной.",
   "chooseACourse": "Выберите курс",
@@ -157,7 +157,9 @@
   "anotherSessionRunningSilly": "Другой {sessionType} уже запущен, глупышка.",
   "@anotherSessionRunningSilly": {
     "placeholders": {
-      "sessionType": { "type": "String" }
+      "sessionType": {
+        "type": "String"
+      }
     }
   },
   "friendJoinPrompt": "Ваш друг может присоединиться, введя название вашей группы в строку поиска.",
@@ -166,20 +168,16 @@
   "maxTimeCapped": "Максимум 3:00:00 — ограничено",
   "studiedLabel": "Изучено",
   "goalsUpdated": "Цели обновлены",
-
   "studiedToday": "Изучено сегодня",
   "studiedThisWeek": "Изучено на этой неделе",
   "studiedThisMonth": "Изучено в этом месяце",
   "studiedThisYear": "Изучено в этом году",
   "studiedOverall": "Изучено всего",
-
   "timer": "таймер",
   "stopwatch": "секундомер",
   "pomodoro": "помодоро",
   "session": "сеанс",
-
   "editCourse": "Редактировать курс",
-  "courseName": "Название курса",
   "today": "Сегодня",
   "edit": "Редактировать",
   "timerTab": "Таймер",
@@ -199,22 +197,17 @@
   "skipBreak": "Пропустить перерыв",
   "pomodoroExitWarning": "Сеанс помодоро запущен. Все равно выйти?",
   "exitAnyway": "Выйти в любом случае",
-
   "expLevel1": "Полный новичок",
   "expLevel2": "Знаю основы",
   "expLevel3": "Уверенно владею предметом",
   "expLevel4": "Продвинутый уровень знаний",
   "expLevel5": "Широкий опыт",
   "expLevelDefault": "Уверенно",
-
-  "statistics": "Статистика",
   "dayStatistics": "Статистика дня",
   "periodStatistics": "Статистика периода",
   "tip": "Совет",
   "chartTip": "• Удерживайте палец на графике и ведите влево или вправо для перемещения между днями или месяцами.",
   "courseStatistics": "Статистика курсов",
-  
-  
   "previousDay": "Предыдущий день",
   "nextDay": "Следующий день",
   "history": "История",
@@ -234,14 +227,11 @@
   "avgPerDay": "Среднее в день",
   "mostStudied": "Больше всего",
   "leastStudied": "Меньше всего",
-
   "adjustWeeklyGoal": "Настройте еженедельную цель",
   "targetPerWeek": "Цель в неделю",
   "targetPerDay": "Цель в день",
   "semester": "Семестр (~{weeks} нед)",
   "hPerWeek": "{hours} ч/нед",
-
-  "groups": "Группы",
   "createGroup": "Создать группу",
   "joinGroup": "Присоедиться",
   "groupName": "Название группы",
@@ -267,7 +257,9 @@
   "joinGroupDialogTitle": "Вступить в {groupName}",
   "@joinGroupDialogTitle": {
     "placeholders": {
-      "groupName": { "type": "String" }
+      "groupName": {
+        "type": "String"
+      }
     }
   },
   "joinGroupDialogMessage": "Введите код доступа для входа в эту закрытую группу.",
@@ -287,7 +279,7 @@
   "groupNotFound": "Группа не найдена или была удалена.",
   "signInToManage": "Вам необходимо войти в систему, чтобы управлять этой группой.",
   "noLongerMember": "Вы больше не являетесь участником этой группы.",
-  "groupNameHint": "Введите название вашей группы",
+  "groupNameHint": "Введите название группы",
   "visibility": "Видимость",
   "descriptionHint": "Опишите вашу группу в нескольких словах",
   "codeRequired": "Код обязателен",
@@ -321,7 +313,6 @@
   "groupLeaderboard": "Таблица лидеров",
   "rankLabel": "#{rank}",
   "failedToLoadUserData": "Ошибка загрузки данных пользователя: {error}",
-
   "sun": "Вс",
   "mon": "Пн",
   "tue": "Вт",
@@ -336,7 +327,6 @@
   "thursday": "Четверг",
   "friday": "Пятница",
   "saturday": "Суббота",
-
   "january": "Январь",
   "february": "Февраль",
   "march": "Март",
@@ -349,9 +339,7 @@
   "october": "Октябрь",
   "november": "Ноябрь",
   "december": "Декабрь",
-
   "total": "Всего",
-
   "groupSummary": "Сводка группы",
   "average": "Среднее",
   "leader": "Лидер",
@@ -375,7 +363,6 @@
   "minutes_plural": "минут",
   "second": "секунда",
   "seconds_plural": "секунд",
-
   "jan": "Янв",
   "feb": "Фев",
   "mar": "Мар",
@@ -388,26 +375,21 @@
   "oct": "Окт",
   "nov": "Ноя",
   "dec": "Дек",
-
   "via": "через",
   "viaTimer": "через Таймер",
   "viaStopwatch": "через Секундомер",
-  "viaPomodoro": "через Помодоро",
-  "viaManualRecording": "через ручную запись",
+  "viaPomodoro": "Через Помидоро",
+  "viaManualRecording": "Через ручной ввод",
   "startTime": "Начало",
   "endTime": "Окончание",
   "duration": "Длительность",
   "reflection": "Заметка",
-
   "overThis": "за",
   "credits": "Кредит",
   "credits_plural": "Кредитов",
-  "save": "Сохранить",
   "deleteSession": "Удалить сеанс?",
   "deleteSessionMessage": "Это удалит сеанс из вашей истории и статистики.",
   "sessionDeleted": "Сеанс удален",
-  "deleteCourseTitle": "Удалить курс",
-  "deleteCourseMessage": "Вы уверены? Все данные этого курса будут удалены.",
   "leaveGroupTitle": "Покинуть группу?",
   "leaveGroupMessage": "Вы уверены, что хотите покинуть эту группу?",
   "leave": "Покинуть",
@@ -430,7 +412,9 @@
   "timeAddedToCourse": "Время добавлено в {courseName}",
   "@timeAddedToCourse": {
     "placeholders": {
-      "courseName": { "type": "String" }
+      "courseName": {
+        "type": "String"
+      }
     }
   },
   "currentDay": "текущий день",
@@ -470,7 +454,9 @@
   "invalidTimeFormat": "Введите время как {format}",
   "@invalidTimeFormat": {
     "placeholders": {
-      "format": { "type": "String" }
+      "format": {
+        "type": "String"
+      }
     }
   },
   "signIn": "Войти",
@@ -507,14 +493,18 @@
   "sessionFinished": "Занятие завершено: {duration}",
   "@sessionFinished": {
     "placeholders": {
-      "duration": { "type": "String" }
+      "duration": {
+        "type": "String"
+      }
     }
   },
   "whatDidYouWorkOn": "Над чем вы работали?",
   "failedToSaveReflection": "Не удалось сохранить заметку: {error}",
   "@failedToSaveReflection": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "skip": "Пропустить",
@@ -530,13 +520,17 @@
   "nudgeWaitMinutes": "Пожалуйста, подождите {minutes} {minutes, plural, one{минуту} few{минуты} other{минут}} перед повторным подталкиванием.",
   "@nudgeWaitMinutes": {
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "nudgeWaitSeconds": "Пожалуйста, подождите {seconds} {seconds, plural, one{секунду} few{секунды} other{секунд}} перед повторным подталкиванием.",
   "@nudgeWaitSeconds": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "memberCannotReceiveNudges": "Этот участник пока не может получать уведомления.",
@@ -544,7 +538,9 @@
   "failedToSendNudge": "Не удалось отправить уведомление: {error}",
   "@failedToSendNudge": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "cannotNudgeSelf": "Вы не можете подтолкнуть самого себя.",
@@ -765,11 +761,12 @@
   "habitFrequencyEveryXDays": "Каждые {count} дн.",
   "habitDragToCategorize": "Перетащите для распределения",
   "@habitFrequencyEveryXDays": {
-     "placeholders": {
-        "count": {"type": "int"}
-     }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
-
   "habitStatsEmptyState": "Привычек не найдено. Добавьте привычку, чтобы начать отслеживать прогресс. Это круто, поверьте!",
   "habitStatsCompletionRate": "Процент выполнения",
   "habitStatsCompleted": "Выполнено",
@@ -790,7 +787,9 @@
   "habitReportDownloadCountdown": "Генерация отчета начнется через {seconds} сек.",
   "@habitReportDownloadCountdown": {
     "placeholders": {
-      "seconds": { "type": "int" }
+      "seconds": {
+        "type": "int"
+      }
     }
   },
   "@habitReportFailed": {
@@ -810,7 +809,6 @@
   "exportSuccess": "Экспорт успешен",
   "exportSuccessMessage": "Ваш файл успешно сохранён",
   "openFile": "Открыть файл",
-  "done": "Готово",
   "close": "Закрыть",
   "habitWeekNext": "Следующая неделя",
   "habitWeekLast": "Прошлая неделя",
@@ -820,8 +818,12 @@
   "habitReportFileName": "привычки_{month}_{year}",
   "@habitReportFileName": {
     "placeholders": {
-      "month": { "type": "String" },
-      "year": { "type": "int" }
+      "month": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
     }
   },
   "habitUnarchived": "Привычка разархивирована",
@@ -850,41 +852,46 @@
   "deleteContactMessage": "Вы уверены, что хотите удалить \"{name}\"?",
   "@deleteContactMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "deleteConnectionGroupTitle": "Удалить группу?",
   "deleteConnectionGroupMessage": "Это удалит \"{name}\" из всех контактов. Это действие нельзя отменить.",
   "@deleteConnectionGroupMessage": {
     "placeholders": {
-      "name": { "type": "String" }
+      "name": {
+        "type": "String"
+      }
     }
   },
   "renameGroup": "Переименовать",
   "newGroup": "Новая группа",
   "editGroup": "Редактировать группу",
   "groupNameLabel": "Название группы",
-  "groupNameHint": "Введите название группы",
   "noInteractionsYet": "Взаимодействий пока нет",
   "addInteractionHint": "О чем вы говорили?",
   "interactionCalendarTitle": "Календарь взаимодействий",
   "signInToViewConnections": "Войдите, чтобы видеть своих людей.",
   "personNotFound": "Человек не найден",
-  "errorLoadingLeaderboard": "Ошибка загрузки таблицы лидеров: {error}",
   "@errorLoadingLeaderboard": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "courseHiddenFromLeaderboard": "Курс скрыт из таблицы лидеров",
   "courseVisibleInLeaderboard": "Курс виден в таблице лидеров",
   "hideFromLeaderboard": "Скрыть из таблицы лидеров",
   "unhideFromLeaderboard": "Показать в таблице лидеров",
-  "noDataAvailable": "Нет данных за этот период",
   "errorSaving": "Ошибка сохранения: {error}",
   "@errorSaving": {
     "placeholders": {
-      "error": { "type": "String" }
+      "error": {
+        "type": "String"
+      }
     }
   },
   "add": "Добавить",
@@ -900,8 +907,6 @@
   "memberFallbackName": "Участник",
   "joinCodeTooShort": "Используйте не меньше 8 символов.",
   "sessionNotificationAction": "Начать сессию",
-  "viaPomodoro": "Через Помидоро",
-  "viaManualRecording": "Через ручной ввод",
   "updateRequiredTitle": "Обновите NUmer",
   "updateRequiredBody": "Эта версия больше не поддерживается. Установите последнюю версию, чтобы продолжить.",
   "updateRequiredAction": "Обновить",
@@ -968,5 +973,22 @@
   "resetSessionExpired": "Время сброса истекло. Начните заново.",
   "resetStartOver": "Начать заново",
   "resetRequestFailed": "Не удалось отправить запрос. Попробуйте ещё раз.",
-  "passwordSaveFailed": "Не удалось сохранить пароль. Попробуйте ещё раз."
+  "passwordSaveFailed": "Не удалось сохранить пароль. Попробуйте ещё раз.",
+  "verificationEmailSent": "Письмо с подтверждением отправлено!",
+  "sendResetLink": "Отправить ссылку",
+  "resetLinkSent": "Если аккаунт существует, мы отправили ссылку для сброса.",
+  "verifyEmailFirst": "Сначала подтвердите почту. Мы отправили письмо для подтверждения.",
+  "resendVerificationEmail": "Отправить письмо повторно",
+  "resetRateLimited": "Подождите немного перед следующей попыткой.",
+  "networkRequestFailed": "Ошибка сети. Проверьте соединение и повторите.",
+  "signInToResend": "Войдите, чтобы отправить письмо повторно.",
+  "tryAgainInSeconds": "Повторите через {seconds} с",
+  "@tryAgainInSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "loadingHint": "Загрузка"
 }

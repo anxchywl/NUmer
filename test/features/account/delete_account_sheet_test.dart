@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/features/account/widgets/delete_account_sheet.dart';
@@ -88,5 +90,38 @@ void main() {
     expect(find.byType(DeleteAccountSheet), findsNothing);
     expect(results, [false]);
     expect(delete.passwords, isEmpty);
+  });
+
+  testWidgets('a screen reader hears that delete is loading', (tester) async {
+    final semantics = tester.ensureSemantics();
+    final answer = Completer<DeleteAccountFailure?>();
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () =>
+                showDeleteAccountSheet(context, onDelete: (_) => answer.future),
+            child: const Text('open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'right');
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pump();
+
+    expect(
+      tester.getSemantics(find.byType(FilledButton)),
+      containsSemantics(label: 'Delete', hint: 'Loading'),
+    );
+
+    answer.complete(null);
+    await tester.pumpAndSettle();
+    semantics.dispose();
   });
 }
