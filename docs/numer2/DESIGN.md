@@ -471,7 +471,9 @@ share one 240 ms ease-out animation; with reduce-motion they switch instantly. T
 signal is `MediaQuery.viewInsets.bottom > 0`, not focus alone. "Next" on the keyboard moves to
 the next field and opens its fold. Built from `NumerSheetFocusMode`, `NumerFocusFold`,
 `NumerFocusGap` and `NumerFocusActions` (ported from Gradus `focus_mode.dart`, which took
-it from Muto, so all of the owner's apps behave alike).
+it from Muto, so all of the owner's apps behave alike). The form's `State` creates the mode
+in `initState` and disposes it in `dispose`, builds a `NumerSheetBody` with it, and is opened
+with `showNumerFormSheet`.
 
 ### 5.8 Status label
 
