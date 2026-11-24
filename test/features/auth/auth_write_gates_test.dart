@@ -26,15 +26,4 @@ void main() {
       expect(shouldSaveFcmToken('a', null, null, savedAt), isTrue);
     });
   });
-
-  group('shouldUpsertEmailIndex', () {
-    test('skips the same email', () {
-      expect(shouldUpsertEmailIndex('a@x.test', 'a@x.test'), isFalse);
-    });
-
-    test('writes a different or missing email', () {
-      expect(shouldUpsertEmailIndex('b@x.test', 'a@x.test'), isTrue);
-      expect(shouldUpsertEmailIndex('a@x.test', null), isTrue);
-    });
-  });
 }

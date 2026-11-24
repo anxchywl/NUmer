@@ -27,6 +27,7 @@ describe('firestore rules feed', () => {
       const db = context.firestore();
       await db.doc('feed/current').set({ items: [] });
       await db.doc('announcements/x').set({ title: { en: 't' } });
+      await db.doc('feedState/events').set({ seen: {} });
     });
   });
 
@@ -47,6 +48,14 @@ describe('firestore rules feed', () => {
       await assertFails(db.collection('feed').get());
       await assertFails(db.doc('feed/current').set({ items: [] }));
       await assertFails(db.doc('feed/current').delete());
+    }
+  });
+
+  it('denies every client any access to the feed state', async () => {
+    for (const db of [as('u'), editor()]) {
+      await assertFails(db.doc('feedState/events').get());
+      await assertFails(db.collection('feedState').get());
+      await assertFails(db.doc('feedState/events').set({ seen: {} }));
     }
   });
 

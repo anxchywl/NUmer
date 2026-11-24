@@ -79,13 +79,13 @@ group with the owner according to `groupIndex`, never according to `users.groupI
   /members                             creator promotes/demotes; nobody but the creator removes the creator
   /invites, /secrets, /aggregates, /stats, /leaderboard
 /users/{userId}                        profile; any signed-in user may get one, nobody may list
-/email_index/{emailId}                 email → uid lookup; write own lowercased email only, no reads
+/email_index/{emailId}                 email → uid lookup written only by older app versions, no reads
 /groupIndex/{userId}                   server-written: groups the user belongs to; owner get only
 /publicProfiles/{userId}               server-written: profile fields peers may get
 /nudges/{nudgeId}                      server-written; receiver reads and sets status 'delivered'
 /config/{docId}, /feed/{docId}         server-written; any signed-in user may get
 /mailQueue, /nudgeLimits, /joinAttempts, /authCodes, /authRateLimits, /authAudit,
-/deletedUsers, /accountEvents, /announcements, /roleAudit
+/deletedUsers, /accountEvents, /announcements, /feedState, /roleAudit
                                        server only, denied to every client
 /users/{userId}/
   fcmTokens, aggregates (peers read), aggState (server only), sessions (peers read,
@@ -199,7 +199,7 @@ the last 5 minutes; it stays `off` while older app versions cannot re-authentica
 News (`functions/src/feed/`): the callables require `numer:editor` in both the caller's token
 and their current claims, and write `announcements/{id}`, the source of truth: `title` (EN,
 optional RU and KK, at most 100 characters each), optional `body` (400 each), `pinned`,
-optional `link` (`https`) and `expiresAt` (at most 365 days ahead), `publishedAt`,
+optional `link` (`https`, ASCII, at most 300 characters) and `expiresAt` (at most 365 days ahead), `publishedAt`,
 `authorUid` and `retracted`. Without the app, `npm run feed:publish -- --file <json>` or
 `-- --retract <id>`, with an optional `--dry-run`, does the same in `functions/` (needs
 `GOOGLE_APPLICATION_CREDENTIALS`).
@@ -207,11 +207,15 @@ optional `link` (`https`) and `expiresAt` (at most 365 days ahead), `publishedAt
 The composer writes the one document clients read, `feed/current` (`items`, `composedAt`,
 `eventsOk`): at most 30 items, the newest two pinned announcements first, then newest first by
 `publishedAt`. Retracted and expired announcements are left out, and an expired one leaves on
-the next run. Events come from the Events backend's public list at `FEED_EVENTS_URL` in
+the next run. The items stay within 96 KB of JSON: past that, the oldest unpinned ones are
+left out. Events come from the Events backend's public list at `FEED_EVENTS_URL` in
 `functions/.env.<project id>`, a URL up to and including `/api/events`; empty means
-announcements only. Ended and past events are left out. An event's `publishedAt` is when the
-composer first saw it in the feed. If the list cannot be read, the previous events stay and
-`eventsOk` is `false`. `composeFeedScheduled` creates one Cloud Scheduler job on deploy, the
+announcements only. Ended and past events are left out, as are events with a title or location
+over 100 characters or a token that is not 1 to 64 letters, digits, `_` or `-`. An event's
+`publishedAt` is when the composer first saw it, kept in the server-only `feedState/events`
+until the event starts (at most 300 events). If the list cannot be read, the previous events
+stay and `eventsOk` is `false`. The composer reads and writes in one transaction, and a run
+whose fetch is older than the stored one leaves the events as they are. `composeFeedScheduled` creates one Cloud Scheduler job on deploy, the
 third besides those of `sweepDeletedUsers` and `retryAccountEvents`.
 
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon

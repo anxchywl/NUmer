@@ -1,13 +1,26 @@
 import * as admin from 'firebase-admin';
-import type { DocumentData, Firestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
+import type {
+  DocumentData,
+  Firestore,
+  QueryDocumentSnapshot,
+  Timestamp,
+  Transaction,
+} from 'firebase-admin/firestore';
 import { eventStartsAt } from './localized';
 import type { EventSourceItem, FeedItem } from './types';
 
 const maxItems = 30;
 const maxPinned = 2;
 const maxAnnouncements = 100;
+const maxSeen = 300;
+const maxFeedBytes = 96 * 1024;
+const maxEventText = 100;
+const eventToken = /^[A-Za-z0-9_-]{1,64}$/;
 const fetchTimeoutMs = 10_000;
 const eventFields = ['token', 'title', 'date', 'time', 'location'] as const;
+
+type SeenEvent = { publishedAt: Timestamp; startsAt: Timestamp };
+type EventState = { fetchedAt: number; seen: Record<string, SeenEvent> };
 
 export type ComposeDeps = {
   db: Firestore;
@@ -48,12 +61,9 @@ function announcementItem(doc: QueryDocumentSnapshot<DocumentData>): FeedItem {
   };
 }
 
-async function announcementItems(db: Firestore, now: number): Promise<FeedItem[]> {
-  const snap = await db
-    .collection('announcements')
-    .orderBy('publishedAt', 'desc')
-    .limit(maxAnnouncements)
-    .get();
+async function announcementItems(tx: Transaction, db: Firestore, now: number): Promise<FeedItem[]> {
+  const query = db.collection('announcements').orderBy('publishedAt', 'desc').limit(maxAnnouncements);
+  const snap = await tx.get(query);
   return snap.docs
     .filter((doc) => {
       const { retracted, expiresAt } = doc.data();
@@ -72,9 +82,12 @@ async function sourceEvents(deps: ComposeDeps): Promise<EventSourceItem[] | null
   }
 }
 
-function eventItems(events: EventSourceItem[], previous: FeedItem[], now: number): FeedItem[] {
-  const firstSeen = new Map(previous.map((item) => [item.id, item.publishedAt]));
-  return events.flatMap((event): FeedItem[] => {
+function fitsFeed({ token, title, location }: EventSourceItem): boolean {
+  return eventToken.test(token) && title.length <= maxEventText && location.length <= maxEventText;
+}
+
+function eventItems(events: EventSourceItem[], seen: EventState['seen'], now: number): FeedItem[] {
+  return events.filter(fitsFeed).flatMap((event): FeedItem[] => {
     const startsAt = eventStartsAt(event.date, event.time);
     if (event.is_ended || Number.isNaN(startsAt) || startsAt < now) return [];
     const id = `event_${event.token}`;
@@ -84,10 +97,20 @@ function eventItems(events: EventSourceItem[], previous: FeedItem[], now: number
       title: { en: event.title },
       startsAt: admin.firestore.Timestamp.fromMillis(startsAt),
       place: event.location,
-      publishedAt: firstSeen.get(id) ?? admin.firestore.Timestamp.fromMillis(now),
+      publishedAt: seen[id]?.publishedAt ?? admin.firestore.Timestamp.fromMillis(now),
       pinned: false,
     }];
   });
+}
+
+// an event cut from the feed or missing from one response must not return as new
+function remember(seen: EventState['seen'], events: FeedItem[], now: number): EventState['seen'] {
+  const next = { ...seen };
+  for (const { id, publishedAt, startsAt } of events) next[id] = { publishedAt, startsAt: startsAt! };
+  const upcoming = Object.entries(next)
+    .filter(([, event]) => event.startsAt.toMillis() >= now)
+    .sort(([, a], [, b]) => a.startsAt.toMillis() - b.startsAt.toMillis());
+  return Object.fromEntries(upcoming.slice(0, maxSeen));
 }
 
 function rank(items: FeedItem[]): FeedItem[] {
@@ -97,22 +120,46 @@ function rank(items: FeedItem[]): FeedItem[] {
   return [...top, ...rest].slice(0, maxItems);
 }
 
-export async function composeFeed(deps: ComposeDeps): Promise<FeedItem[]> {
-  const feed = deps.db.collection('feed').doc('current');
-  // the slow fetch goes first so a concurrent run cannot overwrite newer announcements with old ones
-  const events = await sourceEvents(deps);
-  const now = deps.now();
-  const [current, announcements] = await Promise.all([feed.get(), announcementItems(deps.db, now)]);
-  const previous: FeedItem[] = current.data()?.items ?? [];
-  const upcoming = events
-    ? eventItems(events, previous, now)
-    : previous.filter((item) => item.kind === 'event' && item.startsAt!.toMillis() >= now);
+// the pinned items lead the list and are far below the limit, so only the oldest others go
+function withinBudget(items: FeedItem[]): FeedItem[] {
+  const kept = [...items];
+  while (Buffer.byteLength(JSON.stringify(kept)) > maxFeedBytes) kept.pop();
+  return kept;
+}
 
-  const items = rank([...announcements, ...upcoming]);
-  await feed.set({
+async function writeFeed(
+  tx: Transaction,
+  db: Firestore,
+  now: number,
+  events: EventSourceItem[] | null,
+  fetchedAt: number,
+): Promise<FeedItem[]> {
+  const feed = db.collection('feed').doc('current');
+  const state = db.collection('feedState').doc('events');
+  const stored = (await tx.get(state)).data() as EventState | undefined;
+  const current = (await tx.get(feed)).data();
+  const announcements = await announcementItems(tx, db, now);
+
+  // a run that fetched later has already written, so this run's events are old
+  const outdated = (stored?.fetchedAt ?? 0) > fetchedAt;
+  const fresh = !outdated && events ? eventItems(events, stored?.seen ?? {}, now) : null;
+  const previous: FeedItem[] = current?.items ?? [];
+  const upcoming =
+    fresh ?? previous.filter((item) => item.kind === 'event' && item.startsAt!.toMillis() >= now);
+
+  const items = withinBudget(rank([...announcements, ...upcoming]));
+  tx.set(feed, {
     items,
     composedAt: admin.firestore.FieldValue.serverTimestamp(),
-    eventsOk: events !== null,
+    eventsOk: outdated ? current?.eventsOk ?? true : events !== null,
   });
+  if (fresh) tx.set(state, { fetchedAt, seen: remember(stored?.seen ?? {}, fresh, now) });
   return items;
+}
+
+export async function composeFeed(deps: ComposeDeps): Promise<FeedItem[]> {
+  const fetchedAt = deps.now();
+  // the slow fetch stays outside the transaction
+  const events = await sourceEvents(deps);
+  return deps.db.runTransaction((tx) => writeFeed(tx, deps.db, deps.now(), events, fetchedAt));
 }

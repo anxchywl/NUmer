@@ -388,6 +388,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // First seen times of feed events - server only
+    match /feedState/{docId} {
+      allow read, write: if false;
+    }
+
     // Role change log - server only
     match /roleAudit/{entryId} {
       allow read, write: if false;

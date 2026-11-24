@@ -10,6 +10,3 @@ bool shouldSaveFcmToken(
   if (nowMs < savedAtMs) return true;
   return nowMs - savedAtMs >= _fcmResaveAfter.inMilliseconds;
 }
-
-bool shouldUpsertEmailIndex(String normalizedEmail, String? written) =>
-    normalizedEmail != written;

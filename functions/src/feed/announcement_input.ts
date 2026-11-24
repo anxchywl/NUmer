@@ -4,7 +4,7 @@ import type { LocalizedText } from './types';
 
 const maxTitle = 100;
 const maxBody = 400;
-const maxLink = 500;
+const maxLink = 300;
 const maxLifetimeMs = 365 * 24 * 60 * 60 * 1000;
 
 export type AnnouncementInput = {
@@ -33,7 +33,7 @@ function parseExpiresAt(value: unknown, now: number): number {
 }
 
 function parseLink(value: unknown): string {
-  if (typeof value !== 'string' || value.length > maxLink || !/^https:\/\/[^\s/?#]\S*$/.test(value)) {
+  if (typeof value !== 'string' || value.length > maxLink || !/^https:\/\/(?![/?#])[\x21-\x7e]+$/.test(value)) {
     throw invalid('link');
   }
   return value;

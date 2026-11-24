@@ -77,7 +77,6 @@ class AuthController extends ChangeNotifier
   bool get isProfileReady => _profileReady;
   bool get isBusy => _isBusy;
   bool get isInitialized => _initialized;
-  bool get emailVerified => _currentUser?.emailVerified ?? false;
   bool get isSyncReady => _currentUser == null || _syncReady;
   bool get wasForcedLoggedOut => _forcedLoggedOut;
   bool get requiresEmailVerification => _requiresEmailVerification;
@@ -146,7 +145,6 @@ class AuthController extends ChangeNotifier
         await _registerPushToken(user);
       }),
     );
-    unawaited(_upsertEmailIndexIfChanged(user));
     _listenToProfile(user);
     _listenForPendingNudges(user.uid);
     lastPreparationError = null;
@@ -419,8 +417,6 @@ class AuthController extends ChangeNotifier
         await user.updateDisplayName(trimmedDisplayName);
       }
 
-      await _upsertEmailIndex(user.email, user.uid);
-
       return null;
     } on FirebaseAuthException catch (e) {
       return _messageForAuthCode(e.code);
@@ -555,7 +551,6 @@ class AuthController extends ChangeNotifier
         'timezoneOffsetMinutes': DateTime.now().timeZoneOffset.inMinutes,
         'allowNudges': true,
         'fcmEnabled': false,
-        'emailVerified': user.emailVerified,
       });
       return;
     }
@@ -578,9 +573,6 @@ class AuthController extends ChangeNotifier
     }
     if ((data['email'] as String?) != user.email) {
       updates['email'] = user.email;
-    }
-    if (data['emailVerified'] != user.emailVerified) {
-      updates['emailVerified'] = user.emailVerified;
     }
     if (data['updatedAt'] == null) {
       updates['updatedAt'] = FieldValue.serverTimestamp();
@@ -680,30 +672,6 @@ class AuthController extends ChangeNotifier
       default:
         return 'Authentication failed. Please try again.';
     }
-  }
-
-  String _normalizeEmail(String email) => email.trim().toLowerCase();
-
-  Future<void> _upsertEmailIndex(String? email, String uid) async {
-    if (email == null || email.isEmpty) return;
-    final normalized = _normalizeEmail(email);
-    final ref = _firestore.collection('email_index').doc(normalized);
-    await ref.set({
-      'uid': uid,
-      'email': normalized,
-      'updatedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
-  }
-
-  Future<void> _upsertEmailIndexIfChanged(User user) async {
-    final email = user.email;
-    if (email == null || email.isEmpty) return;
-    final normalized = _normalizeEmail(email);
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'email_index_written_${user.uid}';
-    if (!shouldUpsertEmailIndex(normalized, prefs.getString(key))) return;
-    await _upsertEmailIndex(email, user.uid);
-    await prefs.setString(key, normalized);
   }
 
   @override
