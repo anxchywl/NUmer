@@ -89,7 +89,41 @@ void main() {
         expect(idle.borderRadius, BorderRadius.circular(12));
         expect(focused.borderSide.color, scheme.primary);
         expect(focused.borderSide.width, 2);
+        expect(focused.isOutline, isFalse);
       });
+
+      for (final error in [null, 'Required']) {
+        testWidgets('the floating label stays inside the fill, error $error', (
+          tester,
+        ) async {
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: theme,
+              home: Scaffold(
+                body: Center(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      errorText: error,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+          await tester.tap(find.byType(TextField));
+          await tester.enterText(find.byType(TextField), 'a@nu.edu.kz');
+          await tester.pumpAndSettle();
+          final field = tester.getRect(find.byType(TextField));
+          final label = tester.getRect(find.text('Email'));
+          final input = tester.getRect(find.byType(EditableText));
+
+          expect(label.top, greaterThanOrEqualTo(field.top + 4));
+          expect(label.bottom, lessThanOrEqualTo(input.top));
+          expect(input.bottom, lessThanOrEqualTo(field.top + 56));
+          if (error == null) expect(field.height, 56);
+        });
+      }
     });
   }
 }
