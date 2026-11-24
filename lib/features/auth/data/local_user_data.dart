@@ -31,6 +31,8 @@ Future<void> _clearUserPreferences(String uid) async {
   }
   await prefs.remove('fcm_saved_token_$uid');
   await prefs.remove('fcm_saved_at_$uid');
+  // older versions saved the address under this key
+  await prefs.remove('email_index_written_$uid');
 }
 
 // erase is false only for a sign-out with unsynced changes, which stay on the device for the next sign-in

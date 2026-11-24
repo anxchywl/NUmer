@@ -2261,4 +2261,52 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get loadingHint => 'Загрузка';
+
+  @override
+  String get emailInUseHint =>
+      'Аккаунт с этой почтой уже есть. Войдите или сбросьте пароль.';
+
+  @override
+  String get authWrongCredentials =>
+      'Неверная почта или пароль. Попробуйте ещё раз.';
+
+  @override
+  String get authAccountDisabled =>
+      'Этот аккаунт отключён. Войдите в другой аккаунт.';
+
+  @override
+  String get authTooManyAttempts =>
+      'Слишком много попыток. Подождите немного и попробуйте ещё раз.';
+
+  @override
+  String get authSignInFailed => 'Не удалось войти. Попробуйте ещё раз.';
+
+  @override
+  String get authAccountCreationFailed =>
+      'Не удалось создать аккаунт. Попробуйте ещё раз.';
+
+  @override
+  String get authNotSignedIn =>
+      'Вы вышли из аккаунта. Войдите и попробуйте ещё раз.';
+
+  @override
+  String get authEmailNotVerified =>
+      'Почта ещё не подтверждена. Введите присланный код.';
+
+  @override
+  String get authVerificationCheckFailed =>
+      'Не удалось проверить подтверждение. Попробуйте ещё раз.';
+
+  @override
+  String get authDataDownloadFailed =>
+      'Не удалось загрузить ваши данные. Проверьте соединение и попробуйте ещё раз.';
+
+  @override
+  String get completeProfileTitle => 'Заполните профиль';
+
+  @override
+  String get completeSetupButton => 'Завершить настройку';
+
+  @override
+  String get nudgeNotificationTitle => 'Напоминание';
 }

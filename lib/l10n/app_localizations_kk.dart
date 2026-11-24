@@ -2238,4 +2238,52 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get loadingHint => 'Жүктелуде';
+
+  @override
+  String get emailInUseHint =>
+      'Бұл поштамен аккаунт бар. Кіріңіз немесе құпиясөзді қалпына келтіріңіз.';
+
+  @override
+  String get authWrongCredentials =>
+      'Пошта немесе құпиясөз қате. Қайталап көріңіз.';
+
+  @override
+  String get authAccountDisabled =>
+      'Бұл аккаунт өшірілген. Басқа аккаунтпен кіріңіз.';
+
+  @override
+  String get authTooManyAttempts =>
+      'Әрекет тым көп. Біраз күтіп, қайталап көріңіз.';
+
+  @override
+  String get authSignInFailed => 'Кіру мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get authAccountCreationFailed =>
+      'Аккаунт жасау мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get authNotSignedIn =>
+      'Аккаунттан шығып кеттіңіз. Кіріп, қайталап көріңіз.';
+
+  @override
+  String get authEmailNotVerified =>
+      'Пошта әлі расталмаған. Жіберілген кодты енгізіңіз.';
+
+  @override
+  String get authVerificationCheckFailed =>
+      'Растауды тексеру мүмкін болмады. Қайталап көріңіз.';
+
+  @override
+  String get authDataDownloadFailed =>
+      'Деректеріңізді жүктеу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.';
+
+  @override
+  String get completeProfileTitle => 'Профильді толтырыңыз';
+
+  @override
+  String get completeSetupButton => 'Баптауды аяқтау';
+
+  @override
+  String get nudgeNotificationTitle => 'Ескерту';
 }

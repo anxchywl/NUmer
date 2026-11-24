@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/account/widgets/profile_form.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProfileSetupScreen extends StatelessWidget {
@@ -34,7 +35,7 @@ class ProfileSetupScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Complete Your Profile',
+                      AppLocalizations.of(context)!.completeProfileTitle,
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: colorScheme.onSurface,
                       ),
@@ -49,7 +50,9 @@ class ProfileSetupScreen extends StatelessWidget {
                       initialContact:
                           auth.profile?['profileContact'] as String?,
                       autofocusName: true,
-                      primaryButtonLabel: 'Complete Setup',
+                      primaryButtonLabel: AppLocalizations.of(
+                        context,
+                      )!.completeSetupButton,
                       onSubmit: (data) async {
                         final userId = auth.currentUser?.uid;
                         if (userId == null) return;

@@ -16,12 +16,15 @@ import 'package:numer_app/core/data/user_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'account_deletion.dart';
 import 'auth_code_api.dart';
+import 'auth_error_kind.dart';
 import 'auth_write_gates.dart';
 import 'email_verification.dart';
 import 'local_user_data.dart';
+import 'nudge_title.dart';
 import 'password_reset.dart';
 
 export 'account_deletion.dart';
+export 'auth_error_kind.dart';
 
 class AuthFailure implements Exception {
   final String message;
@@ -171,13 +174,13 @@ class AuthController extends ChangeNotifier
             if (kDebugMode) {
               print('Failed to prepare user data: $error\n$stack');
             }
-            lastPreparationError = error.toString();
+            lastPreparationError = AuthErrorKind.dataDownloadFailed;
             notifyListeners();
           }),
     );
   }
 
-  String? lastPreparationError;
+  AuthErrorKind? lastPreparationError;
 
   Future<void> _performSignOutCleanup(String? previousUid) async {
     // Push any pending changes to Firebase before logout
@@ -256,10 +259,7 @@ class AuthController extends ChangeNotifier
       await Future.delayed(const Duration(milliseconds: 150));
     }
     if (sync.lastPull == null && !sync.hasPulledUser) {
-      final message =
-          sync.lastError ??
-          'Unable to download your data. Please check your connection and try again.';
-      throw AuthFailure(message);
+      throw AuthFailure(sync.lastError ?? 'bootstrap timed out');
     }
   }
 
@@ -288,7 +288,7 @@ class AuthController extends ChangeNotifier
       _fcmMessageSub?.cancel();
       _fcmMessageSub = FirebaseMessaging.onMessage.listen((message) async {
         final notification = message.notification;
-        final title = notification?.title ?? 'Nudge';
+        final title = notification?.title ?? await fallbackNudgeTitle();
         final body = notification?.body ?? '';
         if (body.isEmpty) return;
         final id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
@@ -380,7 +380,7 @@ class AuthController extends ChangeNotifier
     notifyListeners();
   }
 
-  Future<String?> register({
+  Future<AuthErrorKind?> register({
     required String email,
     required String displayName,
     required String password,
@@ -389,16 +389,16 @@ class AuthController extends ChangeNotifier
     final trimmedDisplayName = displayName.trim();
 
     if (trimmedEmail.isEmpty) {
-      return 'Email is required.';
+      return AuthErrorKind.emailRequired;
     }
     if (!trimmedEmail.contains('@')) {
-      return 'Please enter a valid email address.';
+      return AuthErrorKind.invalidEmail;
     }
     if (trimmedDisplayName.isEmpty) {
-      return 'Display name is required.';
+      return AuthErrorKind.displayNameRequired;
     }
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long.';
+      return AuthErrorKind.weakPassword;
     }
 
     _setBusy(true);
@@ -410,7 +410,7 @@ class AuthController extends ChangeNotifier
 
       final user = credential.user;
       if (user == null) {
-        return 'Unable to create an account right now. Please try again.';
+        return AuthErrorKind.accountCreationFailed;
       }
 
       if (user.displayName != trimmedDisplayName) {
@@ -419,22 +419,23 @@ class AuthController extends ChangeNotifier
 
       return null;
     } on FirebaseAuthException catch (e) {
-      return _messageForAuthCode(e.code);
-    } on FirebaseException catch (e) {
-      return e.message ?? 'Unable to save account data. Please try again.';
+      final kind = authErrorKindFor(e.code);
+      return kind == AuthErrorKind.signInFailed
+          ? AuthErrorKind.accountCreationFailed
+          : kind;
     } catch (_) {
-      return 'Something went wrong. Please try again.';
+      return AuthErrorKind.accountCreationFailed;
     } finally {
       _setBusy(false);
     }
   }
 
   @override
-  Future<String?> checkEmailVerified() async {
+  Future<AuthErrorKind?> checkEmailVerified() async {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        return 'Not logged in';
+        return AuthErrorKind.notSignedIn;
       }
 
       await user.reload();
@@ -445,27 +446,27 @@ class AuthController extends ChangeNotifier
         return null;
       }
 
-      return 'Email not verified yet. Please check your email and click the verification link.';
+      return AuthErrorKind.emailNotVerified;
     } on FirebaseAuthException catch (e) {
-      return _messageForAuthCode(e.code);
+      return authErrorKindFor(e.code);
     } catch (e) {
-      return 'Failed to check verification status. Please try again.';
+      return AuthErrorKind.verificationCheckFailed;
     }
   }
 
-  Future<String?> signIn({
+  Future<AuthErrorKind?> signIn({
     required String email,
     required String password,
   }) async {
     final trimmedEmail = email.trim();
     if (trimmedEmail.isEmpty) {
-      return 'Please enter your email.';
+      return AuthErrorKind.emailRequired;
     }
     if (!trimmedEmail.contains('@')) {
-      return 'Please enter a valid email address.';
+      return AuthErrorKind.invalidEmail;
     }
     if (password.isEmpty) {
-      return 'Please enter your password.';
+      return AuthErrorKind.passwordRequired;
     }
 
     _setBusy(true);
@@ -477,9 +478,7 @@ class AuthController extends ChangeNotifier
 
       return null;
     } on FirebaseAuthException catch (e) {
-      return _messageForAuthCode(e.code);
-    } on AuthFailure catch (e) {
-      return e.message;
+      return authErrorKindFor(e.code);
     } finally {
       _setBusy(false);
     }
@@ -628,13 +627,14 @@ class AuthController extends ChangeNotifier
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .listen(
-          (snapshot) {
+          (snapshot) async {
             for (var change in snapshot.docChanges) {
               if (change.type == DocumentChangeType.added) {
                 final data = change.doc.data();
                 if (data == null) continue;
 
-                final title = data['title'] as String? ?? 'Nudge';
+                final title =
+                    data['title'] as String? ?? await fallbackNudgeTitle();
                 final body = data['body'] as String? ?? '';
 
                 if (body.isNotEmpty) {
@@ -652,26 +652,6 @@ class AuthController extends ChangeNotifier
             if (kDebugMode) print('Nudges listener error: $e');
           },
         );
-  }
-
-  String _messageForAuthCode(String code) {
-    switch (code) {
-      case 'email-already-in-use':
-        return 'An account already exists for that login.';
-      case 'invalid-email':
-        return 'That login looks invalid. Try a different one.';
-      case 'weak-password':
-        return 'Choose a stronger password (at least 6 characters).';
-      case 'user-disabled':
-        return 'This account has been disabled.';
-      case 'user-not-found':
-      case 'wrong-password':
-        return 'Incorrect login or password. Please try again.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please wait and try again.';
-      default:
-        return 'Authentication failed. Please try again.';
-    }
   }
 
   @override

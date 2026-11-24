@@ -974,5 +974,18 @@
   "resetStartOver": "Начать заново",
   "resetRequestFailed": "Не удалось отправить запрос. Попробуйте ещё раз.",
   "passwordSaveFailed": "Не удалось сохранить пароль. Попробуйте ещё раз.",
-  "loadingHint": "Загрузка"
+  "loadingHint": "Загрузка",
+  "emailInUseHint": "Аккаунт с этой почтой уже есть. Войдите или сбросьте пароль.",
+  "authWrongCredentials": "Неверная почта или пароль. Попробуйте ещё раз.",
+  "authAccountDisabled": "Этот аккаунт отключён. Войдите в другой аккаунт.",
+  "authTooManyAttempts": "Слишком много попыток. Подождите немного и попробуйте ещё раз.",
+  "authSignInFailed": "Не удалось войти. Попробуйте ещё раз.",
+  "authAccountCreationFailed": "Не удалось создать аккаунт. Попробуйте ещё раз.",
+  "authNotSignedIn": "Вы вышли из аккаунта. Войдите и попробуйте ещё раз.",
+  "authEmailNotVerified": "Почта ещё не подтверждена. Введите присланный код.",
+  "authVerificationCheckFailed": "Не удалось проверить подтверждение. Попробуйте ещё раз.",
+  "authDataDownloadFailed": "Не удалось загрузить ваши данные. Проверьте соединение и попробуйте ещё раз.",
+  "completeProfileTitle": "Заполните профиль",
+  "completeSetupButton": "Завершить настройку",
+  "nudgeNotificationTitle": "Напоминание"
 }

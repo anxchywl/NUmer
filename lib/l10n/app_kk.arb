@@ -1096,5 +1096,18 @@
   "resetStartOver": "Қайта бастау",
   "resetRequestFailed": "Сұранысты жіберу мүмкін болмады. Қайталап көріңіз.",
   "passwordSaveFailed": "Құпиясөзді сақтау мүмкін болмады. Қайталап көріңіз.",
-  "loadingHint": "Жүктелуде"
+  "loadingHint": "Жүктелуде",
+  "emailInUseHint": "Бұл поштамен аккаунт бар. Кіріңіз немесе құпиясөзді қалпына келтіріңіз.",
+  "authWrongCredentials": "Пошта немесе құпиясөз қате. Қайталап көріңіз.",
+  "authAccountDisabled": "Бұл аккаунт өшірілген. Басқа аккаунтпен кіріңіз.",
+  "authTooManyAttempts": "Әрекет тым көп. Біраз күтіп, қайталап көріңіз.",
+  "authSignInFailed": "Кіру мүмкін болмады. Қайталап көріңіз.",
+  "authAccountCreationFailed": "Аккаунт жасау мүмкін болмады. Қайталап көріңіз.",
+  "authNotSignedIn": "Аккаунттан шығып кеттіңіз. Кіріп, қайталап көріңіз.",
+  "authEmailNotVerified": "Пошта әлі расталмаған. Жіберілген кодты енгізіңіз.",
+  "authVerificationCheckFailed": "Растауды тексеру мүмкін болмады. Қайталап көріңіз.",
+  "authDataDownloadFailed": "Деректеріңізді жүктеу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.",
+  "completeProfileTitle": "Профильді толтырыңыз",
+  "completeSetupButton": "Баптауды аяқтау",
+  "nudgeNotificationTitle": "Ескерту"
 }

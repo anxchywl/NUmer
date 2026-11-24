@@ -80,6 +80,7 @@ void main() {
     await prefs.setInt('user_${uid}_lastTab', 2);
     await prefs.setString('fcm_saved_token_$uid', 'token');
     await prefs.setInt('fcm_saved_at_$uid', 1);
+    await prefs.setString('email_index_written_$uid', 'a@x.test');
     await prefs.setString('timer_planned_1', 'x');
     await prefs.setString('themeMode', 'dark');
     await prefs.setInt('user_someone_lastTab', 1);

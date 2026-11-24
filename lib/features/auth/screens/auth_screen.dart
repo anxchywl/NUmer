@@ -9,6 +9,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
+import '../widgets/auth_error_text.dart';
 import '../widgets/auth_validators.dart';
 import 'reset_password_sheet.dart';
 
@@ -480,7 +481,7 @@ class _LoginFormState extends State<_LoginForm> {
       return;
     }
 
-    showAppMessage(context, error, isError: true);
+    showAuthError(context, error);
   }
 
   void _openResetPasswordSheet() {
@@ -629,9 +630,7 @@ class _RegisterFormState extends State<_RegisterForm> {
 
     if (!mounted) return;
 
-    if (error != null) {
-      showAppMessage(context, error, isError: true);
-    }
+    if (error != null) showAuthError(context, error);
   }
 }
 

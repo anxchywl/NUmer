@@ -2256,4 +2256,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingHint => 'Loading';
+
+  @override
+  String get emailInUseHint =>
+      'This email already has an account. Sign in or reset the password.';
+
+  @override
+  String get authWrongCredentials => 'Wrong email or password. Try again.';
+
+  @override
+  String get authAccountDisabled =>
+      'This account is disabled. Use a different account.';
+
+  @override
+  String get authTooManyAttempts =>
+      'Too many attempts. Wait a moment and try again.';
+
+  @override
+  String get authSignInFailed => 'Could not sign in. Try again.';
+
+  @override
+  String get authAccountCreationFailed =>
+      'Could not create the account. Try again.';
+
+  @override
+  String get authNotSignedIn => 'You are signed out. Sign in and try again.';
+
+  @override
+  String get authEmailNotVerified =>
+      'Email not verified yet. Enter the code we sent.';
+
+  @override
+  String get authVerificationCheckFailed =>
+      'Could not check verification. Try again.';
+
+  @override
+  String get authDataDownloadFailed =>
+      'Could not download your data. Check the connection and try again.';
+
+  @override
+  String get completeProfileTitle => 'Complete your profile';
+
+  @override
+  String get completeSetupButton => 'Finish setup';
+
+  @override
+  String get nudgeNotificationTitle => 'Nudge';
 }

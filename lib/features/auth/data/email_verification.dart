@@ -2,13 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'auth_code_api.dart';
+import 'auth_error_kind.dart';
 
 mixin EmailVerification {
   String? _acceptedUid;
 
   AuthCodeApi get codeApi;
   FirebaseAuth get firebaseAuth;
-  Future<String?> checkEmailVerified();
+  Future<AuthErrorKind?> checkEmailVerified();
 
   Future<CodeResult> sendVerificationCode(String locale) async {
     final uid = firebaseAuth.currentUser?.uid;

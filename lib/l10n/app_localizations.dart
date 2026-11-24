@@ -4167,6 +4167,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Loading'**
   String get loadingHint;
+
+  /// No description provided for @emailInUseHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This email already has an account. Sign in or reset the password.'**
+  String get emailInUseHint;
+
+  /// No description provided for @authWrongCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong email or password. Try again.'**
+  String get authWrongCredentials;
+
+  /// No description provided for @authAccountDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'This account is disabled. Use a different account.'**
+  String get authAccountDisabled;
+
+  /// No description provided for @authTooManyAttempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment and try again.'**
+  String get authTooManyAttempts;
+
+  /// No description provided for @authSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sign in. Try again.'**
+  String get authSignInFailed;
+
+  /// No description provided for @authAccountCreationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the account. Try again.'**
+  String get authAccountCreationFailed;
+
+  /// No description provided for @authNotSignedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You are signed out. Sign in and try again.'**
+  String get authNotSignedIn;
+
+  /// No description provided for @authEmailNotVerified.
+  ///
+  /// In en, this message translates to:
+  /// **'Email not verified yet. Enter the code we sent.'**
+  String get authEmailNotVerified;
+
+  /// No description provided for @authVerificationCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check verification. Try again.'**
+  String get authVerificationCheckFailed;
+
+  /// No description provided for @authDataDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not download your data. Check the connection and try again.'**
+  String get authDataDownloadFailed;
+
+  /// No description provided for @completeProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete your profile'**
+  String get completeProfileTitle;
+
+  /// No description provided for @completeSetupButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish setup'**
+  String get completeSetupButton;
+
+  /// No description provided for @nudgeNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nudge'**
+  String get nudgeNotificationTitle;
 }
 
 class _AppLocalizationsDelegate

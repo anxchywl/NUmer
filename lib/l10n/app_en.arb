@@ -1103,5 +1103,18 @@
   "resetStartOver": "Start again",
   "resetRequestFailed": "Could not send the request. Try again.",
   "passwordSaveFailed": "Could not save the password. Try again.",
-  "loadingHint": "Loading"
+  "loadingHint": "Loading",
+  "emailInUseHint": "This email already has an account. Sign in or reset the password.",
+  "authWrongCredentials": "Wrong email or password. Try again.",
+  "authAccountDisabled": "This account is disabled. Use a different account.",
+  "authTooManyAttempts": "Too many attempts. Wait a moment and try again.",
+  "authSignInFailed": "Could not sign in. Try again.",
+  "authAccountCreationFailed": "Could not create the account. Try again.",
+  "authNotSignedIn": "You are signed out. Sign in and try again.",
+  "authEmailNotVerified": "Email not verified yet. Enter the code we sent.",
+  "authVerificationCheckFailed": "Could not check verification. Try again.",
+  "authDataDownloadFailed": "Could not download your data. Check the connection and try again.",
+  "completeProfileTitle": "Complete your profile",
+  "completeSetupButton": "Finish setup",
+  "nudgeNotificationTitle": "Nudge"
 }

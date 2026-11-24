@@ -5,3 +5,4 @@ export 'screens/auth_screen.dart';
 export 'screens/email_code_screen.dart';
 export 'screens/profile_setup_screen.dart';
 export 'screens/reset_password_sheet.dart';
+export 'widgets/auth_error_text.dart';

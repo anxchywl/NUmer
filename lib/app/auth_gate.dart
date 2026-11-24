@@ -129,7 +129,13 @@ class _AuthGateState extends State<AuthGate> {
             children: [
               Text(AppLocalizations.of(context)!.failedToPrepareData),
               const SizedBox(height: 12),
-              Text(auth.lastPreparationError!, textAlign: TextAlign.center),
+              Text(
+                authErrorText(
+                  AppLocalizations.of(context)!,
+                  auth.lastPreparationError!,
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () {
