@@ -82,7 +82,8 @@ NUmer posts `account.deleted` events to each module (the contract is in
 raw_body=..., now=...)` returns an `AccountEvent`, or raises `SignatureInvalid` for a missing
 or malformed header, a timestamp more than 300 seconds from `now`, no matching `v1`, or a
 body that is not a known event. Pass the body bytes exactly as received. `occurred_at` stays
-the ISO 8601 string that was sent.
+the ISO 8601 string that was sent. Delete data only for `account.deleted`; for
+`account.disabled` block the account and keep its data.
 
 ```python
 verify = partial(verify_account_event, secret=settings.account_events_secret)
@@ -95,9 +96,13 @@ async def account_events(request: Request) -> None:
         event = verify(signature_header=sent, raw_body=body, now=time.time())
     except SignatureInvalid as error:
         raise HTTPException(401, "invalid signature") from error
-    if not await store.was_processed(event.id):
+    if await store.was_processed(event.id):
+        return
+    if event.type == "account.deleted":
         await store.delete_account(event.issuer, event.subject)
-        await store.mark_processed(event.id)
+    else:
+        await store.block_account(event.issuer, event.subject)
+    await store.mark_processed(event.id)
 ```
 
 ## Test helpers
