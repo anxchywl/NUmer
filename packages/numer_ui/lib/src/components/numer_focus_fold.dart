@@ -3,12 +3,9 @@ import 'package:flutter/widgets.dart';
 import '../tokens/numer_motion.dart';
 import '../tokens/numer_space.dart';
 
-// one duration for a fold, the sheet resizing around it and the buttons
-// swapping underneath: any two at different speeds read as a wobble
+// folds, the sheet resize and the button swap share it, different speeds read as a wobble
 const Duration _duration = Duration(milliseconds: 240);
 
-// folds out of the way while the keyboard belongs to something else,
-// collapsing vertically so the content slides up under its own top edge
 class NumerFocusFold extends StatelessWidget {
   const NumerFocusFold({
     super.key,
@@ -24,8 +21,7 @@ class NumerFocusFold extends StatelessWidget {
   final bool hidden;
   final Widget child;
 
-  // false inside a parent that already animates its own height: two nested
-  // AnimatedSizes reacting to one change fight, and the outer one snaps
+  // false under a parent that animates its height, nested AnimatedSizes make the outer snap
   final bool animateSize;
 
   @override
@@ -42,8 +38,7 @@ class NumerFocusFold extends StatelessWidget {
   }
 }
 
-// the space between two fields is chrome too: with one field left there is
-// nothing for it to separate
+// with one field left there is nothing for a gap to separate
 class NumerFocusGap extends StatelessWidget {
   const NumerFocusGap({
     super.key,

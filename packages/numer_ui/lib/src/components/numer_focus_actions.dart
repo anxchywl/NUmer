@@ -5,8 +5,6 @@ import 'numer_focus_fold.dart';
 
 const Offset _enterOffset = Offset(0, 0.08);
 
-// while typing, the one button on offer puts the keyboard away and brings the
-// whole form back; it takes the place of the sheet's own actions
 class NumerFocusActions extends StatelessWidget {
   const NumerFocusActions({
     super.key,

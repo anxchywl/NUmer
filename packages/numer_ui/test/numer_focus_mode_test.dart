@@ -33,13 +33,51 @@ Widget _form(NumerSheetFocusMode focus) {
   );
 }
 
+class _CourseForm extends StatefulWidget {
+  const _CourseForm({required this.doneLabel, required this.hasAction});
+
+  final String? doneLabel;
+  final bool hasAction;
+
+  @override
+  State<_CourseForm> createState() => _CourseFormState();
+}
+
+class _CourseFormState extends State<_CourseForm> {
+  late final NumerSheetFocusMode focus;
+
+  @override
+  void initState() {
+    super.initState();
+    focus = NumerSheetFocusMode();
+  }
+
+  @override
+  void dispose() {
+    focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NumerSheetBody(
+      title: 'Add course',
+      focusMode: focus,
+      doneLabel: widget.doneLabel,
+      builder: (_) => _form(focus),
+      primaryAction: widget.hasAction
+          ? FilledButton(onPressed: () {}, child: const Text('Save'))
+          : null,
+    );
+  }
+}
+
 Future<NumerSheetFocusMode> _open(
   WidgetTester tester, {
   String? doneLabel = 'Done',
+  bool hasAction = true,
   bool reduceMotion = false,
 }) async {
-  final focus = NumerSheetFocusMode();
-  addTearDown(focus.dispose);
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     MaterialApp(
@@ -50,16 +88,10 @@ Future<NumerSheetFocusMode> _open(
       home: Scaffold(
         body: Builder(
           builder: (context) => TextButton(
-            onPressed: () => showNumerSheet<void>(
+            onPressed: () => showNumerFormSheet<void>(
               context,
-              title: 'Add course',
-              focusMode: focus,
-              doneLabel: doneLabel,
-              builder: (_) => _form(focus),
-              primaryAction: FilledButton(
-                onPressed: () {},
-                child: const Text('Save'),
-              ),
+              builder: (_) =>
+                  _CourseForm(doneLabel: doneLabel, hasAction: hasAction),
             ),
             child: const Text('open'),
           ),
@@ -69,7 +101,7 @@ Future<NumerSheetFocusMode> _open(
   );
   await tester.tap(find.text('open'));
   await tester.pumpAndSettle();
-  return focus;
+  return tester.state<_CourseFormState>(find.byType(_CourseForm)).focus;
 }
 
 void _keyboard(WidgetTester tester, {required bool up}) {
@@ -197,5 +229,53 @@ void main() {
     expect(find.text('Save'), findsNothing);
     expect(find.text('Add course'), findsNothing);
     expect(find.text('Done'), findsOneWidget);
+  });
+
+  testWidgets('closing while typing disposes the nodes after the exit', (
+    tester,
+  ) async {
+    final focus = await _open(tester);
+    await _typeIn(tester, 'Name');
+    final node = focus.nodeFor('name');
+
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump();
+    _keyboard(tester, up: false);
+    await tester.pump(const Duration(milliseconds: 50));
+
+    expect(find.byType(_CourseForm), findsOneWidget);
+    ChangeNotifier.debugAssertNotDisposed(node);
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(_CourseForm), findsNothing);
+    expect(
+      () => ChangeNotifier.debugAssertNotDisposed(node),
+      throwsFlutterError,
+    );
+    expect(
+      () => ChangeNotifier.debugAssertNotDisposed(focus),
+      throwsFlutterError,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('done grows in and out of a sheet without an action', (
+    tester,
+  ) async {
+    await _open(tester, hasAction: false);
+    final sheet = find.byType(BottomSheet);
+    expect(find.text('Done'), findsNothing);
+    await _typeIn(tester, 'Name');
+    final typing = tester.getSize(sheet).height;
+
+    await tester.tap(find.text('Done'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Done'), findsOneWidget);
+
+    await tester.pumpAndSettle();
+    expect(find.text('Done'), findsNothing);
+    expect(tester.getSize(sheet).height, isNot(typing));
   });
 }
