@@ -2,6 +2,35 @@ import * as functions from 'firebase-functions/v1';
 import * as admin from 'firebase-admin';
 import { db } from '../shared/admin';
 import { requireAppCheck } from '../shared/app_check';
+import { assertId } from '../shared/validation';
+import { sanitizeDisplayName } from './sanitize';
+
+const nudgeCooldownMs = 3600 * 1000;
+const dailyNudgeLimit = 30;
+const nudgeLimitTtlMs = 2 * 24 * 3600 * 1000;
+
+async function consumeNudgeLimit(senderId: string, targetUserId: string) {
+  const limits = db.collection('nudgeLimits');
+  const day = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const pairRef = limits.doc(`${senderId}_${targetUserId}`);
+  const dayRef = limits.doc(`day_${senderId}_${day}`);
+
+  await db.runTransaction(async (txn) => {
+    const [pairSnap, daySnap] = await txn.getAll(pairRef, dayRef);
+    const now = Date.now();
+    const lastAt = pairSnap.data()?.lastAt as admin.firestore.Timestamp | undefined;
+    if (lastAt && now - lastAt.toMillis() < nudgeCooldownMs) {
+      throw new functions.https.HttpsError('resource-exhausted', 'You already nudged this person. Try again later.');
+    }
+    const count = daySnap.data()?.count ?? 0;
+    if (count >= dailyNudgeLimit) {
+      throw new functions.https.HttpsError('resource-exhausted', 'Daily nudge limit reached.');
+    }
+    const expiresAt = admin.firestore.Timestamp.fromMillis(now + nudgeLimitTtlMs);
+    txn.set(pairRef, { lastAt: admin.firestore.Timestamp.fromMillis(now), expiresAt });
+    txn.set(dayRef, { count: count + 1, expiresAt });
+  });
+}
 
 export const sendNudge = functions.https.onCall(async (data, context) => {
   requireAppCheck(context, 'sendNudge');
@@ -9,13 +38,10 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated.');
   }
 
-  const groupId = typeof data?.groupId === 'string' ? data.groupId : '';
-  const targetUserId = typeof data?.targetUserId === 'string' ? data.targetUserId : '';
+  const groupId = assertId(data?.groupId, 'groupId');
+  const targetUserId = assertId(data?.targetUserId, 'targetUserId');
   const senderId = context.auth.uid;
 
-  if (!groupId || !targetUserId) {
-    throw new functions.https.HttpsError('invalid-argument', 'groupId and targetUserId are required.');
-  }
   if (targetUserId === senderId) {
     throw new functions.https.HttpsError('failed-precondition', 'You cannot nudge yourself.');
   }
@@ -56,8 +82,8 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
   }
 
   const senderName =
-    (senderData.profileName as string | undefined)?.trim() ||
-    (senderData.displayName as string | undefined)?.trim() ||
+    sanitizeDisplayName(senderData.profileName) ||
+    sanitizeDisplayName(senderData.displayName) ||
     'Someone';
 
   // Determine target user's preferred language. Support 'ru', 'en', 'kk' (Kazakh).
@@ -155,6 +181,8 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
   const title = titles[lang] || titles.en;
 
   try {
+    await consumeNudgeLimit(senderId, targetUserId);
+
     const now = admin.firestore.FieldValue.serverTimestamp();
     
     // 1. Store the nudge persistently
@@ -214,10 +242,10 @@ export const sendNudge = functions.https.onCall(async (data, context) => {
 
     return { success: true };
   } catch (err) {
-    functions.logger.error('Failed to process nudge', err);
     if (err instanceof functions.https.HttpsError) {
       throw err;
     }
-    throw new functions.https.HttpsError('internal', err instanceof Error ? err.message : 'Failed to send nudge.');
+    functions.logger.error('Failed to process nudge', err);
+    throw new functions.https.HttpsError('internal', 'Failed to send nudge.');
   }
 });
