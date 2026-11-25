@@ -76,6 +76,7 @@ a group; see `firestore.rules` for exact access):
 /mailQueue/{id}                        outgoing email, server only
 /groupIndex/{userId}                   server-written: groups the user belongs to
 /publicProfiles/{userId}               server-written: profile fields group peers may see
+/nudgeLimits, /joinAttempts            server-only rate limit counters
 /users/{userId}/
   fcmTokens, aggregates, sessions, studySessions, courses, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
@@ -90,14 +91,12 @@ a group; see `firestore.rules` for exact access):
 | Firestore trigger | `onStudySessionWrite` | Recompute user/group aggregates on session change |
 | Firestore trigger | `onCourseWrite` | Recompute aggregates when course visibility changes |
 | Firestore trigger | `onGroupMemberDelete` | Clean up membership associations |
-| Firestore trigger | `deleteGroup` | Cascade group cleanup |
 | Firestore trigger | `onMailQueued` | Render and send a queued email |
 | Firestore trigger | `onGroupMemberWrite` | Maintain `groupIndex` from member create and delete |
 | Firestore trigger | `onUserProfileWrite` | Mirror public profile fields into `publicProfiles` |
 | Callable | `deleteGroupCallable` | Recursively delete group, members, aggregates |
 | Callable | `deleteAccountCallable` | Delete auth user + subcollections + memberships |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
-| Callable | `getMemberSubjectStats` | Per-subject study breakdown for a group member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
 
 Callables enforce authentication. App Check is off by default and switched on per callable:
