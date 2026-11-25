@@ -1103,21 +1103,5 @@
   "resetStartOver": "Start again",
   "resetRequestFailed": "Could not send the request. Try again.",
   "passwordSaveFailed": "Could not save the password. Try again.",
-  "verificationEmailSent": "Verification email sent!",
-  "sendResetLink": "Send reset link",
-  "resetLinkSent": "If an account exists for this email, we sent a reset link.",
-  "verifyEmailFirst": "Please verify your email first. We sent you a verification email.",
-  "resendVerificationEmail": "Resend verification email",
-  "resetRateLimited": "Please wait a moment before trying again.",
-  "networkRequestFailed": "Network error. Check your connection and try again.",
-  "signInToResend": "Sign in to resend the verification email.",
-  "tryAgainInSeconds": "Try again in {seconds}s",
-  "@tryAgainInSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
   "loadingHint": "Loading"
 }

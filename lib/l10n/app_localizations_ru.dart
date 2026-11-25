@@ -2260,37 +2260,5 @@ class AppLocalizationsRu extends AppLocalizations {
       'Не удалось сохранить пароль. Попробуйте ещё раз.';
 
   @override
-  String get verificationEmailSent => 'Письмо с подтверждением отправлено!';
-
-  @override
-  String get sendResetLink => 'Отправить ссылку';
-
-  @override
-  String get resetLinkSent =>
-      'Если аккаунт существует, мы отправили ссылку для сброса.';
-
-  @override
-  String get verifyEmailFirst =>
-      'Сначала подтвердите почту. Мы отправили письмо для подтверждения.';
-
-  @override
-  String get resendVerificationEmail => 'Отправить письмо повторно';
-
-  @override
-  String get resetRateLimited => 'Подождите немного перед следующей попыткой.';
-
-  @override
-  String get networkRequestFailed =>
-      'Ошибка сети. Проверьте соединение и повторите.';
-
-  @override
-  String get signInToResend => 'Войдите, чтобы отправить письмо повторно.';
-
-  @override
-  String tryAgainInSeconds(int seconds) {
-    return 'Повторите через $seconds с';
-  }
-
-  @override
   String get loadingHint => 'Загрузка';
 }

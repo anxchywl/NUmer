@@ -974,21 +974,5 @@
   "resetStartOver": "Начать заново",
   "resetRequestFailed": "Не удалось отправить запрос. Попробуйте ещё раз.",
   "passwordSaveFailed": "Не удалось сохранить пароль. Попробуйте ещё раз.",
-  "verificationEmailSent": "Письмо с подтверждением отправлено!",
-  "sendResetLink": "Отправить ссылку",
-  "resetLinkSent": "Если аккаунт существует, мы отправили ссылку для сброса.",
-  "verifyEmailFirst": "Сначала подтвердите почту. Мы отправили письмо для подтверждения.",
-  "resendVerificationEmail": "Отправить письмо повторно",
-  "resetRateLimited": "Подождите немного перед следующей попыткой.",
-  "networkRequestFailed": "Ошибка сети. Проверьте соединение и повторите.",
-  "signInToResend": "Войдите, чтобы отправить письмо повторно.",
-  "tryAgainInSeconds": "Повторите через {seconds} с",
-  "@tryAgainInSeconds": {
-    "placeholders": {
-      "seconds": {
-        "type": "int"
-      }
-    }
-  },
   "loadingHint": "Загрузка"
 }
