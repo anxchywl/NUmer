@@ -31,7 +31,7 @@ export async function deleteGroupCascade(groupRef: FirebaseFirestore.DocumentRef
 
   await db.recursiveDelete(groupRef);
 
-  const chunkSize = 400;
+  const chunkSize = 200;
   for (let i = 0; i < memberIds.length; i += chunkSize) {
     const batch = db.batch();
     const slice = memberIds.slice(i, i + chunkSize);

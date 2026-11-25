@@ -21,11 +21,3 @@ export const onGroupMemberDelete = functions.firestore
       functions.logger.warn('Failed to clean up after member removal', err);
     }
   });
-
-export const deleteGroup = functions.firestore
-  .document('groups/{groupId}')
-  .onDelete(async (snap, context) => {
-    // This is a backup cleanup trigger, but we'll also implement a callable for direct deletion
-    // to ensure we can handle the recursive delete properly and return success/failure to client.
-    // Actually, let's just make it a Callable function that the client calls.
-  });
