@@ -238,7 +238,8 @@ run the commands.
 2. `git tag identity-v0.1.0 && git push origin identity-v0.1.0`
 
 ### D-2 First admin (P2-02)
-1. `cd functions && node scripts/set_roles.js --uid <your uid> --roles numer:admin,numer:editor`
+1. `cd functions && npm run roles:set -- --uid <your uid> --roles numer:admin,numer:editor`
+   (needs `GOOGLE_APPLICATION_CREDENTIALS`, as in B-3).
 2. Sign out and in again in the app so the token carries the claim.
 
 ### D-3 Redeploy the four module backends (P2-03 to P2-06). Approval needed.
