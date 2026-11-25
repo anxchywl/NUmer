@@ -6,3 +6,4 @@ export { sendNudge } from './nudges/send_nudge';
 export { onMailQueued } from './mail/queue';
 export { onGroupMemberWrite } from './groups/membership_index';
 export { onUserProfileWrite } from './profiles/public_profile';
+export { setUserRoles } from './roles/set_user_roles';
