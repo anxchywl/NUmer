@@ -9,7 +9,10 @@ class NumerButtonChild extends StatelessWidget {
     required this.label,
     this.loading = false,
     this.loadingHint,
-  });
+  }) : assert(
+         !loading || loadingHint != null,
+         'say what a screen reader hears',
+       );
 
   final String label;
   final bool loading;
@@ -25,17 +28,24 @@ class NumerButtonChild extends StatelessWidget {
         alignment: Alignment.center,
         children: [
           // laid out while hidden so the button keeps its size
-          Visibility(
-            visible: !loading,
-            maintainSize: true,
-            maintainAnimation: true,
-            maintainState: true,
-            maintainSemantics: true,
-            child: Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+          ConstrainedBox(
+            // a label narrower than the spinner would shrink it
+            constraints: const BoxConstraints(
+              minWidth: _spinnerSize,
+              minHeight: _spinnerSize,
+            ),
+            child: Visibility(
+              visible: !loading,
+              maintainSize: true,
+              maintainAnimation: true,
+              maintainState: true,
+              maintainSemantics: true,
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           if (loading) Positioned.fill(child: Center(child: _spinner(context))),
