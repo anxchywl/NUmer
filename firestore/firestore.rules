@@ -279,6 +279,11 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // Role change log - server only
+    match /roleAudit/{entryId} {
+      allow read, write: if false;
+    }
+
     // Connections feature
     match /users/{userId}/connections/{personId} {
       allow read, write: if isOwner(userId);
