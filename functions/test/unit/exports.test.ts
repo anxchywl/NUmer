@@ -8,8 +8,10 @@ describe('exports', () => {
       'joinPrivateGroup',
       'onCourseWrite',
       'onGroupMemberDelete',
+      'onGroupMemberWrite',
       'onMailQueued',
       'onStudySessionWrite',
+      'onUserProfileWrite',
       'sendNudge',
     ]);
   });
