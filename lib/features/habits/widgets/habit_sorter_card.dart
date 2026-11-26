@@ -33,13 +33,15 @@ class _HabitSorterCardState extends State<HabitSorterCard>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
@@ -89,8 +91,9 @@ class _HabitSorterCardState extends State<HabitSorterCard>
               scale: 0.95,
               child: Material(
                 elevation: 12,
-                borderRadius:
-                    BorderRadius.circular(16), // Match container radius
+                borderRadius: BorderRadius.circular(
+                  16,
+                ), // Match container radius
                 color: Colors.transparent,
                 child: _buildCardContent(theme, habitColor, isDragging: true),
               ),
@@ -106,8 +109,11 @@ class _HabitSorterCardState extends State<HabitSorterCard>
     );
   }
 
-  Widget _buildCardContent(ThemeData theme, Color habitColor,
-      {bool isDragging = false}) {
+  Widget _buildCardContent(
+    ThemeData theme,
+    Color habitColor, {
+    bool isDragging = false,
+  }) {
     return Container(
       width: isDragging ? MediaQuery.of(context).size.width - 32 : null,
       height: 70, // Compact height matching calendar strip area approx
@@ -170,8 +176,9 @@ class _HabitSorterCardState extends State<HabitSorterCard>
                 Text(
                   widget.habit.name,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color:
-                        isDragging ? Colors.white : theme.colorScheme.onSurface,
+                    color: isDragging
+                        ? Colors.white
+                        : theme.colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
