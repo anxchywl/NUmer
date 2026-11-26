@@ -18,7 +18,8 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseStyle = Theme.of(context).textTheme.bodyMedium;
-    final textStyle = baseStyle?.copyWith(
+    final textStyle =
+        baseStyle?.copyWith(
           color: foregroundColor,
           fontWeight: FontWeight.w500,
         ) ??
@@ -45,11 +46,7 @@ class LoadingScreen extends StatelessWidget {
                   ),
                 ),
               if (showSpinner) const SizedBox(height: 16),
-              Text(
-                message,
-                style: textStyle,
-                textAlign: TextAlign.center,
-              ),
+              Text(message, style: textStyle, textAlign: TextAlign.center),
             ],
           ),
         ),

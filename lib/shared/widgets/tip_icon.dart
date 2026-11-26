@@ -6,11 +6,7 @@ class TipIcon extends StatefulWidget {
   final String title;
   final String message;
 
-  const TipIcon({
-    super.key,
-    required this.title,
-    required this.message,
-  });
+  const TipIcon({super.key, required this.title, required this.message});
 
   @override
   State<TipIcon> createState() => _TipIconState();
