@@ -100,7 +100,8 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
     // Initialize Controllers
     _targetCtrl = TextEditingController(
-        text: _type == HabitType.numeric ? "$_target" : "");
+      text: _type == HabitType.numeric ? "$_target" : "",
+    );
     _unitCtrl = TextEditingController(text: _unit);
     // Removed old frequency controllers as they are now handled by HabitScheduleEditor
 
@@ -124,23 +125,28 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     }
   }
 
-  List<dynamic> get _allCategories =>
-      [..._customCategories, ..._defaultCategories];
+  List<dynamic> get _allCategories => [
+    ..._customCategories,
+    ..._defaultCategories,
+  ];
 
   Map<String, dynamic> get _currentCatData {
     try {
-      final custom =
-          _customCategories.firstWhere((c) => c.name == _categoryName);
+      final custom = _customCategories.firstWhere(
+        (c) => c.name == _categoryName,
+      );
       return {
         'name': custom.name,
         'icon': custom.icon,
         'color': custom.color,
         'isCustom': true,
-        'id': custom.id
+        'id': custom.id,
       };
     } catch (_) {}
-    return _defaultCategories.firstWhere((c) => c['name'] == _categoryName,
-        orElse: () => _defaultCategories.last);
+    return _defaultCategories.firstWhere(
+      (c) => c['name'] == _categoryName,
+      orElse: () => _defaultCategories.last,
+    );
   }
 
   String _localizedCategoryName(String name, AppLocalizations l10n) {
@@ -248,12 +254,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         content: Text(l10n.habitDeleteMessage),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(l10n.cancel)),
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: Text(l10n.delete)),
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
         ],
       ),
     );
@@ -272,20 +280,23 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   Future<void> _confirmDeleteCategory(HabitCategory cat) async {
     final l10n = AppLocalizations.of(context)!;
     final ok = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-              title: Text(l10n.habitCategoryDeleteTitle),
-              content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    child: Text(l10n.cancel)),
-                FilledButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                    child: Text(l10n.delete)),
-              ],
-            ));
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.habitCategoryDeleteTitle),
+        content: Text(l10n.habitCategoryDeleteMessage(cat.name)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
 
     if (ok == true && mounted) {
       final auth = context.read<AuthController>();
@@ -323,8 +334,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
               if (_isDirty)
                 TextButton(
                   onPressed: _save,
-                  child: Text(l10n.save,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(
+                    l10n.save,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               IconButton(
                 icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -351,8 +364,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                           fillColor: theme.colorScheme.surfaceContainerHighest
                               .withAlpha(80),
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              borderSide: BorderSide.none),
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                         onChanged: (v) {
                           _habitName = v;
@@ -361,14 +375,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(32),
                           FilteringTextInputFormatter.allow(
-                              RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
+                            RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
 
                       // Category Selector (locked for created habits)
-                      Text(l10n.habitCategoryLabel,
-                          style: theme.textTheme.labelLarge),
+                      Text(
+                        l10n.habitCategoryLabel,
+                        style: theme.textTheme.labelLarge,
+                      ),
                       const SizedBox(height: 12),
                       IgnorePointer(
                         ignoring: true,
@@ -436,10 +453,13 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
   Widget _sectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Text(title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.primary)),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
     );
   }
 
@@ -463,8 +483,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             try {
               cat = _customCategories.firstWhere((c) => c.name == item);
             } catch (_) {
-              cat = _defaultCategories.firstWhere((c) => c['name'] == item,
-                  orElse: () => _defaultCategories.first);
+              cat = _defaultCategories.firstWhere(
+                (c) => c['name'] == item,
+                orElse: () => _defaultCategories.first,
+              );
             }
             final isCustom = cat is HabitCategory;
             final icon = isCustom ? cat.icon : cat['icon'];
@@ -476,9 +498,12 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(_localizedCategoryName(item, l10n),
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      _localizedCategoryName(item, l10n),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Icon(icon, color: color, size: 20),
                   ],
@@ -487,8 +512,11 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                   Positioned(
                     right: 0,
                     child: IconButton(
-                      icon: const Icon(Icons.delete_outline,
-                          size: 20, color: Colors.grey),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 20,
+                        color: Colors.grey,
+                      ),
                       onPressed: () => _confirmDeleteCategory(cat),
                       tooltip: l10n.habitCategoryDeleteTitle,
                     ),
@@ -508,15 +536,19 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           child: Row(
             children: [
               Icon(
-                  _isCreatingCategory
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_right,
-                  color: theme.colorScheme.primary),
+                _isCreatingCategory
+                    ? Icons.keyboard_arrow_down
+                    : Icons.keyboard_arrow_right,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 8),
-              Text(l10n.habitCategoryCreateAction,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                l10n.habitCategoryCreateAction,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
         ),
@@ -541,14 +573,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
       children: [
         TextField(
           decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.habitCategoryNameLabel,
-              hintText: AppLocalizations.of(context)!.habitCategoryNameHint),
+            labelText: AppLocalizations.of(context)!.habitCategoryNameLabel,
+            hintText: AppLocalizations.of(context)!.habitCategoryNameHint,
+          ),
           onChanged: (v) => _newCatName = v,
           autofocus: true,
           inputFormatters: [
             LengthLimitingTextInputFormatter(32),
             FilteringTextInputFormatter.allow(
-                RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
+              RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true),
+            ),
           ],
         ),
         const SizedBox(height: 12),
@@ -557,38 +591,44 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: Colors.primaries
-                .map((color) => Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: GestureDetector(
-                        onTap: () => setState(() => _newCatColor = color),
-                        child: Container(
-                          width: 34,
-                          height: 34,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _newCatColor == color
-                                  ? Colors.black87
-                                  : Colors.transparent,
-                              width: 2.5,
-                            ),
-                            boxShadow: _newCatColor == color
-                                ? [
-                                    BoxShadow(
-                                        color: color.withAlpha(100),
-                                        blurRadius: 8,
-                                        spreadRadius: 1)
-                                  ]
-                                : null,
+                .map(
+                  (color) => Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _newCatColor = color),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _newCatColor == color
+                                ? Colors.black87
+                                : Colors.transparent,
+                            width: 2.5,
                           ),
-                          child: _newCatColor == color
-                              ? const Icon(Icons.check,
-                                  color: Colors.white, size: 16)
+                          boxShadow: _newCatColor == color
+                              ? [
+                                  BoxShadow(
+                                    color: color.withAlpha(100),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
                               : null,
                         ),
+                        child: _newCatColor == color
+                            ? const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                                size: 16,
+                              )
+                            : null,
                       ),
-                    ))
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ),
@@ -597,104 +637,111 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           height: 48,
           child: ListView(
             scrollDirection: Axis.horizontal,
-            children: [
-              Icons.local_fire_department,
-              Icons.check_circle,
-              Icons.calendar_today,
-              Icons.access_time,
-              Icons.track_changes,
-              Icons.star,
-              Icons.bolt,
-              Icons.favorite_border,
-              Icons.psychology,
-              Icons.fitness_center,
-              Icons.menu_book,
-              Icons.eco,
-              Icons.water_drop,
-              Icons.nightlight_round,
-              Icons.wb_sunny,
-              Icons.directions_walk,
-              Icons.emoji_events,
-              Icons.notifications,
-              Icons.edit,
-              Icons.trending_up,
-              Icons.shield,
-              Icons.battery_charging_full,
-              Icons.sentiment_satisfied,
-              Icons.rocket_launch,
-              Icons.coffee,
-              Icons.apple,
-              Icons.lunch_dining,
-              Icons.bakery_dining,
-              Icons.wine_bar,
-              Icons.medication,
-              Icons.medical_services,
-              Icons.health_and_safety,
-              Icons.self_improvement,
-              Icons.directions_bike,
-              Icons.pool,
-              Icons.accessibility_new,
-              Icons.spa,
-              Icons.music_note,
-              Icons.headphones,
-              Icons.palette,
-              Icons.camera_alt,
-              Icons.code,
-              Icons.laptop,
-              Icons.account_balance_wallet,
-              Icons.savings,
-              Icons.shopping_cart,
-              Icons.bed,
-            ].map((icon) {
-              final selected = _newCatIcon == icon;
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: GestureDetector(
-                  onTap: () => setState(() => _newCatIcon = icon),
-                  child: Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: selected
-                          ? _newCatColor.withAlpha((0.15 * 255).round())
-                          : theme.colorScheme.surfaceContainerHighest
-                              .withAlpha(80),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                          color: selected ? _newCatColor : Colors.transparent,
-                          width: 2.5),
-                      boxShadow: selected
-                          ? [
-                              BoxShadow(
-                                  color: _newCatColor.withAlpha(80),
-                                  blurRadius: 6,
-                                  spreadRadius: 0)
-                            ]
-                          : null,
+            children:
+                [
+                  Icons.local_fire_department,
+                  Icons.check_circle,
+                  Icons.calendar_today,
+                  Icons.access_time,
+                  Icons.track_changes,
+                  Icons.star,
+                  Icons.bolt,
+                  Icons.favorite_border,
+                  Icons.psychology,
+                  Icons.fitness_center,
+                  Icons.menu_book,
+                  Icons.eco,
+                  Icons.water_drop,
+                  Icons.nightlight_round,
+                  Icons.wb_sunny,
+                  Icons.directions_walk,
+                  Icons.emoji_events,
+                  Icons.notifications,
+                  Icons.edit,
+                  Icons.trending_up,
+                  Icons.shield,
+                  Icons.battery_charging_full,
+                  Icons.sentiment_satisfied,
+                  Icons.rocket_launch,
+                  Icons.coffee,
+                  Icons.apple,
+                  Icons.lunch_dining,
+                  Icons.bakery_dining,
+                  Icons.wine_bar,
+                  Icons.medication,
+                  Icons.medical_services,
+                  Icons.health_and_safety,
+                  Icons.self_improvement,
+                  Icons.directions_bike,
+                  Icons.pool,
+                  Icons.accessibility_new,
+                  Icons.spa,
+                  Icons.music_note,
+                  Icons.headphones,
+                  Icons.palette,
+                  Icons.camera_alt,
+                  Icons.code,
+                  Icons.laptop,
+                  Icons.account_balance_wallet,
+                  Icons.savings,
+                  Icons.shopping_cart,
+                  Icons.bed,
+                ].map((icon) {
+                  final selected = _newCatIcon == icon;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: GestureDetector(
+                      onTap: () => setState(() => _newCatIcon = icon),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? _newCatColor.withAlpha((0.15 * 255).round())
+                              : theme.colorScheme.surfaceContainerHighest
+                                    .withAlpha(80),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: selected ? _newCatColor : Colors.transparent,
+                            width: 2.5,
+                          ),
+                          boxShadow: selected
+                              ? [
+                                  BoxShadow(
+                                    color: _newCatColor.withAlpha(80),
+                                    blurRadius: 6,
+                                    spreadRadius: 0,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Icon(
+                          icon,
+                          color: selected
+                              ? _newCatColor
+                              : theme.colorScheme.onSurfaceVariant,
+                          size: 18,
+                        ),
+                      ),
                     ),
-                    child: Icon(icon,
-                        color: selected
-                            ? _newCatColor
-                            : theme.colorScheme.onSurfaceVariant,
-                        size: 18),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
         ),
         const SizedBox(height: 24),
         Row(
           children: [
             TextButton(
-                onPressed: () => setState(() => _isCreatingCategory = false),
-                child: Text(AppLocalizations.of(context)!.cancel)),
+              onPressed: () => setState(() => _isCreatingCategory = false),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
             const Spacer(),
             FilledButton(
-                onPressed: _saveNewCategory,
-                child: Text(AppLocalizations.of(context)!.save)),
+              onPressed: _saveNewCategory,
+              child: Text(AppLocalizations.of(context)!.save),
+            ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -708,11 +755,17 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           runSpacing: 8,
           children: [
             _buildTypeChip(
-                AppLocalizations.of(context)!.habitYesNo, HabitType.yesNo),
+              AppLocalizations.of(context)!.habitYesNo,
+              HabitType.yesNo,
+            ),
             _buildTypeChip(
-                AppLocalizations.of(context)!.habitNumeric, HabitType.numeric),
+              AppLocalizations.of(context)!.habitNumeric,
+              HabitType.numeric,
+            ),
             _buildTypeChip(
-                AppLocalizations.of(context)!.habitTime, HabitType.time),
+              AppLocalizations.of(context)!.habitTime,
+              HabitType.time,
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -728,92 +781,106 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             }),
             builder: (context, item) {
               String label = switch (item) {
-                HabitComparator.atLeast =>
-                  AppLocalizations.of(context)!.habitComparatorAtLeast,
-                HabitComparator.lessThan =>
-                  AppLocalizations.of(context)!.habitComparatorLessThan,
-                HabitComparator.exactly =>
-                  AppLocalizations.of(context)!.habitComparatorExactly,
-                HabitComparator.any =>
-                  AppLocalizations.of(context)!.habitComparatorAny,
+                HabitComparator.atLeast => AppLocalizations.of(
+                  context,
+                )!.habitComparatorAtLeast,
+                HabitComparator.lessThan => AppLocalizations.of(
+                  context,
+                )!.habitComparatorLessThan,
+                HabitComparator.exactly => AppLocalizations.of(
+                  context,
+                )!.habitComparatorExactly,
+                HabitComparator.any => AppLocalizations.of(
+                  context,
+                )!.habitComparatorAny,
               };
               return Container(
-                  alignment: Alignment.center,
-                  child: Text(label,
-                      style: const TextStyle(fontWeight: FontWeight.bold)));
+                alignment: Alignment.center,
+                child: Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              );
             },
           ),
           const SizedBox(height: 16),
         ],
         if (_type == HabitType.numeric)
-          Row(children: [
-            Expanded(
-              child: TextFormField(
-                controller: _targetCtrl,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _targetCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
                     labelText: AppLocalizations.of(context)!.habitValueLabel,
                     filled: true,
-                    fillColor:
-                        theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                    fillColor: theme.colorScheme.surfaceContainerHighest
+                        .withAlpha(80),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none)),
-                onChanged: (v) {
-                  final trimmed = v.trim();
-                  if (trimmed.isEmpty) {
-                    if (_target != 0) {
-                      _target = 0;
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (v) {
+                    final trimmed = v.trim();
+                    if (trimmed.isEmpty) {
+                      if (_target != 0) {
+                        _target = 0;
+                        _markDirty();
+                      }
+                      return;
+                    }
+
+                    double val = double.tryParse(trimmed) ?? 0;
+                    if (val > 10000) {
+                      val = 10000;
+                      _targetCtrl.value = TextEditingValue(
+                        text: "10000",
+                        selection: TextSelection.collapsed(offset: 5),
+                      );
+                    }
+
+                    if (_target != val) {
+                      _target = val;
                       _markDirty();
                     }
-                    return;
-                  }
-
-                  double val = double.tryParse(trimmed) ?? 0;
-                  if (val > 10000) {
-                    val = 10000;
-                    _targetCtrl.value = TextEditingValue(
-                      text: "10000",
-                      selection: TextSelection.collapsed(offset: 5),
-                    );
-                  }
-
-                  if (_target != val) {
-                    _target = val;
-                    _markDirty();
-                  }
-                },
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(5),
-                  FilteringTextInputFormatter.digitsOnly,
-                ],
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(5),
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                controller: _unitCtrl,
-                decoration: InputDecoration(
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _unitCtrl,
+                  decoration: InputDecoration(
                     labelText: AppLocalizations.of(context)!.habitUnitLabel,
                     hintText: AppLocalizations.of(context)!.habitUnitHint,
                     filled: true,
-                    fillColor:
-                        theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                    fillColor: theme.colorScheme.surfaceContainerHighest
+                        .withAlpha(80),
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none)),
-                onChanged: (v) {
-                  _unit = v;
-                  _markDirty();
-                },
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(16),
-                  FilteringTextInputFormatter.allow(
-                      RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true)),
-                ],
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  onChanged: (v) {
+                    _unit = v;
+                    _markDirty();
+                  },
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(16),
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r"[\p{L}\p{N}\s'\-]", unicode: true),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ]),
+            ],
+          ),
         if (_type == HabitType.time)
           HabitTimePicker(
             value: _target,
@@ -854,8 +921,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
       backgroundColor: isDisabled
           ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
           : null,
-      disabledColor:
-          theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(
+        alpha: 0.3,
+      ),
       labelStyle: TextStyle(
         color: isDisabled
             ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
@@ -871,14 +939,19 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context)!.habitConnectCourse,
-            style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold, color: theme.colorScheme.primary)),
+        Text(
+          AppLocalizations.of(context)!.habitConnectCourse,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
         const SizedBox(height: 8),
         Text(
           AppLocalizations.of(context)!.habitCourseSyncHint,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 12),
         SizedBox(
@@ -886,7 +959,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: courses.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final c = courses[index];
               final isSelected = _connectedCourseIds.contains(c.id);
@@ -907,10 +980,7 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                           _markDirty();
                         });
                       },
-                avatar: CircleAvatar(
-                  backgroundColor: c.color,
-                  radius: 8,
-                ),
+                avatar: CircleAvatar(backgroundColor: c.color, radius: 8),
                 showCheckmark: false,
                 labelStyle: TextStyle(
                   color: isSelected
@@ -919,14 +989,16 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
                 selectedColor: theme.colorScheme.primary,
-                backgroundColor:
-                    theme.colorScheme.surfaceContainerHighest.withAlpha(80),
+                backgroundColor: theme.colorScheme.surfaceContainerHighest
+                    .withAlpha(80),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: BorderSide(
-                        color: isSelected
-                            ? Colors.transparent
-                            : theme.colorScheme.outlineVariant)),
+                  borderRadius: BorderRadius.circular(20),
+                  side: BorderSide(
+                    color: isSelected
+                        ? Colors.transparent
+                        : theme.colorScheme.outlineVariant,
+                  ),
+                ),
                 padding: const EdgeInsets.symmetric(horizontal: 4),
               );
             },
@@ -935,8 +1007,10 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
         if (_type == HabitType.numeric && courses.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(AppLocalizations.of(context)!.habitCourseNumericWarning,
-                style: TextStyle(color: theme.colorScheme.error, fontSize: 12)),
+            child: Text(
+              AppLocalizations.of(context)!.habitCourseNumericWarning,
+              style: TextStyle(color: theme.colorScheme.error, fontSize: 12),
+            ),
           ),
       ],
     );
@@ -951,12 +1025,14 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
           contentPadding: EdgeInsets.zero,
           leading: Icon(
             Icons.notifications_off_outlined,
-            color: theme.colorScheme.onSurfaceVariant
-                .withAlpha(_archived ? 80 : 255),
+            color: theme.colorScheme.onSurfaceVariant.withAlpha(
+              _archived ? 80 : 255,
+            ),
           ),
           title: Text(AppLocalizations.of(context)!.habitReminderDisabledTitle),
-          subtitle:
-              Text(AppLocalizations.of(context)!.habitReminderDisabledSubtitle),
+          subtitle: Text(
+            AppLocalizations.of(context)!.habitReminderDisabledSubtitle,
+          ),
           trailing: const Icon(Icons.chevron_right),
           enabled: false,
           onTap: null, // _showRemindMeModal,
@@ -991,8 +1067,9 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          subtitle:
-              Text(AppLocalizations.of(context)!.habitResetProgressSubtitle),
+          subtitle: Text(
+            AppLocalizations.of(context)!.habitResetProgressSubtitle,
+          ),
           trailing: OutlinedButton(
             style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
             onPressed: _archived
@@ -1002,33 +1079,44 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
                     final uid = context.read<AuthController>().currentUser?.uid;
 
                     final ok = await showDialog<bool>(
-                        context: context,
-                        builder: (c) => AlertDialog(
-                                title: Text(AppLocalizations.of(context)!
-                                    .habitResetProgressConfirmTitle),
-                                content: Text(AppLocalizations.of(context)!
-                                    .habitResetProgressConfirmMessage),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () => Navigator.pop(c, false),
-                                      child: Text(AppLocalizations.of(context)!
-                                          .cancel)),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(c, true),
-                                    style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red),
-                                    child: Text(
-                                      AppLocalizations.of(context)!.reset,
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  )
-                                ]));
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.habitResetProgressConfirmTitle,
+                        ),
+                        content: Text(
+                          AppLocalizations.of(
+                            context,
+                          )!.habitResetProgressConfirmMessage,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, false),
+                            child: Text(AppLocalizations.of(context)!.cancel),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(c, true),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.red,
+                            ),
+                            child: Text(
+                              AppLocalizations.of(context)!.reset,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
 
                     if (ok != true) return;
 
                     if (uid != null) {
                       await habitService.resetHabitProgress(
-                          uid, widget.habit.id);
+                        uid,
+                        widget.habit.id,
+                      );
                       if (mounted) {
                         setState(() {});
                       }
