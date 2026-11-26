@@ -12,10 +12,10 @@ class HabitRule {
   });
 
   Map<String, dynamic> toJson() => {
-        'endDate': endDate.millisecondsSinceEpoch,
-        'targetValue': targetValue,
-        'comparator': comparator.index,
-      };
+    'endDate': endDate.millisecondsSinceEpoch,
+    'targetValue': targetValue,
+    'comparator': comparator.index,
+  };
 
   factory HabitRule.fromJson(Map<String, dynamic> json) {
     return HabitRule(
