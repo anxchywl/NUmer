@@ -33,7 +33,8 @@ class _TimerScreenState extends State<TimerScreen> {
     super.didChangeDependencies();
     if (_selectedCourseId == null) {
       final state = context.read<AppState>();
-      _selectedCourseId = widget.courseId ??
+      _selectedCourseId =
+          widget.courseId ??
           (state.courses.length == 1 ? state.courses.first.id : null);
     }
   }
@@ -52,9 +53,7 @@ class _TimerScreenState extends State<TimerScreen> {
     if (courses.isEmpty) {
       return Scaffold(
         appBar: AppBar(title: Text(AppLocalizations.of(context)!.studyTimer)),
-        body: Center(
-          child: Text(AppLocalizations.of(context)!.noCoursesYet),
-        ),
+        body: Center(child: Text(AppLocalizations.of(context)!.noCoursesYet)),
       );
     }
 
@@ -71,10 +70,9 @@ class _TimerScreenState extends State<TimerScreen> {
               ),
               initialValue: _selectedCourseId,
               items: courses
-                  .map((c) => DropdownMenuItem(
-                        value: c.id,
-                        child: Text(c.name),
-                      ))
+                  .map(
+                    (c) => DropdownMenuItem(value: c.id, child: Text(c.name)),
+                  )
                   .toList(),
               onChanged: (v) => setState(() => _selectedCourseId = v),
             ),
@@ -122,7 +120,8 @@ class _TimerScreenState extends State<TimerScreen> {
               ),
               content: Text(
                 AppLocalizations.of(context)!.anotherSessionRunningSilly(
-                    activeKind ?? AppLocalizations.of(context)!.session),
+                  activeKind ?? AppLocalizations.of(context)!.session,
+                ),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onErrorContainer,
                 ),
@@ -161,16 +160,18 @@ class _TimerScreenState extends State<TimerScreen> {
                         onPressed: isRunning
                             ? null
                             : () {
-                                final ok =
-                                    context.read<AppState>().startTimer(cid);
+                                final ok = context.read<AppState>().startTimer(
+                                  cid,
+                                );
                                 if (!ok) {
                                   final st = context.read<AppState>();
                                   final kind =
                                       st.activeSessionKind ?? 'session';
                                   showAppMessage(
                                     context,
-                                    AppLocalizations.of(context)!
-                                        .anotherSessionRunningSilly(kind),
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.anotherSessionRunningSilly(kind),
                                     isError: true,
                                   );
                                 }
@@ -199,18 +200,22 @@ class _TimerScreenState extends State<TimerScreen> {
                             if (!context.mounted) return;
 
                             showAppMessage(
+                              context,
+                              AppLocalizations.of(
                                 context,
-                                AppLocalizations.of(context)!
-                                    .timerStoppedAndSaved);
+                              )!.timerStoppedAndSaved,
+                            );
                           } else {
                             if (!context.mounted) return;
-                            showAppMessage(context,
-                                AppLocalizations.of(context)!.nothingToReset);
+                            showAppMessage(
+                              context,
+                              AppLocalizations.of(context)!.nothingToReset,
+                            );
                           }
                         },
                         icon: const Icon(Icons.refresh),
                         label: Text(AppLocalizations.of(context)!.reset),
-                      )
+                      ),
                     ],
                   ),
                 ],
@@ -227,10 +232,7 @@ class _CourseChipPicker extends StatelessWidget {
   final String selectedId;
   final ValueChanged<String> onChanged;
 
-  const _CourseChipPicker({
-    required this.selectedId,
-    required this.onChanged,
-  });
+  const _CourseChipPicker({required this.selectedId, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {

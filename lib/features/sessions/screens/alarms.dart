@@ -43,8 +43,9 @@ class _AlarmsScreenState extends State<AlarmsScreen> {
               onDismissed: (_) => state.removeAlarm(a.id),
               child: ListTile(
                 title: Text(a.title),
-                subtitle:
-                    Text(a.repeatsDaily ? 'Daily at $when' : a.time.toString()),
+                subtitle: Text(
+                  a.repeatsDaily ? 'Daily at $when' : a.time.toString(),
+                ),
               ),
             );
           },
@@ -130,17 +131,20 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                         lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
                       if (picked != null) {
-                        setState(() => _date = DateTime(
-                              picked.year,
-                              picked.month,
-                              picked.day,
-                              _date.hour,
-                              _date.minute,
-                            ));
+                        setState(
+                          () => _date = DateTime(
+                            picked.year,
+                            picked.month,
+                            picked.day,
+                            _date.hour,
+                            _date.minute,
+                          ),
+                        );
                       }
                     },
                     child: Text(
-                        '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}'),
+                      '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}',
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -148,20 +152,24 @@ class _AddAlarmSheetState extends State<_AddAlarmSheet> {
                   child: OutlinedButton(
                     onPressed: () async {
                       final t = await showTimePicker(
-                          context: context,
-                          initialTime: TimeOfDay.fromDateTime(_date));
+                        context: context,
+                        initialTime: TimeOfDay.fromDateTime(_date),
+                      );
                       if (t != null) {
-                        setState(() => _date = DateTime(
-                              _date.year,
-                              _date.month,
-                              _date.day,
-                              t.hour,
-                              t.minute,
-                            ));
+                        setState(
+                          () => _date = DateTime(
+                            _date.year,
+                            _date.month,
+                            _date.day,
+                            t.hour,
+                            t.minute,
+                          ),
+                        );
                       }
                     },
                     child: Text(
-                        '${_date.hour.toString().padLeft(2, '0')}:${_date.minute.toString().padLeft(2, '0')}'),
+                      '${_date.hour.toString().padLeft(2, '0')}:${_date.minute.toString().padLeft(2, '0')}',
+                    ),
                   ),
                 ),
               ],
