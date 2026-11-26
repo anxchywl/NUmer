@@ -8,14 +8,13 @@ void main() {
     String? kind = 'timer',
     int? startMs = 1,
     int? expectedEndMs = 2,
-  }) =>
-      activeSessionSignature(
-        isStudying: isStudying,
-        courseId: courseId,
-        kind: kind,
-        startMs: startMs,
-        expectedEndMs: expectedEndMs,
-      );
+  }) => activeSessionSignature(
+    isStudying: isStudying,
+    courseId: courseId,
+    kind: kind,
+    startMs: startMs,
+    expectedEndMs: expectedEndMs,
+  );
 
   test('equal values give equal signatures', () {
     expect(signature(), signature());
