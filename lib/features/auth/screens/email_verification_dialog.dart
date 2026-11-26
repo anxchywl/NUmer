@@ -29,8 +29,10 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
   }
 
   void _startPolling() {
-    _timer =
-        Timer.periodic(const Duration(seconds: 3), (_) => _checkVerification());
+    _timer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _checkVerification(),
+    );
   }
 
   Future<void> _checkVerification() async {
@@ -72,9 +74,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
         const SnackBar(content: Text('Verification email sent!')),
       );
     } else {
-      messenger.showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -87,9 +87,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
       canPop: false,
       child: Dialog(
         backgroundColor: colors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
         child: DecoratedBox(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
@@ -97,8 +95,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
             boxShadow: [
               BoxShadow(
                 color: colors.shadow.withAlpha(
-                    ((theme.brightness == Brightness.dark ? 0.5 : 0.08) * 255)
-                        .round()),
+                  ((theme.brightness == Brightness.dark ? 0.5 : 0.08) * 255)
+                      .round(),
+                ),
                 blurRadius: 40,
                 offset: const Offset(0, 18),
               ),
@@ -110,11 +109,7 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (_verified)
-                  Icon(
-                    Icons.verified_outlined,
-                    size: 48,
-                    color: colors.primary,
-                  )
+                  Icon(Icons.verified_outlined, size: 48, color: colors.primary)
                 else
                   Stack(
                     alignment: Alignment.center,
@@ -130,8 +125,9 @@ class _EmailVerificationDialogState extends State<EmailVerificationDialog> {
                           height: 64,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color:
-                                colors.primary.withAlpha((0.5 * 255).round()),
+                            color: colors.primary.withAlpha(
+                              (0.5 * 255).round(),
+                            ),
                           ),
                         ),
                     ],
