@@ -51,11 +51,7 @@ class _AccountScreenState extends State<AccountScreen> {
         final theme = Theme.of(context);
         final scheme = theme.colorScheme;
         return AlertDialog(
-          icon: Icon(
-            Icons.warning_rounded,
-            color: scheme.error,
-            size: 32,
-          ),
+          icon: Icon(Icons.warning_rounded, color: scheme.error, size: 32),
           title: Text(l10n.deleteAccount),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -63,8 +59,10 @@ class _AccountScreenState extends State<AccountScreen> {
             children: [
               Text(
                 'This action is permanent and can not be undone.',
-                style:
-                    TextStyle(fontWeight: FontWeight.bold, color: scheme.error),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: scheme.error,
+                ),
               ),
               const SizedBox(height: 8),
               const Text('Deleting your account will:'),
@@ -72,7 +70,8 @@ class _AccountScreenState extends State<AccountScreen> {
               const Text('• Remove all your study sessions'),
               const Text('• Delete your courses and habits progress'),
               const Text(
-                  '• Remove you from your group and delete group you created if any'),
+                '• Remove you from your group and delete group you created if any',
+              ),
               const Text('• Erase your profile and settings'),
               const SizedBox(height: 12),
               Text(l10n.deleteAccountHoldConfirmDetail),
@@ -143,9 +142,7 @@ class _AccountScreenState extends State<AccountScreen> {
     }
 
     if (error != null) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      scaffoldMessenger.showSnackBar(SnackBar(content: Text(error)));
       return;
     }
 
@@ -177,7 +174,8 @@ class _AccountScreenState extends State<AccountScreen> {
               hasScrollBody: false,
               child: Center(
                 child: Text(
-                    AppLocalizations.of(context)!.pleaseSignInToViewAccount),
+                  AppLocalizations.of(context)!.pleaseSignInToViewAccount,
+                ),
               ),
             ),
           ],
@@ -188,11 +186,11 @@ class _AccountScreenState extends State<AccountScreen> {
     final profile = auth.profile;
     final displayName =
         (state.profileName != null && state.profileName!.trim().isNotEmpty)
-            ? state.profileName!.trim()
-            : (((profile?['displayName'] as String?) ??
-                    user.displayName ??
-                    'Unknown user')
-                .trim());
+        ? state.profileName!.trim()
+        : (((profile?['displayName'] as String?) ??
+                  user.displayName ??
+                  'Unknown user')
+              .trim());
     final loginLabel =
         (profile?['login'] as String?) ?? user.email ?? 'Unknown login';
 
@@ -217,7 +215,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -238,9 +237,7 @@ class _AccountScreenState extends State<AccountScreen> {
                           title: Text(displayName),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(loginLabel),
-                            ],
+                            children: [Text(loginLabel)],
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -250,11 +247,11 @@ class _AccountScreenState extends State<AccountScreen> {
                               onPressed: auth.isBusy
                                   ? null
                                   : () async {
-                                      final authController =
-                                          context.read<AuthController>();
+                                      final authController = context
+                                          .read<AuthController>();
                                       final appState = context.read<AppState>();
-                                      final syncService =
-                                          context.read<SyncService>();
+                                      final syncService = context
+                                          .read<SyncService>();
                                       final navigator = Navigator.of(context);
 
                                       await appState
@@ -270,37 +267,45 @@ class _AccountScreenState extends State<AccountScreen> {
                                     },
                               style: TextButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 textStyle: const TextStyle(fontSize: 13),
                               ),
                               icon: const Icon(Icons.logout, size: 18),
-                              label:
-                                  Text(AppLocalizations.of(context)!.signOut),
+                              label: Text(
+                                AppLocalizations.of(context)!.signOut,
+                              ),
                             ),
                             const Spacer(),
                             FilledButton.icon(
-                              onPressed: context.watch<SyncService>().status ==
+                              onPressed:
+                                  context.watch<SyncService>().status ==
                                       SyncStatus.syncing
                                   ? null
-                                  : () => context
-                                      .read<SyncService>()
-                                      .syncNow(full: true),
+                                  : () => context.read<SyncService>().syncNow(
+                                      full: true,
+                                    ),
                               style: FilledButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                                 minimumSize: Size.zero,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                 textStyle: const TextStyle(fontSize: 13),
                               ),
-                              icon: context.watch<SyncService>().status ==
+                              icon:
+                                  context.watch<SyncService>().status ==
                                       SyncStatus.syncing
                                   ? const SizedBox(
                                       height: 16,
                                       width: 16,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2),
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Icon(Icons.sync, size: 18),
                               label: FittedBox(
@@ -334,8 +339,8 @@ class _AccountScreenState extends State<AccountScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                           side: BorderSide(
-                              color:
-                                  Theme.of(context).colorScheme.outlineVariant),
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(20),
@@ -348,8 +353,9 @@ class _AccountScreenState extends State<AccountScreen> {
                             initialAvatarColorValue:
                                 state.profileAvatarColorValue,
                             initialAvatarBytes: state.profileAvatarImage,
-                            primaryButtonLabel:
-                                AppLocalizations.of(context)!.save,
+                            primaryButtonLabel: AppLocalizations.of(
+                              context,
+                            )!.save,
                             onSubmit: (data) async {
                               final appState = context.read<AppState>();
                               await appState.saveProfile(
@@ -368,9 +374,7 @@ class _AccountScreenState extends State<AccountScreen> {
                     : const Card(
                         child: Padding(
                           padding: EdgeInsets.all(20),
-                          child: Center(
-                            child: CircularProgressIndicator(),
-                          ),
+                          child: Center(child: CircularProgressIndicator()),
                         ),
                       ),
                 const SizedBox(height: 32),
@@ -391,29 +395,38 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     segments: [
                       ButtonSegment(
-                          value: ThemeMode.light,
-                          icon: const Icon(Icons.light_mode_outlined),
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(AppLocalizations.of(context)!.light,
-                                style: const TextStyle(fontSize: 12)),
-                          )),
+                        value: ThemeMode.light,
+                        icon: const Icon(Icons.light_mode_outlined),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppLocalizations.of(context)!.light,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                       ButtonSegment(
-                          value: ThemeMode.system,
-                          icon: const Icon(Icons.settings_suggest_outlined),
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(AppLocalizations.of(context)!.system,
-                                style: const TextStyle(fontSize: 12)),
-                          )),
+                        value: ThemeMode.system,
+                        icon: const Icon(Icons.settings_suggest_outlined),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppLocalizations.of(context)!.system,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                       ButtonSegment(
-                          value: ThemeMode.dark,
-                          icon: const Icon(Icons.dark_mode_outlined),
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(AppLocalizations.of(context)!.dark,
-                                style: const TextStyle(fontSize: 12)),
-                          )),
+                        value: ThemeMode.dark,
+                        icon: const Icon(Icons.dark_mode_outlined),
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            AppLocalizations.of(context)!.dark,
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                     ],
                     selected: {mode},
                     onSelectionChanged: (s) async {
@@ -429,11 +442,14 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     leading: Container(
                       width: 24,
                       height: 24,
@@ -448,7 +464,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     title: Text(AppLocalizations.of(context)!.accentColor),
                     subtitle: Text(
-                        AppLocalizations.of(context)!.accentColorDescription),
+                      AppLocalizations.of(context)!.accentColorDescription,
+                    ),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () {
                       showModalBottomSheet(
@@ -457,8 +474,9 @@ class _AccountScreenState extends State<AccountScreen> {
                         useSafeArea: true,
                         backgroundColor: Theme.of(context).colorScheme.surface,
                         shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20)),
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
                         ),
                         builder: (context) => Padding(
                           padding: EdgeInsets.only(
@@ -487,8 +505,9 @@ class _AccountScreenState extends State<AccountScreen> {
                                 const SizedBox(height: 16),
                                 Text(
                                   AppLocalizations.of(context)!.accentColor,
-                                  style:
-                                      Theme.of(context).textTheme.headlineSmall,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineSmall,
                                 ),
                                 const SizedBox(height: 24),
                                 AccentColorPicker(
@@ -527,38 +546,41 @@ class _AccountScreenState extends State<AccountScreen> {
                     ),
                     segments: const [
                       ButtonSegment(
-                          value: 'ru',
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'Русский',
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          )),
+                        value: 'ru',
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Русский',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                       ButtonSegment(
-                          value: 'en',
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'English',
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          )),
+                        value: 'en',
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'English',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                       ButtonSegment(
-                          value: 'kk',
-                          label: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              'Қазақша',
-                              maxLines: 1,
-                              softWrap: false,
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          )),
+                        value: 'kk',
+                        label: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'Қазақша',
+                            maxLines: 1,
+                            softWrap: false,
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
                     ],
                     selected: {Localizations.localeOf(context).languageCode},
                     onSelectionChanged: (Set<String> newSelection) async {
@@ -594,16 +616,20 @@ class _AccountScreenState extends State<AccountScreen> {
                         value: WeekStart.monday,
                         label: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(AppLocalizations.of(context)!.mon,
-                              style: const TextStyle(fontSize: 12)),
+                          child: Text(
+                            AppLocalizations.of(context)!.mon,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
                       ButtonSegment(
                         value: WeekStart.sunday,
                         label: FittedBox(
                           fit: BoxFit.scaleDown,
-                          child: Text(AppLocalizations.of(context)!.sun,
-                              style: const TextStyle(fontSize: 12)),
+                          child: Text(
+                            AppLocalizations.of(context)!.sun,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                         ),
                       ),
                     ],
@@ -639,7 +665,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   child: Text(
                     AppLocalizations.of(context)!.justSwipeIt,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline),
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -650,7 +677,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: SwitchListTile(
                     dense: true,
@@ -659,10 +687,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       Icons.notes_rounded,
                       color: state.quickNotesEnabled
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withAlpha(128),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withAlpha(128),
                     ),
                     title: Text(AppLocalizations.of(context)!.quickNotes),
                     subtitle: Text(
@@ -675,7 +702,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     value: state.quickNotesEnabled,
                     onChanged: (v) => state.setQuickNotesEnabled(v),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -684,7 +712,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: SwitchListTile(
                     dense: true,
@@ -693,16 +722,17 @@ class _AccountScreenState extends State<AccountScreen> {
                       Icons.notifications_active_rounded,
                       color: state.allowNudges
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withAlpha(128),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withAlpha(128),
                     ),
-                    title:
-                        Text(AppLocalizations.of(context)!.wantToReceiveNudges),
+                    title: Text(
+                      AppLocalizations.of(context)!.wantToReceiveNudges,
+                    ),
                     subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .wantToReceiveNudgesDescription,
+                      AppLocalizations.of(
+                        context,
+                      )!.wantToReceiveNudgesDescription,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -711,7 +741,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     value: state.allowNudges,
                     onChanged: (v) => state.setAllowNudges(v),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -720,7 +751,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: SwitchListTile(
                     dense: true,
@@ -729,10 +761,9 @@ class _AccountScreenState extends State<AccountScreen> {
                       Icons.grid_view_rounded,
                       color: state.eisenhowerMatrixEnabled
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withAlpha(128),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withAlpha(128),
                     ),
                     title: Text(AppLocalizations.of(context)!.eisenhowerMatrix),
                     subtitle: Text(
@@ -745,7 +776,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     value: state.eisenhowerMatrixEnabled,
                     onChanged: (v) => state.setEisenhowerMatrixEnabled(v),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -754,7 +786,8 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: SwitchListTile(
                     dense: true,
@@ -763,16 +796,17 @@ class _AccountScreenState extends State<AccountScreen> {
                       Icons.mark_chat_unread_rounded,
                       color: state.sessionNotificationsEnabled
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant
-                              .withAlpha(128),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant.withAlpha(128),
                     ),
-                    title:
-                        Text(AppLocalizations.of(context)!.sessionNotification),
+                    title: Text(
+                      AppLocalizations.of(context)!.sessionNotification,
+                    ),
                     subtitle: Text(
-                      AppLocalizations.of(context)!
-                          .sessionNotificationDescription,
+                      AppLocalizations.of(
+                        context,
+                      )!.sessionNotificationDescription,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -781,7 +815,8 @@ class _AccountScreenState extends State<AccountScreen> {
                     value: state.sessionNotificationsEnabled,
                     onChanged: (v) => state.setSessionNotificationsEnabled(v),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -790,13 +825,16 @@ class _AccountScreenState extends State<AccountScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20),
                     side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant),
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: ListTile(
                     dense: true,
                     visualDensity: VisualDensity.compact,
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     title: Text(AppLocalizations.of(context)!.exportToCalendar),
                     subtitle: Text(
                       AppLocalizations.of(context)!.exportToCalendarSubtitle,
@@ -826,11 +864,13 @@ class _AccountScreenState extends State<AccountScreen> {
                     color: Theme.of(context).colorScheme.error,
                     size: 20,
                   ),
-                  title: Text(AppLocalizations.of(context)!.deleteAccount,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                        fontSize: 14,
-                      )),
+                  title: Text(
+                    AppLocalizations.of(context)!.deleteAccount,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 14,
+                    ),
+                  ),
                   subtitle: Text(
                     AppLocalizations.of(context)!.deleteAccountSubtitle,
                     style: const TextStyle(fontSize: 12),
@@ -941,7 +981,8 @@ class _HoldToConfirmButtonState extends State<_HoldToConfirmButton>
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              final background = Color.lerp(
+              final background =
+                  Color.lerp(
                     backgroundColor,
                     Colors.white,
                     _controller.value,
@@ -1017,11 +1058,7 @@ class _DeleteAccountTextConfirmDialogState
     final l10n = AppLocalizations.of(context)!;
 
     return AlertDialog(
-      icon: Icon(
-        Icons.warning_amber_rounded,
-        color: scheme.error,
-        size: 40,
-      ),
+      icon: Icon(Icons.warning_amber_rounded, color: scheme.error, size: 40),
       title: const Text('Final Confirmation'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1106,7 +1143,9 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
   void initState() {
     super.initState();
     _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
   }
 
@@ -1159,23 +1198,22 @@ class _HomeSummarySwipeSelectorState extends State<_HomeSummarySwipeSelector>
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
+              color: Theme.of(context).colorScheme.surfaceContainerHighest
                   .withAlpha((0.4 * 255).round()),
             ),
             child: SlideTransition(
-              position: _slide.drive(Tween<Offset>(
-                begin: Offset.zero,
-                end: Offset(0.15 * -_slideDir, 0),
-              )),
+              position: _slide.drive(
+                Tween<Offset>(
+                  begin: Offset.zero,
+                  end: Offset(0.15 * -_slideDir, 0),
+                ),
+              ),
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -1214,7 +1252,9 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
   void initState() {
     super.initState();
     _anim = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 200));
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
     _slide = CurvedAnimation(parent: _anim, curve: Curves.easeOutCubic);
   }
 
@@ -1261,23 +1301,22 @@ class _ProgressViewSelectorState extends State<_ProgressViewSelector>
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHighest
+              color: Theme.of(context).colorScheme.surfaceContainerHighest
                   .withAlpha((0.4 * 255).round()),
             ),
             child: SlideTransition(
-              position: _slide.drive(Tween<Offset>(
-                begin: Offset.zero,
-                end: Offset(0.15 * -_slideDir, 0),
-              )),
+              position: _slide.drive(
+                Tween<Offset>(
+                  begin: Offset.zero,
+                  end: Offset(0.15 * -_slideDir, 0),
+                ),
+              ),
               child: Text(
                 label,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           ),
