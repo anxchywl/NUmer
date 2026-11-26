@@ -30,7 +30,8 @@ class Notifs {
           timeZoneName = result?.toString();
         } catch (e) {
           debugPrint(
-              "Notifs: Timezone detection timed out/failed in background: $e");
+            "Notifs: Timezone detection timed out/failed in background: $e",
+          );
         }
       } else {
         try {
@@ -47,7 +48,8 @@ class Notifs {
           debugPrint("Notifs: Timezone initialized to $timeZoneName");
         } catch (e) {
           debugPrint(
-              "Notifs: Invalid timezone '$timeZoneName', falling back to UTC. Error: $e");
+            "Notifs: Invalid timezone '$timeZoneName', falling back to UTC. Error: $e",
+          );
           tz.setLocalLocation(tz.UTC);
         }
       } else {
@@ -80,17 +82,20 @@ class Notifs {
 
     // 3. create the android notification channel explicitly
     if (Platform.isAndroid) {
-      final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-      await androidPlugin
-          ?.createNotificationChannel(const AndroidNotificationChannel(
-        _channelId,
-        _channelName,
-        description: _channelDescription,
-        importance: Importance.max,
-        playSound: true,
-        enableVibration: true,
-      ));
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await androidPlugin?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: _channelDescription,
+          importance: Importance.max,
+          playSound: true,
+          enableVibration: true,
+        ),
+      );
     }
 
     _inited = true;
@@ -109,7 +114,8 @@ class Notifs {
     try {
       final tzTime = tz.TZDateTime.from(whenLocal, tz.local);
       debugPrint(
-          "Notifs: Scheduling #$id for local: $whenLocal -> tz: $tzTime");
+        "Notifs: Scheduling #$id for local: $whenLocal -> tz: $tzTime",
+      );
 
       // common details
       const details = NotificationDetails(
@@ -193,7 +199,12 @@ class Notifs {
     await init();
     final now = DateTime.now();
     var first = DateTime(
-        now.year, now.month, now.day, timeLocal.hour, timeLocal.minute);
+      now.year,
+      now.month,
+      now.day,
+      timeLocal.hour,
+      timeLocal.minute,
+    );
 
     // if the time has already passed today, schedule for tomorrow
     if (first.isBefore(now)) {
