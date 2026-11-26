@@ -45,7 +45,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
   void initState() {
     super.initState();
     final groupService = context.read<GroupService>();
-    final stale = widget.shouldRefresh ||
+    final stale =
+        widget.shouldRefresh ||
         groupService.isMemberStatsStale(
           groupId: widget.groupId,
           userId: widget.userId,
@@ -77,19 +78,19 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
         .doc(widget.userId)
         .snapshots()
         .listen((snapshot) {
-      if (!snapshot.exists || !mounted) return;
+          if (!snapshot.exists || !mounted) return;
 
-      final data = snapshot.data();
-      if (data != null) {
-        setState(() {
-          _profileData = {
-            'major': data['major'],
-            'profileGoal': data['profileGoal'],
-            'profileContact': data['profileContact'],
-          };
+          final data = snapshot.data();
+          if (data != null) {
+            setState(() {
+              _profileData = {
+                'major': data['major'],
+                'profileGoal': data['profileGoal'],
+                'profileContact': data['profileContact'],
+              };
+            });
+          }
         });
-      }
-    });
   }
 
   @override
@@ -108,7 +109,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
       stream: _statsStream,
       initialData: widget.preloadedStats,
       builder: (context, snapshot) {
-        final hasData = snapshot.hasData &&
+        final hasData =
+            snapshot.hasData &&
             snapshot.data != null &&
             snapshot.data!.subjectStats.isNotEmpty;
 
@@ -132,7 +134,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: colorScheme.onSurfaceVariant.withAlpha(
-                        theme.brightness == Brightness.dark ? 120 : 60),
+                      theme.brightness == Brightness.dark ? 120 : 60,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -193,20 +196,22 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                                         major,
                                         style: theme.textTheme.bodyMedium
                                             ?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w500,
+                                            ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     if (hasGoal)
                                       Text(
                                         goal,
-                                        style:
-                                            theme.textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontStyle: FontStyle.italic,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                              fontStyle: FontStyle.italic,
+                                            ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -214,19 +219,22 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                                       InkWell(
                                         onTap: () {
                                           Clipboard.setData(
-                                              ClipboardData(text: contact));
+                                            ClipboardData(text: contact),
+                                          );
                                           showAppMessage(
+                                            context,
+                                            AppLocalizations.of(
                                               context,
-                                              AppLocalizations.of(context)!
-                                                  .copiedToClipboard);
+                                            )!.copiedToClipboard,
+                                          );
                                         },
                                         child: Text(
                                           contact,
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
-                                            color: colorScheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                                color: colorScheme.primary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -275,8 +283,9 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                         padding: const EdgeInsets.all(32),
                         child: Center(
                           child: Text(
-                            AppLocalizations.of(context)!.failedToLoadUserData(
-                                snapshot.error.toString()),
+                            AppLocalizations.of(
+                              context,
+                            )!.failedToLoadUserData(snapshot.error.toString()),
                             style: theme.textTheme.bodyLarge?.copyWith(
                               color: colorScheme.error,
                             ),
@@ -308,10 +317,11 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                       );
                     }
 
-                    final subjects = stats.subjectStats.values
-                        .where((s) => s.seconds > 0)
-                        .toList()
-                      ..sort((a, b) => b.seconds.compareTo(a.seconds));
+                    final subjects =
+                        stats.subjectStats.values
+                            .where((s) => s.seconds > 0)
+                            .toList()
+                          ..sort((a, b) => b.seconds.compareTo(a.seconds));
 
                     if (subjects.isEmpty) {
                       return Padding(
@@ -345,7 +355,7 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                                   color: colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.bold,
                                   fontFeatures: [
-                                    const FontFeature.tabularFigures()
+                                    const FontFeature.tabularFigures(),
                                   ],
                                 ),
                               ),
@@ -401,7 +411,7 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 fontFeatures: [
-                                  const FontFeature.tabularFigures()
+                                  const FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
