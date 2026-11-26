@@ -38,8 +38,9 @@ class GroupAggregationService {
 
     final leaderId = members.isNotEmpty ? members.first.userId : null;
     final normalizedMembers = members
-        .map((m) =>
-            m.copyWith(isLeader: leaderId != null && m.userId == leaderId))
+        .map(
+          (m) => m.copyWith(isLeader: leaderId != null && m.userId == leaderId),
+        )
         .toList();
 
     return GroupStatistics(
@@ -127,12 +128,15 @@ class GroupAggregationService {
       if (liveUserData != null) {
         return aggregateData.copyWith(
           name: (liveUserData['profileName'] as String?) ?? aggregateData.name,
-          avatarIndex: (liveUserData['profileAvatarIndex'] as int?) ??
+          avatarIndex:
+              (liveUserData['profileAvatarIndex'] as int?) ??
               liveUserData['avatarIndex'] as int? ??
               aggregateData.avatarIndex,
-          avatarBase64: liveUserData['profileAvatarImageBase64'] as String? ??
+          avatarBase64:
+              liveUserData['profileAvatarImageBase64'] as String? ??
               aggregateData.avatarBase64,
-          avatarColorValue: (liveUserData['avatarColorValue'] as int?) ??
+          avatarColorValue:
+              (liveUserData['avatarColorValue'] as int?) ??
               (liveUserData['profileAvatarColorValue'] as int?) ??
               aggregateData.avatarColorValue,
           isStudying: (liveUserData['isStudying'] as bool?) ?? false,
@@ -172,9 +176,11 @@ class GroupAggregationService {
         name: (liveUserData['profileName'] as String?) ?? userId,
         avatarUrl: null,
         avatarBase64: liveUserData['profileAvatarImageBase64'] as String?,
-        avatarIndex: (liveUserData['profileAvatarIndex'] as int?) ??
+        avatarIndex:
+            (liveUserData['profileAvatarIndex'] as int?) ??
             liveUserData['avatarIndex'] as int?,
-        avatarColorValue: (liveUserData['avatarColorValue'] as int?) ??
+        avatarColorValue:
+            (liveUserData['avatarColorValue'] as int?) ??
             (liveUserData['profileAvatarColorValue'] as int?) ??
             0xFF6366F1,
         studyTimeSeconds: 0,
@@ -208,10 +214,12 @@ class GroupAggregationService {
     final userDoc = await firestore.collection('users').doc(userId).get();
     final userData = userDoc.data() ?? <String, dynamic>{};
     final name = (userData['profileName'] as String?) ?? userId;
-    final avatarIndex = userData['profileAvatarIndex'] as int? ??
+    final avatarIndex =
+        userData['profileAvatarIndex'] as int? ??
         userData['avatarIndex'] as int?;
     final avatarBase64 = userData['profileAvatarImageBase64'] as String?;
-    final avatarColorValue = (userData['avatarColorValue'] as int?) ??
+    final avatarColorValue =
+        (userData['avatarColorValue'] as int?) ??
         (userData['profileAvatarColorValue'] as int?) ??
         0xFF6366F1;
 
@@ -222,10 +230,14 @@ class GroupAggregationService {
         .collection('users')
         .doc(userId)
         .collection('sessions')
-        .where('startUtc',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(periodStartUtc))
-        .where('startUtc',
-            isLessThanOrEqualTo: Timestamp.fromDate(periodEndUtc))
+        .where(
+          'startUtc',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(periodStartUtc),
+        )
+        .where(
+          'startUtc',
+          isLessThanOrEqualTo: Timestamp.fromDate(periodEndUtc),
+        )
         .get();
 
     // Fetch courses to check for hidden status
@@ -264,14 +276,18 @@ class GroupAggregationService {
       final courseId = (sessionData['courseId'] as String?) ?? '';
       if (hiddenCourseIds.contains(courseId)) continue;
 
-      if (startUtc
-              .isAfter(periodStartUtc.subtract(const Duration(seconds: 1))) &&
+      if (startUtc.isAfter(
+            periodStartUtc.subtract(const Duration(seconds: 1)),
+          ) &&
           startUtc.isBefore(periodEndUtc.add(const Duration(seconds: 1)))) {
         periodSeconds += seconds;
       }
 
-      final sessionDay =
-          DateTime(startLocal.year, startLocal.month, startLocal.day);
+      final sessionDay = DateTime(
+        startLocal.year,
+        startLocal.month,
+        startLocal.day,
+      );
       if (sessionDay.isAtSameMomentAs(today)) {
         todaySeconds += seconds;
       }
@@ -298,14 +314,19 @@ class GroupAggregationService {
           // Sanity check: cap at 3h and ignore future starts
           if (diff > 0 && diff < 3600 * 3) {
             if (startUtc.isAfter(
-                    periodStartUtc.subtract(const Duration(seconds: 1))) &&
-                startUtc
-                    .isBefore(periodEndUtc.add(const Duration(seconds: 1)))) {
+                  periodStartUtc.subtract(const Duration(seconds: 1)),
+                ) &&
+                startUtc.isBefore(
+                  periodEndUtc.add(const Duration(seconds: 1)),
+                )) {
               periodSeconds += diff;
             }
 
-            final sessionDay =
-                DateTime(startLocal.year, startLocal.month, startLocal.day);
+            final sessionDay = DateTime(
+              startLocal.year,
+              startLocal.month,
+              startLocal.day,
+            );
             if (sessionDay.isAtSameMomentAs(today)) {
               todaySeconds += diff;
             }
@@ -358,10 +379,12 @@ class GroupAggregationService {
       final userData = userDoc.data();
       if (userData != null) {
         name = (userData['profileName'] as String?) ?? name;
-        avatarIndex = userData['profileAvatarIndex'] as int? ??
+        avatarIndex =
+            userData['profileAvatarIndex'] as int? ??
             userData['avatarIndex'] as int?;
         avatarBase64 = userData['profileAvatarImageBase64'] as String?;
-        avatarColorValue = (userData['avatarColorValue'] as int?) ??
+        avatarColorValue =
+            (userData['avatarColorValue'] as int?) ??
             (userData['profileAvatarColorValue'] as int?) ??
             avatarColorValue;
         isStudying = (userData['isStudying'] as bool?) ?? false;
@@ -428,11 +451,14 @@ class GroupAggregationService {
     required String? currentUserId,
   }) {
     final name = (data['name'] as String?) ?? userId;
-    final avatarIndex = (data['profileAvatarIndex'] as num?)?.toInt() ??
+    final avatarIndex =
+        (data['profileAvatarIndex'] as num?)?.toInt() ??
         (data['avatarIndex'] as num?)?.toInt();
-    final avatarBase64 = data['profileAvatarImageBase64'] as String? ??
+    final avatarBase64 =
+        data['profileAvatarImageBase64'] as String? ??
         data['avatarBase64'] as String?;
-    final avatarColorValue = (data['avatarColorValue'] as num?)?.toInt() ??
+    final avatarColorValue =
+        (data['avatarColorValue'] as num?)?.toInt() ??
         (data['profileAvatarColorValue'] as num?)?.toInt() ??
         0xFF6366F1;
     final lastStudyDate = data['lastStudyDate'] as String?;
@@ -482,8 +508,9 @@ class GroupAggregationService {
           observerMonthSeconds += entry.studyTimeSeconds;
         }
 
-        if (entry.date
-                .isAfter(periodStart.subtract(const Duration(seconds: 1))) &&
+        if (entry.date.isAfter(
+              periodStart.subtract(const Duration(seconds: 1)),
+            ) &&
             entry.date.isBefore(periodEnd.add(const Duration(seconds: 1)))) {
           periodSeconds += entry.studyTimeSeconds;
         }
@@ -517,8 +544,15 @@ class GroupAggregationService {
   }) async {
     final range = period.getDateRange();
     final start = DateTime(range.$1.year, range.$1.month, range.$1.day);
-    final end =
-        DateTime(range.$2.year, range.$2.month, range.$2.day, 23, 59, 59, 999);
+    final end = DateTime(
+      range.$2.year,
+      range.$2.month,
+      range.$2.day,
+      23,
+      59,
+      59,
+      999,
+    );
 
     final userDoc = await firestore.collection('users').doc(userId).get();
     final userData = userDoc.data() ?? <String, dynamic>{};
@@ -527,8 +561,10 @@ class GroupAggregationService {
         .collection('users')
         .doc(userId)
         .collection('sessions')
-        .where('startUtc',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(start.toUtc()))
+        .where(
+          'startUtc',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(start.toUtc()),
+        )
         .where('startUtc', isLessThanOrEqualTo: Timestamp.fromDate(end.toUtc()))
         .get();
 
@@ -559,8 +595,11 @@ class GroupAggregationService {
       if (hiddenCourseIds.contains(courseId)) continue;
 
       totalSeconds += seconds;
-      courseTotals.update(courseId, (value) => value + seconds,
-          ifAbsent: () => seconds);
+      courseTotals.update(
+        courseId,
+        (value) => value + seconds,
+        ifAbsent: () => seconds,
+      );
     }
 
     // Include ongoing active session if applicable
@@ -579,13 +618,17 @@ class GroupAggregationService {
             final rangeStart = start.toUtc();
             final rangeEnd = end.toUtc();
 
-            if (startUtc
-                    .isAfter(rangeStart.subtract(const Duration(seconds: 1))) &&
+            if (startUtc.isAfter(
+                  rangeStart.subtract(const Duration(seconds: 1)),
+                ) &&
                 startUtc.isBefore(rangeEnd.add(const Duration(seconds: 1)))) {
               final cid = aCourseId ?? 'unknown';
               totalSeconds += diff;
-              courseTotals.update(cid, (value) => value + diff,
-                  ifAbsent: () => diff);
+              courseTotals.update(
+                cid,
+                (value) => value + diff,
+                ifAbsent: () => diff,
+              );
             }
           }
         }
@@ -598,15 +641,20 @@ class GroupAggregationService {
 
     final courseInfo = <String, ({String name, int colorValue})>{};
     final courseIds = courseTotals.keys.toList();
-    final coursesRef =
-        firestore.collection('users').doc(userId).collection('courses');
+    final coursesRef = firestore
+        .collection('users')
+        .doc(userId)
+        .collection('courses');
 
     const chunkSize = 10;
     for (var i = 0; i < courseIds.length; i += chunkSize) {
-      final chunk = courseIds.sublist(i,
-          i + chunkSize > courseIds.length ? courseIds.length : i + chunkSize);
-      final query =
-          await coursesRef.where(FieldPath.documentId, whereIn: chunk).get();
+      final chunk = courseIds.sublist(
+        i,
+        i + chunkSize > courseIds.length ? courseIds.length : i + chunkSize,
+      );
+      final query = await coursesRef
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
       for (final courseDoc in query.docs) {
         final data = courseDoc.data();
         // Skip hidden courses
