@@ -38,7 +38,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   bool _overlaps(
-      DateTime aStart, DateTime aEnd, DateTime bStart, DateTime bEnd) {
+    DateTime aStart,
+    DateTime aEnd,
+    DateTime bStart,
+    DateTime bEnd,
+  ) {
     return aEnd.isAfter(bStart) && aStart.isBefore(bEnd);
   }
 
@@ -106,16 +110,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => _SessionNotesSheet(
-        initialNotes: row.notes ?? '',
-      ),
+      builder: (ctx) => _SessionNotesSheet(initialNotes: row.notes ?? ''),
     );
     if (result == null) return;
     if (!mounted) return;
-    await context.read<AppState>().saveSessionNotes(
-          id: row.id,
-          notes: result,
-        );
+    await context.read<AppState>().saveSessionNotes(id: row.id, notes: result);
     if (!mounted) return;
     showAppMessage(context, l10n.notesSaved);
     setState(() => _future = _load());
@@ -180,24 +179,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
       final labelDate = _fmtDateOnly(context, widget.startLocal!);
       final courseName =
           (widget.courseId != null && byId[widget.courseId!] != null)
-              ? byId[widget.courseId!]!.name
-              : null;
+          ? byId[widget.courseId!]!.name
+          : null;
 
       banner = Padding(
         padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
         child: Row(
           children: [
-            Icon(Icons.filter_alt_outlined,
-                size: 18,
-                color: Theme.of(context).colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.filter_alt_outlined,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 courseName == null ? labelDate : '$labelDate • $courseName',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -211,9 +212,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: Text(
           AppLocalizations.of(context)!.history,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         actions: [
           IconButton(
@@ -243,7 +244,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: Column(
         children: [
-          if (banner != null) banner,
+          ?banner,
           Expanded(
             child: FutureBuilder<List<_SessionRow>>(
               future: _future,
@@ -257,8 +258,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: Text(
                       AppLocalizations.of(context)!.noData,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   );
                 }
@@ -266,7 +267,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return ListView.separated(
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
                   itemCount: sessions.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
                     final s = sessions[i];
                     final duration = s.end.difference(s.start).inSeconds;
@@ -384,8 +385,10 @@ class _HistoryCard extends StatelessWidget {
                 ),
               ],
             ),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 8,
+              vertical: 10,
+            ),
             dense: true,
             visualDensity: VisualDensity.compact,
           ),
@@ -432,9 +435,7 @@ class _SessionRow {
 }
 
 class _SessionNotesSheet extends StatefulWidget {
-  const _SessionNotesSheet({
-    required this.initialNotes,
-  });
+  const _SessionNotesSheet({required this.initialNotes});
 
   final String initialNotes;
 
@@ -488,8 +489,10 @@ class _SessionNotesSheetState extends State<_SessionNotesSheet> {
               hintText: l10n.sessionNotesHint,
               border: const OutlineInputBorder(),
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 12,
+              ),
             ),
             minLines: 2,
             maxLines: 4,
@@ -544,7 +547,7 @@ String _fmtDateOnly(BuildContext context, DateTime d) {
     l10n.sep,
     l10n.oct,
     l10n.nov,
-    l10n.dec
+    l10n.dec,
   ];
   final mm = months[d.month - 1];
   final day = d.day.toString().padLeft(2, '0');
@@ -643,7 +646,8 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     final views = WidgetsBinding.instance.platformDispatcher.views;
     final view = views.isNotEmpty ? views.first : null;
     final bottomPx = view?.viewInsets.bottom ?? 0.0;
-    final dpr = view?.devicePixelRatio ??
+    final dpr =
+        view?.devicePixelRatio ??
         WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
     final bottom = bottomPx / dpr;
 
@@ -705,8 +709,9 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
       hh = d.substring(0, d.length - 2).padLeft(2, '0');
       mm = d.substring(d.length - 2);
     } else {
-      final takeLast6 =
-          d.length > 6 ? d.substring(d.length - 6) : d.padLeft(6, '0');
+      final takeLast6 = d.length > 6
+          ? d.substring(d.length - 6)
+          : d.padLeft(6, '0');
       hh = takeLast6.substring(0, 2);
       mm = takeLast6.substring(2, 4);
       ss = takeLast6.substring(4, 6);
@@ -724,13 +729,14 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
   }
 
   ({int h, int m, int s})? _parseHms(String value) {
-    final m =
-        RegExp(r'^(\d{2}):(\d{2}):(\d{2})$').firstMatch(_normalizeHms(value));
+    final m = RegExp(
+      r'^(\d{2}):(\d{2}):(\d{2})$',
+    ).firstMatch(_normalizeHms(value));
     if (m == null) return null;
     return (
       h: int.parse(m.group(1)!),
       m: int.parse(m.group(2)!),
-      s: int.parse(m.group(3)!)
+      s: int.parse(m.group(3)!),
     );
   }
 
@@ -740,16 +746,20 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
   Future<void> _save() async {
     final courses = context.read<AppState>().courses;
     if (courses.isEmpty) {
-      showAppMessage(context, AppLocalizations.of(context)!.addCourseFirst,
-          isError: true);
+      showAppMessage(
+        context,
+        AppLocalizations.of(context)!.addCourseFirst,
+        isError: true,
+      );
       return;
     }
 
     if (_startCtrl.text.trim().isEmpty || _endCtrl.text.trim().isEmpty) {
       showAppMessage(
         context,
-        AppLocalizations.of(context)!
-            .invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
+        AppLocalizations.of(
+          context,
+        )!.invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
         isError: true,
       );
       return;
@@ -760,8 +770,9 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     if (startT == null || endT == null) {
       showAppMessage(
         context,
-        AppLocalizations.of(context)!
-            .invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
+        AppLocalizations.of(
+          context,
+        )!.invalidTimeFormat(AppLocalizations.of(context)!.timeFormatHint),
         isError: true,
       );
       return;
@@ -773,16 +784,20 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     final nowLocal = DateTime.now();
     if (start.isAfter(nowLocal) || end.isAfter(nowLocal)) {
       showAppMessage(
-          context, AppLocalizations.of(context)!.cannotEnterFutureTime,
-          isError: true);
+        context,
+        AppLocalizations.of(context)!.cannotEnterFutureTime,
+        isError: true,
+      );
       Navigator.pop(context);
       return;
     }
 
     if (!end.isAfter(start)) {
       showAppMessage(
-          context, AppLocalizations.of(context)!.startTimeLaterThanEndTime,
-          isError: true);
+        context,
+        AppLocalizations.of(context)!.startTimeLaterThanEndTime,
+        isError: true,
+      );
       Navigator.pop(context);
       return;
     }
@@ -791,15 +806,17 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     final course = courses[safeIndex];
     try {
       await context.read<AppState>().addManualSession(
-            courseId: course.id,
-            start: start,
-            end: end,
-          );
+        courseId: course.id,
+        start: start,
+        end: end,
+      );
     } on SessionOverlapException catch (_) {
       if (!mounted) return;
       showAppMessage(
-          context, AppLocalizations.of(context)!.alreadyStudiedThisPeriod,
-          isError: true);
+        context,
+        AppLocalizations.of(context)!.alreadyStudiedThisPeriod,
+        isError: true,
+      );
       Navigator.pop(context);
       return;
     }
@@ -807,7 +824,9 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
     if (!mounted) return;
     Navigator.pop(context, true);
     showAppMessage(
-        context, AppLocalizations.of(context)!.timeAddedToCourse(course.name));
+      context,
+      AppLocalizations.of(context)!.timeAddedToCourse(course.name),
+    );
   }
 
   @override
@@ -833,8 +852,10 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
           curve: _curve,
           padding: EdgeInsets.only(bottom: _liftPx),
           child: ConstrainedBox(
-            constraints:
-                BoxConstraints(minHeight: 380, maxHeight: maxAvailable),
+            constraints: BoxConstraints(
+              minHeight: 380,
+              maxHeight: maxAvailable,
+            ),
             child: AnimatedSize(
               duration: _animDur,
               curve: _curve,
@@ -844,7 +865,8 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                   physics: const ClampingScrollPhysics(),
                   child: Padding(
                     padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -852,8 +874,9 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                           width: 44,
                           height: 5,
                           decoration: BoxDecoration(
-                            color: scheme.onSurfaceVariant
-                                .withAlpha((0.30 * 255).round()),
+                            color: scheme.onSurfaceVariant.withAlpha(
+                              (0.30 * 255).round(),
+                            ),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -864,23 +887,26 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                             children: [
                               Text(
                                 AppLocalizations.of(context)!.addTime,
-                                style: theme.textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               const SizedBox(height: 12),
                               _HmsField(
                                 label: AppLocalizations.of(context)!.startTime,
                                 controller: _startCtrl,
-                                hint: AppLocalizations.of(context)!
-                                    .timeFormatHint,
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.timeFormatHint,
                                 onSubmitted: (_) => _scheduleRecalcLift(),
                               ),
                               const SizedBox(height: 10),
                               _HmsField(
                                 label: AppLocalizations.of(context)!.endTime,
                                 controller: _endCtrl,
-                                hint: AppLocalizations.of(context)!
-                                    .timeFormatHint,
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.timeFormatHint,
                                 onSubmitted: (_) => _scheduleRecalcLift(),
                               ),
                             ],
@@ -888,9 +914,10 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                         ),
                         const SizedBox(height: 12),
                         Divider(
-                            height: 20,
-                            thickness: 1,
-                            color: scheme.outlineVariant),
+                          height: 20,
+                          thickness: 1,
+                          color: scheme.outlineVariant,
+                        ),
                         const SizedBox(height: 6),
                         if (courses.isEmpty)
                           FadeTransition(
@@ -901,8 +928,11 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                 color: scheme.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              child: Text(AppLocalizations.of(context)!
-                                  .noCoursesAvailable),
+                              child: Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.noCoursesAvailable,
+                              ),
                             ),
                           )
                         else
@@ -925,16 +955,20 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                       final c = courses[i];
                                       final selected = i == _index;
                                       return AnimatedScale(
-                                        duration:
-                                            const Duration(milliseconds: 200),
+                                        duration: const Duration(
+                                          milliseconds: 200,
+                                        ),
                                         scale: selected ? 1.0 : 0.95,
                                         child: AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 200),
+                                          duration: const Duration(
+                                            milliseconds: 200,
+                                          ),
                                           opacity: selected ? 1.0 : 0.6,
                                           child: Container(
                                             margin: const EdgeInsets.symmetric(
-                                                horizontal: 6, vertical: 8),
+                                              horizontal: 6,
+                                              vertical: 8,
+                                            ),
                                             padding: const EdgeInsets.all(14),
                                             decoration: BoxDecoration(
                                               color:
@@ -944,15 +978,17 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                               border: Border.all(
                                                 color: selected
                                                     ? scheme.primary.withAlpha(
-                                                        (0.40 * 255).round())
+                                                        (0.40 * 255).round(),
+                                                      )
                                                     : scheme.outlineVariant,
                                               ),
                                             ),
                                             child: Row(
                                               children: [
                                                 CircleAvatar(
-                                                    radius: 16,
-                                                    backgroundColor: c.color),
+                                                  radius: 16,
+                                                  backgroundColor: c.color,
+                                                ),
                                                 const SizedBox(width: 12),
                                                 Expanded(
                                                   child: Text(
@@ -961,11 +997,12 @@ class _AddTimeSheetState extends State<_AddTimeSheet>
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                     style: theme
-                                                        .textTheme.titleMedium
+                                                        .textTheme
+                                                        .titleMedium
                                                         ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w700,
-                                                    ),
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
                                                   ),
                                                 ),
                                               ],
@@ -1072,9 +1109,7 @@ class _HmsFieldState extends State<_HmsField> {
         widget.onSubmitted?.call(widget.controller.text);
       },
       onEditingComplete: _normalizeNow,
-      inputFormatters: [
-        _HmsAutoColonFormatter(),
-      ],
+      inputFormatters: [_HmsAutoColonFormatter()],
       decoration: InputDecoration(
         labelText: widget.label,
         hintText: widget.hint,
