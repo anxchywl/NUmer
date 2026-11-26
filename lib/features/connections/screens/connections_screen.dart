@@ -88,7 +88,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                 hasScrollBody: false,
                 child: Center(
                   child: Text(
-                      AppLocalizations.of(context)!.signInToViewConnections),
+                    AppLocalizations.of(context)!.signInToViewConnections,
+                  ),
                 ),
               ),
             ],
@@ -124,7 +125,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                            builder: (_) => const PeopleCalendarScreen()),
+                          builder: (_) => const PeopleCalendarScreen(),
+                        ),
                       );
                     },
                   ),
@@ -148,8 +150,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                         controller: _searchController,
                         focusNode: _searchFocusNode,
                         decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)!
-                              .searchConnectionsHint,
+                          hintText: AppLocalizations.of(
+                            context,
+                          )!.searchConnectionsHint,
                           prefixIcon: const Icon(Icons.search),
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
@@ -168,7 +171,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                             borderSide: BorderSide.none,
                           ),
                           contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                         ),
                         onChanged: (val) {
                           setState(() => _searchQuery = val.trim());
@@ -189,7 +194,8 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                                 padding: const EdgeInsets.only(right: 8),
                                 child: FilterChip(
                                   label: Text(
-                                      AppLocalizations.of(context)!.filterAll),
+                                    AppLocalizations.of(context)!.filterAll,
+                                  ),
                                   selected: _selectedGroupId == null,
                                   onSelected: (_) {
                                     setState(() => _selectedGroupId = null);
@@ -197,33 +203,35 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                                 ),
                               ),
                               // Group chips
-                              ...groups.map((group) => Padding(
-                                    padding: const EdgeInsets.only(right: 8),
-                                    child: FilterChip(
-                                      label: Text(group.name),
-                                      selected: _selectedGroupId == group.id,
-                                      selectedColor: group.color.withAlpha(51),
-                                      avatar: _selectedGroupId == group.id
-                                          ? null
-                                          : CircleAvatar(
-                                              backgroundColor:
-                                                  group.color.withAlpha(51),
-                                              child: Icon(
-                                                group.icon,
-                                                size: 14,
-                                                color: group.color,
-                                              ),
+                              ...groups.map(
+                                (group) => Padding(
+                                  padding: const EdgeInsets.only(right: 8),
+                                  child: FilterChip(
+                                    label: Text(group.name),
+                                    selected: _selectedGroupId == group.id,
+                                    selectedColor: group.color.withAlpha(51),
+                                    avatar: _selectedGroupId == group.id
+                                        ? null
+                                        : CircleAvatar(
+                                            backgroundColor: group.color
+                                                .withAlpha(51),
+                                            child: Icon(
+                                              group.icon,
+                                              size: 14,
+                                              color: group.color,
                                             ),
-                                      onSelected: (_) {
-                                        setState(() {
-                                          _selectedGroupId =
-                                              _selectedGroupId == group.id
-                                                  ? null
-                                                  : group.id;
-                                        });
-                                      },
-                                    ),
-                                  )),
+                                          ),
+                                    onSelected: (_) {
+                                      setState(() {
+                                        _selectedGroupId =
+                                            _selectedGroupId == group.id
+                                            ? null
+                                            : group.id;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -237,7 +245,9 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                         borderRadius: BorderRadius.circular(8),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 4),
+                            vertical: 8,
+                            horizontal: 4,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -282,36 +292,33 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
                   sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final person = sortedPeople[index];
-                        final personGroups = groups
-                            .where((g) => person.groupIds.contains(g.id))
-                            .toList();
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final person = sortedPeople[index];
+                      final personGroups = groups
+                          .where((g) => person.groupIds.contains(g.id))
+                          .toList();
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: PersonCard(
-                            person: person,
-                            groups: personGroups,
-                            onTap: () => _openPersonDetails(context, person),
-                            onCall:
-                                person.phone != null && person.phone!.isNotEmpty
-                                    ? () => _makeCall(person.phone!)
-                                    : null,
-                            onMessage:
-                                person.phone != null && person.phone!.isNotEmpty
-                                    ? () => _sendMessage(person.phone!)
-                                    : null,
-                            onEmail:
-                                person.email != null && person.email!.isNotEmpty
-                                    ? () => _sendEmail(person.email!)
-                                    : null,
-                          ),
-                        );
-                      },
-                      childCount: sortedPeople.length,
-                    ),
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: PersonCard(
+                          person: person,
+                          groups: personGroups,
+                          onTap: () => _openPersonDetails(context, person),
+                          onCall:
+                              person.phone != null && person.phone!.isNotEmpty
+                              ? () => _makeCall(person.phone!)
+                              : null,
+                          onMessage:
+                              person.phone != null && person.phone!.isNotEmpty
+                              ? () => _sendMessage(person.phone!)
+                              : null,
+                          onEmail:
+                              person.email != null && person.email!.isNotEmpty
+                              ? () => _sendEmail(person.email!)
+                              : null,
+                        ),
+                      );
+                    }, childCount: sortedPeople.length),
                   ),
                 ),
             ],
@@ -415,8 +422,10 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
               icon: const Icon(Icons.person_add),
               label: Text(AppLocalizations.of(context)!.addPersonTitle),
               style: FilledButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),

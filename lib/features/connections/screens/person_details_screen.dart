@@ -41,7 +41,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
         if (person == null) {
           return Scaffold(
             appBar: AppBar(
-                title: Text(AppLocalizations.of(context)!.personNameLabel)),
+              title: Text(AppLocalizations.of(context)!.personNameLabel),
+            ),
             body: Center(
               child: Text(AppLocalizations.of(context)!.personNotFound),
             ),
@@ -91,8 +92,10 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                           children: [
                             Icon(Icons.delete_outline, color: Colors.red),
                             SizedBox(width: 8),
-                            Text(AppLocalizations.of(context)!.delete,
-                                style: TextStyle(color: Colors.red)),
+                            Text(
+                              AppLocalizations.of(context)!.delete,
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ],
                         ),
                       ),
@@ -118,7 +121,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                             _markContactedToday(context, person.id),
                         icon: const Icon(Icons.check_circle_outline),
                         label: Text(
-                            AppLocalizations.of(context)!.markContactedToday),
+                          AppLocalizations.of(context)!.markContactedToday,
+                        ),
                         style: FilledButton.styleFrom(
                           minimumSize: const Size.fromHeight(52),
                           shape: RoundedRectangleBorder(
@@ -148,7 +152,10 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
   }
 
   Widget _buildInfoCard(
-      BuildContext context, Person person, List<ContactGroup> groups) {
+    BuildContext context,
+    Person person,
+    List<ContactGroup> groups,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
@@ -190,31 +197,35 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: groups
-                        .map((group) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: group.color.withAlpha(26),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                    color: group.color.withAlpha(77)),
+                        .map(
+                          (group) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: group.color.withAlpha(26),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: group.color.withAlpha(77),
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(group.icon,
-                                      size: 14, color: group.color),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    group.name,
-                                    style: TextStyle(
-                                      color: group.color,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(group.icon, size: 14, color: group.color),
+                                const SizedBox(width: 4),
+                                Text(
+                                  group.name,
+                                  style: TextStyle(
+                                    color: group.color,
+                                    fontWeight: FontWeight.w500,
                                   ),
-                                ],
-                              ),
-                            ))
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -239,20 +250,24 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                     spacing: 6,
                     runSpacing: 6,
                     children: person.tags
-                        .map((tag) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: colorScheme.surfaceContainerHighest,
-                                borderRadius: BorderRadius.circular(8),
+                        .map(
+                          (tag) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '#$tag',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
-                              child: Text(
-                                '#$tag',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ))
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                 ],
@@ -311,10 +326,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    person.notes!,
-                    style: theme.textTheme.bodyMedium,
-                  ),
+                  Text(person.notes!, style: theme.textTheme.bodyMedium),
                 ],
               ),
             ),
@@ -362,10 +374,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               ),
             ),
             if (onTap != null)
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
           ],
         ),
       ),
@@ -442,11 +451,13 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                   TextField(
                     controller: _interactionNoteController,
                     decoration: InputDecoration(
-                      hintText:
-                          AppLocalizations.of(context)!.addInteractionHint,
+                      hintText: AppLocalizations.of(
+                        context,
+                      )!.addInteractionHint,
                       filled: true,
-                      fillColor:
-                          colorScheme.surfaceContainerHighest.withAlpha(128),
+                      fillColor: colorScheme.surfaceContainerHighest.withAlpha(
+                        128,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -508,7 +519,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: sortedLog.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final entry = sortedLog[index];
                 return Padding(
@@ -537,10 +548,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              entry.note,
-                              style: theme.textTheme.bodyMedium,
-                            ),
+                            Text(entry.note, style: theme.textTheme.bodyMedium),
                           ],
                         ),
                       ),
@@ -564,7 +572,9 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
   }
 
   Future<void> _markContactedToday(
-      BuildContext context, String personId) async {
+    BuildContext context,
+    String personId,
+  ) async {
     final auth = context.read<AuthController>();
     final uid = auth.currentUser?.uid;
     if (uid == null) return;
@@ -614,7 +624,8 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context)!.deleteContactTitle),
         content: Text(
-            AppLocalizations.of(context)!.deleteContactMessage(person.name)),
+          AppLocalizations.of(context)!.deleteContactMessage(person.name),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
