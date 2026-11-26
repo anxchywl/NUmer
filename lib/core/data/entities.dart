@@ -586,12 +586,12 @@ class LocalUserDocAdapter extends TypeAdapter<LocalUserDoc> {
       profileContact:
           (reader.availableBytes > 0 ? reader.read() : null) as String?,
       allowNudges: (reader.availableBytes > 0 ? reader.read() : true) as bool,
-      eisenhowerMatrixEnabled: (reader.availableBytes > 0
-          ? (reader.read() ?? false)
-          : false) as bool,
-      onboardingCompleted: (reader.availableBytes > 0
-          ? (reader.read() ?? false)
-          : false) as bool,
+      eisenhowerMatrixEnabled:
+          (reader.availableBytes > 0 ? (reader.read() ?? false) : false)
+              as bool,
+      onboardingCompleted:
+          (reader.availableBytes > 0 ? (reader.read() ?? false) : false)
+              as bool,
       bootstrapVersion:
           (reader.availableBytes > 0 ? reader.read() : null) as int?,
       sessionNotificationsEnabled:
@@ -654,8 +654,9 @@ class LocalCourseAdapter extends TypeAdapter<LocalCourse> {
       dirty: reader.read() as bool,
       deleted: reader.read() as bool,
       sortOrder: reader.availableBytes > 0 ? reader.read() as int? : null,
-      hiddenFromLeaderboard:
-          reader.availableBytes > 0 ? reader.read() as bool : false,
+      hiddenFromLeaderboard: reader.availableBytes > 0
+          ? reader.read() as bool
+          : false,
     );
   }
 

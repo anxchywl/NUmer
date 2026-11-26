@@ -96,8 +96,9 @@ class Storage {
 
   static Future<void> setProfileName(String? name) async {
     final doc = _userDoc();
-    doc.profileName =
-        (name == null || name.trim().isEmpty) ? null : name.trim();
+    doc.profileName = (name == null || name.trim().isEmpty)
+        ? null
+        : name.trim();
     await _saveUser(doc);
     if (name != null && name.trim().isNotEmpty) {
       await _db.putMeta(_metaProfileComplete, true);
@@ -113,8 +114,9 @@ class Storage {
 
   static Future<void> setProfileGoal(String? goal) async {
     final doc = _userDoc();
-    doc.profileGoal =
-        (goal == null || goal.trim().isEmpty) ? null : goal.trim();
+    doc.profileGoal = (goal == null || goal.trim().isEmpty)
+        ? null
+        : goal.trim();
     await _saveUser(doc);
   }
 
@@ -122,8 +124,9 @@ class Storage {
 
   static Future<void> setProfileContact(String? contact) async {
     final doc = _userDoc();
-    doc.profileContact =
-        (contact == null || contact.trim().isEmpty) ? null : contact.trim();
+    doc.profileContact = (contact == null || contact.trim().isEmpty)
+        ? null
+        : contact.trim();
     await _saveUser(doc);
   }
 
@@ -140,8 +143,9 @@ class Storage {
 
   static Future<void> setProfileAvatarImageBytes(Uint8List? bytes) async {
     final doc = _userDoc();
-    doc.avatarImage =
-        (bytes == null || bytes.isEmpty) ? null : Uint8List.fromList(bytes);
+    doc.avatarImage = (bytes == null || bytes.isEmpty)
+        ? null
+        : Uint8List.fromList(bytes);
     await _saveUser(doc);
   }
 
@@ -211,8 +215,9 @@ class Storage {
   static Future<void> setThemeMode(String? mode) async {
     if (_db.currentUid == null) return;
     final doc = _userDoc();
-    final normalized =
-        (mode == null || mode.trim().isEmpty) ? null : mode.trim();
+    final normalized = (mode == null || mode.trim().isEmpty)
+        ? null
+        : mode.trim();
     await _db.putMeta(_metaThemeMode, normalized);
     doc.themeMode = normalized;
     await _saveUser(doc, dirty: false);
@@ -240,7 +245,8 @@ class Storage {
   }
 
   static Future<void> saveUserColorPresets(
-      List<Map<String, dynamic>> presets) async {
+    List<Map<String, dynamic>> presets,
+  ) async {
     _ensureUser();
     await _db.putMeta(_metaUserColorPresets, presets);
   }
@@ -292,14 +298,7 @@ class Storage {
   static Future<String> getHomeSummaryRange() async {
     _ensureUser();
     final raw = _db.getMeta(_metaHomeSummaryRange);
-    const allowed = {
-      'today',
-      'week',
-      'month',
-      'year',
-      'allTime',
-      'off',
-    };
+    const allowed = {'today', 'week', 'month', 'year', 'allTime', 'off'};
     if (raw is String && allowed.contains(raw)) {
       return raw;
     }
@@ -311,14 +310,7 @@ class Storage {
 
   static Future<void> setHomeSummaryRange(String value) async {
     _ensureUser();
-    const allowed = {
-      'today',
-      'week',
-      'month',
-      'year',
-      'allTime',
-      'off',
-    };
+    const allowed = {'today', 'week', 'month', 'year', 'allTime', 'off'};
     final normalized = allowed.contains(value) ? value : 'today';
     await _db.putMeta(_metaHomeSummaryRange, normalized);
     final doc = _userDoc();
@@ -426,14 +418,17 @@ class Storage {
     final raw = _db.getMeta(_metaHabitQuadrants);
     if (raw is Map) {
       return raw.map<String, int>(
-          (key, value) => MapEntry(key.toString(), (value as num).toInt()));
+        (key, value) => MapEntry(key.toString(), (value as num).toInt()),
+      );
     }
     return {};
   }
 
   /// save a habit → quadrant placement, quadrant 0-3
   static Future<void> saveHabitQuadrantPlacement(
-      String habitId, int quadrant) async {
+    String habitId,
+    int quadrant,
+  ) async {
     _ensureUser();
     final placements = getHabitQuadrantPlacements();
     placements[habitId] = quadrant.clamp(0, 3);
@@ -543,16 +538,25 @@ class Storage {
       update(existing.day, course.day, (v) => existing.day = v);
       update(existing.start, course.start, (v) => existing.start = v);
       update(existing.end, course.end, (v) => existing.end = v);
-      update(existing.colorValue, course.colorValue,
-          (v) => existing.colorValue = v);
+      update(
+        existing.colorValue,
+        course.colorValue,
+        (v) => existing.colorValue = v,
+      );
       update(existing.credits, course.credits, (v) => existing.credits = v);
       update(existing.expLevel, course.expLevel, (v) => existing.expLevel = v);
       if (course.sortOrder != null) {
-        update(existing.sortOrder, course.sortOrder,
-            (v) => existing.sortOrder = v);
+        update(
+          existing.sortOrder,
+          course.sortOrder,
+          (v) => existing.sortOrder = v,
+        );
       }
-      update(existing.hiddenFromLeaderboard, course.hiddenFromLeaderboard,
-          (v) => existing.hiddenFromLeaderboard = v);
+      update(
+        existing.hiddenFromLeaderboard,
+        course.hiddenFromLeaderboard,
+        (v) => existing.hiddenFromLeaderboard = v,
+      );
       if (existing.deleted) {
         existing.deleted = false;
         changed = true;
@@ -601,9 +605,10 @@ class Storage {
     if (raw is List) {
       return raw
           .whereType<Map>()
-          .map((dynamic m) => AlarmItem.fromJson(
-                Map<String, dynamic>.from(m as Map),
-              ))
+          .map(
+            (dynamic m) =>
+                AlarmItem.fromJson(Map<String, dynamic>.from(m as Map)),
+          )
           .toList();
     }
     return const [];
@@ -620,7 +625,8 @@ class Storage {
     final raw = _db.getMeta(_metaCourseMinutes);
     if (raw is Map) {
       return raw.map<String, int>(
-          (key, value) => MapEntry(key.toString(), (value as num).toInt()));
+        (key, value) => MapEntry(key.toString(), (value as num).toInt()),
+      );
     }
     final map = <String, int>{};
     for (final c in _db.courses()) {
@@ -711,7 +717,9 @@ class Storage {
   }
 
   static Future<void> setPomodoroLongBreakMinutes(
-      String courseId, int minutes) async {
+    String courseId,
+    int minutes,
+  ) async {
     _ensureUser();
     final course = _db.getCourseById(courseId);
     if (course == null) return;
@@ -743,12 +751,11 @@ class Storage {
   }
 
   static Future<void> saveDailyState(
-      String dateKey, Map<String, int> map) async {
+    String dateKey,
+    Map<String, int> map,
+  ) async {
     _ensureUser();
-    await _db.putMeta(_metaDailyState, {
-      'dateKey': dateKey,
-      'map': map,
-    });
+    await _db.putMeta(_metaDailyState, {'dateKey': dateKey, 'map': map});
   }
 
   static Map<String, dynamic>? getStreakSnapshot() {
@@ -842,7 +849,8 @@ class Storage {
   }
 
   static Future<void> saveGroupMemberStatsCache(
-      Map<String, dynamic> data) async {
+    Map<String, dynamic> data,
+  ) async {
     _ensureUser();
     await _db.putMeta(_metaGroupMemberStatsCache, data);
   }
@@ -881,10 +889,14 @@ class Storage {
   }
 
   static Map<String, dynamic> _sessionToJson(LocalSession session) {
-    final startUtc =
-        DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
-    final endUtc =
-        DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+    final startUtc = DateTime.fromMillisecondsSinceEpoch(
+      session.startUtcMs,
+      isUtc: true,
+    );
+    final endUtc = DateTime.fromMillisecondsSinceEpoch(
+      session.endUtcMs,
+      isUtc: true,
+    );
     return {
       'id': session.id,
       'courseId': session.courseId,
@@ -906,8 +918,11 @@ class Storage {
     if (!endLocal.isAfter(startLocal)) return null;
     final startUtc = startLocal.toUtc();
     final endUtc = endLocal.toUtc();
-    final seconds =
-        endUtc.difference(startUtc).inSeconds.clamp(0, 1 << 31).toInt();
+    final seconds = endUtc
+        .difference(startUtc)
+        .inSeconds
+        .clamp(0, 1 << 31)
+        .toInt();
     if (seconds <= 0) return null;
 
     final id = '${startUtc.microsecondsSinceEpoch}_$courseId';
@@ -926,8 +941,9 @@ class Storage {
       deleted: false,
     );
     await _db.putSession(session);
-    _sessionUpdateController
-        .add([DateTime(startLocal.year, startLocal.month, startLocal.day)]);
+    _sessionUpdateController.add([
+      DateTime(startLocal.year, startLocal.month, startLocal.day),
+    ]);
     return id;
   }
 
@@ -938,16 +954,22 @@ class Storage {
   }
 
   static Future<bool> hasSessionOverlap(
-      DateTime startLocal, DateTime endLocal) async {
+    DateTime startLocal,
+    DateTime endLocal,
+  ) async {
     if (!endLocal.isAfter(startLocal)) return true;
     _ensureUser();
     final startUtc = startLocal.toUtc();
     final endUtc = endLocal.toUtc();
     for (final session in _db.sessions()) {
-      final sStart =
-          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
-      final sEnd =
-          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      final sStart = DateTime.fromMillisecondsSinceEpoch(
+        session.startUtcMs,
+        isUtc: true,
+      );
+      final sEnd = DateTime.fromMillisecondsSinceEpoch(
+        session.endUtcMs,
+        isUtc: true,
+      );
       if (sEnd.isAfter(startUtc) && sStart.isBefore(endUtc)) {
         return true;
       }
@@ -1006,7 +1028,9 @@ class Storage {
   }
 
   static Future<void> setLastPeerCourseSync(
-      String targetUid, int timestamp) async {
+    String targetUid,
+    int timestamp,
+  ) async {
     _ensureUser();
     final entry = _db.syncStateForKey('peer_courses_$targetUid');
     entry.lastPullMs = timestamp;
@@ -1014,30 +1038,41 @@ class Storage {
   }
 
   static Future<Map<String, int>> secondsByCourseBetween(
-      DateTime startLocal, DateTime endLocal) async {
+    DateTime startLocal,
+    DateTime endLocal,
+  ) async {
     if (!endLocal.isAfter(startLocal)) return {};
     _ensureUser();
     final startUtc = startLocal.toUtc();
     final endUtc = endLocal.toUtc();
     final result = <String, int>{};
     for (final session in _db.sessions()) {
-      final sStart =
-          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
-      final sEnd =
-          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      final sStart = DateTime.fromMillisecondsSinceEpoch(
+        session.startUtcMs,
+        isUtc: true,
+      );
+      final sEnd = DateTime.fromMillisecondsSinceEpoch(
+        session.endUtcMs,
+        isUtc: true,
+      );
       if (!sEnd.isAfter(startUtc) || !sStart.isBefore(endUtc)) continue;
       final from = sStart.isBefore(startUtc) ? startUtc : sStart;
       final to = sEnd.isAfter(endUtc) ? endUtc : sEnd;
       final secs = max(0, to.difference(from).inSeconds);
       if (secs <= 0) continue;
-      result.update(session.courseId, (value) => value + secs,
-          ifAbsent: () => secs);
+      result.update(
+        session.courseId,
+        (value) => value + secs,
+        ifAbsent: () => secs,
+      );
     }
     return result;
   }
 
   static Future<Map<DateTime, int>> getDailyTotals(
-      DateTime start, DateTime end) async {
+    DateTime start,
+    DateTime end,
+  ) async {
     _ensureUser();
     final startUtc = DateTime.utc(start.year, start.month, start.day);
     final endUtc = DateTime.utc(end.year, end.month, end.day, 23, 59, 59);
@@ -1047,10 +1082,14 @@ class Storage {
     for (final session in _db.sessions()) {
       if (session.deleted) continue;
 
-      final sStart =
-          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
-      final sEnd =
-          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      final sStart = DateTime.fromMillisecondsSinceEpoch(
+        session.startUtcMs,
+        isUtc: true,
+      );
+      final sEnd = DateTime.fromMillisecondsSinceEpoch(
+        session.endUtcMs,
+        isUtc: true,
+      );
 
       // skip sessions outside the requested range
       if (sEnd.isBefore(startUtc) || sStart.isAfter(endUtc)) continue;
@@ -1071,19 +1110,28 @@ class Storage {
   }
 
   static Future<List<Map<String, int>>> dailySeries(
-      DateTime startLocal, int days) async {
+    DateTime startLocal,
+    int days,
+  ) async {
     if (days <= 0) return const [];
     _ensureUser();
-    final startUtc =
-        DateTime.utc(startLocal.year, startLocal.month, startLocal.day);
+    final startUtc = DateTime.utc(
+      startLocal.year,
+      startLocal.month,
+      startLocal.day,
+    );
     final endUtc = startUtc.add(Duration(days: days));
     final buckets = List.generate(days, (_) => <String, int>{});
 
     for (final session in _db.sessions()) {
-      var cursor =
-          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true);
-      final stop =
-          DateTime.fromMillisecondsSinceEpoch(session.endUtcMs, isUtc: true);
+      var cursor = DateTime.fromMillisecondsSinceEpoch(
+        session.startUtcMs,
+        isUtc: true,
+      );
+      final stop = DateTime.fromMillisecondsSinceEpoch(
+        session.endUtcMs,
+        isUtc: true,
+      );
       if (!stop.isAfter(startUtc) || !cursor.isBefore(endUtc)) continue;
 
       if (cursor.isBefore(startUtc)) cursor = startUtc;
@@ -1097,8 +1145,11 @@ class Storage {
         if (secs > 0) {
           final index = bucketStart.difference(startUtc).inDays;
           if (index >= 0 && index < buckets.length) {
-            buckets[index].update(session.courseId, (value) => value + secs,
-                ifAbsent: () => secs);
+            buckets[index].update(
+              session.courseId,
+              (value) => value + secs,
+              ifAbsent: () => secs,
+            );
           }
         }
         cursor = bucketEnd;
@@ -1131,8 +1182,9 @@ class Storage {
 
     final dayStart = DateTime(year, month, day);
     final hasSessions = (await secondsByCourseBetween(
-            dayStart, dayStart.add(const Duration(days: 1))))
-        .isNotEmpty;
+      dayStart,
+      dayStart.add(const Duration(days: 1)),
+    )).isNotEmpty;
     if (hasSessions) {
       await _db.putMeta(_metaLegacyDailyMigrated, true);
       return;
@@ -1168,8 +1220,9 @@ class Storage {
     _ensureUser();
     final snapshot = await getDailyState();
     if (snapshot == null) return;
-    final map =
-        Map<String, int>.from(snapshot['map'] as Map<String, int>? ?? const {});
+    final map = Map<String, int>.from(
+      snapshot['map'] as Map<String, int>? ?? const {},
+    );
     map.remove(courseId);
     await saveDailyState(snapshot['dateKey'] as String? ?? '', map);
   }
@@ -1209,9 +1262,10 @@ class Storage {
       session.updatedAtMs = _now();
       await session.save();
 
-      final d =
-          DateTime.fromMillisecondsSinceEpoch(session.startUtcMs, isUtc: true)
-              .toLocal();
+      final d = DateTime.fromMillisecondsSinceEpoch(
+        session.startUtcMs,
+        isUtc: true,
+      ).toLocal();
       _sessionUpdateController.add([DateTime(d.year, d.month, d.day)]);
       return;
     }
@@ -1224,10 +1278,14 @@ class Storage {
       if (item.id == id) {
         match = true;
       } else if (courseId != null && startUtc != null && endUtc != null) {
-        final sStart =
-            DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true);
-        final sEnd =
-            DateTime.fromMillisecondsSinceEpoch(item.endUtcMs, isUtc: true);
+        final sStart = DateTime.fromMillisecondsSinceEpoch(
+          item.startUtcMs,
+          isUtc: true,
+        );
+        final sEnd = DateTime.fromMillisecondsSinceEpoch(
+          item.endUtcMs,
+          isUtc: true,
+        );
         if (item.courseId == courseId &&
             sStart.microsecondsSinceEpoch ==
                 startUtc.toUtc().microsecondsSinceEpoch &&
@@ -1243,9 +1301,10 @@ class Storage {
         item.updatedAtMs = _now();
         await item.save();
         // track unique days affected
-        final d =
-            DateTime.fromMillisecondsSinceEpoch(item.startUtcMs, isUtc: true)
-                .toLocal();
+        final d = DateTime.fromMillisecondsSinceEpoch(
+          item.startUtcMs,
+          isUtc: true,
+        ).toLocal();
         final day = DateTime(d.year, d.month, d.day);
         if (!affectedDays.contains(day)) affectedDays.add(day);
       }
@@ -1301,15 +1360,17 @@ class Storage {
     final session = _db.getSessionById(id);
     if (session == null) return;
     final normalized = notes?.trim();
-    session.notes =
-        (normalized == null || normalized.isEmpty) ? null : normalized;
+    session.notes = (normalized == null || normalized.isEmpty)
+        ? null
+        : normalized;
     session.dirty = true;
     session.updatedAtMs = _now();
     await session.save();
   }
 
-  static Future<List<Map<String, dynamic>>> listSessions(
-      {bool newestFirst = true}) async {
+  static Future<List<Map<String, dynamic>>> listSessions({
+    bool newestFirst = true,
+  }) async {
     final sessions = await getSessions();
     final converted = sessions.map((s) {
       final startUtc = s['startUtc'] as DateTime;
@@ -1334,15 +1395,18 @@ class Storage {
     final raw = _db.getMeta(_metaHabitCategories);
     if (raw is List) {
       return raw
-          .map((item) =>
-              HabitCategory.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) =>
+                HabitCategory.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
     }
     return [];
   }
 
   static Future<void> saveHabitCategories(
-      List<HabitCategory> categories) async {
+    List<HabitCategory> categories,
+  ) async {
     _ensureUser();
     final raw = categories.map((c) => c.toJson()).toList();
     await _db.putMeta(_metaHabitCategories, raw);

@@ -8,8 +8,9 @@ import 'package:numer_app/core/data/sync_service.dart';
 
 class _FakeConnectivity implements Connectivity {
   @override
-  Future<List<ConnectivityResult>> checkConnectivity() async =>
-      [ConnectivityResult.wifi];
+  Future<List<ConnectivityResult>> checkConnectivity() async => [
+    ConnectivityResult.wifi,
+  ];
 
   @override
   Stream<List<ConnectivityResult>> get onConnectivityChanged =>
@@ -33,8 +34,7 @@ class _FakeDocument implements DocumentReference<Map<String, dynamic>> {
   Stream<DocumentSnapshot<Map<String, dynamic>>> snapshots({
     bool includeMetadataChanges = false,
     ListenSource source = ListenSource.defaultSource,
-  }) =>
-      const Stream.empty();
+  }) => const Stream.empty();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -62,11 +62,11 @@ class _FakeFirestore implements FirebaseFirestore {
 // keeps the real scheduling and replaces only the remote work
 class _RecordingSyncService extends SyncService {
   _RecordingSyncService()
-      : super(
-          firestore: _FakeFirestore(),
-          connectivity: _FakeConnectivity(),
-          database: _FakeDatabase(),
-        );
+    : super(
+        firestore: _FakeFirestore(),
+        connectivity: _FakeConnectivity(),
+        database: _FakeDatabase(),
+      );
 
   final calls = <String>[];
   Completer<void>? pushGate;
