@@ -50,7 +50,8 @@ class HabitDaySheet extends StatelessWidget {
                   height: 4,
                   decoration: BoxDecoration(
                     color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                        theme.brightness == Brightness.dark ? 120 : 60),
+                      theme.brightness == Brightness.dark ? 120 : 60,
+                    ),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -102,7 +103,7 @@ class HabitDaySheet extends StatelessWidget {
                     shrinkWrap: true,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: sortedHabits.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final habit = sortedHabits[index];
                       return _HabitRow(
@@ -203,9 +204,11 @@ class _HabitRow extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                IconData(habit.iconCodePoint,
-                    fontFamily: habit.iconFamily,
-                    fontPackage: habit.iconPackage),
+                IconData(
+                  habit.iconCodePoint,
+                  fontFamily: habit.iconFamily,
+                  fontPackage: habit.iconPackage,
+                ),
                 color: habit.color,
                 size: 20,
               ),
@@ -221,8 +224,9 @@ class _HabitRow extends StatelessWidget {
                     habit.name,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
+                      decoration: isCompleted
+                          ? TextDecoration.lineThrough
+                          : null,
                       color: isCompleted
                           ? theme.colorScheme.onSurface.withAlpha(150)
                           : theme.colorScheme.onSurface,
@@ -274,19 +278,19 @@ class _HabitRow extends StatelessWidget {
       final isCompleted = progress >= habit.targetValue;
       try {
         await context.read<HabitService>().toggleCompletion(
-              userId: userId,
-              habit: habit,
-              date: date,
-              completed: !isCompleted,
-              mondayFirst:
-                  context.read<AppState>().weekStart == WeekStart.monday,
-            );
+          userId: userId,
+          habit: habit,
+          date: date,
+          completed: !isCompleted,
+          mondayFirst: context.read<AppState>().weekStart == WeekStart.monday,
+        );
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text("Error: $e"),
-                backgroundColor: Theme.of(context).colorScheme.error),
+              content: Text("Error: $e"),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
           );
         }
       }
