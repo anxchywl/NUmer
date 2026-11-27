@@ -33,6 +33,7 @@ This Privacy Policy explains how we collect, use, and share information when you
 ### Device and app data
 - A locally generated device identifier used for sync and account safety.
 - App settings (theme, locale, notification preferences).
+- A push notification token from Firebase Cloud Messaging, used to deliver nudges.
 - Local notification schedules/alarms stored on your device.
 - Crash reports from release builds: the error and where in the App it occurred, device model, operating system and App version, identifiers of the App installation, and your account identifier. We do not add your name or email address to them.
 
@@ -50,7 +51,7 @@ AI analysis is currently unavailable. The current version of the App does not se
 
 ## 4) Sharing and disclosure
 We share information in the following cases:
-- Service providers: We use Firebase (Authentication, Firestore, Cloud Functions, App Check, Crashlytics) and Google Cloud services to host and process data.
+- Service providers: We use Firebase (Authentication, Firestore, Cloud Functions, Cloud Messaging, App Check, Crashlytics) and Google Cloud services to host and process data.
 - Group visibility: Your profile name, avatar, and study statistics may be visible to members of the groups you join, depending on group settings.
 - Legal and safety: We may disclose information if required by law or to protect users, the App, or our rights.
 
