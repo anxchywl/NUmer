@@ -95,8 +95,9 @@ void main() {
     await _pumpList(tester, state);
 
     await _swipeFirstRow(tester);
-    expect(find.byType(AlertDialog), findsOneWidget);
-    await tester.tap(find.text('Delete'));
+    expect(find.byType(BottomSheet), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
     await tester.pumpAndSettle();
 
     expect(state.removed, ['a']);
@@ -107,10 +108,22 @@ void main() {
     await _pumpList(tester, state);
 
     await _swipeFirstRow(tester);
-    await tester.tap(find.text('Cancel'));
+    await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(AlertDialog), findsNothing);
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(state.removed, isEmpty);
+  });
+
+  testWidgets('dismissing the sheet keeps the course', (tester) async {
+    final state = _FakeAppState();
+    await _pumpList(tester, state);
+
+    await _swipeFirstRow(tester);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsNothing);
     expect(state.removed, isEmpty);
   });
 

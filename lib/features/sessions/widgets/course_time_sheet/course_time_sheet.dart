@@ -8,6 +8,7 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../../data/last_course_store.dart';
 import '../../models/active_session_info.dart';

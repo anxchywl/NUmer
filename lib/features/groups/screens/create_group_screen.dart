@@ -7,6 +7,7 @@ import 'package:numer_app/features/groups/data/group_service.dart';
 import 'package:numer_app/features/groups/models/join_code.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class CreateGroupScreen extends StatefulWidget {
   const CreateGroupScreen({super.key});
@@ -191,22 +192,11 @@ class _CreateGroupScreenState extends State<CreateGroupScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.5,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Text(
-                        'Create Community',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                child: NumerButtonChild(
+                  label: 'Create Community',
+                  loading: _isSaving,
+                  loadingHint: AppLocalizations.of(context)!.loadingHint,
+                ),
               ),
             ),
             const SizedBox(height: 24),

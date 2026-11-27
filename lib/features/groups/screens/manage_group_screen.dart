@@ -9,6 +9,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/groups/models/join_code.dart';
 import 'package:numer_app/features/groups/widgets/user_profile_tile.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class ManageGroupScreen extends StatefulWidget {
   const ManageGroupScreen({super.key, required this.groupId});
@@ -112,7 +113,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
 
           if (snapshot.connectionState == ConnectionState.waiting &&
               !snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const SafeArea(child: NumerSkeleton());
           }
 
           final group = snapshot.data;
@@ -165,7 +166,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
               }
               if (membershipSnap.connectionState == ConnectionState.waiting &&
                   !membershipSnap.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return const SafeArea(child: NumerSkeleton());
               }
               final membership = membershipSnap.data;
               if (membership == null) {
@@ -562,12 +563,7 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
                                 if (memberSnap.connectionState ==
                                         ConnectionState.waiting &&
                                     !memberSnap.hasData) {
-                                  return const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 32),
-                                    child: Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  );
+                                  return const NumerSkeleton();
                                 }
                                 final members =
                                     memberSnap.data ?? const <GroupMember>[];
@@ -662,25 +658,16 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
   }
 
   Future<void> _confirmDelete(GroupService service) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteGroupTitle),
-        content: Text(AppLocalizations.of(context)!.deleteGroupMessage),
-        actions: [
-          TextButton(
-            child: Text(AppLocalizations.of(context)!.cancel),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          TextButton(
-            child: Text(AppLocalizations.of(context)!.delete),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showNumerConfirm(
+      context,
+      title: l10n.deleteGroupTitle,
+      body: l10n.deleteGroupMessage,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() => _deleting = true);
 
@@ -705,25 +692,16 @@ class _ManageGroupScreenState extends State<ManageGroupScreen> {
   }
 
   Future<void> _leaveGroup(GroupService service) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.leaveGroupTitle),
-        content: Text(AppLocalizations.of(context)!.leaveGroupMessage),
-        actions: [
-          TextButton(
-            child: Text(AppLocalizations.of(context)!.cancel),
-            onPressed: () => Navigator.of(context).pop(false),
-          ),
-          TextButton(
-            child: Text(AppLocalizations.of(context)!.leave),
-            onPressed: () => Navigator.of(context).pop(true),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showNumerConfirm(
+      context,
+      title: l10n.leaveGroupTitle,
+      body: l10n.leaveGroupMessage,
+      confirmLabel: l10n.leave,
+      destructive: true,
     );
 
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     setState(() => _leaving = true);
 

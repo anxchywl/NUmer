@@ -8,6 +8,7 @@ import 'package:numer_app/features/connections/models/person.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/connections/data/connections_service.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class AddPersonSheet extends StatefulWidget {
   final Person? person; // For editing existing person
@@ -338,17 +339,13 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(
-                        _isEditing
-                            ? AppLocalizations.of(context)!.saveChanges
-                            : AppLocalizations.of(context)!.addPersonTitle,
-                      ),
+                child: NumerButtonChild(
+                  label: _isEditing
+                      ? AppLocalizations.of(context)!.saveChanges
+                      : AppLocalizations.of(context)!.addPersonTitle,
+                  loading: _isSaving,
+                  loadingHint: AppLocalizations.of(context)!.loadingHint,
+                ),
               ),
             ),
           ],

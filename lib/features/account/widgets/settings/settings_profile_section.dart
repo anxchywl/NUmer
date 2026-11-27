@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../profile_form.dart';
 import 'settings_heading.dart';
@@ -28,12 +29,7 @@ class SettingsProfileSection extends StatelessWidget {
                   child: _form(context, state, auth),
                 ),
               )
-            : const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(20),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
-              ),
+            : const Card(child: NumerSkeleton()),
       ],
     );
   }

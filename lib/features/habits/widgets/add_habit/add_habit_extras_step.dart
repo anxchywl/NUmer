@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class AddHabitExtrasStep extends StatelessWidget {
   final Key navKey;
@@ -83,16 +84,11 @@ class AddHabitExtrasStep extends StatelessWidget {
         Expanded(
           child: FilledButton(
             onPressed: isSaving ? null : onSubmit,
-            child: isSaving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Text(l10n.habitCreateAction),
+            child: NumerButtonChild(
+              label: l10n.habitCreateAction,
+              loading: isSaving,
+              loadingHint: l10n.loadingHint,
+            ),
           ),
         ),
       ],

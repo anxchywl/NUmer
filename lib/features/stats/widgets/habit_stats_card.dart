@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../models/stats_models.dart';
 
@@ -36,7 +37,7 @@ class HabitStatsCard extends StatelessWidget {
             _header(context),
             const Spacer(),
             if (stats == null)
-              const Center(child: CircularProgressIndicator())
+              const NumerSkeleton(rows: 1)
             else ...[
               _StatRow(
                 label: l10n.habitStatsCompletionRate,

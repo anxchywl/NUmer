@@ -10,6 +10,7 @@ import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/connections/data/connections_service.dart';
 import 'package:numer_app/features/connections/screens/add_person_sheet.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class PersonDetailsScreen extends StatefulWidget {
   final String personId;
@@ -615,30 +616,16 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
   }
 
   Future<void> _confirmDeletePerson(BuildContext context, Person person) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteContactTitle),
-        content: Text(
-          AppLocalizations.of(context)!.deleteContactMessage(person.name),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: Text(AppLocalizations.of(context)!.delete),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showNumerConfirm(
+      context,
+      title: l10n.deleteContactTitle,
+      body: l10n.deleteContactMessage(person.name),
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
 
-    if (confirmed == true && context.mounted) {
+    if (confirmed && context.mounted) {
       final auth = context.read<AuthController>();
       final uid = auth.currentUser?.uid;
       if (uid == null) return;

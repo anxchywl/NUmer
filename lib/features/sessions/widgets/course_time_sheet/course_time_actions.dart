@@ -267,26 +267,16 @@ mixin _CourseTimeActions on _CourseTimeMenuBase {
     final appState = context.read<AppState>();
     final navigator = Navigator.of(context);
 
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteCourseTitle),
-        content: Text(AppLocalizations.of(context)!.deleteCourseMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton.icon(
-            onPressed: () => Navigator.pop(dialogCtx, true),
-            icon: const Icon(Icons.delete),
-            label: Text(AppLocalizations.of(context)!.delete),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final ok = await showNumerConfirm(
+      context,
+      title: l10n.deleteCourseTitle,
+      body: l10n.deleteCourseMessage,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
 
-    if (ok == true) {
+    if (ok) {
       await appState.removeCourse(widget.course.id);
 
       navigator.pop();

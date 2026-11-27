@@ -10,6 +10,7 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/features/habits/widgets/habit_day_sheet.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/app/app_state.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class HabitsCalendarScreen extends StatefulWidget {
   const HabitsCalendarScreen({super.key});
@@ -275,11 +276,7 @@ class _HabitsCalendarScreenState extends State<HabitsCalendarScreen> {
                     children: [
                       _buildWeekdayHeader(theme, context),
                       const SizedBox(height: 12),
-                      const Expanded(
-                        child: Center(
-                          child: CircularProgressIndicator(strokeWidth: 3),
-                        ),
-                      ),
+                      const Expanded(child: NumerSkeleton()),
                     ],
                   );
                 }

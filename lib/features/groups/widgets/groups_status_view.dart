@@ -6,12 +6,10 @@ import 'package:numer_app/l10n/app_localizations.dart';
 
 // keeps the way into settings while memberships are loading or failed
 class GroupsStatusView extends StatelessWidget {
-  const GroupsStatusView({super.key, required Widget this.child})
-    : error = null;
+  const GroupsStatusView.loading({super.key}) : error = null;
 
-  const GroupsStatusView.error(Object this.error, {super.key}) : child = null;
+  const GroupsStatusView.error(Object this.error, {super.key});
 
-  final Widget? child;
   final Object? error;
 
   @override
@@ -20,12 +18,13 @@ class GroupsStatusView extends StatelessWidget {
     return CustomScrollView(
       slivers: [
         ShellHeader(title: Text(l10n.groups, style: context.text.screenTitle)),
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(
-            child: child ?? Text(l10n.errorLoadingMemberships('$error')),
+        if (error == null)
+          const SliverToBoxAdapter(child: NumerSkeleton())
+        else
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(child: Text(l10n.errorLoadingMemberships('$error'))),
           ),
-        ),
       ],
     );
   }

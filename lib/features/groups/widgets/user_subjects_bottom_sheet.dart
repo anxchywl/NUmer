@@ -10,6 +10,7 @@ import 'package:numer_app/features/groups/data/group_service.dart';
 import 'package:numer_app/features/groups/data/public_profile_source.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class UserSubjectsBottomSheet extends StatefulWidget {
   final String groupId;
@@ -294,9 +295,8 @@ class _UserSubjectsBottomSheetState extends State<UserSubjectsBottomSheet> {
 
                     if (!snapshot.hasData &&
                         snapshot.connectionState == ConnectionState.waiting) {
-                      return const Padding(
-                        padding: EdgeInsets.all(48.0),
-                        child: Center(child: CircularProgressIndicator()),
+                      return const SingleChildScrollView(
+                        child: NumerSkeleton(),
                       );
                     }
 

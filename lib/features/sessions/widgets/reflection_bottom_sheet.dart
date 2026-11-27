@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class ReflectionBottomSheet extends StatefulWidget {
   final String sessionId;
@@ -112,13 +113,11 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
               const SizedBox(width: 8),
               FilledButton(
                 onPressed: _isSaving ? null : _save,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(AppLocalizations.of(context)!.save),
+                child: NumerButtonChild(
+                  label: AppLocalizations.of(context)!.save,
+                  loading: _isSaving,
+                  loadingHint: AppLocalizations.of(context)!.loadingHint,
+                ),
               ),
             ],
           ),

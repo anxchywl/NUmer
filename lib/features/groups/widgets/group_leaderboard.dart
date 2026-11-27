@@ -197,7 +197,7 @@ class _GroupLeaderboardState extends State<GroupLeaderboard> {
 
             if (snapshot.connectionState == ConnectionState.waiting &&
                 stats == null) {
-              return const Center(child: CircularProgressIndicator());
+              return const NumerSkeleton();
             }
 
             final child = (stats == null || stats.members.isEmpty)

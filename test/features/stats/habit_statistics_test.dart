@@ -63,48 +63,72 @@ Future<void> _loadRoboto() {
 void main() {
   setUpAll(_loadRoboto);
 
+  Future<PageController> pumpStatistics(
+    WidgetTester tester, {
+    required double scale,
+    required Map<String, HabitStatsResult>? stats,
+  }) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.textScaleFactorTestValue = scale;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    final controller = PageController();
+    addTearDown(controller.dispose);
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<FirebaseAuth?>.value(value: _FakeFirebaseAuth()),
+          Provider<HabitService>.value(value: _FakeHabits()),
+        ],
+        child: MaterialApp(
+          theme: NumerTheme.build(
+            seed: Colors.indigo,
+            brightness: Brightness.light,
+          ),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('kk'),
+          home: Scaffold(
+            body: HabitStatistics(
+              statsByHabit: stats,
+              loading: false,
+              pageController: controller,
+              reportMonth: DateTime(2026, 5),
+              onLoadStats: (_) {},
+              onHabitsShown: (_) {},
+              onHabitSelected: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    return controller;
+  }
+
   for (final scale in [1.0, 1.15, 1.3]) {
     testWidgets('the habit card fits Kazakh labels at scale $scale', (
       tester,
     ) async {
-      tester.view.physicalSize = const Size(360, 800);
-      tester.view.devicePixelRatio = 1;
-      tester.platformDispatcher.textScaleFactorTestValue = scale;
-      addTearDown(tester.view.reset);
-      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
-      final controller = PageController();
-      addTearDown(controller.dispose);
-
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            Provider<FirebaseAuth?>.value(value: _FakeFirebaseAuth()),
-            Provider<HabitService>.value(value: _FakeHabits()),
-          ],
-          child: MaterialApp(
-            theme: NumerTheme.build(
-              seed: Colors.indigo,
-              brightness: Brightness.light,
-            ),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: const Locale('kk'),
-            home: Scaffold(
-              body: HabitStatistics(
-                statsByHabit: const {'h1': HabitStatsResult(10, 7, 3, 70)},
-                loading: false,
-                pageController: controller,
-                reportMonth: DateTime(2026, 5),
-                onLoadStats: (_) {},
-                onHabitsShown: (_) {},
-                onHabitSelected: (_) {},
-              ),
-            ),
-          ),
-        ),
+      await pumpStatistics(
+        tester,
+        scale: scale,
+        stats: const {'h1': HabitStatsResult(10, 7, 3, 70)},
       );
       await tester.pumpAndSettle();
 
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('the habit card fits its skeleton at scale $scale', (
+      tester,
+    ) async {
+      await pumpStatistics(tester, scale: scale, stats: null);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byType(NumerSkeleton), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   }

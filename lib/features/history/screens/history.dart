@@ -5,6 +5,7 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class HistoryScreen extends StatefulWidget {
   final DateTime? startLocal;
@@ -121,24 +122,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _delete(String id, {required _SessionRow row}) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteSession),
-        content: Text(AppLocalizations.of(context)!.deleteSessionMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(AppLocalizations.of(context)!.delete),
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showNumerConfirm(
+      context,
+      title: l10n.deleteSession,
+      body: l10n.deleteSessionMessage,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    if (ok != true) return;
+    if (!confirmed) return;
     if (!mounted) return;
 
     final appState = context.read<AppState>();
@@ -250,7 +242,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               future: _future,
               builder: (context, snap) {
                 if (snap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const NumerSkeleton();
                 }
                 final sessions = snap.data ?? const <_SessionRow>[];
                 if (sessions.isEmpty) {

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../course.dart';
 import '../course_format.dart';
@@ -52,26 +53,15 @@ class CourseListSliver extends StatelessWidget {
     );
   }
 
-  Future<bool> _confirmDelete(BuildContext context) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteCourseTitle),
-        content: Text(AppLocalizations.of(context)!.deleteCourseMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          FilledButton.icon(
-            onPressed: () => Navigator.pop(context, true),
-            icon: const Icon(Icons.delete),
-            label: Text(AppLocalizations.of(context)!.delete),
-          ),
-        ],
-      ),
+  Future<bool> _confirmDelete(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return showNumerConfirm(
+      context,
+      title: l10n.deleteCourseTitle,
+      body: l10n.deleteCourseMessage,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
-    return ok == true;
   }
 
   Widget _tile(BuildContext context, AppState state, Course c) {

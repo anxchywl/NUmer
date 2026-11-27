@@ -11,6 +11,7 @@ import 'package:numer_app/features/connections/screens/person_details_screen.dar
 import 'package:numer_app/features/connections/screens/groups_management_sheet.dart';
 import 'package:numer_app/features/connections/screens/people_calendar_screen.dart';
 import 'package:numer_app/features/connections/widgets/person_card.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class ConnectionsScreen extends StatefulWidget {
   const ConnectionsScreen({super.key});
@@ -63,8 +64,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final auth = context.watch<AuthController>();
-    final currentUser = auth.currentUser;
+    final currentUser = context.watch<AuthController>().currentUser;
 
     if (currentUser == null) {
       return Scaffold(
@@ -102,7 +102,7 @@ class _ConnectionsScreenState extends State<ConnectionsScreen> {
       body: Consumer<ConnectionsService>(
         builder: (context, service, _) {
           if (!service.isLoaded) {
-            return const Center(child: CircularProgressIndicator());
+            return const SafeArea(child: NumerSkeleton());
           }
 
           final filteredPeople = service.filterPeople(

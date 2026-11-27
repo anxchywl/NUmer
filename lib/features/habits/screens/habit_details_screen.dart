@@ -12,6 +12,7 @@ import 'package:numer_app/features/habits/widgets/habit_time_picker.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/habits/screens/swipe_selector.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class HabitDetailsScreen extends StatefulWidget {
   final Habit habit;
@@ -247,26 +248,15 @@ class _HabitDetailsScreenState extends State<HabitDetailsScreen>
 
   Future<void> _deleteHabit() async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.habitDeleteTitle),
-        content: Text(l10n.habitDeleteMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final confirmed = await showNumerConfirm(
+      context,
+      title: l10n.habitDeleteTitle,
+      body: l10n.habitDeleteMessage,
+      confirmLabel: l10n.delete,
+      destructive: true,
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed && mounted) {
       final uid = context.read<AuthController>().currentUser?.uid;
       if (uid != null) {
         await context.read<HabitService>().deleteHabit(uid, widget.habit.id);

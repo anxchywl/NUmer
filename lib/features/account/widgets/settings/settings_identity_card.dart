@@ -5,6 +5,7 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../universal_avatar.dart';
 import 'settings_heading.dart';
@@ -86,21 +87,19 @@ class SettingsIdentityCard extends StatelessWidget {
   Widget _syncButton(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final syncing = context.watch<SyncService>().status == SyncStatus.syncing;
-    return FilledButton.icon(
+    return FilledButton(
       onPressed: syncing
           ? null
           : () => context.read<SyncService>().syncNow(full: true),
       style: _compactStyle,
-      icon: syncing
-          ? const SizedBox(
-              height: 16,
-              width: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.sync, size: 18),
-      label: FittedBox(
+      child: FittedBox(
         fit: BoxFit.scaleDown,
-        child: Text(syncing ? l10n.syncing : l10n.syncNow),
+        child: NumerButtonChild(
+          label: l10n.syncNow,
+          icon: const Icon(Icons.sync, size: 18),
+          loading: syncing,
+          loadingHint: l10n.syncing,
+        ),
       ),
     );
   }

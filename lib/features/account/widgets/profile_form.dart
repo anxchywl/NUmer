@@ -7,6 +7,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/account/models/profile_avatar.dart';
 import 'package:numer_app/shared/widgets/color_picker_button.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 class ProfileFormData {
   const ProfileFormData({
@@ -462,14 +463,6 @@ class _ProfileFormState extends State<ProfileForm> {
   }
 
   Widget _buildButtonChild() {
-    if (_saving) {
-      return const SizedBox(
-        key: ValueKey('saving'),
-        height: 20,
-        width: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      );
-    }
     if (_saved) {
       return Row(
         key: const ValueKey('saved'),
@@ -481,7 +474,12 @@ class _ProfileFormState extends State<ProfileForm> {
         ],
       );
     }
-    return Text(widget.primaryButtonLabel, key: const ValueKey('label'));
+    return NumerButtonChild(
+      key: const ValueKey('label'),
+      label: widget.primaryButtonLabel,
+      loading: _saving,
+      loadingHint: AppLocalizations.of(context)!.loadingHint,
+    );
   }
 }
 

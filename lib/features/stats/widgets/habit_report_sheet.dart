@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import 'habit_report_selection_view.dart';
 import 'habit_report_session.dart';
@@ -155,34 +156,15 @@ Widget _actionButton(
       padding: const EdgeInsets.symmetric(vertical: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (session.isExporting) ...[
-          if (session.countdown > 0)
-            const Icon(Icons.close, color: Colors.white)
-          else
-            const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: Colors.white,
-              ),
-            ),
-          const SizedBox(width: 8),
-        ] else if (!session.isSuccess) ...[
-          const Icon(Icons.download),
-          const SizedBox(width: 8),
-        ],
-        Text(
-          session.isExporting
-              ? (session.countdown > 0 ? l10n.cancel : l10n.exporting)
-              : (session.isSuccess
-                    ? l10n.done
-                    : l10n.habitReportDownloadAction),
-        ),
-      ],
+    child: NumerButtonChild(
+      label: session.isExporting
+          ? (session.countdown > 0 ? l10n.cancel : l10n.exporting)
+          : (session.isSuccess ? l10n.done : l10n.habitReportDownloadAction),
+      icon: session.isExporting && session.countdown > 0
+          ? const Icon(Icons.close)
+          : (session.isSuccess ? null : const Icon(Icons.download)),
+      loading: session.isExporting && session.countdown == 0,
+      loadingHint: l10n.loadingHint,
     ),
   );
 }

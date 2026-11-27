@@ -110,7 +110,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
           if (membershipSnap.connectionState == ConnectionState.waiting &&
               !membershipSnap.hasData) {
-            return const GroupsStatusView(child: CircularProgressIndicator());
+            return const GroupsStatusView.loading();
           }
 
           final memberships = membershipSnap.data ?? const <GroupMembership>[];
@@ -408,13 +408,11 @@ class _GroupCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   FilledButton(
                     onPressed: isJoining ? null : onJoin,
-                    child: isJoining
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(AppLocalizations.of(context)!.joinGroup),
+                    child: NumerButtonChild(
+                      label: AppLocalizations.of(context)!.joinGroup,
+                      loading: isJoining,
+                      loadingHint: AppLocalizations.of(context)!.loadingHint,
+                    ),
                   ),
                 ],
               ],

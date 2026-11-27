@@ -7,6 +7,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/history/data/export_service.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -277,32 +278,17 @@ class _ExportSessionSheetState extends State<ExportSessionSheet> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (_isExporting) ...[
-                        if (_countdown > 0)
-                          const Icon(Icons.close, color: Colors.white)
-                        else
-                          const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          ),
-                        const SizedBox(width: 8),
-                      ] else if (!_isSuccess) ...[
-                        const Icon(Icons.download_rounded),
-                        const SizedBox(width: 8),
-                      ],
-                      Text(
-                        _isExporting
-                            ? (_countdown > 0 ? l10n.cancel : l10n.exporting)
-                            : (_isSuccess ? l10n.done : l10n.export),
-                      ),
-                    ],
+                  child: NumerButtonChild(
+                    label: _isExporting
+                        ? (_countdown > 0 ? l10n.cancel : l10n.exporting)
+                        : (_isSuccess ? l10n.done : l10n.export),
+                    icon: _isExporting && _countdown > 0
+                        ? const Icon(Icons.close)
+                        : (_isSuccess
+                              ? null
+                              : const Icon(Icons.download_rounded)),
+                    loading: _isExporting && _countdown == 0,
+                    loadingHint: l10n.loadingHint,
                   ),
                 ),
               ),
