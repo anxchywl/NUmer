@@ -188,10 +188,6 @@ shadow	lib/features/home/home_screen.dart	2
 color_literal	lib/features/home/home_screen.dart	6
 color_literal	lib/features/home/streak_title.dart	2
 weight	lib/features/home/streak_title.dart	1
-color_literal	lib/features/sessions/screens/alarms.dart	1
-button	lib/features/sessions/screens/alarms.dart	2
-text_literal	lib/features/sessions/screens/timer.dart	4
-button	lib/features/sessions/screens/timer.dart	1
 alert	lib/features/sessions/widgets/course_time_sheet/course_time_actions.dart	2
 color_literal	lib/features/sessions/widgets/course_time_sheet/course_time_header.dart	7
 text_literal	lib/features/sessions/widgets/course_time_sheet/course_time_tab_bar.dart	2

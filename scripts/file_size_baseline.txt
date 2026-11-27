@@ -1,4 +1,4 @@
-2777 lib/app/app_state.dart
+2743 lib/app/app_state.dart
 922 lib/core/data/entities.dart
 1508 lib/core/data/storage.dart
 1416 lib/core/data/sync_service.dart

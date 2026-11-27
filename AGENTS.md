@@ -87,7 +87,7 @@ features/<name>/
 files. Small features (`ai_analysis`, `courses`) stay flat.
 
 Current features: `auth`, `account`, `habits`, `groups`, `courses`,
-`sessions` (timer/alarms), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
+`sessions` (timer), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
 only), `home`, `study`, `campus`, and
 `connections` (built but intentionally hidden — see the marker in `lib/app/shell/shell_tabs.dart`).
 
@@ -132,7 +132,7 @@ code does; names and structure do that.
 
 ### Key locations
 
-- **Global App State**: [lib/app/app_state.dart](file:///Users/anx/numer_app/lib/app/app_state.dart) — central `ChangeNotifier` (sessions, settings, timers, alarms).
+- **Global App State**: [lib/app/app_state.dart](file:///Users/anx/numer_app/lib/app/app_state.dart) — central `ChangeNotifier` (sessions, settings, timers).
 - **Local Storage Interface**: [lib/core/data/storage.dart](file:///Users/anx/numer_app/lib/core/data/storage.dart) — wraps Hive boxes; read/write local models here.
 - **Synchronization Engine**: [lib/core/data/sync_service.dart](file:///Users/anx/numer_app/lib/core/data/sync_service.dart) — connectivity, full syncs, local-remote resolution.
 - **A feature** (e.g. habits): everything lives under [lib/features/habits/](file:///Users/anx/numer_app/lib/features/habits/) — models, `data/habit_service.dart`, screens, widgets.

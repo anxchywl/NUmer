@@ -32,9 +32,6 @@ Three timer modes — count-up **stopwatch**, count-down **timer**, and **Pomodo
 short/long breaks with break pings). Sessions auto-save. A running session shows a live
 iOS Live Activity / lock-screen recording notification with elapsed time.
 
-### Alarms — `sessions`
-Local scheduled alarms (one-off or daily-repeating).
-
 ### Habit tracker — `habits`
 Custom habits with frequency rules (daily, weekly, specific days), swipe-to-complete
 interactions, categories, archiving, an Eisenhower prioritization view, and
@@ -74,7 +71,7 @@ The composed landing surface tying the above together.
 - **Offline-first:** the app works fully without a connection; study groups are the only
   online-only area.
 - **Localized:** every user-facing string is available in English, Russian, and Kazakh.
-- **Notifications:** local reminders/alarms, recording notifications, and FCM push nudges.
+- **Notifications:** local reminders, recording notifications, and FCM push nudges.
 - **Update required:** a build older than the supported minimum shows only a screen that
   links to its store page.
 

@@ -6,6 +6,7 @@ import 'package:numer_app/features/sessions/models/alarm_item.dart';
 import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/notifications/notifications.dart';
+import 'package:numer_app/core/notifications/stored_alarms.dart';
 import 'package:numer_app/core/notifications/recording_notification_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/features/habits/data/habit_service.dart';
@@ -94,7 +95,6 @@ class AppState extends ChangeNotifier {
   bool get hasCompletedOnboarding => onboardingCompleted || profileComplete;
   Uint8List? profileAvatarImage;
   List<Course> courses = [];
-  List<AlarmItem> alarms = [];
   Map<String, int> courseMinutes = {};
   int _streakCount = 0;
   int get streakCount => _streakCount;
@@ -422,7 +422,11 @@ class AppState extends ChangeNotifier {
     profileAvatarImage = results[6] as Uint8List?;
     _profilePromptCompleted = results[7] as bool;
     courses = results[8] as List<Course>;
-    alarms = results[9] as List<AlarmItem>;
+    await cancelStoredAlarms(
+      (results[9] as List<AlarmItem>).map((a) => a.id),
+      cancel: Notifs.cancel,
+      clear: () => Storage.saveAlarms(const []),
+    );
     courseMinutes = results[10] as Map<String, int>;
     _courseGoalHours = results[11] as Map<String, double>;
     onboardingCompleted = (results[21] as bool?) ?? false;
@@ -1107,43 +1111,6 @@ class AppState extends ChangeNotifier {
     courseMinutes[id] = (courseMinutes[id] ?? 0) + m;
     await Storage.saveCourseMinutes(courseMinutes);
     notifyListeners();
-  }
-
-  Future<void> addAlarm(AlarmItem a) async {
-    alarms = [...alarms, a];
-    await Storage.saveAlarms(alarms);
-    if (a.repeatsDaily) {
-      await Notifs.scheduleDaily(
-        id: a.id,
-        title: a.title,
-        body: 'Reminder',
-        timeLocal: a.time,
-      );
-    } else {
-      await Notifs.scheduleOnce(
-        id: a.id,
-        title: a.title,
-        body: 'Reminder',
-        whenLocal: a.time,
-      );
-    }
-    notifyListeners();
-  }
-
-  Future<void> removeAlarm(int id) async {
-    alarms = alarms.where((a) => a.id != id).toList();
-    await Storage.saveAlarms(alarms);
-    await Notifs.cancel(id);
-    notifyListeners();
-  }
-
-  int nextAlarmId() {
-    final r = Random();
-    int id;
-    do {
-      id = r.nextInt(1 << 31);
-    } while (alarms.any((a) => a.id == id));
-    return id;
   }
 
   void _updateStreak() {
@@ -2448,7 +2415,6 @@ class AppState extends ChangeNotifier {
     _profilePromptCompleted = false;
     _courseGoalHours = {};
     courses = [];
-    alarms = [];
     courseMinutes = {};
     _todayByCourseSeconds = {};
     _todayKey = _dateKey(DateTime.now());
