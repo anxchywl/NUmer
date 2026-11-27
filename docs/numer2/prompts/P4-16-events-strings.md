@@ -28,7 +28,8 @@ ends.
   138 distinct keys; some run where no `BuildContext` exists (`api_client.dart:117-121`).
 - Because of those context-free uses, the generated class is reached through a static
   `EventsL10n.current`, which `EventsStringsScope` sets from the resolved locale on every
-  build (D-42). Widgets may also use `EventsStrings.of(context)`.
+  build (D-42). All code reads `EventsL10n.current`, never `EventsStrings.of(context)`, so a
+  route pushed on NUmer's root navigator needs no scope of its own.
 - About 45 English literals sit outside the map (for example `app.dart:169`, `:214`,
   `:323`, `:370-371`, `:383`, `:401`, `event_form_validation.dart:72-120`). Two of them name
   the old host "Jas Wallet" (`app.dart:214`, `:371`).
