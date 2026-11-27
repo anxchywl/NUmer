@@ -10,11 +10,24 @@ your task:
 
 ---
 
+## Sources of truth
+
+Each subject has one owner. Change it there and link to it from anywhere else.
+
+| Doc | Owns |
+|-----|------|
+| `AGENTS.md` | rules for contributors, the repository layout, known debt |
+| [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md) | commands, environments, the data model, functions, operations |
+| [docs/PRODUCT.md](file:///Users/anx/numer_app/docs/PRODUCT.md) | what the app does |
+| [README.md](file:///Users/anx/numer_app/README.md) | the introduction and links |
+
+---
+
 ## Repository Layout (read this first)
 
-NUmer is a Flutter app plus a small Python library for the module backends. The Dart code
-under `lib/` is organized **by feature, not by type**, so every file has one obvious home
-and a domain can be understood by opening one folder.
+NUmer is a Flutter app with Firebase Cloud Functions, host scripts and a small Python library
+for the module backends. The Dart code under `lib/` is organized **by feature, not by type**,
+so every file has one obvious home and a domain can be understood by opening one folder.
 
 ```
 lib/
@@ -28,6 +41,9 @@ packages/
   numer_ui/              # design tokens and components shared with modules
 backend/
   numer_identity/        # python Firebase ID-token verifier for module backends
+functions/               # Cloud Functions (TypeScript)
+firestore/               # security rules and indexes
+infra/                   # host hardening, backup restore test and monitor scripts
 ```
 
 - **`app/`** — composition root: `bootstrap.dart` (startup and providers), `numer_app.dart`
@@ -39,7 +55,7 @@ backend/
   minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
   `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
   contract), `notifications/`, `observability/` (crash reporting), `firebase_options.dart`,
-  `startup_metrics.dart`. Core never imports a feature.
+  `startup_metrics.dart`.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.
 - **`packages/numer_ui/`** — the design language of
@@ -73,13 +89,29 @@ Current features: `auth`, `account`, `habits`, `groups`, `courses`,
 only), `home`, and
 `connections` (built but intentionally hidden — see the marker in `lib/app/shell/shell_tabs.dart`).
 
-**Dependency rule (one direction):** `features → core → shared`. `core`/`shared` must never
-import a feature; a feature imports another feature only via its barrel
-(`features/<other>/<other>.dart`), never its internal files.
+**Dependency rule (one direction):** `features → core → shared`, enforced by
+`test/boundaries/`:
+
+- `shared` imports nothing from `core`, `features` or `app`
+- `core` imports nothing from `features` or `app`
+- `app` and `main.dart` import a feature only via its barrel (`features/<name>/<name>.dart`)
+- a feature imports another feature only via its barrel, and from `app` only `app_state.dart`
+
+Existing violations are listed in `test/boundaries/allowlist.txt`. A new one fails the test,
+and so does a listed line that no longer occurs.
 
 **Conventions:** absolute `package:numer_app/...` imports across features, relative within a
 feature; filenames are greppable by suffix (`*_screen.dart`, `*_service.dart`, `*_sheet.dart`);
 tests mirror the tree under `test/features/<name>/`, with app-level smoke tests in `test/smoke/`.
+
+### Cloud Functions layout (`functions/src/`)
+
+- `index.ts` only re-exports, one folder per area
+- `auth/` email codes, `account/` deletion and account events, `roles/` module roles
+- `groups/` callables, cleanup and `groupIndex`; `profiles/` `publicProfiles`
+- `aggregates/` study statistics; `nudges/` push nudges
+- `feed/` announcements and the composed feed; `mail/` templates, queue and senders
+- `shared/` admin handle, validation, periods, App Check and safe user writes
 
 ### Comment style
 
@@ -143,9 +175,15 @@ When adding fields to models (e.g. `Course`, `Habit`, `Person`):
 - Ensure compatibilities with existing schemas. Hive database schema modifications might require incremental type adapter IDs or migration logic.
 
 ### 4. Firestore Security Rules Compliance
-Before making changes that involve writing or reading collections:
-- Check if your collections are protected. In `firestore/firestore.rules`, user data (like `habits`, `connections`, `courses`, `sessions`) is owner-read-write. The exceptions: `/groups` follow group roles; any signed-in user may get (not list) a `/users` profile; `sessions`, `courses`, `aggregates` and `/publicProfiles` are readable by co-members, decided by the server-written `/groupIndex`. Server-written collections (`groupIndex`, `publicProfiles`, `mailQueue`, `roleAudit` and the rest listed in [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md)) are denied to client writes; a new one needs its own deny block.
-- If you add a subcollection under `/users/{userId}/`, you **must** update `firestore.rules` to allow owner access.
+[firestore/firestore.rules](file:///Users/anx/numer_app/firestore/firestore.rules) is the
+source of truth for access; read it before writing or reading a collection.
+- Denied to every client: `mailQueue`, `nudgeLimits`, `joinAttempts`, `authCodes`,
+  `authRateLimits`, `authAudit`, `deletedUsers`, `accountEvents`, `announcements`,
+  `feedState`, `roleAudit` and `users/{uid}/aggState`.
+- Written only by the server, readable by some clients: `groupIndex`, `publicProfiles`,
+  `config`, `feed`.
+- A new collection or subcollection, including one under `/users/{userId}/`, needs a rule
+  and a rules test in `functions/test/rules/`.
 
 ### 5. Multi-lingual Support
 NUmer is fully localized into English (`en`), Russian (`ru`), and Kazakh (`kk`).
@@ -173,13 +211,38 @@ The script does not run device builds, emulator tests or deploys.
 - **Coverage**: NUmer: the floor is the baseline measured in P0-02, rounded down, and may only rise. Module repos keep their own floors
 - **Docs**: each doc owns its subject once; a change that makes `AGENTS.md`, `README.md` or `docs/*` wrong fixes them in the same commit
 
+## Known debt
+
+- **Layer violations**: 21 allow-listed lines in `test/boundaries/allowlist.txt`.
+- **Files above 1000 lines**: `lib/app/app_state.dart`, `lib/core/data/storage.dart`,
+  `lib/core/data/sync_service.dart`, `lib/features/groups/data/group_service.dart`,
+  `lib/features/account/screens/account.dart`, `lib/features/habits/data/habit_service.dart`,
+  `lib/features/habits/screens/habit_details_screen.dart`,
+  `lib/features/history/screens/history.dart`,
+  `lib/features/groups/widgets/group_leaderboard.dart`.
+- **`lib/app/app_state.dart` is frozen**: no new state goes into it.
+- **Skipped test**: `test/features/account/accent_color_picker_test.dart` is skipped.
+
+---
+
 ## Agent Gotchas
 
 - **Hive adapters are hand-written** — this project does **not** run `build_runner`
   (`hive_generator`/`build_runner` are intentionally not dependencies). If you add a Hive
   type, write its `TypeAdapter` by hand (see the `Local*Adapter` classes in
   `core/data/entities.dart`) with a unique `typeId`; changing an existing `typeId` or field
-  order breaks persisted data.
+  order breaks persisted data. The next free `typeId` is 18:
+
+  | typeId | Class |
+  |--------|-------|
+  | 10 | `LocalUserDoc` |
+  | 11 | `LocalCourse` |
+  | 12 | `LocalSession` |
+  | 13 | `LocalGoal` |
+  | 14 | `SyncStateEntry` |
+  | 15 | `LocalConflict` |
+  | 16 | `LocalHabit` |
+  | 17 | `LocalHabitHistory` |
 - **Setup, emulator, secrets, deploy** are all in
   [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md) — don't
   reinvent commands here.

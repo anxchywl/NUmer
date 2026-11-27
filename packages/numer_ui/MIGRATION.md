@@ -14,7 +14,8 @@ the `Numer*` names.
    name.
 3. Replace `AppTextStyles.<name>` with `AppTextStyles.of(context).<name>`.
 4. Apply "Behaviour that changed" and replace every removed name and parameter below.
-5. Run the check; it must print nothing but `AppColors.of` and `AppTextStyles.of` calls:
+5. Move every sheet and dialog with a text field to "Focus mode".
+6. Run the check; it must print nothing but `AppColors.of` and `AppTextStyles.of` calls:
 
 ```bash
 grep -rn "app_ui\|AppColors\.[a-z]\|AppTextStyles\.[a-z]\|[l]ucide\|google[_]fonts\|flutter[_]svg\|[G]eist" --include='*.dart' --include=pubspec.yaml .
@@ -24,7 +25,8 @@ grep -rn "app_ui\|AppColors\.[a-z]\|AppTextStyles\.[a-z]\|[l]ucide\|google[_]fon
 
 These compile unchanged or nearly so, and behave differently:
 
-- **Loading buttons** show only a spinner. A button that passes `isLoading` also passes
+- **Loading buttons** show only a centred spinner; the label and icon stay in the layout,
+  invisible, so the button keeps its size. A button that passes `isLoading` also passes
   `loadingHint`, the localized word a screen reader hears; a debug assert requires it.
 - **Button width**: buttons were full width by default. Now they take their label's width;
   pass `width: double.infinity` where a full-width button is meant.
@@ -47,6 +49,57 @@ These compile unchanged or nearly so, and behave differently:
   still, and a test that expects distinct frames has to go.
 - **Brand icons** (`telegram`, `whatsapp`) are generic glyphs: show the brand name beside
   them.
+
+## Focus mode
+
+Every sheet or dialog with a text field uses focus mode (`DESIGN.md` 5.7): while the
+keyboard is up only the active field stays, and the actions become one "Done" button. The
+compat names do not provide it, and `AppBottomSheet.show` cannot fold its own title, so such
+a sheet moves to the `Numer*` pieces. A module's own `focus_mode.dart` is deleted.
+
+1. Open the sheet with `showNumerFormSheet<T>(context, builder: ...)`. It uses the root
+   navigator, so a sheet that read an inherited scope below a nested navigator passes that
+   scope into the builder.
+2. The form's `State` creates a `NumerSheetFocusMode` in `initState` and disposes it in
+   `dispose`.
+3. Build a `NumerSheetBody` with `title`, `focusMode`, the submit button as `primaryAction`
+   and a localized `doneLabel`. A form with one field leaves `doneLabel` null, so its submit
+   button stays while typing. The body already scrolls, pads the sides and follows the
+   keyboard, so the form drops its own.
+4. In `NumerSheetBody.builder`, give each field `focusNode: focus.nodeFor(id)`, wrap it with
+   its label and helper text in `NumerFocusFold(hidden: focus.hides(id))`, put
+   `NumerFocusGap(hidden: focus.hidesChrome)` between fields, and fold everything else with
+   `NumerFocusFold(hidden: focus.hidesChrome)`.
+5. "Next" on the keyboard calls `focus.moveTo(nextId)`; the last field calls
+   `focus.release()`.
+
+A sheet that cannot be a `NumerSheetBody`, such as a stepped flow with its own header, keeps
+its body inside `showNumerFormSheet`. It calls
+`focus.setKeyboardVisible(MediaQuery.viewInsetsOf(context).bottom > 0)` in `build`, rebuilds
+through `ListenableBuilder(listenable: focus, ...)` and places its actions in
+`NumerFocusActions(isTyping: focus.isTyping, doneLabel: ..., onDone: focus.release,
+actions: ...)`.
+
+| Module copy | `numer_ui` |
+|---|---|
+| `SheetFocusMode` | `NumerSheetFocusMode` |
+| `FocusFold`, `FocusGap` | `NumerFocusFold`, `NumerFocusGap` |
+| `FocusModeActions` | `NumerFocusActions` |
+| `focusModeDuration` | `NumerFocusFold.durationOf(context)` |
+| `FocusModeActions.donePadding` (Muto) | one `Padding` around `NumerFocusActions`, none inside `actions` |
+| `SheetFocusMode.typingIn` (Muto) | `isTyping`, `hides(id)` |
+
+Sheets with a text field on 2026-11-27:
+
+| Module | File | Today |
+|---|---|---|
+| Gradus | `course_form.dart`, `assignment_form.dart`, `semester_form.dart` | own `focus_mode.dart` |
+| Muto | `report/report_sheet.dart` | own `focus_mode.dart`, one field, `AppBottomSheet.show` |
+| Muto | `editor/listing_editor_sheet.dart` | own `focus_mode.dart`, stepped, own `showModalBottomSheet` on the nested navigator |
+| Events | `submit/submit_screen.dart` (`asSheet: true`, opened from `events_screen.dart` and `event_detail_screen.dart`) | no focus mode |
+| Events | `events/event_detail_screen.dart`, `_ModerationCommentSheet` | no focus mode |
+| Events | `events/events_screen.dart`, `_MultiSelectSheet` with `withSearch` | no focus mode |
+| Events | `event_manager/analytics_event_picker.dart`, `GlobalSearchBar` in `AppBottomSheet.show` | no focus mode |
 
 ## Removed parameters
 

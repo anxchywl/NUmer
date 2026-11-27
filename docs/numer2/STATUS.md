@@ -4,13 +4,13 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 37 done, 0 in progress, 48 to do (85 tasks). Staging deployed 2026-11-27.**
+**Total: 42 done, 1 in progress, 42 to do (85 tasks). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do
 
 Rule since 2026-11-27: source files stay under 400 lines (`AGENTS.md` "Size"); 33 older files may only shrink.
 
-## Phase 0: Foundation (15 of 16 done)
+## Phase 0: Foundation (16 of 16 done)
 
 Fix what is broken or risky in today's app before building on it. Ends in release 1.1.0.
 
@@ -31,9 +31,9 @@ Fix what is broken or risky in today's app before building on it. Ends in releas
 | ✅ | P0-13 Feature flags and min build | Modules can be switched on remotely; very old app versions can be asked to update |
 | ✅ | P0-14 Observability | Crash reporting and baselines for startup time and app size |
 | ✅ | P0-15 Staging project | A safe copy of the backend to test deploys before production |
-| ⏳ | P0-16 Docs after foundation | Update `AGENTS.md` and the infrastructure doc |
+| ✅ | P0-16 Docs after foundation | Update `AGENTS.md` and the infrastructure doc |
 
-## Phase 1: Sign-in rework (6 of 10 done)
+## Phase 1: Sign-in rework (7 of 10 done)
 
 Email verification and password reset by 6-digit code in a branded email. Ends in release 1.2.0.
 
@@ -44,7 +44,7 @@ Email verification and password reset by 6-digit code in a branded email. Ends i
 | ✅ | P1-03 Design tokens and code field | Shared colors, spacing and the 6-box code input (paste and autofill work) |
 | ✅ | P1-04 Verify email by code | New users type the code from the email instead of tapping a link |
 | ✅ | P1-05 Reset password by code | Forgot password: email, code, new password, all inside the app |
-| ⏳ | P1-06 Retire `email_index` | Remove the old, unsafe email lookup from the app |
+| ✅ | P1-06 Retire `email_index` | Remove the old, unsafe email lookup from the app |
 | ✅ | P1-07 Account deletion | Deleting an account removes everything it owns (App Store rule) |
 | ⏳ | P1-08 Rules stage 2 | Close the last exposure once most users run the new version |
 | ✅ | P1-09 App Check switch | App Check can be turned on per server function without a code change |
@@ -70,20 +70,20 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ⏳ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (5 of 18; all prompts written)
+## Phase 3: Superapp shell (8 of 18; all prompts written)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
 | | Task | In plain words |
 |---|---|---|
 | ✅ | P3-01 Theme and components | Shared buttons, rows, sheets built on the design tokens |
-| ⏳ | P3-02 Compatibility layer | Lets module code use the shared design without rewrites |
-| ⏳ | P3-03 Module registry | One list of modules; each loads only when opened |
+| ✅ | P3-02 Compatibility layer | Lets module code use the shared design without rewrites |
+| ✅ | P3-03 Module registry | One list of modules; each loads only when opened |
 | ✅ | P3-04 Split `home.dart` | Break up the 3,098-line home screen (no visible change) |
-| ⏳ | P3-05 New shell | The new tabs, avatar menu, Settings and About screens |
+| 🔄 | P3-05 New shell | The new tabs, avatar menu, Settings and About screens |
 | ⏳ | P3-06 Study tab | Courses with timer, statistics, history, GPA in one place |
 | ⏳ | P3-07 Home today | Home shows streak, running session, today, upcoming, news |
-| ⏳ | P3-08 Feed backend | Announcements plus events combined into one cheap feed document |
+| ✅ | P3-08 Feed backend | Announcements plus events combined into one cheap feed document |
 | ⏳ | P3-09 News on Home | The news list on Home and its own screen |
 | ⏳ | P3-10 Upcoming store | Bookings and reminders shown on Home without loading modules |
 | ⏳ | P3-11 Campus tab | The list of campus modules |

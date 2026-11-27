@@ -322,7 +322,9 @@ Do P2-13 first. Every NUmer module is served through that proxy.
 ## Phase 3: Shell
 
 ### E-1 Confirm the navigation (O-1). **Waits:** P3-05.
-### E-2 Support address and privacy URL for the About section. **Waits:** P3-05.
+### E-2 Support address and privacy URL for the About section. **Done** 2026-11-27
+Support `numer.app.team@gmail.com`; policy at https://anxchywl.github.io/NUmer/privacy/ (branch
+`gh-pages`, regenerated from `docs/PRIVACY_POLICY.md` when the policy changes, P6-06).
 ### E-3 Scheduler and first editor (P3-08)
 1. Deploying the scheduled function creates a Cloud Scheduler job. The plan uses three in
    total (feed, account-event retries, the deleted-user sweep), which is the number that is
