@@ -43,6 +43,7 @@ class _KeepAlivePageState extends State<_KeepAlivePage>
 class _ShellState extends State<AppShell> with ShellHooks {
   int _index = 0;
   late final PageController _pageController;
+  List<ShellTab> _tabs = const [];
 
   @override
   void initState() {
@@ -80,6 +81,11 @@ class _ShellState extends State<AppShell> with ShellHooks {
     });
   }
 
+  void _selectDestination(ShellDestination destination) {
+    final index = _tabs.indexWhere((tab) => tab.destination == destination);
+    if (index >= 0) _onTabSelected(index);
+  }
+
   // the campus tab can disappear while it is selected
   void _leaveRemovedTab(int tabCount) {
     if (_index < tabCount) return;
@@ -92,7 +98,11 @@ class _ShellState extends State<AppShell> with ShellHooks {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = buildShellTabs(context, registry: widget.registry);
+    final tabs = _tabs = buildShellTabs(
+      context,
+      registry: widget.registry,
+      onSelect: _selectDestination,
+    );
     _leaveRemovedTab(tabs.length);
     final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
     final tabPages = tabs

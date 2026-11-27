@@ -7,6 +7,9 @@ const double _oneLineHeight = 56;
 const double _twoLineHeight = 72;
 const double _chevronSize = 20;
 
+// a longer value wraps so the title keeps room
+const double _valueWidthShare = 0.4;
+
 class NumerRow extends StatelessWidget {
   const NumerRow({
     super.key,
@@ -68,7 +71,16 @@ class NumerRow extends StatelessWidget {
     final trailing = this.trailing;
     return [
       if (value != null)
-        Text(value, style: context.text.body.copyWith(color: muted)),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.sizeOf(context).width * _valueWidthShare,
+          ),
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: context.text.body.copyWith(color: muted),
+          ),
+        ),
       ?trailing,
       if (showChevron)
         Icon(Icons.chevron_right, size: _chevronSize, color: muted),

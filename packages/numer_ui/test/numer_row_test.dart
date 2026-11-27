@@ -40,6 +40,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('a long value wraps and leaves the title room', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      _app(
+        const NumerRow(title: 'Habits', value: 'twelve of twelve done today'),
+        scale: 1.3,
+      ),
+    );
+
+    final value = find.text('twelve of twelve done today');
+    expect(tester.getSize(value).width, lessThanOrEqualTo(128));
+    expect(tester.getSize(find.text('Habits')).width, greaterThan(100));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('pads 16 at the sides and 12 after the leading', (tester) async {
     await tester.pumpWidget(
       _app(

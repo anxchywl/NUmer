@@ -14,13 +14,17 @@ import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
 import 'package:numer_app/features/study/study.dart';
 
+enum ShellDestination { home, habits, study, groups, campus }
+
 class ShellTab {
+  final ShellDestination destination;
   final String label;
   final IconData icon;
   final IconData selectedIcon;
   final WidgetBuilder builder;
 
   const ShellTab({
+    required this.destination,
     required this.label,
     required this.icon,
     required this.selectedIcon,
@@ -30,6 +34,7 @@ class ShellTab {
 
 List<ShellTab> buildShellTabs(
   BuildContext context, {
+  required void Function(ShellDestination) onSelect,
   List<ModuleDescriptor> registry = moduleRegistry,
 }) {
   final l10n = AppLocalizations.of(context)!;
@@ -41,18 +46,24 @@ List<ShellTab> buildShellTabs(
   final campusModules = modulesIn(ModuleSection.campus);
   return <ShellTab>[
     ShellTab(
+      destination: ShellDestination.home,
       label: l10n.home,
       icon: Icons.home_outlined,
       selectedIcon: Icons.home,
-      builder: (_) => const HomeScreen(),
+      builder: (_) => HomeScreen(
+        onOpenStudy: () => onSelect(ShellDestination.study),
+        onOpenHabits: () => onSelect(ShellDestination.habits),
+      ),
     ),
     ShellTab(
+      destination: ShellDestination.habits,
       label: l10n.habitsNavLabel,
       icon: Icons.check_circle_outline,
       selectedIcon: Icons.check_circle,
       builder: (_) => const HabitsScreen(),
     ),
     ShellTab(
+      destination: ShellDestination.study,
       label: l10n.navStudy,
       icon: Icons.school_outlined,
       selectedIcon: Icons.school,
@@ -63,6 +74,7 @@ List<ShellTab> buildShellTabs(
     ),
     // connections is built but intentionally hidden, add its ShellTab here to enable it
     ShellTab(
+      destination: ShellDestination.groups,
       label: l10n.groups,
       icon: Icons.group_outlined,
       selectedIcon: Icons.group,
@@ -70,6 +82,7 @@ List<ShellTab> buildShellTabs(
     ),
     if (campusModules.isNotEmpty)
       ShellTab(
+        destination: ShellDestination.campus,
         label: l10n.navCampus,
         icon: Icons.apartment_outlined,
         selectedIcon: Icons.apartment,

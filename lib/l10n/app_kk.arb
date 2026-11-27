@@ -136,9 +136,6 @@
   "dayStatsTipLine1": "• Күнтізбе оқу белсенділігін көрсетеді. Күн неғұрлым жасыл болса, соғұрлым көп оқыдыңыз.",
   "dayStatsTipLine2": "• Сессия уақытын және жазбаларды Тарих бөлімінде өңдей аласыз.",
   "dayStatsTipLine3": "• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.",
-  "syncOffline": "Офлайн",
-  "syncSyncing": "Синхрондалып жатыр…",
-  "syncUpToDate": "Жаңартылған",
   "setGoals": "Мақсат қою",
   "daily": "Күндік",
   "weekly": "Апталық",
@@ -1124,5 +1121,65 @@
   "linkOpenFailed": "Сілтемені ашу мүмкін болмады.",
   "campusSearchHint": "Іздеу",
   "campusNoMatch": "Ештеңе табылмады.",
-  "campusClearSearch": "Тазалау"
+  "campusClearSearch": "Тазалау",
+  "homeOffline": "Байланыс жоқ. Өзгерістер құрылғыда сақталды.",
+  "homeSyncFailed": "Синхрондау мүмкін болмады. Өзгерістер құрылғыда сақталды.",
+  "homeGoalProgress": "Мақсат: {goal} ішінен {done}",
+  "@homeGoalProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsDoneSummary": "{total} ішінен {done} орындалды",
+  "@habitsDoneSummary": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeContinueCourse": "Жалғастыру: {course}",
+  "@homeContinueCourse": {
+    "placeholders": {
+      "course": {
+        "type": "String"
+      }
+    }
+  },
+  "homeStartSession": "Сеансты бастау",
+  "durationHoursMinutes": "{hours} сағ {minutes} мин",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{hours} сағ",
+  "@durationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{minutes} мин",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

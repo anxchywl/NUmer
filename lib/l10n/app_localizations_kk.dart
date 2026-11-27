@@ -374,15 +374,6 @@ class AppLocalizationsKk extends AppLocalizations {
       '• Кез келген курсты түртсеңіз, тарих экранында тек сол курстың сессиялары көрсетіледі.';
 
   @override
-  String get syncOffline => 'Офлайн';
-
-  @override
-  String get syncSyncing => 'Синхрондалып жатыр…';
-
-  @override
-  String get syncUpToDate => 'Жаңартылған';
-
-  @override
   String get setGoals => 'Мақсат қою';
 
   @override
@@ -2331,4 +2322,44 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get campusClearSearch => 'Тазалау';
+
+  @override
+  String get homeOffline => 'Байланыс жоқ. Өзгерістер құрылғыда сақталды.';
+
+  @override
+  String get homeSyncFailed =>
+      'Синхрондау мүмкін болмады. Өзгерістер құрылғыда сақталды.';
+
+  @override
+  String homeGoalProgress(String done, String goal) {
+    return 'Мақсат: $goal ішінен $done';
+  }
+
+  @override
+  String habitsDoneSummary(int done, int total) {
+    return '$total ішінен $done орындалды';
+  }
+
+  @override
+  String homeContinueCourse(String course) {
+    return 'Жалғастыру: $course';
+  }
+
+  @override
+  String get homeStartSession => 'Сеансты бастау';
+
+  @override
+  String durationHoursMinutes(int hours, int minutes) {
+    return '$hours сағ $minutes мин';
+  }
+
+  @override
+  String durationHours(int hours) {
+    return '$hours сағ';
+  }
+
+  @override
+  String durationMinutes(int minutes) {
+    return '$minutes мин';
+  }
 }

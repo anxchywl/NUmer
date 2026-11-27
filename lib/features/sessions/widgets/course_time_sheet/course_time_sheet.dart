@@ -9,6 +9,7 @@ import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 
+import '../../data/last_course_store.dart';
 import '../../models/active_session_info.dart';
 import '../../models/session_limits.dart';
 import 'course_time_footer.dart';

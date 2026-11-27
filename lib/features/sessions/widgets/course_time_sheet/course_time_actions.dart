@@ -96,8 +96,11 @@ mixin _CourseTimeActions on _CourseTimeMenuBase {
       _snack(AppLocalizations.of(context)!.maxTimeCapped, isError: true);
     }
 
+    final lastCourse = context.read<LastCourseStore>();
     await _savePlannedSecs(total);
-    state.startTimer(widget.course.id);
+    if (state.startTimer(widget.course.id)) {
+      unawaited(lastCourse.save(widget.course.id));
+    }
     setState(() {});
   }
 
@@ -156,7 +159,9 @@ mixin _CourseTimeActions on _CourseTimeMenuBase {
       return;
     }
 
-    state.startStopwatch(widget.course.id);
+    if (state.startStopwatch(widget.course.id)) {
+      unawaited(context.read<LastCourseStore>().save(widget.course.id));
+    }
     setState(() {});
   }
 
@@ -202,6 +207,7 @@ mixin _CourseTimeActions on _CourseTimeMenuBase {
       Navigator.pop(context);
       return;
     }
+    unawaited(context.read<LastCourseStore>().save(widget.course.id));
     setState(() {});
   }
 

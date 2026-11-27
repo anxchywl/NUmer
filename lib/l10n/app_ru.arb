@@ -136,9 +136,6 @@
   "dayStatsTipLine1": "• Календарь показывает вашу учебную активность. Чем зеленее день, тем больше вы учились.",
   "dayStatsTipLine2": "• Вы можете редактировать время сессии и заметки в Истории.",
   "dayStatsTipLine3": "• Вы можете нажать на любой курс, и экран истории покажет сессии только по этому курсу.",
-  "syncOffline": "Офлайн",
-  "syncSyncing": "Синхронизация…",
-  "syncUpToDate": "Обновлено",
   "setGoals": "Цели",
   "daily": "День",
   "weekly": "Неделя",
@@ -1002,5 +999,65 @@
   "linkOpenFailed": "Не удалось открыть ссылку.",
   "campusSearchHint": "Поиск",
   "campusNoMatch": "Ничего не найдено.",
-  "campusClearSearch": "Очистить"
+  "campusClearSearch": "Очистить",
+  "homeOffline": "Нет соединения. Изменения сохранены на устройстве.",
+  "homeSyncFailed": "Не удалось синхронизировать. Изменения сохранены на устройстве.",
+  "homeGoalProgress": "Цель: {done} из {goal}",
+  "@homeGoalProgress": {
+    "placeholders": {
+      "done": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "habitsDoneSummary": "{done} из {total} выполнено",
+  "@habitsDoneSummary": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "homeContinueCourse": "Продолжить: {course}",
+  "@homeContinueCourse": {
+    "placeholders": {
+      "course": {
+        "type": "String"
+      }
+    }
+  },
+  "homeStartSession": "Начать сеанс",
+  "durationHoursMinutes": "{hours} ч {minutes} мин",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{hours} ч",
+  "@durationHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "durationMinutes": "{minutes} мин",
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  }
 }

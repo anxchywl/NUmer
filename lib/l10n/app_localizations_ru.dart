@@ -376,15 +376,6 @@ class AppLocalizationsRu extends AppLocalizations {
       '• Вы можете нажать на любой курс, и экран истории покажет сессии только по этому курсу.';
 
   @override
-  String get syncOffline => 'Офлайн';
-
-  @override
-  String get syncSyncing => 'Синхронизация…';
-
-  @override
-  String get syncUpToDate => 'Обновлено';
-
-  @override
   String get setGoals => 'Цели';
 
   @override
@@ -2354,4 +2345,45 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get campusClearSearch => 'Очистить';
+
+  @override
+  String get homeOffline =>
+      'Нет соединения. Изменения сохранены на устройстве.';
+
+  @override
+  String get homeSyncFailed =>
+      'Не удалось синхронизировать. Изменения сохранены на устройстве.';
+
+  @override
+  String homeGoalProgress(String done, String goal) {
+    return 'Цель: $done из $goal';
+  }
+
+  @override
+  String habitsDoneSummary(int done, int total) {
+    return '$done из $total выполнено';
+  }
+
+  @override
+  String homeContinueCourse(String course) {
+    return 'Продолжить: $course';
+  }
+
+  @override
+  String get homeStartSession => 'Начать сеанс';
+
+  @override
+  String durationHoursMinutes(int hours, int minutes) {
+    return '$hours ч $minutes мин';
+  }
+
+  @override
+  String durationHours(int hours) {
+    return '$hours ч';
+  }
+
+  @override
+  String durationMinutes(int minutes) {
+    return '$minutes мин';
+  }
 }

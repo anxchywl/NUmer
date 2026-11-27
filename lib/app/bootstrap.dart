@@ -32,6 +32,7 @@ import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
+import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/shared/widgets/loading_screen.dart';
 
 // activates firebase app check, skipped on web, emulator and non-release builds
@@ -253,6 +254,9 @@ class NumerBootstrapApp extends StatelessWidget {
                 ),
               ),
               Provider<HabitService>(create: (_) => HabitService()),
+              ChangeNotifierProvider<LastCourseStore>(
+                create: (_) => LastCourseStore(prefs),
+              ),
               ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
                 create: (_) => AppState(),
                 update: (_, syncService, habitService, appState) {

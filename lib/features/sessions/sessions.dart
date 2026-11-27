@@ -1,5 +1,6 @@
 // Public surface of the sessions feature (timer, stopwatch, pomodoro).
 // Native Live Activity code lives in ios/SessionLiveActivityExtension and ios/Shared.
+export 'data/last_course_store.dart';
 export 'models/active_session_info.dart';
 export 'models/alarm_item.dart';
 export 'models/session_limits.dart';

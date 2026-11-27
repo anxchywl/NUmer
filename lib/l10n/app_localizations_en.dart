@@ -374,15 +374,6 @@ class AppLocalizationsEn extends AppLocalizations {
       '• You can tap on any course, and the history screen will show only the sessions for that course.';
 
   @override
-  String get syncOffline => 'Offline';
-
-  @override
-  String get syncSyncing => 'Syncing…';
-
-  @override
-  String get syncUpToDate => 'Up to date';
-
-  @override
   String get setGoals => 'Set goals';
 
   @override
@@ -2347,4 +2338,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get campusClearSearch => 'Clear';
+
+  @override
+  String get homeOffline =>
+      'No connection. Your changes are saved on this device.';
+
+  @override
+  String get homeSyncFailed =>
+      'Could not sync. Your changes are saved on this device.';
+
+  @override
+  String homeGoalProgress(String done, String goal) {
+    return 'Goal: $done of $goal';
+  }
+
+  @override
+  String habitsDoneSummary(int done, int total) {
+    return '$done of $total done';
+  }
+
+  @override
+  String homeContinueCourse(String course) {
+    return 'Continue $course';
+  }
+
+  @override
+  String get homeStartSession => 'Start session';
+
+  @override
+  String durationHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String durationHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String durationMinutes(int minutes) {
+    return '$minutes min';
+  }
 }

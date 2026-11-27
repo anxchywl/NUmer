@@ -1,0 +1,73 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:numer_app/app/app_state.dart';
+import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/identity/module_session.dart';
+import 'package:numer_app/features/auth/auth.dart';
+import 'package:numer_app/features/habits/habits.dart';
+import 'package:numer_app/features/home/home.dart';
+import 'package:numer_app/features/sessions/sessions.dart';
+import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'home_fakes.dart';
+
+class HomeHarness {
+  HomeHarness({FakeState? state, FakeSync? sync})
+    : state = state ?? FakeState(),
+      sync = sync ?? FakeSync();
+
+  final FakeState state;
+  final FakeSync sync;
+  final habits = FakeHabits();
+  final session = CountingSession();
+  late final LastCourseStore lastCourse;
+  int studyOpened = 0;
+  int habitsOpened = 0;
+
+  Future<void> pump(
+    WidgetTester tester, {
+    String? lastCourseId,
+    Locale locale = const Locale('en'),
+    TargetPlatform platform = TargetPlatform.android,
+    double textScale = 1,
+  }) async {
+    SharedPreferences.setMockInitialValues({
+      'home_last_course_id_v1': ?lastCourseId,
+    });
+    lastCourse = LastCourseStore(await SharedPreferences.getInstance());
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AppState>.value(value: state),
+          ChangeNotifierProvider<SyncService>.value(value: sync),
+          ChangeNotifierProvider<AuthController>(create: (_) => FakeAuth()),
+          ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
+          Provider<HabitService>.value(value: habits),
+          Provider<ModuleSession>.value(value: session),
+        ],
+        child: MaterialApp(
+          theme: NumerTheme.build(
+            seed: Colors.indigo,
+            brightness: Brightness.light,
+          ).copyWith(platform: platform),
+          locale: locale,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          builder: (context, child) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.linear(textScale)),
+            child: child!,
+          ),
+          home: HomeScreen(
+            onOpenStudy: () => studyOpened++,
+            onOpenHabits: () => habitsOpened++,
+          ),
+        ),
+      ),
+    );
+  }
+}

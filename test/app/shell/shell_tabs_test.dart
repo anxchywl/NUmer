@@ -66,7 +66,11 @@ Future<List<ShellTab>> _tabs(
         supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder: (context) {
-            tabs = buildShellTabs(context, registry: registry);
+            tabs = buildShellTabs(
+              context,
+              registry: registry,
+              onSelect: (_) {},
+            );
             return const SizedBox();
           },
         ),

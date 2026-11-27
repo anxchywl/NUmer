@@ -11,7 +11,9 @@ import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/campus/campus.dart';
 import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/groups/groups.dart';
+import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
+import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
@@ -75,6 +77,18 @@ class _FakeState extends ChangeNotifier implements AppState {
   Map<String, bool> get pomodoroRunning => const {};
 
   @override
+  bool get hasAnyActiveSession => false;
+
+  @override
+  ProgressView get progressView => ProgressView.off;
+
+  @override
+  WeekStart get weekStart => WeekStart.monday;
+
+  @override
+  int todayTotalSeconds() => 0;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -84,6 +98,20 @@ class _FakeSync extends ChangeNotifier implements SyncService {
 
   @override
   String? get lastError => null;
+
+  @override
+  void addAfterPullListener(Future<void> Function() listener) {}
+
+  @override
+  void removeAfterPullListener(Future<void> Function() listener) {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeHabits implements HabitService {
+  @override
+  Stream<List<Habit>> habitsStream(String userId) => const Stream.empty();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -129,6 +157,7 @@ void main() {
       build: 10,
     );
     await config.refresh();
+    final lastCourse = LastCourseStore(await SharedPreferences.getInstance());
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -137,6 +166,8 @@ void main() {
           ChangeNotifierProvider<AppState>(create: (_) => _FakeState()),
           ChangeNotifierProvider<SyncService>(create: (_) => _FakeSync()),
           Provider<GroupService>(create: (_) => _FakeGroups()),
+          Provider<HabitService>(create: (_) => _FakeHabits()),
+          ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
         ],
         child: MaterialApp(
           theme: NumerTheme.build(

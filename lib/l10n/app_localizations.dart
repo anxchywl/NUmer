@@ -760,24 +760,6 @@ abstract class AppLocalizations {
   /// **'• You can tap on any course, and the history screen will show only the sessions for that course.'**
   String get dayStatsTipLine3;
 
-  /// No description provided for @syncOffline.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline'**
-  String get syncOffline;
-
-  /// No description provided for @syncSyncing.
-  ///
-  /// In en, this message translates to:
-  /// **'Syncing…'**
-  String get syncSyncing;
-
-  /// No description provided for @syncUpToDate.
-  ///
-  /// In en, this message translates to:
-  /// **'Up to date'**
-  String get syncUpToDate;
-
   /// No description provided for @setGoals.
   ///
   /// In en, this message translates to:
@@ -4335,6 +4317,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear'**
   String get campusClearSearch;
+
+  /// No description provided for @homeOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection. Your changes are saved on this device.'**
+  String get homeOffline;
+
+  /// No description provided for @homeSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not sync. Your changes are saved on this device.'**
+  String get homeSyncFailed;
+
+  /// No description provided for @homeGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {done} of {goal}'**
+  String homeGoalProgress(String done, String goal);
+
+  /// No description provided for @habitsDoneSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} done'**
+  String habitsDoneSummary(int done, int total);
+
+  /// No description provided for @homeContinueCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue {course}'**
+  String homeContinueCourse(String course);
+
+  /// No description provided for @homeStartSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get homeStartSession;
+
+  /// No description provided for @durationHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String durationHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @durationHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String durationHours(int hours);
+
+  /// No description provided for @durationMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String durationMinutes(int minutes);
 }
 
 class _AppLocalizationsDelegate

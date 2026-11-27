@@ -3,99 +3,37 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/features/courses/courses.dart';
-import 'package:numer_app/features/home/home.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
-import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_ui/numer_ui.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeState extends ChangeNotifier implements AppState {
-  @override
-  List<Course> get courses => [
-    Course(
-      id: 'a',
-      name: 'Algebra',
-      day: 'Mon',
-      start: '09:00',
-      end: '10:00',
-      colorValue: 0xFF3B82F6,
-    ),
-  ];
+import 'home_fakes.dart';
+import 'home_harness.dart';
 
-  @override
-  String? get profileName => null;
+const _offline = 'No connection. Your changes are saved on this device.';
+const _failed = 'Could not sync. Your changes are saved on this device.';
 
-  @override
-  int? get profileAvatarIndex => null;
+List<Course> _courses() => [
+  course('a', 'Algebra', credits: 6),
+  course('b', 'Biology'),
+];
 
-  @override
-  int? get profileAvatarColorValue => null;
-
-  @override
-  bool get requiresProfileSetup => false;
-
-  @override
-  bool get hasProfile => true;
-
-  @override
-  int get streakCount => 0;
-
-  @override
-  bool get hasStudyToday => false;
-
-  @override
-  Map<String, bool> get timerRunning => const {};
-
-  @override
-  Map<String, bool> get stopwatchRunning => const {};
-
-  @override
-  Map<String, bool> get pomodoroRunning => const {};
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _FakeSync extends ChangeNotifier implements SyncService {
-  @override
-  SyncStatus get status => SyncStatus.upToDate;
-
-  @override
-  String? get lastError => null;
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
+NumerRow _row(WidgetTester tester, String title) => tester.widget<NumerRow>(
+  find.byWidgetPredicate((w) => w is NumerRow && w.title == title),
+);
 
 void main() {
   for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
     testWidgets('home keeps no course list or floating action on $platform', (
       tester,
     ) async {
-      SharedPreferences.setMockInitialValues({});
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider<AppState>(create: (_) => _FakeState()),
-            ChangeNotifierProvider<SyncService>(create: (_) => _FakeSync()),
-          ],
-          child: MaterialApp(
-            theme: NumerTheme.build(
-              seed: Colors.indigo,
-              brightness: Brightness.light,
-            ).copyWith(platform: platform),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const HomeScreen(),
-          ),
-        ),
-      );
+      await HomeHarness(
+        state: FakeState(courses: _courses()),
+      ).pump(tester, platform: platform);
 
       expect(find.byType(FloatingActionButton), findsNothing);
       expect(find.byType(CourseListSliver), findsNothing);
       expect(find.text('Algebra'), findsNothing);
-      expect(find.byTooltip('Add course'), findsNothing);
+      expect(find.byType(FilledButton), findsOneWidget);
       // nothing is running, so the mounted widgets paint nothing
       for (final type in [
         AutoFinishWatcher,
@@ -106,4 +44,150 @@ void main() {
       }
     });
   }
+
+  testWidgets('without courses the button adds one', (tester) async {
+    await HomeHarness().pump(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Add course'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AddCourseSheet), findsOneWidget);
+  });
+
+  testWidgets('without a used course the button opens the picker', (
+    tester,
+  ) async {
+    await HomeHarness(state: FakeState(courses: _courses())).pump(tester);
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Start session'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Select course'), findsOneWidget);
+    expect(find.text('Algebra'), findsOneWidget);
+    expect(find.text('Biology'), findsOneWidget);
+  });
+
+  testWidgets('a used course is continued in its time sheet', (tester) async {
+    final home = HomeHarness(state: FakeState(courses: _courses()));
+    await home.pump(tester, lastCourseId: 'b');
+
+    await tester.tap(find.widgetWithText(FilledButton, 'Continue Biology'));
+    await tester.pumpAndSettle();
+
+    expect(home.state.courseSheetOpen, isTrue);
+    expect(find.text('Biology'), findsOneWidget);
+  });
+
+  testWidgets('a deleted used course counts as none', (tester) async {
+    await HomeHarness(
+      state: FakeState(courses: _courses()),
+    ).pump(tester, lastCourseId: 'gone');
+
+    expect(find.widgetWithText(FilledButton, 'Start session'), findsOneWidget);
+  });
+
+  testWidgets('a running session hides the button', (tester) async {
+    final state = FakeState(courses: _courses())
+      ..stopwatchRunning = {'a': true};
+    await HomeHarness(state: state).pump(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(NumerSection),
+        matching: find.byType(FilledButton),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('the habits row waits for data and counts today', (tester) async {
+    final home = HomeHarness();
+    await home.pump(tester);
+    expect(find.text('Habits'), findsNothing);
+
+    home.habits.emit([]);
+    await tester.pumpAndSettle();
+    expect(find.text('Habits'), findsNothing);
+
+    home.habits.emit([
+      habit('read', done: 1),
+      habit('run', done: 1),
+      habit('sleep'),
+    ]);
+    await tester.pumpAndSettle();
+    expect(find.text('2 of 3 done'), findsOneWidget);
+  });
+
+  testWidgets('a pull reloads the habits', (tester) async {
+    final home = HomeHarness();
+    await home.pump(tester);
+    home.habits.emit([habit('read')]);
+    await tester.pumpAndSettle();
+
+    await home.sync.listeners.single();
+    await tester.pump();
+    home.habits.emit([habit('read', done: 1)]);
+    await tester.pumpAndSettle();
+
+    expect(home.habits.controllers, hasLength(2));
+    expect(find.text('1 of 1 done'), findsOneWidget);
+  });
+
+  testWidgets('the rows open their tabs', (tester) async {
+    final home = HomeHarness();
+    await home.pump(tester);
+    home.habits.emit([habit('read')]);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Study'));
+    await tester.tap(find.text('Habits'));
+
+    expect(home.studyOpened, 1);
+    expect(home.habitsOpened, 1);
+  });
+
+  for (final (name, sync, shown) in [
+    ('offline', FakeSync(status: SyncStatus.offline), _offline),
+    ('failed', FakeSync(lastError: 'boom'), _failed),
+    ('up to date', FakeSync(), null),
+  ]) {
+    testWidgets('the sync line when $name', (tester) async {
+      await HomeHarness(sync: sync).pump(tester);
+
+      for (final line in [_offline, _failed]) {
+        expect(find.text(line), line == shown ? findsOneWidget : findsNothing);
+      }
+    });
+  }
+
+  testWidgets('goals off leaves the study row without a subtitle', (
+    tester,
+  ) async {
+    await HomeHarness(state: FakeState(courses: _courses())).pump(tester);
+
+    expect(_row(tester, 'Study').subtitle, isNull);
+    expect(_row(tester, 'Study').value, '0 min');
+  });
+
+  testWidgets('goals on shows the daily goal of credited courses', (
+    tester,
+  ) async {
+    final state = FakeState(courses: _courses(), goals: ProgressView.week)
+      ..studiedSeconds = 3600;
+    await HomeHarness(state: state).pump(tester);
+
+    // 6 credits at 2 hours a week, spread over 7 days
+    expect(_row(tester, 'Study').subtitle, 'Goal: 1 h of 1 h 42 min');
+  });
+
+  testWidgets('pulling syncs and asks no module for a token', (tester) async {
+    final home = HomeHarness();
+    await home.pump(tester);
+
+    await tester.fling(find.text('Today'), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+
+    expect(home.sync.syncCalls, 1);
+    expect(home.session.tokenReads, 0);
+  });
 }

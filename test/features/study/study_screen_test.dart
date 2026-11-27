@@ -169,6 +169,7 @@ Future<void> _pumpShellStudy(
           builder: (context) => buildShellTabs(
             context,
             registry: [module],
+            onSelect: (_) {},
           ).singleWhere((tab) => tab.label == 'Study').builder(context),
         ),
       ),

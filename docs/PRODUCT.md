@@ -70,7 +70,10 @@ Charts, calendars, and heatmaps visualizing study time and progress.
 Browse past sessions and export logs to `.ics` (calendar), `.csv`, or `.xlsx` (Excel).
 
 ### Home dashboard — `home`
-The landing tab: the study streak, sync status and the running session.
+The landing tab is the today screen: the study streak, a sync line shown only when offline
+or after a failed sync, the running session, and a Today block with the time studied (with
+the daily goal when goal bars are on) and the habits done today. One button continues the
+last used course, picks a course to start, or adds the first one. Pulling down syncs.
 
 ## Cross-cutting product traits
 - **Offline-first:** the app works fully without a connection; study groups are the only
