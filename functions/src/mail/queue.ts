@@ -46,9 +46,19 @@ async function sendWithRetry(sender: MailSender, message: MailMessage, wait: () 
   }
 }
 
+// neither the address nor a code may stay at rest
+async function purgeFailed(snapshot: functions.firestore.QueryDocumentSnapshot): Promise<void> {
+  await snapshot.ref.update({
+    to: admin.firestore.FieldValue.delete(),
+    vars: admin.firestore.FieldValue.delete(),
+    failedAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+// the sender is built here so that a configuration error also purges the entry
 export async function processMailQueued(
   snapshot: functions.firestore.QueryDocumentSnapshot,
-  sender: MailSender,
+  createSender: () => MailSender,
   wait: () => Promise<void> = waitBeforeRetry,
 ): Promise<void> {
   const { to, template, locale, vars } = snapshot.data();
@@ -58,18 +68,14 @@ export async function processMailQueued(
   }
 
   try {
-    await sendWithRetry(sender, { to, ...renderEmail(template, locale, vars) }, wait);
+    await sendWithRetry(createSender(), { to, ...renderEmail(template, locale, vars) }, wait);
   } catch (error) {
-    if (!(error instanceof MailDeliveryError)) {
+    const status = error instanceof MailDeliveryError ? error.status : undefined;
+    functions.logger.error('mail_delivery_failed', { template, status });
+    await purgeFailed(snapshot);
+    if (status === undefined) {
       throw error;
     }
-    functions.logger.error('mail_delivery_failed', { template, status: error.status });
-    // neither the address nor a code may stay at rest
-    await snapshot.ref.update({
-      to: admin.firestore.FieldValue.delete(),
-      vars: admin.firestore.FieldValue.delete(),
-      failedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
     return;
   }
   await snapshot.ref.delete();
@@ -78,4 +84,4 @@ export async function processMailQueued(
 export const onMailQueued = functions
   .runWith({ secrets: ['MAIL_API_KEY'] })
   .firestore.document('mailQueue/{id}')
-  .onCreate((snapshot) => processMailQueued(snapshot, getMailSender()));
+  .onCreate((snapshot) => processMailQueued(snapshot, getMailSender));
