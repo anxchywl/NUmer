@@ -131,7 +131,7 @@ class FakeSync extends ChangeNotifier implements SyncService {
   SyncStatus status;
   @override
   String? lastError;
-  int syncCalls = 0;
+  final forced = <bool>[];
   final listeners = <Future<void> Function()>[];
 
   @override
@@ -140,7 +140,7 @@ class FakeSync extends ChangeNotifier implements SyncService {
     bool startup = false,
     bool force = false,
   }) async {
-    syncCalls++;
+    forced.add(force);
   }
 
   @override

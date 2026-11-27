@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         // starts below the pinned header
         edgeOffset: MediaQuery.paddingOf(context).top + kToolbarHeight,
-        onRefresh: () => context.read<SyncService>().syncNow(),
+        onRefresh: () => context.read<SyncService>().syncNow(force: true),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -108,10 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
     final sync = context.watch<SyncService>();
     final l10n = AppLocalizations.of(context)!;
     final String message;
-    if (sync.status == SyncStatus.offline) {
-      message = l10n.homeOffline;
-    } else if (sync.lastError != null) {
+    // a failed sync also reports offline
+    if (sync.lastError != null) {
       message = l10n.homeSyncFailed;
+    } else if (sync.status == SyncStatus.offline) {
+      message = l10n.homeOffline;
     } else {
       return const SizedBox.shrink();
     }

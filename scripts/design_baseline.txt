@@ -171,8 +171,6 @@ alert	lib/features/history/screens/history.dart	1
 color_literal	lib/features/history/widgets/export_session_dialog.dart	3
 spinner	lib/features/history/widgets/export_session_dialog.dart	2
 button	lib/features/history/widgets/export_session_dialog.dart	1
-color_literal	lib/features/home/streak_title.dart	2
-weight	lib/features/home/streak_title.dart	1
 alert	lib/features/sessions/widgets/course_time_sheet/course_time_actions.dart	2
 color_literal	lib/features/sessions/widgets/course_time_sheet/course_time_header.dart	7
 text_literal	lib/features/sessions/widgets/course_time_sheet/course_time_tab_bar.dart	2

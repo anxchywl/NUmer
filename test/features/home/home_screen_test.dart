@@ -148,7 +148,11 @@ void main() {
 
   for (final (name, sync, shown) in [
     ('offline', FakeSync(status: SyncStatus.offline), _offline),
-    ('failed', FakeSync(lastError: 'boom'), _failed),
+    (
+      'failed',
+      FakeSync(status: SyncStatus.offline, lastError: 'boom'),
+      _failed,
+    ),
     ('up to date', FakeSync(), null),
   ]) {
     testWidgets('the sync line when $name', (tester) async {
@@ -180,14 +184,16 @@ void main() {
     expect(_row(tester, 'Study').subtitle, 'Goal: 1 h of 1 h 42 min');
   });
 
-  testWidgets('pulling syncs and asks no module for a token', (tester) async {
+  testWidgets('pulling forces a sync and asks no module for a token', (
+    tester,
+  ) async {
     final home = HomeHarness();
     await home.pump(tester);
 
     await tester.fling(find.text('Today'), const Offset(0, 400), 1000);
     await tester.pumpAndSettle();
 
-    expect(home.sync.syncCalls, 1);
+    expect(home.sync.forced, [true]);
     expect(home.session.tokenReads, 0);
   });
 }

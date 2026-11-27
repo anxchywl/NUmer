@@ -19,6 +19,8 @@ import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../features/home/home_fakes.dart' show habit;
+
 class _FakeUser implements User {
   @override
   String get uid => 'u1';
@@ -57,6 +59,9 @@ class _FakeState extends ChangeNotifier implements AppState {
 
   @override
   bool get hasStudyToday => false;
+
+  @override
+  bool get eisenhowerMatrixEnabled => false;
 
   @override
   bool get requiresProfileSetup => true;
@@ -111,7 +116,8 @@ class _FakeSync extends ChangeNotifier implements SyncService {
 
 class _FakeHabits implements HabitService {
   @override
-  Stream<List<Habit>> habitsStream(String userId) => const Stream.empty();
+  Stream<List<Habit>> habitsStream(String userId) =>
+      Stream.value([habit('read')]);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -140,6 +146,36 @@ final _module = ModuleDescriptor(
   builder: (_) => const NumerModuleScaffold(title: 'Map', body: SizedBox()),
 );
 
+Future<void> _pumpShell(
+  WidgetTester tester,
+  AppConfigService config, {
+  List<ModuleDescriptor> registry = const [],
+}) async {
+  final lastCourse = LastCourseStore(await SharedPreferences.getInstance());
+  await tester.pumpWidget(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AppConfigService>.value(value: config),
+        ChangeNotifierProvider<AuthController>(create: (_) => _FakeAuth()),
+        ChangeNotifierProvider<AppState>(create: (_) => _FakeState()),
+        ChangeNotifierProvider<SyncService>(create: (_) => _FakeSync()),
+        Provider<GroupService>(create: (_) => _FakeGroups()),
+        Provider<HabitService>(create: (_) => _FakeHabits()),
+        ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
+      ],
+      child: MaterialApp(
+        theme: NumerTheme.build(
+          seed: Colors.indigo,
+          brightness: Brightness.light,
+        ),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: AppShell(registry: registry),
+      ),
+    ),
+  );
+}
+
 void main() {
   testWidgets('losing the selected campus tab returns to home', (tester) async {
     var enabled = true;
@@ -157,29 +193,7 @@ void main() {
       build: 10,
     );
     await config.refresh();
-    final lastCourse = LastCourseStore(await SharedPreferences.getInstance());
-    await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<AppConfigService>.value(value: config),
-          ChangeNotifierProvider<AuthController>(create: (_) => _FakeAuth()),
-          ChangeNotifierProvider<AppState>(create: (_) => _FakeState()),
-          ChangeNotifierProvider<SyncService>(create: (_) => _FakeSync()),
-          Provider<GroupService>(create: (_) => _FakeGroups()),
-          Provider<HabitService>(create: (_) => _FakeHabits()),
-          ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
-        ],
-        child: MaterialApp(
-          theme: NumerTheme.build(
-            seed: Colors.indigo,
-            brightness: Brightness.light,
-          ),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: AppShell(registry: [_module]),
-        ),
-      ),
-    );
+    await _pumpShell(tester, config, registry: [_module]);
     await tester.tap(
       find.descendant(
         of: find.byType(AndroidTabBar),
@@ -201,4 +215,27 @@ void main() {
     expect(bar.currentIndex, 0);
     expect(bar.tabs, hasLength(4));
   });
+
+  for (final (title, index) in [('Study', 2), ('Habits', 1)]) {
+    testWidgets('the home $title row switches to its tab', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final config = AppConfigService(
+        prefs: await SharedPreferences.getInstance(),
+        fetch: () async => null,
+        build: 10,
+      );
+      await _pumpShell(tester, config);
+      await tester.pump();
+
+      await tester.tap(
+        find.byWidgetPredicate((w) => w is NumerRow && w.title == title),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+
+      final bar = tester.widget<AndroidTabBar>(find.byType(AndroidTabBar));
+      expect(bar.currentIndex, index);
+      expect(find.byType(HomeScreen), findsNothing);
+    });
+  }
 }
