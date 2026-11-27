@@ -4,7 +4,7 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 46 done, 2 in progress, 41 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
+**Total: 47 done, 1 in progress, 41 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do, ➖ dropped
 
@@ -70,7 +70,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ✅ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (11 of 18; all prompts written)
+## Phase 3: Superapp shell (12 of 18; all prompts written)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
@@ -87,7 +87,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ⏳ | P3-09 News on Home | The news list on Home and its own screen |
 | ⏳ | P3-10 Upcoming store | Bookings and reminders shown on Home without loading modules |
 | ✅ | P3-11 Campus tab | The list of campus modules |
-| 🔄 | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |
+| ✅ | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |
 | ⏳ | P3-13 Docs after shell | Docs describe the new layout |
 | ✅ | P3-14 Split `stats.dart` | Break the 3,228-line statistics screen into small files (no visible change) |
 | ✅ | P3-15 Split `add_habit_sheet.dart` | Break the 2,462-line add-habit sheet into small files |

@@ -39,6 +39,8 @@ void main() {
 
     expect(hidden.top - shown.top, 2 * shown.height);
     expect(hidden.top, greaterThanOrEqualTo(600));
+    final fade = tester.widget<AnimatedOpacity>(find.byType(AnimatedOpacity));
+    expect(fade.opacity, 0);
 
     await tester.pumpWidget(_app(visible: true, onPressed: () => taps++));
     await tester.pumpAndSettle();

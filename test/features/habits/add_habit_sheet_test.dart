@@ -118,6 +118,9 @@ Future<void> _nameAndContinue(WidgetTester tester, String name) async {
   await _tap(tester, find.text('Next'));
 }
 
+SegmentedButton<HabitType> _typeButton(WidgetTester tester) =>
+    tester.widget(find.byType(SegmentedButton<HabitType>));
+
 void main() {
   testWidgets('creates a daily yes or no habit', (tester) async {
     final habits = await _openSheet(tester);
@@ -137,6 +140,20 @@ void main() {
     expect(habit.frequencyType, HabitFrequencyType.daily);
     expect(habit.connectedCourseIds, ['course-1']);
     expect(find.byType(AddHabitSheet), findsNothing);
+  });
+
+  testWidgets('picks the habit type with one segmented control', (
+    tester,
+  ) async {
+    await _openSheet(tester);
+    await _nameAndContinue(tester, 'Water');
+    expect(find.byType(SegmentedButton<HabitType>), findsOneWidget);
+    expect(find.byType(ChoiceChip), findsNothing);
+
+    await _tap(tester, find.text('Numeric'));
+
+    expect(_typeButton(tester).selected, {HabitType.numeric});
+    expect(find.widgetWithText(TextFormField, 'Unit'), findsOneWidget);
   });
 
   testWidgets('creates a numeric habit on specific days', (tester) async {
@@ -233,6 +250,10 @@ void main() {
     final habits = await _openSheet(tester, habit: old);
 
     await _tap(tester, find.text('Next'));
+    expect(
+      _typeButton(tester).segments.where((s) => s.enabled).map((s) => s.value),
+      [HabitType.numeric],
+    );
     await _enter(tester, find.widgetWithText(TextFormField, 'Value'), '8');
     await _tap(tester, find.text('Next'));
     await _tap(tester, find.text('Next'));
