@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../tokens/numer_space.dart';
+
 const double _spinnerSize = 20;
 const double _spinnerStrokeWidth = 2;
 
@@ -9,6 +11,7 @@ class NumerButtonChild extends StatelessWidget {
     required this.label,
     this.loading = false,
     this.loadingHint,
+    this.icon,
   }) : assert(
          !loading || loadingHint != null,
          'say what a screen reader hears',
@@ -19,6 +22,9 @@ class NumerButtonChild extends StatelessWidget {
 
   // the caller's localized word for a screen reader, this package has none
   final String? loadingHint;
+
+  // belongs here so it hides with the label and the spinner centres over both
+  final Widget? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -40,17 +46,31 @@ class NumerButtonChild extends StatelessWidget {
               maintainAnimation: true,
               maintainState: true,
               maintainSemantics: true,
-              child: Text(
-                label,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
+              child: _content(),
             ),
           ),
           if (loading) Positioned.fill(child: Center(child: _spinner(context))),
         ],
       ),
+    );
+  }
+
+  Widget _content() {
+    final text = Text(
+      label,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+    );
+    final icon = this.icon;
+    if (icon == null) return text;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        icon,
+        const SizedBox(width: NumerSpace.sm),
+        Flexible(child: text),
+      ],
     );
   }
 

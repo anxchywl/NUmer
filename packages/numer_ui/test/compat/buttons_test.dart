@@ -72,32 +72,45 @@ void main() {
     expect(_spinner(), findsNothing);
   });
 
-  testWidgets('loading hides the icon and keeps the size', (tester) async {
-    Widget button({required bool loading}) => host(
-      AppPrimaryButton(
-        text: 'Send',
-        icon: const AppIcon(AppIcons.send),
-        isLoading: loading,
-        loadingHint: 'Loading',
-        onPressed: () {},
-      ),
-    );
+  for (final width in [null, double.infinity]) {
+    for (final icon in [null, const AppIcon(AppIcons.send)]) {
+      final shape = '${icon == null ? 'no' : 'an'} icon, width $width';
+      testWidgets('loading centres the spinner and keeps the size: $shape', (
+        tester,
+      ) async {
+        Widget button({required bool loading}) => host(
+          AppPrimaryButton(
+            text: 'Send',
+            icon: icon,
+            width: width,
+            isLoading: loading,
+            loadingHint: 'Loading',
+            onPressed: () {},
+          ),
+        );
 
-    await tester.pumpWidget(button(loading: false));
-    final resting = tester.getSize(find.byType(AppPrimaryButton));
-    await tester.pumpWidget(button(loading: true));
+        await tester.pumpWidget(button(loading: false));
+        final resting = tester.getSize(find.byType(AppPrimaryButton));
+        await tester.pumpWidget(button(loading: true));
 
-    expect(tester.getSize(find.byType(AppPrimaryButton)), resting);
-    final icon = tester.widget<Visibility>(
-      find
-          .ancestor(
-            of: find.byIcon(Icons.send_outlined),
-            matching: find.byType(Visibility),
-          )
-          .first,
-    );
-    expect(icon.visible, isFalse);
-  });
+        expect(tester.getSize(find.byType(AppPrimaryButton)), resting);
+        expect(
+          tester.getCenter(_spinner()),
+          tester.getCenter(find.byType(AppPrimaryButton)),
+        );
+        final content = tester.widget<Visibility>(find.byType(Visibility));
+        expect(content.visible, isFalse);
+        if (icon == null) return;
+        expect(
+          find.descendant(
+            of: find.byType(Visibility),
+            matching: find.byType(AppIcon),
+          ),
+          findsOneWidget,
+        );
+      });
+    }
+  }
 
   testWidgets('every size of every button is 48 high', (tester) async {
     for (final size in AppButtonSize.values) {

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../components/numer_button_child.dart';
-import '../tokens/numer_space.dart';
 import 'app_icon.dart';
 import 'app_icons.dart';
 import 'app_spacing.dart';
@@ -63,27 +62,11 @@ abstract class _AppButton extends StatelessWidget {
   Widget _button(ColorScheme scheme, VoidCallback? onPressed, Widget child);
 
   Widget _child() {
-    final label = NumerButtonChild(
+    return NumerButtonChild(
       label: text,
       loading: isLoading,
       loadingHint: loadingHint,
-    );
-    final icon = this.icon;
-    if (icon == null) return label;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // hidden rather than removed so loading never resizes the button
-        Visibility(
-          visible: !isLoading,
-          maintainSize: true,
-          maintainAnimation: true,
-          maintainState: true,
-          child: icon,
-        ),
-        const SizedBox(width: NumerSpace.sm),
-        Flexible(child: label),
-      ],
+      icon: icon,
     );
   }
 }

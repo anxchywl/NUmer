@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_ui/numer_ui.dart';
 
-Widget _app({required bool loading, String label = 'Verify'}) {
+Widget _app({required bool loading, String label = 'Verify', Widget? icon}) {
   return MaterialApp(
     home: Scaffold(
       body: Center(
@@ -12,6 +12,7 @@ Widget _app({required bool loading, String label = 'Verify'}) {
             label: label,
             loading: loading,
             loadingHint: 'Loading',
+            icon: icon,
           ),
         ),
       ),
@@ -60,6 +61,23 @@ void main() {
     await tester.pumpWidget(_app(loading: true, label: 'I'));
 
     expect(tester.getSize(_spinner), const Size.square(20));
+    expect(
+      tester.getCenter(_spinner),
+      tester.getCenter(find.byType(FilledButton)),
+    );
+  });
+
+  testWidgets('the spinner centres on a button that has an icon', (
+    tester,
+  ) async {
+    const icon = Icon(Icons.send_outlined);
+    await tester.pumpWidget(_app(loading: false, icon: icon));
+    final idle = tester.getSize(find.byType(FilledButton));
+
+    await tester.pumpWidget(_app(loading: true, icon: icon));
+
+    expect(_labelShows(tester), isFalse);
+    expect(tester.getSize(find.byType(FilledButton)), idle);
     expect(
       tester.getCenter(_spinner),
       tester.getCenter(find.byType(FilledButton)),
