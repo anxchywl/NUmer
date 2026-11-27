@@ -345,6 +345,8 @@ New screenshots and a description that mentions the new layout.
 2. Before the first account events handler (P4-07, P4-18, P4-19): `identity-v0.2.0` (D-4
    step 3), if not pushed yet.
 3. A later change to `numer_ui` that a module needs gets the next tag (`numer-ui-v0.1.1`).
+4. If the NUmer repository is private, give each module repository's CI (and the machine
+   that runs the package tasks) read access to it first, for example with a deploy key.
 ### F-1 Tag each module package when its last package task is reviewed.
 Gradus `v0.2.0` (P4-01), Clavis `v0.2.0` (P4-06), EventsBot `v1.1.0` (P4-17), Muto `v0.2.0`
 (P4-20): `git tag <tag> && git push origin <tag>` in that repository. If a module repository

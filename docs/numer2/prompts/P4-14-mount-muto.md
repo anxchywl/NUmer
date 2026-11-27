@@ -28,7 +28,7 @@ module scaffold, started only when opened and within the download-size budget.
   (`muto_feature/pubspec.yaml:16-17`).
 - Campus order is Events, Marketplace, Piano room: the registry becomes `[gradusModule,
   eventsModule, mutoModule, clavisModule]`.
-- `beforeFirstListing` is P4-15's; this task passes `null`.
+- `beforeFirstListing` comes from P4-20; P4-15 fills it, so this task leaves it unset.
 - The verified-student sentence is Muto's own string (`contactUnavailableUnverified`,
   changed in P4-20); this task checks it shows for an unverified test account.
 - Image packages (`cached_network_image`, `image_picker`) are new to NUmer and are the main
@@ -45,7 +45,9 @@ module scaffold, started only when opened and within the download-size budget.
    `path: muto_feature`, `ref: v0.2.0`); `flutter pub get`. If pub refuses the relative path
    dependency on `muto_ui` inside the git package, add under `dependency_overrides` a
    `muto_ui` git entry with the same `url` and `ref` and `path: muto_ui`, and say so in the
-   report.
+   report. Then `cd ios && pod install` and keep `ios/Podfile.lock`; check that the photo and
+   camera purpose strings P4-11 added are in `ios/Runner/Info.plist`. Do not start before
+   the Muto tag `v0.2.0` exists (F-1).
 2. `lib/features/muto/`: barrel `muto.dart` exporting `mutoModule`; `muto_module.dart`
    with top-level `mutoTitle`, `mutoSubtitle`, `buildMutoModule` (`NumerModuleScaffold(title:
    l10n.moduleMutoTitle, body: const MutoModuleBody())`) and `const ModuleDescriptor

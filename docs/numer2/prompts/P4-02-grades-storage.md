@@ -69,7 +69,8 @@ grades on the course document that group peers can read.
 3. Create `lib/core/data/grade_entities.dart` with the three classes of the table (the two
    sync entities `extends HiveObject with SyncEntity`, `LocalAssignment extends HiveObject`)
    and `LocalCourseGradeAdapter` (18), `LocalAssignmentAdapter` (19), `LocalSemesterAdapter`
-   (20). Each adapter writes the fields in table order and reads them in the same order;
+   (20), with `@HiveType(typeId: ...)` and `@HiveField(n)` annotations numbered in table
+   order, like the existing classes. Each adapter writes the fields in table order and reads them in the same order;
    `assignments` is written with `writer.write(obj.assignments)` and read as
    `(reader.read() as List).cast<LocalAssignment>().toList()`. Constructors default
    `dirty = true` and `deleted = false`; `LocalCourseGrade` takes `List<LocalAssignment>?
@@ -100,7 +101,10 @@ grades on the course document that group peers can read.
    In `Storage` replace them with `static Future<List<Course>> getCourses() =>
    CourseStorage.getCourses();`, `static Future<void> saveCourses(List<Course> courses) =>
    CourseStorage.saveCourses(courses);` and `static Future<void> deleteCourse(String id) =>
-   CourseStorage.deleteCourse(id);`. Lower the `storage.dart` baseline entry.
+   CourseStorage.deleteCourse(id);`. Lower the `storage.dart` baseline entry. `CourseStorage`
+   imports `Course` as `storage.dart` does: add the line
+   `lib/core/data/course_storage.dart -> lib/features/courses/course.dart` to
+   `test/boundaries/allowlist.txt`, the same exception `storage.dart` already has.
 6. Create `lib/core/data/grade_storage.dart` with `abstract final class GradeStorage` (each
    method throws `StateError` like `Storage._ensureUser` when no user is open):
    - `static List<LocalCourseGrade> courseGrades()` and `static List<LocalSemester>
@@ -140,7 +144,9 @@ grades on the course document that group peers can read.
    - `test/core/data/course_entity_test.dart`: a `LocalCourse` written by a copy of the old
      adapter (a test-only class writing the 17 fields without `code`, typeId 11) is read by
      `LocalCourseAdapter` with `code == null` and every other field equal; a course with
-     `code: 'CSCI 151'` round-trips.
+     `code: 'CSCI 151'` round-trips. Mechanism: `Hive.init(<temp dir>)`, `Hive.resetAdapters()`,
+     register only the legacy adapter, open a box, put a course, close it; `Hive.resetAdapters()`
+     again, register the real adapters, reopen the box and read.
    - `test/core/data/type_ids_test.dart`: the `typeId` of each of the eleven adapters is
      pinned: 10 to 17 to the existing classes, 18, 19, 20 to the new ones.
    - `test/core/data/grade_storage_test.dart`: put then read; a second put with equal
@@ -162,14 +168,14 @@ grades on the course document that group peers can read.
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Import a feature only through its barrel. Direction is `features -> core -> shared`; `lib/core/data/` gains no new import from `lib/features/`.
+- Import a feature only through its barrel. Direction is `features -> core -> shared`; `lib/core/data/` gains no new import from `lib/features/` except the allowlisted line of step 5.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.
 - No unrequested features, abstractions, dependencies or error handling.
 - Do not deploy, do not push, do not connect to any server or production project.
-- If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit (`docs/INFRASTRUCTURE.md` lists the user subcollections and the Hive boxes: add the two new ones).
+- If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit (add `courseGrades` and `semesters` to the user subcollections listed in `docs/INFRASTRUCTURE.md`).
 
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0; `bash scripts/check_file_size.sh` prints nothing.

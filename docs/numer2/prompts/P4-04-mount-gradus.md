@@ -68,7 +68,9 @@ start.
        ref: v0.2.0
    ```
    and under `dependency_overrides` add `numer_ui: path: packages/numer_ui`. Run
-   `flutter pub get`.
+   `flutter pub get`, then `cd ios && pod install` (Gradus brings `file_picker`) and keep the
+   updated `ios/Podfile.lock`. `file_picker` opens the document picker on iOS, which needs no
+   purpose string. Do not start before the Gradus tag `v0.2.0` exists (F-1).
 2. Base URL in config: `ModuleFlag` gains `final Uri? baseUrl`, parsed in `_tryParse` from
    `raw['baseUrl']`: a `String` that `Uri.tryParse` accepts with scheme `https` and a
    non-empty host, otherwise null (a wrong value never drops the entry); `toJson` writes
@@ -85,10 +87,16 @@ start.
      `appState.courses`, build the Gradus `Course` (`title` = course name, `credits` =
      course credits, `code` = `GradeStorage.courseCode(id) ?? ''`, `grade` =
      `scale.byLetter(letter)` or null when the letter is null or unknown, `assignments`
-     from the record). An assignment that throws `InvalidAssignmentFailure` is skipped; the
-     others are added in stored order while their weight sum stays at most 100, and one
-     that would pass 100 is skipped. A course whose credits are null or outside `(0, 24]`
-     is left out of the transcript and its records are not touched. Store the result in
+     from the record). Import Gradus as `import
+     'package:gradus_feature/gradus_feature.dart' as gradus;` so its `Course`, `Assignment`
+     and `Semester` do not clash with NUmer's. An assignment that throws
+     `InvalidAssignmentFailure` is skipped. The rest are added one at a time in stored order:
+     build the `gradus.Course` with the assignments kept so far plus the next one inside a
+     `try`; on `InvalidCourseFailure` drop that assignment and go on (Gradus checks the weight
+     budget in integer hundredths, so never sum doubles yourself). A letter that throws
+     `UnknownGradeFailure` gives `grade: null`. A course is left out of the transcript, its
+     records untouched, when its credits are null or outside `(0, 24]`, its name is blank,
+     or its `semesterId` names no live semester. Store the result in
      `_current` and return it.
    - `save(Transcript next)`: compare `next` with `_current` by id and write only what
      differs, in this order: semesters added or changed (`putSemester`); courses added
@@ -124,7 +132,13 @@ start.
    `test/app/modules/registry_is_empty_test.dart` with
    `test/app/modules/registry_order_test.dart`: the ids are `['gradus']`.
 7. Strings: add the two keys to the three ARB files; run `flutter gen-l10n`.
-8. Tests:
+8. Tests.
+   Shared test setup for the module tests of this task: `Storage.configureForUser('u1')` over
+     a temp directory (pattern of `storage_courses_test.dart`); a hand-written
+     `class _FakeAuthController implements AuthController` with `noSuchMethod` and
+     `currentUser` returning a `class _FakeUser implements User` whose `uid` is `'u1'`
+     (`AuthController()` itself calls `FirebaseAuth.instance` and cannot be built in a test);
+     the fake `AppState` below.
    - `test/features/gradus/hive_transcript_repository_test.dart`, with a real Hive in a temp
      directory and a fake `AppState` (hand-written subclass that records `addCourse` and
      `updateCourse` and keeps `courses` in memory). One test per controller edit, each
@@ -135,14 +149,16 @@ start.
      `appState.courses`); add, edit and remove an assignment. After each, a second
      `HiveTranscriptRepository.load()` returns the same transcript.
    - In the same file: a stored unknown letter loads with `grade == null`; assignments
-     weighing 60, 50 and 30 load as the 60 and 30 ones; a course with null credits is left
-     out and still stored; an edit whose write throws (a fake `AppState.addCourse` that
+     weighing 60, 50 and 30 load as the 60 and 30 ones; a course with null credits, one with a blank
+     name and one whose semester is deleted are left out and still stored; assignments
+     weighing 33.34, 33.33 and 33.33 all load; an edit whose write throws (a fake `AppState.addCourse` that
      throws `HiveError`) leaves the controller on the previous transcript and `_current`
      unchanged, so the next save writes the course again.
    - `test/features/gradus/gradus_lazy_start_test.dart`: pump the Study root
      (`StudyScreen` with `visibleModules(ModuleSection.study, ...)` over the real
      registry, an `AppConfigService` whose cached config makes `gradus` visible for `u1`,
-     a `ModuleSession` whose `idToken` counts its calls, and the fake `AppState`). Before
+     a `ModuleSession` whose `idToken` counts its calls, the fake `AuthController` and the
+     fake `AppState`). Before
      the GPA row is tapped: zero `idToken` calls and `find.byType(GradusModuleBody)` finds
      nothing (the repository and the controller are created only in its `initState`).
      After the tap: one `GradusModuleBody`. After going back: none, and still zero

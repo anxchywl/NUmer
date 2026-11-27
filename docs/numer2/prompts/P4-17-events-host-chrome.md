@@ -79,20 +79,28 @@ event from the news feed.
    - `lib/core/api_client.dart`: `SessionProfile.telegramLinked` (`telegram_linked`,
      default false) and `Future<Uri> requestTelegramLink()` (POST, 409 ->
      `ConflictException` from `core/exceptions.dart`, adding the class if absent).
-   - `lib/events_host.dart`, exported from the package entry: `Future<Uri>
-     requestEventsTelegramLink()` and `Future<bool> eventsTelegramLinked()` (both through
-     the host session of `AuthStore`); `@immutable class EventReminder { final int eventId;
+   - `lib/events_host.dart` (the package has no single entry file; hosts import
+     `package:events_feature/app.dart` and `package:events_feature/events_host.dart`):
+     `export 'core/exceptions.dart' show ConflictException;`, `Future<Uri>
+     requestEventsTelegramLink()` and `Future<bool> eventsTelegramLinked()`, which GETs
+     `/api/flutter/auth/session` and returns `telegram_linked`; both use the host session of
+     `AuthStore` and throw `StateError('events is not started')` when no host session is set; `@immutable class EventReminder { final int eventId;
      final String title; final DateTime startsAt; }`; `abstract interface class
      EventsReminders { bool isSet(int eventId); Future<void> set(EventReminder reminder);
      Future<void> clear(int eventId); }`.
    - `EventsFeature` gains `EventsReminders? reminders` and `String? initialEventToken`.
      With `reminders` set, the event detail screen shows one `AppTextButton` under the
-     date: `remindMe` when not set (tap -> `set` with the start the screen already shows,
+     date: `remindMe` when not set (tap -> `set` with the event's start read as
+     UTC+05:00 from `eventDate` and `eventTime`, the zone D-37 uses for the feed,
      then `HapticFeedback.lightImpact()`), `reminderSet` when set (tap -> `clear`); hidden
      for an event that has started. With `initialEventToken`, after the first list load the
      events tab pushes the detail of the event whose `publicToken` matches, once; no match
      leaves the list.
-3. Filters: replace `_buildFilterStrip` and `_EventFilterPill` with the field and block of
+3. Before editing `events_screen.dart` (1464 lines) and `event_detail_screen.dart` (1739),
+   move `_EventFilterPill`, `_SortSheet` and `_MultiSelectSheet` (`events_screen.dart:885-`,
+   `:1128-1300`) and `_ModerationCommentSheet` into files of their own under the same
+   folder, unchanged, so the new code goes into small files.
+   Filters: replace `_buildFilterStrip` and `_EventFilterPill` with the field and block of
    Context; the row titles and values use the keys P4-16 made for the pill labels. Delete
    `_EventFilterPill`.
 4. Replace the `ChoiceChip` per Context.
@@ -130,7 +138,7 @@ event from the news feed.
 - UI: only names from `package:numer_ui/compat.dart`; no `Chip(`, `ChoiceChip`, `FilterChip`, `Badge(` or a pill-shaped container. Every icon-only control has a tooltip.
 - Every sheet or dialog with a text field uses focus mode; a loading button shows only its spinner and passes `loadingHint`.
 - Every user-facing string in the three ARB files.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Do not deploy, do not push, do not tag, do not connect to any server.

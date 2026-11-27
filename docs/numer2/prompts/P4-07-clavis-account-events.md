@@ -60,7 +60,8 @@ the piano room flag cannot open beyond testers (PLAN phase 4 gates).
    subject: str, now: datetime) -> None` doing the Decisions statements in the order:
    release future confirmed bookings, delete `booking_requests` of the subject, replace the
    subject on the remaining bookings with `'deleted-account'`, delete `weekly_limits` of the
-   subject. Add the three to the `BookingTransaction` protocol in `ports.py`.
+   subject. None of them commits; the `store.write()` context does. Add the three to the
+   `BookingTransaction` protocol in `ports.py`.
 4. Service: `BookingService.forget_account(self, *, event_id: str, subject: str) -> None`
    (async, like `release`): in one `store.write()` transaction, return if `was_processed`;
    otherwise `forget_subject(subject, self.now())` and `mark_processed(event_id)`. Also
@@ -68,14 +69,15 @@ the piano room flag cannot open beyond testers (PLAN phase 4 gates).
 5. Router `backend/app/api/account_events.py`: `router = APIRouter(include_in_schema=False)`,
    `@router.post("/internal/v1/account-events", status_code=204)`. Read `await
    request.body()` and the `x-numer-signature` header; with no secret configured answer 503
-   with the existing error shape (`ServiceUnavailableError`); call `verify_account_event`
+   with the existing error shape (`ServiceUnavailableError`); read settings from
+   `request.app.state.settings`; call `verify_account_event`
    with `now=time.time()`; `SignatureInvalid` -> 401 (`UnauthorizedError` with code
    `signature_invalid`). Then: type `account.deleted` and issuer equal to
    `f"https://securetoken.google.com/{settings.firebase_project_id}"` -> `forget_account`;
    any other valid event -> `acknowledge_event`. Include the router in `api/router.py`.
    The request-body size limit middleware already applies.
 6. Docs: this repo's `docs/INFRASTRUCTURE.md` names the endpoint, the secret and what is
-   kept; `docs/ARCHITECTURE.md` "control inventory" gains a row for the signature check;
+   kept; `docs/ARCHITECTURE.md` "Backend" section gains one paragraph on the signature check;
    `docs/PRODUCT.md` says what happens to a deleted account's bookings.
 7. Tests (`pytest`, hand-written fakes):
    - `tests/unit/test_sqlite_store.py` (extend): `forget_subject` releases a future
@@ -106,7 +108,7 @@ the piano room flag cannot open beyond testers (PLAN phase 4 gates).
 - `APP_ENV` stays authoritative; no development mechanism is enabled in production.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - No secret in code, tests (use a test constant), the repo or CI.
 - Do not deploy, do not push, do not connect to any server.
 - If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit.

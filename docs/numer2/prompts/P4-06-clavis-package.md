@@ -63,8 +63,10 @@ session, and callbacks that let the host keep an "Upcoming" item for each bookin
    (`/Users/anx/numer_app/pubspec.yaml:36`); otherwise NUmer cannot resolve both. Run
    `flutter pub get` in both.
 2. Apply `MIGRATION.md` steps 1 to 4 to every Dart file under both packages' `lib` and
-   `test`. The two `AppPrimaryButton`s of `booking_sheet.dart` that pass `isLoading` also
-   pass `loadingHint: s.loadingHint`. Replace `AppTheme.lightTheme` and `.darkTheme` in
+   `test`. The `AppPrimaryButton` of `booking_sheet.dart` that passes `isLoading` (line 208)
+   also passes `loadingHint: s.loadingHint`. Before editing `piano_room_screen.dart` (657
+   lines), move its slot row widget (the class around lines 590-657) into
+   `lib/src/presentation/slot_row.dart` unchanged, then edit it there. Replace `AppTheme.lightTheme` and `.darkTheme` in
    `piano_room_app/lib/main.dart:96-97` with `NumerTheme.build(seed: Colors.indigo,
    brightness: ...)`.
 3. Delete `app_ui/`. Remove it from `scripts/verify.sh:20`, from `.github/workflows/ci.yml:45`,
@@ -78,9 +80,10 @@ session, and callbacks that let the host keep an "Upcoming" item for each bookin
    the same two parameters instead of `accessToken`; it still requires a non-empty
    `studentId` and keeps its HTTPS check.
 5. Callbacks: `PianoRoomFeature` gains `this.onBooked` and `this.onReleased` (types in
-   Context) and passes them to `PianoRoomController`, which calls them in `_mutate` on
-   success: `book` passes the returned booking to `onBooked`; `release` passes
-   `booking.id` to `onReleased`. `didUpdateWidget` does not recreate the controller when
+   Context) and passes them to `PianoRoomController`. They are called outside the
+   `try`/`finally` of `_mutate`, only when it returns true: `book` passes the booking it
+   received to `onBooked`; `release` calls `onReleased(booking.id)` after `_mutate`
+   returns true (its closure returns null, so `_mutate` cannot know the id). `didUpdateWidget` does not recreate the controller when
    only a callback changes.
 6. UI per Context: the slot row's chevron becomes `AppTextButton(text: s.bookSlot,
    onPressed: book)` (keep the row's `InkWell`, `Semantics` and the not-eligible branch as
@@ -106,7 +109,7 @@ session, and callbacks that let the host keep an "Upcoming" item for each bookin
       with the id.
     - `test/presentation/piano_room_screen_test.dart` (extend): a bookable slot shows a
       "Book" text button that opens the booking sheet; a slot that is not eligible shows no
-      button; the loading state shows `NumerSkeleton`.
+      button; the loading state shows `NumerSkeleton` (find it by type; it paints after 300 ms).
 11. Run the `MIGRATION.md` step 6 grep, then `./scripts/verify.sh` and a debug build of
     `piano_room_app` (`flutter build apk --debug` in `piano_room_app`).
 
@@ -121,7 +124,7 @@ session, and callbacks that let the host keep an "Upcoming" item for each bookin
 - A loading button shows only its spinner and passes `loadingHint`. Every sheet or dialog with a text field uses focus mode (none exists here; a new one would).
 - Every user-facing string is in the three ARB files; run `flutter gen-l10n`.
 - The token is never written to disk, a log or a field that outlives one request.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.

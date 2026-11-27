@@ -55,7 +55,9 @@ ends.
    `eventDateInPast`), plus the three keys of the table. Values: the old map's value where
    it exists. Where Russian or Kazakh is missing, write it yourself following `DESIGN.md` 8
    and list every such key with its three values in the report for the owner to review.
-   Replace "Jas Wallet" with "NUmer" in any text that keeps a host name.
+   Replace "Jas Wallet" with "NUmer" in any text that keeps a host name (`app.dart:210`,
+   `:214`, `:371`) and fix the comment at `:271`. The old key `required` is renamed
+   `fieldRequired` (not a safe getter name); list it in the report.
 3. `lib/l10n/events_strings.dart` (pattern of `gradus_strings.dart`): `typedef
    EventsStrings = EventsLocalizations;`, `EventsStringsScope` resolving the ambient
    locale to `en`, `ru` or `kk` (fallback `en`), and `abstract final class EventsL10n {
@@ -74,10 +76,10 @@ ends.
    - `test/l10n_parity_test.dart`: the three ARB files have the same key set and every
      placeholder of a key appears in all three values.
    - `test/no_literals_test.dart`: scans `lib/**/*.dart` except `lib/l10n/generated/` and
-     fails on a string literal passed to `Text(`, `text:`, `label:`, `title:`, `hintText:`,
-     `labelText:`, `tooltip:`, `message:`, `semanticsLabel:` or returned from a validator
-     in `event_form_validation.dart`; an allow-list file `test/no_literals_allow.txt` may
-     hold only non-language strings (route names, keys), each with the file and line.
+     fails on a string literal passed to `Text(`, `hintText:`, `labelText:`, `tooltip:`,
+     `message:` or `semanticsLabel:`, or returned from a validator in
+     `event_form_validation.dart`; an allow-list file `test/no_literals_allow.txt` holds
+     non-language literals by their exact text, one per line (no line numbers).
    - `test/events_strings_scope_test.dart`: under `Locale('ru')` a known key renders its
      Russian value and `EventsL10n.current` is Russian; under `Locale('de')` it is English.
 8. Run the CI `flutter` job commands in `flutter_events/`, after `flutter gen-l10n`.
@@ -90,7 +92,7 @@ ends.
 - Follow this repo's `AGENTS.md`; NUmer `DECISIONS.md` section F applies where it has no rule.
 - Every user-facing string in all three ARB files with identical keys; copy rules of `DESIGN.md` 8.
 - Never hand-edit `lib/l10n/generated/`.
-- A file you create stays under 400 lines (an ARB file is data and is exempt); a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Do not deploy, do not push, do not tag, do not connect to any server.

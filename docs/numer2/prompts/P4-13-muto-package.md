@@ -46,7 +46,8 @@ mode in its two text sheets. Block and report UI is P4-20 (D-42 split).
   Reports; the compose button shows on the root of My listings only (`:133-135`). Host
   chrome (D-42, `DESIGN.md` 9.5): the role is known only after the session resolves, so
   the package draws a text-only `TabBar` under NUmer's app bar with Browse, Favorites, My
-  listings, and for operators also Reports; "New listing" is a `NumerFab(icon:
+  listings, and for operators also Reports (all users start on Browse; who may publish
+  stays `session.canPublish`); "New listing" is a `NumerFab(icon:
   Icons.add, label: strings.newListing, ...)` on the My listings tab root only. In host
   chrome, listing detail, seller profile and the editor are pushed on the root navigator
   so they cover the module screen (`DESIGN.md` 3.3), each re-wrapped in `MutoScope` and
@@ -78,9 +79,25 @@ mode in its two text sheets. Block and report UI is P4-20 (D-42 split).
    accountId, required Future<bool> Function() onSessionExpired})`; export `MutoIdToken`.
    `RemoteAuthState` holds the host session: `beginSession(String accountId)` bumps the
    namespace only for a new account; `_headers` awaits `idToken()`; `_send` resends once on
-   a 401 per the contract. `SessionController.resolve()` takes no token. `MutoScope` is
-   keyed on `accountId`. The mock repository and `muto_app` keep working with a session
-   whose `idToken` returns their development token.
+   a 401 per the contract. The token parameter goes from the whole resolve chain:
+   `SessionRepository.resolve()` (`domain/repositories/session_repository.dart`), its remote
+   and mock implementations, `RemoteApiClient.resolveSession()` and
+   `SessionController.resolve()`, whose `_reportedForToken` de-duplication keys on the
+   account id instead. `MutoFeature.onSessionExpired` (`VoidCallback`) is removed; after the
+   contract gives up (false, or a second 401) `SessionController` moves to its expired state
+   as today and calls nothing more. `MutoScope` is keyed on `accountId`. The mock repository
+   and `muto_app` keep working with a session whose `idToken` returns their development
+   token.
+   Listing images: today `RemoteImageLocator.locate` (`remote_repositories.dart:276-288`)
+   bakes `_api.authorizationHeaders()` into a `CachedNetworkImageProvider`
+   (`presentation/images/listing_image_provider.dart:11-17`), which cannot hold an async,
+   unstored token. Replace it with `presentation/images/authorized_image_provider.dart`: an
+   `ImageProvider<AuthorizedImageKey>` whose key is the URI plus `sessionNamespace`, and whose
+   `loadImage` awaits `idToken()`, fetches the file with
+   `DefaultCacheManager().getSingleFile(uri, key: <uri>#<namespace>, headers: {'Authorization':
+   'Bearer <token>'})` and decodes it. Add `flutter_cache_manager` (already in the lock through
+   `cached_network_image`) as a direct dependency at the locked version. `ImageLocation`
+   carries no headers any more.
 5. Host chrome: `MutoFeature` gains `this.chrome = MutoChrome.own` (`enum MutoChrome { own,
    host }`, exported). In `host`, `MutoShell` builds a `DefaultTabController` with a
    `Column(TabBar, Expanded(TabBarView))` of the destinations of Context (each still its
@@ -105,12 +122,18 @@ mode in its two text sheets. Block and report UI is P4-20 (D-42 split).
      opening a listing covers the tabs (the `TabBar` is no longer in the visible route).
    - Focus-mode tests for both sheets (title hidden with keyboard insets; Done restores).
    - `contact_buttons` test: one row per channel with its name, no brand colour.
-   - Every icon-only control you touched has a non-empty tooltip or semantics label.
+       - `test/presentation/authorized_image_provider_test.dart`: the provider awaits
+      `idToken` at load time and sends it; two providers for the same URI and namespace are
+      equal; a new namespace gives a new key.
+    - Every icon-only control you touched has a non-empty tooltip or semantics label.
 9. Run the `MIGRATION.md` step 6 grep from the repo root and `./scripts/verify.sh` (coverage
    floor 70 for `muto_feature`).
 
 ## Non-goals
 - No block, report-status or operator-action UI (P4-20). No backend change.
+- `muto_ui`'s `filter_pill.dart`, `meta_chip.dart` and `selectable_chip.dart` stay as they
+  are in this task (DESIGN 11 is checked in NUmer's `lib/` only); a later design pass
+  replaces them.
 - No change to listing rules, caching or the image pipeline.
 
 ## Constraints
@@ -119,7 +142,7 @@ mode in its two text sheets. Block and report UI is P4-20 (D-42 split).
 - Every sheet or dialog with a text field uses focus mode; a loading button shows only its spinner and passes `loadingHint`.
 - Every user-facing string in the three ARB files.
 - The token is never written to disk, a log, a cache key or a field that outlives one request.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings (convert the `///` you touch), debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.

@@ -22,13 +22,15 @@ document that tells the owner and a reviewer where every required control is.
 - Where things are after P4-14 and P4-20: report a listing: Campus -> Marketplace ->
   listing -> More -> Report; block a seller: the same menu, or the seller's profile -> More
   -> Block seller; blocked sellers: My listings -> Blocked sellers; operator actions: the
-  Reports tab for holders of the Muto operator role; delete the account: Settings ->
+  Reports tab for holders of `muto:admin`; delete the account: Settings ->
   Delete account (P1-07, it reaches every module through account events, P4-07, P4-18,
   P4-19); contact: Settings -> About -> Contact support (the address of E-2).
 - Events content is moderated before it is published (coordinators approve requests), so
   the document mentions it in one line.
 - Decisions (D-42): acceptance is stored per user and device in `SharedPreferences` under
-  `muto_rules_accepted_v1_<uid>`; the Muto flag stays on the `allow` list until the owner
+  `muto_rules_accepted_v1_<uid>` and is cleared with the user's other preferences whenever
+  local data is closed (every sign-out and account deletion), so the rules are shown again
+  after the next sign-in; the Muto flag stays on the `allow` list until the owner
   signs `docs/APP_REVIEW.md` off; the moderation response time is the owner's (F-6) and the
   document leaves its line for the owner.
 - Text of the rules screen (pushed screen, `AppBar` title `communityRulesTitle`, body a
@@ -63,8 +65,8 @@ document that tells the owner and a reviewer where every required control is.
    which pushes the screen with `askToAccept: false`.
 4. In `_clearUserPreferences` (`lib/features/auth/data/local_user_data.dart:21-36`) add
    `await prefs.remove('muto_rules_accepted_v1_$uid');` next to the `fcm_saved_token_$uid`
-   line, so the key goes whenever this user's local data is erased (sign-out with nothing
-   unsynced, or account deletion) and the rules are shown again after that.
+   line; that function runs on every `closeLocalUserData`, so the key goes at every sign-out
+   and on account deletion.
 5. Strings: add the keys of the table; `flutter gen-l10n`.
 6. `docs/APP_REVIEW.md` (owned by this file alone), with these sections:
    - "Where to find it": a table of the controls of Context with the path a reviewer taps.

@@ -45,9 +45,11 @@ P4-09 (D-42).
     - A Telegram user (`telegram_id > 0`, linked through P4-09): delete only the
       `user_identities` rows of that `(issuer, subject)`. The Telegram account and its
       content belong to the bot and stay.
-    - A Firebase-provisioned user (`telegram_id < 0`): set `creator_user_id` of their
-      events to the removed user, then delete the user row; the database cascades and
-      nulls the rest.
+    - A Firebase-provisioned user (`telegram_id < 0` and `password_hash IS NULL`): set
+      `creator_user_id` of their events to the removed user, then delete the user row; the
+      database cascades and nulls the rest.
+    - A native email and password account (`telegram_id < 0`, `password_hash` set) that a
+      NUmer identity was attached to: delete only the identity rows, like a Telegram user.
   - `account.disabled` (defined, not yet sent) and any other issuer change nothing.
   - Each handled event id is stored in `processed_account_events`; a replay changes nothing.
   - All of one event is one transaction; any failure answers 500 so NUmer retries.
@@ -79,10 +81,11 @@ P4-09 (D-42).
    `POST /internal/v1/account-events`, status 204. No secret configured -> 503; read the
    raw body and `x-numer-signature`; `SignatureInvalid` -> 401 `Invalid signature`;
    already processed -> 204; else `handle_account_event` and commit. Include it in
-   `web/main.py` after `flutter_analytics_router`. Add the file to the `mypy` list in
+   `web/main.py` after `flutter_analytics_router`. Append the file to the single `mypy` command at
    `ci.yml:66`.
 7. Docs: `backend/SUPERAPP_BRIDGE.md` "Account deletion" (what goes, what stays, the removed
-   user); `docs/INFRASTRUCTURE.md` (endpoint, secret); `docs/PRODUCT.md` (what a user who
+   user, and that a still-valid ID token used within its last hour provisions a new empty
+   user, which is accepted); `docs/INFRASTRUCTURE.md` (endpoint, secret); `docs/PRODUCT.md` (what a user who
    deletes their NUmer account keeps in Telegram).
 8. Tests:
    - `tests/integration/test_account_events_db.py` (`-m integration`, Postgres, signing
@@ -91,7 +94,8 @@ P4-09 (D-42).
      removed user as creator and are still listed by the public events endpoint; the user,
      the identity, the favourite, the reminder, the comment, the rating and the friendship
      are gone; analytics rows that named them have `user_id` null. A linked Telegram user
-     -> only the identity row is gone. A replay of the same event -> 204 and no change (add
+     and a native password account with an attached identity -> only the identity row is
+     gone. A replay of the same event -> 204 and no change (add
      a new favourite for another user between calls and assert it stays). An unknown
      subject -> 204. `account.disabled` and another issuer -> 204 and no change. The
      migration upgrades and downgrades on an empty database.
@@ -114,7 +118,7 @@ P4-09 (D-42).
 - `APP_ENV` and the existing production guards stay authoritative.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle; no bare `except`.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - No secret in code, tests (use a test constant), the repo or CI.
 - Do not deploy, do not push, do not connect to any server, database or the production bot.
 - If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit.

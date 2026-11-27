@@ -67,20 +67,26 @@ controller when only the token changes.
    `gradus_feature/test`, `gradus_app/lib` and `gradus_app/test`. The seven
    `AppColors.primary` uses (`course_form.dart:580`, `gradus_screen.dart:310` and `:342`,
    `gradus_widgets.dart:185`, `:348`, `:353`, `:398`) become `AppColors.of(context).primary`;
-   `course_form.dart:580` reads one name and drops the `isLight` choice. Every button that
-   passes `isLoading` also passes `loadingHint` (add the key `loadingHint`: EN "Loading",
-   RU "Загрузка", KK "Жүктелуде" to the three ARB files if no such string exists). The
-   `AppLoader()` at `gradus_screen.dart:162` becomes `AppLoader(page: true)`.
+   `course_form.dart:580` reads one name and drops the `isLight` choice. The
+   `AppPrimaryButton(color: ...)` at `gradus_widgets.dart:230-236` drops `color` (it becomes
+   `destructive: true` if the colour was an error colour). No Gradus button passes
+   `isLoading`, so no `loadingHint` is needed. The `AppLoader()` at `gradus_screen.dart:162`
+   becomes `AppLoader(page: true)`. `test/boundaries/layer_boundaries_test.dart` names
+   `package:app_ui/` among the imports `domain` may not use: change it to
+   `package:numer_ui/`.
 3. Focus mode: apply `MIGRATION.md` "Focus mode" to `course_form.dart`,
    `assignment_form.dart` and `semester_form.dart`. Replace the four `showModalBottomSheet`
    calls that open them (`gradus_screen.dart:43`, `:82`, `course_detail_screen.dart:39`,
-   `:70`) with `showNumerFormSheet`, each builder wrapping the form in
-   `GradusStringsScope(child: GradusScope(session: ..., controller: ..., child: <form>))`.
-   `doneLabel` is a new key `done`: EN "Done", RU "Готово", KK "Дайын". Delete
+   `:70`) with one new helper, `lib/src/presentation/scoped_sheet.dart`: `Future<T?>
+   showGradusFormSheet<T>(BuildContext context, {required WidgetBuilder form})`, which reads
+   `GradusScope.of(context)` once and calls `showNumerFormSheet` with a builder returning
+   `GradusStringsScope(child: GradusScope(session: ..., controller: ..., child:
+   form(context)))`. `doneLabel` is the existing key `done` (`app_en.arb:70`). Delete
    `lib/src/presentation/focus_mode.dart` and its test.
-4. `confirm_dialog.dart` (`showModalBottomSheet<bool>` at line 12) becomes a call to
-   `showNumerConfirm` with the same title, body and labels; keep the function name and
-   signature so callers do not change.
+4. `confirm_dialog.dart`: keep `confirmDestructiveAction(context, {required String
+   message})` and make its body `showNumerConfirm(context, title: message, confirmLabel:
+   strings.delete, destructive: true)` (read `strings` before the call; the sheet's cancel
+   label is `numer_ui`'s own).
 5. Delete `app_ui/`. Remove `app_ui` from the package loops and the path filter in
    `scripts/verify.sh:21` and `.github/workflows/ci.yml:45`, `:121`, `:131`, `:137`, and the
    `(cd app_ui && flutter test --no-pub)` line at `:143`. Replace the `AppTheme.lightTheme`
@@ -98,7 +104,8 @@ controller when only the token changes.
 7. `HttpSyllabusImporter` takes `required GradusIdToken idToken` and `required Future<bool>
    Function() onSessionExpired` instead of `accessToken`. In `importFromFile`, move the POST
    into a private `Future<http.Response> _post(List<int> bytes, String contentType, String
-   key)` that awaits `idToken()` for its header; compute the idempotency key once before the
+   key)` that awaits `idToken()` for its header (any exception thrown by `idToken()` becomes
+   `SyllabusImportFailure(SyllabusImportProblem.unavailable)`); compute the idempotency key once before the
    first attempt so the repeat sends the same key. On a 401 apply the contract in Context.
    `createSyllabusImporter` in `gradus_scope.dart:30-33` takes the same two parameters.
 8. Keys: in `gradus_feature.dart` the controller is recreated only when `accountId` changes
@@ -118,10 +125,12 @@ controller when only the token changes.
     deployment validation. Replace `app_ui` with `numer_ui` in `AGENTS.md` "Packages" and in
     `docs/ARCHITECTURE.md:22-40` and `docs/INFRASTRUCTURE.md:21`: `numer_ui` comes from the
     NUmer repository by git tag; product concepts never go into it. Remove the sentence
-    about `app_ui/test/token_parity_test.dart`.
+    about `app_ui/test/token_parity_test.dart` and the `app_ui/test` row of
+    `docs/ARCHITECTURE.md:463`, and fix `AGENTS.md:25,31-36,141`.
 12. Tests (hand-written fakes, `flutter_test`):
-    - `gradus_feature/test/gradus_feature_test.dart`: pump `GradusFeature` with a counting
-      `GradusDependencies.createController`; rebuild it with a new `GradusSession` whose
+    - `gradus_feature/test/gradus_feature_test.dart`: pump `GradusFeature` with a
+      hand-written subclass of `GradusDependencies` whose `createController` override counts
+      calls and returns a controller whose `dispose` is counted; rebuild it with a new `GradusSession` whose
       `idToken` returns a different string and the same `accountId`: the controller is
       created once and not disposed; rebuild with a different `accountId`: a second
       controller is created and the first disposed.
@@ -151,7 +160,7 @@ controller when only the token changes.
 - Every sheet or dialog with a text field uses focus mode (`MIGRATION.md` "Focus mode"). A loading button shows only its spinner and passes `loadingHint`.
 - Every user-facing string is in `app_en.arb`, `app_ru.arb` and `app_kk.arb` under `gradus_feature/lib/src/l10n/arb/`; run `flutter gen-l10n`.
 - The token is never written to disk, a log, a key or a field that outlives one request.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
@@ -162,7 +171,7 @@ controller when only the token changes.
 - [ ] `./scripts/verify.sh` exits 0 with the coverage floor of 85 for `gradus_feature`.
 - [ ] The `MIGRATION.md` step 6 grep prints only `AppColors.of` and `AppTextStyles.of` lines.
 - [ ] `grep -rn "accessToken" gradus_feature gradus_app --include='*.dart'` prints nothing.
-- [ ] `app_ui/` and `gradus_feature/lib/src/presentation/focus_mode.dart` are gone; `grep -rn "app_ui" . --include='*.yaml' --include='*.yml' --include='*.sh'` prints nothing.
+- [ ] `app_ui/` and `gradus_feature/lib/src/presentation/focus_mode.dart` are gone; `grep -rn "app_ui" . --include='*.yaml' --include='*.yml' --include='*.sh' --include='*.md' --include='*.dart'` prints nothing (outside `.claude/`).
 - [ ] The tests of step 12 exist and pass; the controller test asserts one creation across a token change.
 - [ ] `grep -rn "creditsRatio" gradus_feature/lib` prints nothing.
 - [ ] Screenshots of the GPA screen, the course form while typing and the confirm sheet, from `gradus_app`, light and dark, EN and RU, attached.

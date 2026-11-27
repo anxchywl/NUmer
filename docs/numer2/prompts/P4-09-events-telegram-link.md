@@ -37,8 +37,12 @@ without ever merging accounts silently or moving an admin role.
   to 64 bytes.
 - "Content" of a user, for the refusal (D-22): any row in `events` with `creator_user_id`,
   `favorites`, `reminders`, `ratings` or `comments` with `user_id`, `friendships` with
-  `user_id` or `friend_user_id`, or `friend_requests` with `requester_id` or `recipient_id`
-  equal to that user's id.
+  `user_id` or `friend_user_id`, `friend_requests` with `requester_id` or `recipient_id`, or
+  `friend_invites` with `owner_id` equal to that user's id. Not content: `privacy_settings`
+  (a default row), verification and reset codes, `user_activity_logs`, `audit_logs`,
+  `moderation_logs`, `event_analytics`; deleting the provisioned user removes or nulls them
+  through their foreign keys, by design. `users.superapp_user_id` is a legacy key that
+  linking leaves untouched.
 - Redis key: `telegram_link:<code>`, value JSON `{"issuer", "subject", "email"}`, 600
   seconds. `email` is the token's verified email or null.
 - CI runs, in `backend/`: `ruff check app ../scripts ../tests/backend --select
@@ -76,8 +80,9 @@ without ever merging accounts silently or moving an admin role.
      each an `EXISTS` select through the SQLAlchemy models.
    - `async def attach_identity(session, *, telegram_user: User, payload: LinkPayload) ->
      LinkOutcome` with `LinkOutcome` a `StrEnum` of `linked`, `already_linked`, `taken`,
-     `content_conflict`. Take the advisory lock `firebase:{issuer}:{subject}` (reuse
-     `_advisory_lock` by moving it to this module and importing it in `firebase_bridge.py`).
+     `content_conflict`. Take the advisory lock `firebase:{issuer}:{subject}` (move
+     `_advisory_lock` to this module as the public `advisory_lock` and import it in
+     `firebase_bridge.py`).
      Then, in order: the identity row for `(issuer, subject)` already points at the
      Telegram user -> `already_linked`; the Telegram user already has an identity with this
      issuer -> `taken`; the identity row points at another user with `telegram_id > 0` ->
@@ -109,11 +114,14 @@ without ever merging accounts silently or moving an admin role.
    Include the router in `main.py` before `start_router` (`main.py:124`), so the generic
    deep-link handler in `start.py:40` never sees `link_` payloads.
 5. Docs: `backend/SUPERAPP_BRIDGE.md` gains "Telegram link": the endpoint, the code's life,
-   the bot confirmation, the four outcomes and that roles never move; `docs/PRODUCT.md`
+   the bot confirmation, the four outcomes, that roles never move, and the accepted risk that
+   whoever opens the link within 10 minutes can confirm it; `docs/PRODUCT.md`
    describes linking for a user; `docs/INFRASTRUCTURE.md` names the Redis key.
 6. Tests:
-   - `tests/backend/test_telegram_account_links.py` with the `FakeRedis` pattern of
-     `test_flutter_cover_upload.py:60`: a code round-trips through `peek_link` and
+   - `tests/backend/test_telegram_account_links.py` with its own `FakeRedis` (the one in
+     `test_flutter_cover_upload.py:60` has no `nx` or `getdel`): `set(key, value, ex=None,
+     nx=False)` recording `ex`, `get`, `getdel`, `delete`. `redis>=5` has `getdel` and the
+     compose Redis is 7: a code round-trips through `peek_link` and
      `take_link` once (a second `take_link` is `None`); expiry is passed as 600; masking of
      `ab@nu.edu.kz`, `a@x.y`, `None`.
    - `tests/integration/test_telegram_link_db.py` (`-m integration`, Postgres; Redis is the
@@ -145,7 +153,7 @@ without ever merging accounts silently or moving an admin role.
 - Linking never copies or changes a role (D-07, D-22).
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle; no bare `except`.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Do not deploy, do not push, do not connect to any server or the production bot.
 - If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit.
 

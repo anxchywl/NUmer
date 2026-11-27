@@ -29,16 +29,19 @@ listing was hidden by moderation, and a banned word gets a clear message. Split 
   report status in the app and the operator tab only lists reports.
 - Menus (D-42): the listing detail's floating report control becomes an
   `IconButton(icon: AppIcons.moreVert, tooltip: strings.moreActions)` opening a
-  `MenuAnchor` with "Report" (today's sheet; after it is sent the row reads "Reported"
-  and is disabled) and "Block seller" (or "Unblock seller"); the menu is absent on your own
+  `MenuAnchor` with "Report" (today's sheet; after it is sent, or when the API answers 409
+  because this user already reported it, the row reads "Reported" and is disabled for this
+  visit) and "Block seller" (or "Unblock seller" when the listing carries
+  `seller_blocked: true`, P4-12); the menu is absent on your own
   listing. The seller profile's app bar has the same button with "Block seller" or
-  "Unblock seller". Block asks with `showNumerConfirm(title: blockSellerTitle, body:
+  "Unblock seller" (from `seller_blocked`). Block asks with `showNumerConfirm(title: blockSellerTitle, body:
   blockSellerBody, confirmLabel: blockSeller)`; unblock needs no confirmation. After a
   block the screen pops back to the tab root and the feeds refresh.
 - "Blocked sellers": the host's app bar menu cannot reach the package's scope, so it is a
   `NumerRow` at the top of the My listings tab that pushes a list of blocked sellers, each a
   row with an "Unblock" text button; empty state `blockedSellersEmpty` (D-42).
-- Operator tab: each open report gets text buttons "Hide listing", "Suspend seller",
+- Operator tab (holders of `muto:admin`): the report response carries `seller_id`,
+  `seller_account_status` and `listing_moderation_hidden` (P4-12). Each open report gets text buttons "Hide listing", "Suspend seller",
   "Dismiss"; each opens a form sheet with one required reason field (focus mode, one field,
   so no Done swap) and sends the P4-12 endpoint with `report_id`. A row at the top,
   "Handled reports", pushes the reports with status `actioned` or `dismissed`, each with
@@ -126,7 +129,7 @@ listing was hidden by moderation, and a banned word gets a clear message. Split 
 - UI: only names from `package:numer_ui/compat.dart` and `Numer*`; confirmations are `showNumerConfirm`; messages are `showNumerMessage`. No new colour, radius, text style, font or icon package. Every icon-only control has a tooltip.
 - Every sheet or dialog with a text field uses focus mode; a loading button shows only its spinner and passes `loadingHint`.
 - Every user-facing string in the three ARB files, with the values of the table.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (`listing_detail_screen.dart` is 1166: move the menu into its own file).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings (convert the `///` you touch), debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
@@ -136,7 +139,7 @@ listing was hidden by moderation, and a banned word gets a clear message. Split 
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0 with the coverage floor of 70.
 - [ ] The tests of step 7 exist and pass.
-- [ ] `wc -l muto_feature/lib/src/presentation/listing/listing_detail_screen.dart` is at most 1166.
+- [ ] `listing_detail_screen.dart` is no longer than it was after P4-13 (state both counts); the menu lives in its own file.
 - [ ] Screenshots from `muto_app` (sample backend) in host chrome: the listing menu, the block confirmation, blocked sellers (empty and with rows), the operator tab with actions, the reason sheet while typing, an owner's moderated listing; light and dark, EN and RU.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).
 

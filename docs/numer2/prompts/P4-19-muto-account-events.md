@@ -32,12 +32,14 @@ gates). Split from P4-12 (D-42).
   (`models/user.py:53-70`). The issuer of NUmer's tokens is
   `https://securetoken.google.com/<FIREBASE_PROJECT_ID>`.
 - Foreign keys that block a plain delete (`ondelete="RESTRICT"`): `listings.owner_id`,
-  `reports.reporter_id`, `reports.listing_id`, `image_uploads.listing_id`,
-  `listing_images.upload_id`. Everything else to `users` or `listings` cascades or is set
+  `reports.reporter_id`, `reports.listing_id`, `image_uploads.redeemed_listing_id` (a
+  `redeemed` upload may not null it, check `redemption_matches_state`) and
+  `listing_images.image_upload_id`. `image_uploads.owner_id` cascades. Everything else to `users` or `listings` cascades or is set
   null (check P4-12's tables).
 - Order of deletion in one transaction (D-42): reports filed by the user and reports on the
-  user's listings; `listing_images` of the user's listings; the user's listings; the
-  user's `image_uploads` (collect their non-null `storage_key`s first); the user (identities,
+  user's listings; `listing_images` of the user's listings; the user's `image_uploads` and
+  any upload whose `redeemed_listing_id` is one of the user's listings (collect their
+  non-null `storage_key`s first); the user's listings; the user (identities,
   favourites, idempotency keys and blocks cascade; audit rows keep their row with the user
   set null). After the commit, delete each collected key from `ImageStorage`; a key that
   fails to delete is left for the existing `reconcile_storage` command and logged once as
@@ -50,7 +52,8 @@ gates). Split from P4-12 (D-42).
 ## Steps
 1. `pyproject.toml:31`: `tag = "identity-v0.2.0"`; `uv lock` in `backend/`.
 2. Settings: `account_events_secret: SecretStr | None` (alias `ACCOUNT_EVENTS_SECRET`); in
-   the validator at `config.py:195`, production with the firebase adapter requires it. Add
+   the validator at `config.py:195`, `self.environment == AppEnvironment.production` with
+   the firebase adapter requires it. Add
    it to `.env.example`, `deploy/production.env.example` and the required list in
    `deploy/preflight.sh` next to `FIREBASE_PROJECT_ID`.
 3. Model `ProcessedAccountEvent` and one Alembic revision creating
@@ -60,8 +63,8 @@ gates). Split from P4-12 (D-42).
    order of Context with SQLAlchemy statements, the processed row last, commit, then the
    storage deletes.
 5. Router `backend/app/api/account_events.py`: `APIRouter(include_in_schema=False)`, `POST
-   /internal/v1/account-events`, 204; no secret -> 503 (`ServiceUnavailableError` or the
-   repo's equivalent); `SignatureInvalid` -> 401 with the repo's error shape; replay ->
+   /internal/v1/account-events`, 204; no secret -> 503 (`ServiceUnavailableError`); `SignatureInvalid` -> 401
+   (`UnauthorizedError`, whose code is the fixed `authentication_required`); replay ->
    204. Include it in `api/router.py`.
 6. Docs: `docs/API.md` stays public-only; `docs/INFRASTRUCTURE.md` names the endpoint and
    the secret; `docs/PRODUCT.md` says what a deleted account leaves (audit rows without a
@@ -90,9 +93,9 @@ gates). Split from P4-12 (D-42).
 - Follow this repo's `AGENTS.md`; NUmer `DECISIONS.md` section F applies where it has no rule.
 - The body is not trusted before the signature check; body, secret, header and storage keys are never logged.
 - One migration; no raw SQL outside it; all database work of one event in one transaction.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42).
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings, debug prints, commented-out code or emoji.
-- Catch only the specific failure you handle (the storage delete catches the storage error type it raises, not `Exception`).
+- Catch only the specific failure you handle (the storage delete catches exactly `ServiceUnavailableError`, `OSError`, `botocore.exceptions.ClientError` and `botocore.exceptions.BotoCoreError`, never `Exception`).
 - No secret in code, tests (use a test constant), the repo or CI.
 - Do not deploy, do not push, do not connect to any server or bucket.
 - If this change makes `AGENTS.md`, `README.md` or `docs/*` wrong, fix them in the same commit.
@@ -114,4 +117,3 @@ Report: files changed, both test commands' output, user actions still pending.
 ## Stop and ask if
 - `uv lock` cannot fetch `identity-v0.2.0`.
 - A table that references `users` or `listings` is `RESTRICT` and not listed in Context.
-- The storage interface has no error type to catch for a failed delete.

@@ -39,6 +39,9 @@ appears on the other.
   `lib/core/data/study_sync.dart`, next to the new grade and semester functions. The
   service keeps the batching, the cursors and the order of work. The pure functions take
   the database and the uid as arguments, so tests call them without a Firestore fake.
+- `code` travels on the course document, which group peers may read; that is accepted
+  (a course code is not a grade, D-25). Soft-deleted grades and semesters stay remote as
+  `deleted: true`, like courses.
 - Remote paths: `users/{uid}/courseGrades/{courseId}` and `users/{uid}/semesters/{id}`
   (rules from P4-02). Remote shapes:
   - grade: `{uid, semesterId, gradeLetter, assignments: [{id, name, weight, maximumScore,
@@ -60,7 +63,9 @@ appears on the other.
      plus `code: data['code'] as String?` in the create branch and `..code = data['code']
      as String?` in the update branch. Drop the second of the two identical `..goalHours`
      lines (`sync_service.dart:827-828`).
-   In `SyncService` replace the three with calls to these functions; the `courses`
+   In `SyncService` replace the three with calls to these functions; every one of the 14
+   call sites of `_timestampToMs` switches to `timestampToMs` and the private function is
+   deleted; the `courses`
    `_pullCollection` call passes `mapper: (doc) => applyRemoteCourse(_db, uid: _uid!, id:
    doc.id, data: doc.data())`.
 2. In `study_sync.dart` add, following `applyRemoteCourse` and `courseToRemote` line for
@@ -89,13 +94,15 @@ appears on the other.
    directory (pattern of `storage_courses_test.dart`) and `Timestamp` values:
    - `courseGradeToRemote` of a dirty grade with two assignments has every field and
      `updatedAt` is `FieldValue.serverTimestamp()`; `semesterToRemote` likewise.
-   - push: a `SyncService` built with a hand-written `FirebaseFirestore` fake whose
+   - push (required): a `SyncService` built with a hand-written `FirebaseFirestore` fake whose
      `batch()` records `set` calls by document path (extend the fakes of
-     `sync_service_test.dart` in the new file, start the service with `start(uid: 'u',
-     deviceId: 'd')`): after `pushDirty` one dirty grade produces one `set` at
-     `users/u/courseGrades/<id>` and the local record is clean. If `start` needs fakes
-     beyond those of `sync_service_test.dart` plus a recording `WriteBatch` and document
-     paths, leave this one case out, say so in the report, and rely on the two-device check.
+     `sync_service_test.dart` into the new file, since they are private there; `_FakeDocument`
+     gains `path` and `collection(String)`, `_FakeFirestore` gains `batch()` returning a
+     recording `WriteBatch` fake whose `set` stores path and data and whose `commit`
+     completes; the database is `LocalDatabase.instance` after `Storage.configureForUser('u')`,
+     not the `noSuchMethod` fake). Start it with `start(uid: 'u', deviceId: 'd')`, adding to
+     the fakes whatever `start` calls until it completes. After `pushDirty` one dirty grade
+     produces one `set` at `users/u/courseGrades/<id>` and the local record is clean.
    - pull of a newer remote grade over a clean local one replaces it.
    - a dirty local grade with `updatedAtMs` newer than the remote is kept and no conflict
      is logged; one older than the remote takes the remote and logs one conflict with

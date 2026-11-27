@@ -65,12 +65,15 @@ both go away when the booking is released.
 ## Steps
 1. `pubspec.yaml`: add `piano_room_feature` by git (`url:
    https://github.com/anxchywl/Clavis.git`, `path: piano_room_feature`, `ref: v0.2.0`);
-   run `flutter pub get`.
+   run    `flutter pub get`; then `cd ios && pod install` and keep the updated `ios/Podfile.lock`.
+   Do not start before the Clavis tag `v0.2.0` exists (F-1).
 2. `ModuleDescriptor.needsBaseUrl` and the `visibleModules` rule (Context); extend
    `test/app/modules/module_registry_test.dart`: a descriptor with `needsBaseUrl: true` is
    hidden without a `baseUrl` and shown with one.
 3. `UpcomingStore`: constructor parameter `Future<void> Function(int id)
-   cancelNotification` (the app passes `Notifs.cancel`), `static int notificationIdOf(String
+   cancelNotification` as a required named parameter (the app passes `(id) async { await
+   Notifs.init(); await Notifs.cancel(id); }`; update every `UpcomingStore(` in the P3-10
+   tests), `static int notificationIdOf(String
    itemId)`, and `remove` and `clear` call `cancelNotification(notificationIdOf(id))` for
    each item they drop (also for an item `put` drops because it is past). Update its
    provider in `bootstrap.dart` and its tests.
@@ -82,21 +85,30 @@ both go away when the booking is released.
    'clavis', needsBaseUrl: true, builder: buildClavisModule)`.
 5. `ClavisModuleBody` (`StatefulWidget`, in `clavis_module_body.dart`): in `initState`
    read `ModuleSession`, `AuthController` (uid), `AppConfigService` and `UpcomingStore`;
-   build `PianoRoomRemote(baseUri: config.moduleBaseUrl('clavis')!, idToken:
+   build the remote through an optional constructor parameter `PianoRoomRemote Function(Uri
+   baseUri, String uid, ModuleSession session)? remoteBuilder` (tests pass one over Clavis's
+   sample repository; the default builds `PianoRoomRemote(baseUri: config.moduleBaseUrl('clavis')!, idToken:
    session.idToken, onSessionExpired: () async => await session.handleSessionExpired() !=
-   null, studentId: uid)` and `_clock = remote.repository.synchronizeClock().catchError((_)
+   null, studentId: uid)`; `PianoRoomRemote` is imported from
+   `package:piano_room_feature/piano_room_remote.dart`) and `_clock = remote.repository.synchronizeClock().catchError((_)
    {}, test: (error) => error is PianoRoomFailure)`. `build` is a `FutureBuilder` on
    `_clock`: until done, `const NumerSkeleton(rows: 6)`; then `PianoRoomFeature(session:
    remote.session, repository: remote.repository, policy: remote.policy, now: remote.now,
-   onBooked: _booked, onReleased: _released)`.
-6. `_booked(PianoRoomBooking booking)`: `upcoming.put(uid, UpcomingItem(id:
+   onBooked: sync.booked, onReleased: sync.released)`.
+6. `lib/features/clavis/clavis_booking_sync.dart`: `class ClavisBookingSync({required String
+   uid, required UpcomingStore store, required String title, required String Function(String
+   time) reminderBody, Future<void> Function({required int id, required String title,
+   required String body, required DateTime whenLocal}) scheduleReminder = Notifs.scheduleOnce,
+   DateTime Function() now = DateTime.now})`, built in `initState` with the module title and
+   body from `AppLocalizations`. `booked(PianoRoomBooking booking)`: `upcoming.put(uid, UpcomingItem(id:
    'clavis:${booking.id}', moduleId: 'clavis', kind: UpcomingKind.pianoBooking, title:
    l10n.moduleClavisTitle, startsAt: booking.start, route: '/module/clavis'))`; then, when
    `booking.start.subtract(const Duration(minutes: 30))` is after now,
    `Notifs.scheduleOnce(id: UpcomingStore.notificationIdOf(itemId), title:
-   l10n.moduleClavisTitle, body: l10n.clavisReminderBody(<time>), whenLocal: <that time,
-   local>)`. `_released(String bookingId)`: `upcoming.remove(uid, 'clavis:$bookingId')`
-   (which cancels the reminder). Read `l10n` from the widget's context at call time.
+   title, body: reminderBody(<time>), whenLocal: <that time, local>)` through
+   `scheduleReminder`. `released(String bookingId)`: `store.remove(uid, 'clavis:$bookingId')`
+   (which cancels the reminder). A booking whose callback arrives after the module was left
+   is not delivered (Clavis drops callbacks of a disposed controller); that is accepted.
 7. `lib/app/modules/open_upcoming.dart`: `bool openUpcomingItem(BuildContext context,
    UpcomingItem item, List<ModuleDescriptor> visible)` per Context. `shell_tabs.dart`
    passes `(context, item) => openUpcomingItem(context, item, <visible campus and study
@@ -106,16 +118,15 @@ both go away when the booking is released.
 9. Strings: add the three keys (the last with a `time` placeholder of type `String`); run
    `flutter gen-l10n`.
 10. Tests:
-    - `test/features/clavis/clavis_lazy_start_test.dart` (pattern of the Gradus one): with
+    - `test/features/clavis/clavis_lazy_start_test.dart` (pattern and fakes of the Gradus
+      one, and a `remoteBuilder` over Clavis's sample repository so no HTTP call is made): with
       the flag and `baseUrl` set, pumping the Campus root makes zero `idToken` calls and
       creates no `ClavisModuleBody`; tapping the row creates one; going back disposes it.
-    - `test/features/clavis/clavis_upcoming_test.dart`: drive `_booked` and `_released`
-      through a `PianoRoomFeature` built with Clavis's sample repository
-      (`piano_room_development.dart`) or by calling the two callbacks of a pumped
-      `ClavisModuleBody` with a fake remote; assert one Upcoming item with kind
+    - `test/features/clavis/clavis_booking_sync_test.dart`: call `booked` and `released` of
+      a `ClavisBookingSync` with a real `UpcomingStore` (mock prefs), a recording
+      `scheduleReminder` and a fixed `now`; assert one Upcoming item with kind
       `pianoBooking`, the booking's start and id `clavis:<id>`; one scheduled reminder at
-      start minus 30 minutes (inject the scheduler: `ClavisModuleBody` takes an optional
-      `scheduleReminder` parameter defaulting to `Notifs.scheduleOnce`); no reminder for a
+      start minus 30 minutes; no reminder for a
       booking starting in 20 minutes; release removes the item and cancels the same id.
     - `test/core/upcoming/upcoming_store_test.dart` (extend): `remove` and `clear` cancel
       the notification ids of the dropped items.
@@ -153,14 +164,14 @@ both go away when the booking is released.
 ## Acceptance criteria
 - [ ] `./scripts/verify.sh` exits 0.
 - [ ] The tests of steps 2, 3 and 10 exist and pass.
-- [ ] `grep -rn "(_, _) => false" lib/app/shell` prints nothing.
+- [ ] `grep -n "openUpcomingItem" lib/app/shell/shell_tabs.dart` shows the Upcoming hook wired (the news hook stays `(_, _) => false` until P4-11).
 - [ ] The report gives both `apkDownloadBytes` values and the difference.
 - [ ] Screenshots of step 13 are attached, and the report answers each review item of `DESIGN.md` section 11 with yes or no.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).
 
 ## User actions
 - `USER_ACTIONS.md` F-7: add `modules.clavis.baseUrl` to `config/app` (staging, then production).
-- Book and release a slot on a device; check the Upcoming row and that the reminder arrives 30 minutes before.
+- Book and release a slot on a device; check the Upcoming row and that the reminder arrives about 30 minutes before (Android delivers it inexactly).
 - Keep the `clavis` flag on the `allow` list until P4-07 is deployed and listed in `ACCOUNT_EVENT_TARGETS` (F-3).
 
 ## Deliverable

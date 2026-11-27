@@ -47,9 +47,9 @@ and loses the screens nothing opens.
 - Screens with no construction site (`grep -rn "<Name>(" lib test` finds only the class):
   `features/stub/stub_screen.dart`, `features/calendar/calendar_screen.dart`,
   `features/moderation/pending_events_screen.dart`. `AppCalendar` and `AppCalendarEvent`
-  are used only by `calendar_screen.dart`, so they go with it and with `app_ui` (D-42: they
-  do not move into the package).
-- Size of the migration: 284 `AppColors.` and 98 `AppTextStyles.` references in 21 files.
+  are also used by `events_screen.dart` (`:478`, `:502-508`, `:822-843`), so they move into
+  the package (`MIGRATION.md`, "Removed names") before `app_ui` goes.
+- Size of the migration: 285 `AppColors.` and 98 `AppTextStyles.` references in about 20 files.
   `event_manager_screen.dart` (2830 lines), `submit_screen.dart` (1994),
   `event_detail_screen.dart` (1739) and `events_screen.dart` (1464) hold most. The rename
   is mechanical: `AppColors.x` -> `AppColors.of(context).x`; where no `BuildContext` is in
@@ -63,7 +63,10 @@ and loses the screens nothing opens.
 1. `flutter_events/pubspec.yaml`: replace the `app_ui` path entry with the `numer_ui` git
    entry (`url: https://github.com/anxchywl/NUmer.git`, `path: packages/numer_ui`, `ref:
    numer-ui-v0.1.0`); `intl: any`. `flutter pub get`.
-2. Delete the three screens of Context and anything only they import; delete `app_ui/`.
+2. Copy `app_ui/lib/calendar/app_calendar.dart` and `app_calendar_event.dart` into
+   `flutter_events/lib/features/shared/calendar/`, switch `events_screen.dart` to them, and
+   restyle them with `numer_ui` names in step 3. Then delete the three screens of Context and
+   anything only they import, and delete `app_ui/`.
    Remove `app_ui` from `ci.yml:173` and from docs (`README.md`, `flutter_events/README.md`,
    `docs/INFRASTRUCTURE.md`; `grep -rn "app_ui" --include='*.md' .`).
 3. Apply `MIGRATION.md` steps 1 to 4 to every file under `flutter_events/lib` and
@@ -89,7 +92,19 @@ and loses the screens nothing opens.
      paths keep their leading one) and `AuthStore.useHost(session)`. Remove the old
      `onSessionExpired` `VoidCallback` parameter; the session carries it.
    - `AuthStore.useHost(EventsHostSession? host)` keeps the host in a static field;
-     `AuthStore.clear()` also clears it. In host mode `AuthStore.token` is never set.
+     `AuthStore.clear()` also clears it. In host mode `AuthStore.token` is never set;
+     `AuthStore.saveHost({required String role, String? firstName, required int userId})`
+     stores the profile in memory, and `isLoggedIn` is true when a host is set and a profile
+     was saved. `expireIfCurrent` and `_requestTokens` stay for standalone mode; in host
+     mode a 401 that survives the retry calls a new `AuthStore.expireHost()` that bumps
+     `sessionExpiryChanges`.
+   - Every other reader of the token or the base URL moves too:
+     `core/realtime_updates.dart:48-54` awaits `host.idToken()` for each connect in host mode
+     (and calls `expireHost()` on a 401) and builds its URL from `EventsApi.baseUrl`;
+     `uploadCover` (`api_client.dart:~292-330`) builds its `MultipartRequest` inside the
+     closure given to `_request`, so it gets the header and the retry;
+     `models/analytics_model.dart:16` and `models/event_model.dart:140` read
+     `EventsApi.baseUrl`.
    - `api_client.dart`: `_headers` becomes `Future<Map<String, String>> _headers({bool
      auth = false})`: in host mode `'Bearer ${await host.idToken()}'`, otherwise today's
      `AuthStore.token`. `_get`, `_post`, `_patch`, `_delete` and the multipart upload build
@@ -102,7 +117,7 @@ and loses the screens nothing opens.
      expired through `AuthStore` the same way.
    - `_bootstrapHostSession`: drop the `accessToken` checks; call `bootstrapSession()`
      with no token argument (it uses `_headers(auth: true)`); keep the profile save with
-     `persist: false` and no `token`. `didUpdateWidget` re-bootstraps only when
+     `AuthStore.saveHost(...)`. `didUpdateWidget` re-bootstraps only when
      `accountId` changes, and then calls `AuthStore.clear()` first.
 6. `lib/main.dart` keeps the standalone path (`EventsApp`, dev session); it compiles with
    the new constants.
@@ -116,7 +131,12 @@ and loses the screens nothing opens.
    - `test/app_bootstrap_test.dart` (extend): a new `EventsHostSession` with the same
      `accountId` and a different `idToken` does not re-run the bootstrap request; a
      different `accountId` does, and clears the stored profile first.
-   - Every existing test compiles against the new constructors and passes.
+   - Every existing test compiles against the new constructors and passes; the cases in
+     `test/app_bootstrap_test.dart:396-514` that used `EventsHostSession(accessToken: ...)`,
+     a blank token or the `onSessionExpired` `VoidCallback` become the same cases with an
+     `idToken` fake and `onSessionExpired` returning false.
+   - `test/realtime_updates_host_test.dart`: in host mode a connect awaits `idToken` once and
+     sends it as the bearer.
 8. Run the CI `flutter` job commands in `flutter_events/`, including the release build with
    the two defines, and the `MIGRATION.md` step 6 grep from `flutter_events/`.
 
@@ -130,7 +150,7 @@ and loses the screens nothing opens.
 - UI: only names from `package:numer_ui/compat.dart`. No new colour, radius, text style, font or icon package. Every icon-only control has a tooltip.
 - A loading button shows only its spinner and passes `loadingHint`.
 - The token is never written to disk, a log or a field that outlives one request in host mode.
-- A file you create stays under 400 lines; a file over 400 lines that you edit does not grow (D-42). The four large files may shrink only.
+- Size (D-42): a file you create stays under 400 lines. New logic meant for a file already over 400 lines goes into a new file; the mechanical migration (renames, `.of(context)`, focus-mode wiring) may lengthen such a file, and the report lists every edited file over 400 lines with its line count before and after.
 - Comments only for a non-obvious why: lowercase, one line, no trailing punctuation. No docstrings (convert the `///` you touch), debug prints, commented-out code or emoji.
 - Catch only the specific failure you handle.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
@@ -140,9 +160,9 @@ and loses the screens nothing opens.
 ## Acceptance criteria
 - [ ] The CI `flutter` job commands pass in `flutter_events/`, including the release build.
 - [ ] The `MIGRATION.md` step 6 grep prints only `AppColors.of` and `AppTextStyles.of` lines.
-- [ ] `grep -rn "kBaseUrl\|accessToken" flutter_events/lib` prints nothing; `app_ui/` and the three screens are gone.
+- [ ] `grep -rn "kBaseUrl\|accessToken" flutter_events/lib` prints nothing; `grep -rn "AuthStore.token" flutter_events/lib` shows only standalone paths; `app_ui/` and the three screens are gone; `AppCalendar` lives under `lib/features/shared/calendar/`.
 - [ ] The tests of step 7 exist and pass.
-- [ ] Screenshots from the standalone app against a local backend: the events list, an event detail, the submit form, the coordinator dashboard; light and dark, EN.
+- [ ] Screenshots from the standalone app against a local backend (starting the backend locally with the repo's `docker compose` is allowed; nothing remote): the events list, an event detail, the submit form, the coordinator dashboard; light and dark, EN.
 - [ ] No new comment breaks the comment rule; no debug prints or commented-out code (check the diff).
 
 ## User actions
