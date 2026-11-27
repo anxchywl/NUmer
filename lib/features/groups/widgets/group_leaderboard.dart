@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
 
@@ -289,48 +291,23 @@ class _PeriodSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        padding: const EdgeInsets.all(4),
-        child: Row(
-          children: [
-            for (final period in StatisticsPeriod.values)
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onPeriodChanged(period),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOutCubic,
-                    decoration: BoxDecoration(
-                      color: selectedPeriod == period
-                          ? colorScheme.primary
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Text(
-                      _periodLabel(context, period),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: selectedPeriod == period
-                            ? colorScheme.onPrimary
-                            : colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: NumerSpace.lg),
+      child: SegmentedButton<StatisticsPeriod>(
+        segments: [
+          for (final period in StatisticsPeriod.values)
+            ButtonSegment(
+              value: period,
+              label: Text(_periodLabel(context, period)),
+            ),
+        ],
+        selected: {selectedPeriod},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) {
+          HapticFeedback.selectionClick();
+          onPeriodChanged(selection.first);
+        },
       ),
     );
   }

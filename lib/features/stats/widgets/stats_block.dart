@@ -260,34 +260,3 @@ class _DetailStatCard extends StatelessWidget {
     );
   }
 }
-
-class SegChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const SegChip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          color: selected ? theme.colorScheme.onPrimary : null,
-        ),
-      ),
-      selected: selected,
-      onSelected: (_) => onTap(),
-      selectedColor: theme.colorScheme.primary,
-      shape: StadiumBorder(side: BorderSide(color: theme.dividerColor)),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 12),
-    );
-  }
-}

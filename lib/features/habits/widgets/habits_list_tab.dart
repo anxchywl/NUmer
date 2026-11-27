@@ -4,7 +4,6 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import '../models/habit.dart';
 import 'habit_list_item.dart';
 import 'habits_clearances.dart';
-import 'habits_create_button.dart';
 
 class HabitsListSliver extends StatelessWidget {
   const HabitsListSliver({
@@ -59,10 +58,7 @@ class HabitsListSliver extends StatelessWidget {
               style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 8),
-            FilledButton(
-              onPressed: onCreate,
-              child: const Text(createNewHabitLabel),
-            ),
+            FilledButton(onPressed: onCreate, child: Text(l10n.habitsAddHabit)),
           ],
         ),
       ),

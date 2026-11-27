@@ -91,7 +91,7 @@ class HabitStatistics extends StatelessWidget {
         // Month Chooser REMOVED (moved to dialog)
 
         // Swipe Selector (PageView)
-        _carousel(habits),
+        _carousel(context, habits),
 
         const SizedBox(height: 16),
 
@@ -104,9 +104,9 @@ class HabitStatistics extends StatelessWidget {
     );
   }
 
-  Widget _carousel(List<Habit> habits) {
+  Widget _carousel(BuildContext context, List<Habit> habits) {
     return SizedBox(
-      height: 180,
+      height: MediaQuery.textScalerOf(context).scale(180),
       child: PageView.builder(
         controller: pageController,
         itemCount: habits.length,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/history/history.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 import '../data/habit_report_builder.dart';
 
@@ -44,11 +45,10 @@ class HabitReportSession {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.habitReportFailed(e.toString())),
-            backgroundColor: Colors.red,
-          ),
+        showAppMessage(
+          context,
+          l10n.habitReportFailed(e.toString()),
+          isError: true,
         );
       }
     } finally {

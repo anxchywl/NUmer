@@ -1512,6 +1512,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get habitsEmptyListTitle => 'Әзірге әдеттер жоқ';
 
   @override
+  String get habitsAddHabit => 'Әдет қосу';
+
+  @override
   String get habitsEmptyListCta => 'Алғашқысын құру';
 
   @override

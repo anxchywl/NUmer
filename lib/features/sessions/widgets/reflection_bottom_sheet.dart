@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class ReflectionBottomSheet extends StatefulWidget {
   final String sessionId;
@@ -45,14 +46,10 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(
-                context,
-              )!.failedToSaveReflection(e.toString()),
-            ),
-          ),
+        showAppMessage(
+          context,
+          AppLocalizations.of(context)!.failedToSaveReflection(e.toString()),
+          isError: true,
         );
       }
     }

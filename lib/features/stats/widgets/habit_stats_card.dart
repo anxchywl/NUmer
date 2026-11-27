@@ -103,7 +103,6 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isKK = Localizations.localeOf(context).languageCode == 'kk';
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -112,10 +111,9 @@ class _StatRow extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).hintColor,
-              fontSize: isKK ? 13 : null,
             ),
             maxLines: 2,
-            overflow: TextOverflow.visible,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         const SizedBox(width: 8),
@@ -142,7 +140,6 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isKK = Localizations.localeOf(context).languageCode == 'kk';
     // Cleaner stat card: no border, subtle background
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
@@ -162,13 +159,10 @@ class _StatCard extends StatelessWidget {
           ),
           Text(
             label,
-            style: TextStyle(
-              fontSize: isKK ? 10 : 11,
-              color: color.withValues(alpha: 0.8),
-            ),
+            style: TextStyle(fontSize: 11, color: color.withValues(alpha: 0.8)),
             textAlign: TextAlign.center,
             maxLines: 2,
-            softWrap: true,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

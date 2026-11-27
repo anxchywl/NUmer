@@ -12,7 +12,7 @@ double iosBottomNavClearance(BuildContext context) {
 }
 
 double iosFabBottomLift(BuildContext context) {
-  // Keep pill close to nav while staying clear of overlap.
+  // close to the floating tab bar without overlapping it
   final lift = iosBottomNavClearance(context) - 36.0;
   return lift > 0 ? lift : 0;
 }

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../data/stats_labels.dart';
 import '../models/stats_models.dart';
 import '../stats_format.dart';
-import 'stats_block.dart';
 
-class PeriodRangeChips extends StatelessWidget {
+class PeriodRangeControl extends StatelessWidget {
   final Range range;
   final ValueChanged<Range> onSetRange;
 
-  const PeriodRangeChips({
+  const PeriodRangeControl({
     super.key,
     required this.range,
     required this.onSetRange,
@@ -18,27 +19,27 @@ class PeriodRangeChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-      child: Wrap(
-        spacing: 8,
-        children: [
-          SegChip(
-            label: AppLocalizations.of(context)!.week,
-            selected: range == Range.week,
-            onTap: () => onSetRange(Range.week),
-          ),
-          SegChip(
-            label: AppLocalizations.of(context)!.month,
-            selected: range == Range.month,
-            onTap: () => onSetRange(Range.month),
-          ),
-          SegChip(
-            label: AppLocalizations.of(context)!.year,
-            selected: range == Range.year,
-            onTap: () => onSetRange(Range.year),
-          ),
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(
+        NumerSpace.lg,
+        NumerSpace.sm,
+        NumerSpace.lg,
+        NumerSpace.xs,
+      ),
+      child: SegmentedButton<Range>(
+        segments: [
+          ButtonSegment(value: Range.week, label: Text(l10n.week)),
+          ButtonSegment(value: Range.month, label: Text(l10n.month)),
+          ButtonSegment(value: Range.year, label: Text(l10n.year)),
         ],
+        selected: {range},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) {
+          HapticFeedback.selectionClick();
+          onSetRange(selection.first);
+        },
       ),
     );
   }

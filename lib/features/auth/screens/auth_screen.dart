@@ -41,19 +41,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              colors.primaryContainer.withAlpha(
-                ((theme.brightness == Brightness.dark ? 0.2 : 0.9) * 255)
-                    .round(),
-              ),
-              colors.surface,
-            ],
-          ),
-        ),
+        color: colors.surface,
         child: Stack(
           children: [
             SafeArea(

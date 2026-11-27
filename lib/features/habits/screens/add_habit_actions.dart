@@ -103,8 +103,10 @@ mixin _AddHabitActions on _AddHabitSheetBase {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.habitsListError(e.toString()))),
+        showAppMessage(
+          context,
+          l10n.habitsListError(e.toString()),
+          isError: true,
         );
       }
     } finally {

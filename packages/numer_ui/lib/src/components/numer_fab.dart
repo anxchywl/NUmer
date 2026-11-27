@@ -25,13 +25,18 @@ class NumerFab extends StatelessWidget {
         offset: visible ? Offset.zero : _hiddenOffset,
         duration: NumerMotion.of(context, NumerMotion.base),
         curve: visible ? NumerMotion.enter : NumerMotion.exit,
-        child: IgnorePointer(
-          ignoring: !visible,
-          child: FloatingActionButton.extended(
-            icon: Icon(icon),
-            label: Text(label),
-            onPressed: onPressed,
-            heroTag: label,
+        // the slide alone leaves it showing behind a translucent bottom bar
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: NumerMotion.of(context, NumerMotion.base),
+          child: IgnorePointer(
+            ignoring: !visible,
+            child: FloatingActionButton.extended(
+              icon: Icon(icon),
+              label: Text(label),
+              onPressed: onPressed,
+              heroTag: label,
+            ),
           ),
         ),
       ),

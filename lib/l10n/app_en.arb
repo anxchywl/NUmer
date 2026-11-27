@@ -709,6 +709,7 @@
     }
   },
   "habitsEmptyListTitle": "No habits yet",
+  "habitsAddHabit": "Add habit",
   "habitsEmptyListCta": "Create your first",
   "habitRequirementMarkDone": "Mark as done",
   "habitRequirementToday": "{current} / {target} {unit} today",

@@ -1534,6 +1534,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get habitsEmptyListTitle => 'Пока нет привычек';
 
   @override
+  String get habitsAddHabit => 'Добавить привычку';
+
+  @override
   String get habitsEmptyListCta => 'Создать первую';
 
   @override

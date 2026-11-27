@@ -51,7 +51,7 @@ class PeriodStatsSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          PeriodRangeChips(range: range, onSetRange: onSetRange),
+          PeriodRangeControl(range: range, onSetRange: onSetRange),
           PeriodRangeNavigator(
             range: range,
             shift: shift,

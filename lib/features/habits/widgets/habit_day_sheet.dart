@@ -7,6 +7,7 @@ import 'package:numer_app/features/habits/data/habit_service.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/habits/widgets/habit_logging_sheet.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class HabitDaySheet extends StatelessWidget {
   final DateTime date;
@@ -286,12 +287,7 @@ class _HabitRow extends StatelessWidget {
         );
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Error: $e"),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-          );
+          showAppMessage(context, "Error: $e", isError: true);
         }
       }
     } else {

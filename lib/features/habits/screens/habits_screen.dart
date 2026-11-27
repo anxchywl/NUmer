@@ -12,7 +12,7 @@ import '../data/habit_service.dart';
 import '../habit_dates.dart';
 import '../models/habit.dart';
 import '../widgets/habit_logging_sheet.dart';
-import '../widgets/habits_create_button.dart';
+import '../widgets/habits_clearances.dart';
 import '../widgets/habits_date_picker.dart';
 import '../widgets/habits_list_tab.dart';
 import '../widgets/habits_progress_tab.dart';
@@ -174,7 +174,6 @@ class _HabitsScreenState extends State<HabitsScreen>
     final habitService = context.watch<HabitService>();
 
     return Scaffold(
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       body: NotificationListener<UserScrollNotification>(
         onNotification: _onUserScroll,
         child: CustomScrollView(
@@ -196,10 +195,23 @@ class _HabitsScreenState extends State<HabitsScreen>
           ],
         ),
       ),
-      floatingActionButton: HabitsCreateButton(
+      floatingActionButton: Visibility(
         visible: _selectedTabIndex == 1,
-        shown: _fabVisible,
+        child: _buildFab(context),
+      ),
+    );
+  }
+
+  Widget _buildFab(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: isIos(context) ? iosFabBottomLift(context) : 0,
+      ),
+      child: NumerFab(
+        icon: Icons.add,
+        label: AppLocalizations.of(context)!.habitsAddHabit,
         onPressed: _showAddHabitSheet,
+        visible: _fabVisible,
       ),
     );
   }

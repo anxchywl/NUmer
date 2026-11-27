@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import '../stats_format.dart';
@@ -37,7 +38,6 @@ class HabitReportSelectionView extends StatelessWidget {
 
         const SizedBox(height: 24),
 
-        // Format Selector
         Text(
           l10n.exportFormat,
           style: theme.textTheme.titleSmall?.copyWith(
@@ -46,7 +46,7 @@ class HabitReportSelectionView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _formatChips(),
+        _formatControl(),
       ],
     );
   }
@@ -132,47 +132,21 @@ class HabitReportSelectionView extends StatelessWidget {
     );
   }
 
-  Widget _formatChips() {
-    return Row(
-      children: [
-        Expanded(
-          child: ChoiceChip(
-            label: Text(l10n.exportFormatCSV),
-            selected: selectedFormat == 'csv',
-            onSelected: (selected) {
-              if (selected) {
-                onFormatChanged('csv');
-              }
-            },
-            selectedColor: theme.colorScheme.secondaryContainer,
-            labelStyle: TextStyle(
-              color: selectedFormat == 'csv'
-                  ? theme.colorScheme.onSecondaryContainer
-                  : theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ChoiceChip(
-            label: Text(l10n.exportFormatExcel),
-            selected: selectedFormat == 'excel',
-            onSelected: (selected) {
-              if (selected) {
-                onFormatChanged('excel');
-              }
-            },
-            selectedColor: theme.colorScheme.secondaryContainer,
-            labelStyle: TextStyle(
-              color: selectedFormat == 'excel'
-                  ? theme.colorScheme.onSecondaryContainer
-                  : theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
+  Widget _formatControl() {
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<String>(
+        segments: [
+          ButtonSegment(value: 'csv', label: Text(l10n.exportFormatCSV)),
+          ButtonSegment(value: 'excel', label: Text(l10n.exportFormatExcel)),
+        ],
+        selected: {selectedFormat},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) {
+          HapticFeedback.selectionClick();
+          onFormatChanged(selection.first);
+        },
+      ),
     );
   }
 }

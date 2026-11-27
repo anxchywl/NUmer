@@ -694,6 +694,7 @@
     }
   },
   "habitsEmptyListTitle": "Әзірге әдеттер жоқ",
+  "habitsAddHabit": "Әдет қосу",
   "habitsEmptyListCta": "Алғашқысын құру",
   "habitRequirementMarkDone": "Орындалды деп белгілеу",
   "habitRequirementToday": "{current} / {target} {unit} бүгін",

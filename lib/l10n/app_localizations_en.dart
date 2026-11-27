@@ -1528,6 +1528,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get habitsEmptyListTitle => 'No habits yet';
 
   @override
+  String get habitsAddHabit => 'Add habit';
+
+  @override
   String get habitsEmptyListCta => 'Create your first';
 
   @override

@@ -7,6 +7,7 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/connections/models/person.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/connections/data/connections_service.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class AddPersonSheet extends StatefulWidget {
   final Person? person; // For editing existing person
@@ -479,12 +480,10 @@ class _AddPersonSheetState extends State<AddPersonSheet> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              AppLocalizations.of(context)!.errorSaving(e.toString()),
-            ),
-          ),
+        showAppMessage(
+          context,
+          AppLocalizations.of(context)!.errorSaving(e.toString()),
+          isError: true,
         );
       }
     } finally {

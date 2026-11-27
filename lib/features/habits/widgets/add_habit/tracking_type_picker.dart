@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import '../../models/habit.dart';
@@ -22,17 +23,18 @@ class TrackingTypePicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _chip(theme, HabitType.yesNo, l10n.habitYesNo),
-              _chip(theme, HabitType.numeric, l10n.habitNumeric),
-              _chip(theme, HabitType.time, l10n.habitTime),
-            ],
-          ),
+        SegmentedButton<HabitType>(
+          segments: [
+            _segment(HabitType.yesNo, l10n.habitYesNo),
+            _segment(HabitType.numeric, l10n.habitNumeric),
+            _segment(HabitType.time, l10n.habitTime),
+          ],
+          selected: {type},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) {
+            HapticFeedback.selectionClick();
+            onSelected(selection.first);
+          },
         ),
         const SizedBox(height: 16),
         Text(
@@ -50,24 +52,12 @@ class TrackingTypePicker extends StatelessWidget {
     );
   }
 
-  Widget _chip(ThemeData theme, HabitType value, String label) {
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: type == value
-              ? theme.colorScheme.onSecondaryContainer
-              : (isEditing && type != value
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.38)
-                    : null),
-        ),
-      ),
-      selected: type == value,
-      disabledColor: theme.colorScheme.surfaceContainerHighest.withValues(
-        alpha: 0.3,
-      ),
-      selectedColor: theme.colorScheme.secondaryContainer,
-      onSelected: isEditing ? null : (b) => onSelected(value),
+  // a disabled button would also hide which type is selected
+  ButtonSegment<HabitType> _segment(HabitType value, String label) {
+    return ButtonSegment(
+      value: value,
+      label: Text(label, textAlign: TextAlign.center),
+      enabled: !isEditing || value == type,
     );
   }
 }

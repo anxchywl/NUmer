@@ -2872,6 +2872,12 @@ abstract class AppLocalizations {
   /// **'No habits yet'**
   String get habitsEmptyListTitle;
 
+  /// No description provided for @habitsAddHabit.
+  ///
+  /// In en, this message translates to:
+  /// **'Add habit'**
+  String get habitsAddHabit;
+
   /// No description provided for @habitsEmptyListCta.
   ///
   /// In en, this message translates to:

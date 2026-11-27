@@ -9,6 +9,7 @@ import 'package:numer_app/features/connections/models/contact_group.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/connections/data/connections_service.dart';
 import 'package:numer_app/features/connections/screens/add_person_sheet.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 class PersonDetailsScreen extends StatefulWidget {
   final String personId;
@@ -583,12 +584,7 @@ class _PersonDetailsScreenState extends State<PersonDetailsScreen> {
     await service.markContactedToday(uid, personId);
 
     if (mounted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.markContactedToday),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      showAppMessage(context, AppLocalizations.of(context)!.markContactedToday);
     }
   }
 

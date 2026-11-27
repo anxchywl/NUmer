@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/app_toast.dart';
 
 import '../data/habit_service.dart';
 import '../models/habit.dart';

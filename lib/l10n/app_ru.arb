@@ -561,6 +561,7 @@
     }
   },
   "habitsEmptyListTitle": "Пока нет привычек",
+  "habitsAddHabit": "Добавить привычку",
   "habitsEmptyListCta": "Создать первую",
   "habitRequirementMarkDone": "Отметить выполненным",
   "habitRequirementToday": "{current} / {target} {unit} сегодня",
