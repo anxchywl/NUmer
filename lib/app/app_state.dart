@@ -1063,7 +1063,7 @@ class AppState extends ChangeNotifier {
     }
 
     courses = courses.where((Course c) => c.id != id).toList();
-    await Storage.saveCourses(courses);
+    await Storage.deleteCourse(id);
 
     courseMinutes.remove(id);
     timerRunning.remove(id);
