@@ -37,6 +37,14 @@ describe('renderEmail', () => {
     expect(renderEmail('passwordChanged', 'en', {}).text.split('\n\n')).toHaveLength(2);
   });
 
+  it.each(templates)('keeps %s on a light background in dark mode', (template) => {
+    const { html } = renderEmail(template, 'en', { code });
+
+    expect(html).toContain('<meta name="color-scheme" content="light">');
+    expect(html).toMatch(/<body style="[^"]*background-color: #FFFFFF;/);
+    expect(html).toMatch(/<table [^>]*style="[^"]*background-color: #FFFFFF;/);
+  });
+
   it('escapes the code in html', () => {
     const { html } = renderEmail('verify', 'en', { code: '<b>' });
 
