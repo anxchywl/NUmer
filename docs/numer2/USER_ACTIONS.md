@@ -340,13 +340,25 @@ New screenshots and a description that mentions the new layout.
 
 ## Phase 4: Modules
 
-### F-1 Tag each module package when its task is reviewed (P4-01, P4-06, P4-10, P4-13).
+### F-0 Tag `numer_ui` before the first package task (P4-01, P4-06, P4-10, P4-13).
+1. On NUmer `main`: `git tag numer-ui-v0.1.0 && git push origin numer-ui-v0.1.0`.
+2. Before the first account events handler (P4-07, P4-18, P4-19): `identity-v0.2.0` (D-4
+   step 3), if not pushed yet.
+3. A later change to `numer_ui` that a module needs gets the next tag (`numer-ui-v0.1.1`).
+### F-1 Tag each module package when its last package task is reviewed.
+Gradus `v0.2.0` (P4-01), Clavis `v0.2.0` (P4-06), EventsBot `v1.1.0` (P4-17), Muto `v0.2.0`
+(P4-20): `git tag <tag> && git push origin <tag>` in that repository. If a module repository
+is private, give NUmer's CI read access before merging its mount task.
 ### F-2 Open each flag in three steps
 1. `allow: [your uid]`. Use the module for a few days.
 2. `rollout: 10`, then 50, then 100, a few days apart, watching crash reports and the
    server's memory (`free -h`, `docker stats --no-stream`) at each step.
 3. If memory triggers fire (private capacity file), stop and decide before going on.
 ### F-3 Redeploy Clavis, Events and Muto with their account events handlers. Approval needed.
+For P4-07, P4-18 and P4-19, and for the Events link (P4-09) and Muto moderation (P4-12):
+back up the database, set `ACCOUNT_EVENTS_SECRET` (from D-4) and, for Muto,
+`LISTING_BLOCKED_WORDS`, redeploy, then add the module's `/internal/v1/account-events` URL
+to `ACCOUNT_EVENT_TARGETS` and deploy functions.
 ### F-4 Events: link your own Telegram account in the app and confirm your events appear.
 ### F-5 Muto storage
 Confirm the S3-compatible bucket, its credentials and its CORS are in Muto's env file;
@@ -356,6 +368,11 @@ production refuses to start without them.
 2. Publish a contact address for content complaints.
 3. Write the App Review notes: how to report, how to block, a test account.
 4. Update the age rating answers for user-generated content in both stores.
+
+### F-7 Module base URLs (P4-04, P4-08, P4-11, P4-14)
+In `config/app`, staging first, then production, set `modules.<id>.baseUrl` to the module's
+`https` API address: `gradus`, `clavis`, `events`, `muto`. A module that needs a backend
+stays hidden until its address is set.
 
 ---
 

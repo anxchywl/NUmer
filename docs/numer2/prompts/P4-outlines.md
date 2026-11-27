@@ -1,5 +1,9 @@
 # Phase 4 outlines: module integration
 
+**Superseded (2026-11-28).** Every task below now has a full prompt, `P4-<nn>-<slug>.md`;
+P4-09, P4-10, P4-12 and P4-13 were split, adding P4-16 to P4-20, and P4-05 is dropped
+(`../DECISIONS.md` D-42, `../PLAN.md` phase 4). Kept for history; execute the prompts.
+
 Outlines, not prompts. Expand each with `TEMPLATE.md` when its turn comes, citing the code as
 it is then. Order: Gradus, Clavis, Events, Muto. Each module ships behind its flag
 (`config/app`, `DECISIONS.md` D-23).
@@ -93,7 +97,7 @@ dirty wins over an older remote, soft delete propagates; no existing sync test c
 delete course, semester, assignment; rollback on failure); lazy-start test; size report;
 screenshots of the GPA screen inside `NumerModuleScaffold` in both modes.
 
-### P4-05 Import from standalone Gradus
+### P4-05 Import from standalone Gradus (dropped, O-5: no real data)
 Only if the owner says real users have data there (O-5). One-shot, idempotent import from the
 `SharedPreferences` keys, matching courses by exact normalized name, never deleting the old
 keys, asking the user on an ambiguous match.

@@ -4,9 +4,9 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 46 done, 0 in progress, 39 to do (85 tasks). Staging deployed 2026-11-27.**
+**Total: 46 done, 2 in progress, 41 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
 
-Status: ✅ done, 🔄 in progress, ⏳ to do
+Status: ✅ done, 🔄 in progress, ⏳ to do, ➖ dropped
 
 Rule since 2026-11-27: source files stay under 400 lines (`AGENTS.md` "Size"); 33 older files may only shrink.
 
@@ -82,12 +82,12 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ✅ | P3-04 Split `home.dart` | Break up the 3,098-line home screen (no visible change) |
 | ✅ | P3-05 New shell | The new tabs, avatar menu, Settings and About screens |
 | ✅ | P3-06 Study tab | Courses with timer, statistics, history, GPA in one place |
-| ⏳ | P3-07 Home today | Home shows streak, running session, today, upcoming, news |
+| 🔄 | P3-07 Home today | Home shows streak, running session, today, upcoming, news |
 | ✅ | P3-08 Feed backend | Announcements plus events combined into one cheap feed document |
 | ⏳ | P3-09 News on Home | The news list on Home and its own screen |
 | ⏳ | P3-10 Upcoming store | Bookings and reminders shown on Home without loading modules |
 | ✅ | P3-11 Campus tab | The list of campus modules |
-| ⏳ | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |
+| 🔄 | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |
 | ⏳ | P3-13 Docs after shell | Docs describe the new layout |
 | ✅ | P3-14 Split `stats.dart` | Break the 3,228-line statistics screen into small files (no visible change) |
 | ✅ | P3-15 Split `add_habit_sheet.dart` | Break the 2,462-line add-habit sheet into small files |
@@ -95,7 +95,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ⏳ | P3-17 States pass | Confirmations become bottom sheets; loading spinners become quiet placeholders |
 | ⏳ | P3-18 Focus mode everywhere | While typing in any sheet, only the field and a Done button stay on screen |
 
-## Phase 4: Module integration (0 of 15)
+## Phase 4: Module integration (0 of 19; all prompts written)
 
 Gradus, Clavis, Events and Muto appear inside NUmer, each behind a feature flag.
 
@@ -105,15 +105,20 @@ Gradus, Clavis, Events and Muto appear inside NUmer, each behind a feature flag.
 | ⏳ | P4-02 Grades storage | Grades saved in NUmer's local database and Firestore |
 | ⏳ | P4-03 Grades sync | Grades sync between devices |
 | ⏳ | P4-04 Mount Gradus | GPA appears in the Study tab |
-| ⏳ | P4-05 Gradus import | Not needed (no old Gradus data, per O-5) |
+| ➖ | P4-05 Gradus import | Dropped: no old Gradus data (O-5) |
 | ⏳ | P4-06 Clavis package | Piano room uses NUmer's design and sign-in |
 | ⏳ | P4-07 Clavis account events | Piano room deletes data when a NUmer account is deleted |
 | ⏳ | P4-08 Mount Clavis | Piano room in Campus, bookings in Upcoming |
-| ⏳ | P4-09 Events backend extras | Events deletion handling and Telegram account linking |
-| ⏳ | P4-10 Events package | Events uses NUmer's design, strings and sign-in |
+| ⏳ | P4-09 Events Telegram link | Link your Telegram account to NUmer for Events |
+| ⏳ | P4-10 Events package | Events uses NUmer's design and sign-in |
+| ⏳ | P4-16 Events strings | Events speaks English, Russian and Kazakh |
+| ⏳ | P4-17 Events tabs and filters | Events fits inside NUmer: tabs, filter rows, reminders |
+| ⏳ | P4-18 Events account events | Events deletes data when a NUmer account is deleted |
 | ⏳ | P4-11 Mount Events | Events in Campus, with Telegram link and reminders |
 | ⏳ | P4-12 Muto moderation | Block user, moderation, text filter (needed for App Review) |
-| ⏳ | P4-13 Muto package | Marketplace uses NUmer's design, with block and report |
+| ⏳ | P4-19 Muto account events | Marketplace deletes data when a NUmer account is deleted |
+| ⏳ | P4-13 Muto package | Marketplace uses NUmer's design and sign-in |
+| ⏳ | P4-20 Muto block and report | Block, report and moderation buttons in the marketplace |
 | ⏳ | P4-14 Mount Muto | Marketplace in Campus |
 | ⏳ | P4-15 App Review readiness | Review notes and contact details for user content |
 

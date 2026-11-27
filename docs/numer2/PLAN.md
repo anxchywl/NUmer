@@ -1,6 +1,6 @@
 # NUmer 2.0 plan
 
-Seven phases, 84 tasks. One task is one pull request that a mid-tier model finishes in one
+Seven phases, 89 tasks (P4-05 dropped). One task is one pull request that a mid-tier model finishes in one
 session. Every task has an execution prompt in `prompts/`; phases 0 to 3 are complete
 prompts, later phases are outlines to be expanded when their phase
 starts.
@@ -543,26 +543,41 @@ Each module ships dark behind its flag, is opened to the `allow` list, then by `
 | P4-01 | Gradus package: `numer_ui`, token provider, host chrome | Gradus | P3-02 | med | sonnet, high | tag |
 | P4-02 | Grades: Hive types 18 to 20, storage, rules | NUmer | P0-06 | high | opus, high | none |
 | P4-03 | Grades: sync push and pull | NUmer | P4-02 | high | opus, high | two-device check |
-| P4-04 | Mount Gradus: Hive transcript adapter, registry entry, flag | NUmer | P4-01, P4-03, P3-06, P2-03 | med | sonnet, high | flag on for testers |
-| P4-05 | Import from standalone Gradus | NUmer | P4-04 | med | sonnet, medium | only if O-5 says data exists |
-| P4-06 | Clavis package: `numer_ui`, token provider | Clavis | P3-02 | med | sonnet, high | tag |
+| P4-04 | Mount Gradus: Hive transcript adapter, registry entry, flag, module base URLs | NUmer | P4-01, P4-03, P3-06, P2-03 | med | sonnet, high | flag on for testers |
+| P4-05 | ~~Import from standalone Gradus~~ dropped: no real Gradus or Clavis data (O-5) | NUmer | | | | none |
+| P4-06 | Clavis package: `numer_ui`, token provider, booking callbacks | Clavis | P3-02 | med | sonnet, high | tag |
 | P4-07 | Clavis backend: account events handler | Clavis | P2-07, P2-04 | med | sonnet, medium | approval to redeploy |
-| P4-08 | Mount Clavis: registry, Upcoming item, local reminder | NUmer | P4-06, P4-07, P3-10, P3-11 | med | sonnet, high | book and release a slot |
-| P4-09 | Events backend: account events, Telegram link | EventsBot | P2-06, P2-07 | high | opus, high | approval to redeploy |
-| P4-10 | Events package: `numer_ui`, ARB strings, host chrome, base URL, token provider | EventsBot | P3-02 | high | sonnet, high | tag |
-| P4-11 | Mount Events: registry, Telegram link screen, reminders | NUmer | P4-09, P4-10, P3-10, P3-11 | med | sonnet, high | link a Telegram account |
-| P4-12 | Muto backend: block user, moderation actions, text filter, account events | Muto | P2-05, P2-07 | high | opus, high | approval to redeploy |
-| P4-13 | Muto package: `numer_ui`, host chrome, block and report UI | Muto | P3-02, P4-12 | high | sonnet, high | tag |
-| P4-14 | Mount Muto: registry, flag | NUmer | P4-13, P3-11 | med | sonnet, high | storage bucket |
+| P4-08 | Mount Clavis: registry, Upcoming item, local reminder | NUmer | P4-06, P4-07, P3-10, P3-11, P4-04 | med | sonnet, high | book and release a slot |
+| P4-09 | Events backend: Telegram link | EventsBot | P2-06, P2-07 | high | opus, high | approval to redeploy |
+| P4-10 | Events package: `numer_ui`, token provider, base URL | EventsBot | P3-02 | high | sonnet, high | none |
+| P4-16 | Events package: strings to ARB in EN, RU and KK | EventsBot | P4-10 | med | sonnet, high | review translations |
+| P4-17 | Events package: host chrome, filter rows, focus mode, host hooks | EventsBot | P4-16, P4-09 | high | sonnet, high | tag |
+| P4-18 | Events backend: account events handler | EventsBot | P2-06, P2-07, P4-09 | high | opus, high | approval to redeploy |
+| P4-11 | Mount Events: registry, Telegram link, reminders, feed taps | NUmer | P4-09, P4-17, P3-09, P3-10, P3-11, P4-08 | med | sonnet, high | link a Telegram account |
+| P4-12 | Muto backend: block user, moderation actions, text filter | Muto | P2-05, P2-07 | high | opus, high | approval to redeploy |
+| P4-19 | Muto backend: account events handler | Muto | P2-05, P2-07, P4-12 | high | sonnet, high | approval to redeploy |
+| P4-13 | Muto package: `numer_ui`, token provider, host chrome | Muto | P3-02 | high | sonnet, high | none |
+| P4-20 | Muto package: block, report and moderation UI | Muto | P4-13, P4-12 | high | sonnet, high | tag |
+| P4-14 | Mount Muto: registry, flag | NUmer | P4-20, P3-11, P4-11 | med | sonnet, high | storage bucket |
 | P4-15 | App Review readiness for user content | NUmer | P4-14 | med | sonnet, medium | review notes, contact details, moderation duty |
 
-Can run together: the four package tasks (P4-01, P4-06, P4-10, P4-13 after P4-12) and the
-three backend tasks are in different repos. Mount tasks run in module order.
+P4-16 to P4-20 were split out of P4-09, P4-10, P4-12 and P4-13 when the prompts were
+written, because each original was more than one session of work (D-42). Rows are in
+execution order.
+
+Before any package task the owner pushes the `numer-ui-v0.1.0` tag (`USER_ACTIONS.md` F-0);
+before any account events handler, the `identity-v0.2.0` tag (D-4 step 3).
+
+Can run together: the package tasks of different repos (P4-01, P4-06, P4-10 to P4-17 in
+sequence, P4-13 then P4-20 after P4-12) and the backend tasks of different repos (P4-07,
+P4-09 then P4-18, P4-12 then P4-19). P4-02 and P4-03 run beside them. Mount tasks run in
+module order, each after the previous one, because they share the registry and the
+module base URLs that P4-04 adds.
 
 Gates:
 - A module's flag is not opened beyond the `allow` list until its account events handler is
-  deployed (Gradus has no server data and needs none).
-- Muto is not opened beyond the `allow` list until P4-15 is done.
+  deployed (P4-07, P4-18, P4-19; Gradus has no server data and needs none).
+- Muto is not opened beyond the `allow` list until P4-15 is signed off.
 - Every mount task proves lazy start and the size budget (`DESIGN.md` section 10).
 
 ---
@@ -572,7 +587,7 @@ Gates:
 | Id | Title | Depends on | Risk | Executor | Owner |
 |---|---|---|---|---|---|
 | P5-01 | Notifications: tap handling, categories, settings | P3-05 | med | sonnet, high | none |
-| P5-02 | Deletion fan-out drill, end to end | P4-07, P4-09, P4-12 | med | sonnet, medium | delete a test account in production |
+| P5-02 | Deletion fan-out drill, end to end | P4-07, P4-18, P4-19 | med | sonnet, medium | delete a test account in production |
 | P5-03 | Campus search | P4-14 | low | sonnet, medium | none |
 | P5-04 | Peer stats from aggregates; sessions and courses owner-only | P0-08, P1-08 | high | opus, high | adoption check before the rules change |
 | P5-05 | Optional: avatar glyphs to Material icons | P3-12 | med | sonnet, medium | decide O-6 |
@@ -641,9 +656,25 @@ prompts/P3-08-feed-backend.md                 prompts/P3-17-states-pass.md   pro
 prompts/P3-09-news-client.md
 ```
 
-Phases 4 to 6, outlines: `prompts/P4-outlines.md`, `prompts/P5-P6-outlines.md`. Each outline
-is expanded into a full prompt with the template in `prompts/TEMPLATE.md` when its phase
-starts, because the files it must cite will have moved by then.
+Phase 4, complete (written 2026-11-28 from NUmer `main` at `e031f97` and the module repos'
+`main`; P4-05 dropped):
+
+```
+prompts/P4-01-gradus-package.md          prompts/P4-12-muto-moderation.md
+prompts/P4-02-grades-storage.md          prompts/P4-13-muto-package.md
+prompts/P4-03-grades-sync.md             prompts/P4-14-mount-muto.md
+prompts/P4-04-mount-gradus.md            prompts/P4-15-app-review.md
+prompts/P4-06-clavis-package.md          prompts/P4-16-events-strings.md
+prompts/P4-07-clavis-account-events.md   prompts/P4-17-events-host-chrome.md
+prompts/P4-08-mount-clavis.md            prompts/P4-18-events-account-events.md
+prompts/P4-09-events-telegram-link.md    prompts/P4-19-muto-account-events.md
+prompts/P4-10-events-package.md          prompts/P4-20-muto-block-report-ui.md
+prompts/P4-11-mount-events.md
+```
+
+Phases 5 and 6, outlines: `prompts/P5-P6-outlines.md`. Each outline is expanded into a full
+prompt with the template in `prompts/TEMPLATE.md` when its phase starts, because the files
+it must cite will have moved by then.
 
 ## The smoke list
 

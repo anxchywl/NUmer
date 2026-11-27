@@ -601,3 +601,38 @@ at `5a6359c`.
 | D-39 | `DESIGN.md` 9.1 extended for `app_ui` colours in module use and missing from it: `grey`, `iconSecondary` to `onSurfaceVariant`; `white` to `onPrimary`; `black`, `iconPrimary` to `onSurface`; `lightGrey` to `outlineVariant`; `orange` to `warning`; `green` to `success`; `blue` to `primary`; `blueLight`, `infoLight` to `primaryContainer`; `errorLight` to `errorContainer`; `successLight`, `warningLight` to `surfaceContainerHighest`; `iconDisabled` to `onSurface` at 0.38 | together 200 call sites; without a row the executor would guess |
 | D-40 | News and Upcoming open module screens through a host hook `bool Function(BuildContext, item)` that returns false until a module fills it (P4-08, P4-11); an event then opens a detail built from the feed item | no module exists in phase 3; the descriptor stays small |
 | D-41 | The design pass is two tasks: P3-12 replaces glass, the auth gradient, mode chips, segmented pills, raw snack bars, a card shadow and the Kazakh font branches; P3-17 turns confirmations into confirm sheets and list spinners into skeletons. P3-13 depends on P3-17 | about 40 files in one task is beyond one executor session; the two halves touch different patterns |
+
+---
+
+## I. Phase 4 expansion (2026-11-28)
+
+Decisions taken while expanding the phase 4 outlines into prompts, from NUmer `main` at
+`e031f97` and the `main` of Gradus (`b341230`), Clavis (`b4e08d6`), EventsBot (`a5a44ef`)
+and Muto (`9467cc5`).
+
+### D-42 Module integration details. New.
+
+| Topic | Decision | Why |
+|---|---|---|
+| Splits | P4-09 keeps the Telegram link and P4-18 takes the Events account events handler; P4-10 becomes P4-10 (`numer_ui`, token, base URL), P4-16 (strings to ARB) and P4-17 (host chrome, filter rows, focus mode, host hooks); P4-12 keeps block, moderation and the filter and P4-19 takes the Muto handler; P4-13 keeps the migration and P4-20 takes block, report and moderation UI. P5-02 now depends on P4-07, P4-18, P4-19 | each original was more than one session: Events alone is 15k lines with 284 colour references and 216 strings |
+| P4-05 | dropped | O-5: no real Gradus or Clavis data |
+| Order | each mount task depends on the previous one (P4-08 on P4-04, P4-11 on P4-08, P4-14 on P4-11) | they edit the same registry and P4-04 adds the module base URLs the others use |
+| `numer_ui` release | modules depend on `numer_ui` by git tag `numer-ui-v<version>` (first `numer-ui-v0.1.0`) at `packages/numer_ui` of the NUmer repository; NUmer overrides it to the path | the `identity-v` precedent; a module repo cannot use a path into another repository |
+| Identity pin | the three account events handlers move their `numer_identity` pin from `identity-v0.1.0` to `identity-v0.2.0` | `verify_account_event` is not in 0.1.0 |
+| Token contract | `idToken({bool forceRefresh})` before every request, never stored; `Future<bool> Function() onSessionExpired` on a 401, once per request; on true the request is sent once more with a new token, on false or a second 401 the module's existing unauthorized path runs. NUmer passes `() async => await session.handleSessionExpired() != null` | the outline left who retries open; a boolean lets a module stop when the host signed out |
+| Module state | keyed on the account id (the Firebase uid), never on the token | tokens rotate hourly; Gradus disposed its controller on each change |
+| Base URLs | `config/app` gains `modules.<id>.baseUrl` (https only, otherwise ignored); a descriptor with `needsBaseUrl` is invisible without one; Gradus without one has no syllabus import | no server address in a file or a define; staging and production differ by project |
+| Grades storage | grade types and storage live in new files (`grade_entities.dart`, `grade_storage.dart`, `study_sync.dart`, part files of `local_database.dart`); `LocalCourse` and the course storage move out of the baseline files first | `entities.dart`, `storage.dart` and `sync_service.dart` may only shrink and `local_database.dart` is at 398 lines (D-33) |
+| Grades facts | no screen reads `Course.day`, `start` or `end`; `credits` is a `double?` of ECTS credits; course ids are `<epoch ms>_<0..9998>` | the P4-02 spot checks, answered from the code |
+| GPA view | lists only NUmer courses that have a grade record; removing a course in GPA soft-deletes its grade record and keeps the NUmer course; a course added in GPA gets empty timetable fields, colour `0xFF3B82F6` and `hiddenFromLeaderboard: true`; credits outside `(0, 24]` leave a course out of the view without touching it | no data is lost through GPA; a timetable course is not silently graded |
+| Clavis callbacks | `onBooked(booking)` and `onReleased(bookingId)` instead of one `onBookingChanged` | the host needs the id to remove the right Upcoming item |
+| Reminders | the Upcoming store cancels the notification of every item it drops (`notificationIdOf(itemId)`); piano bookings remind 30 minutes before, event reminders 60 | sign-out clears the store and must not leave reminders behind |
+| `account.disabled` | acknowledged and recorded, no data change, in all three handlers | NUmer defines it but does not send it yet (`docs/INFRASTRUCTURE.md`) |
+| Events deletion | a migration adds one "Removed user" row (`telegram_id = -(2**62)`) that takes over the deleted user's events; a Firebase-provisioned user is then deleted; a linked Telegram account loses only its NUmer identity | `events.creator_user_id` is `RESTRICT`; the Telegram account belongs to the bot |
+| Events strings | ARB with a static `EventsL10n.current` set by the strings scope; missing RU and KK values written by the executor and listed for review; the bot's own link messages stay inline English like the rest of the bot | 230 call sites, some without a `BuildContext`; the bot has no catalogs |
+| Events cleanup | the three screens with no construction site are deleted, and `AppCalendar` with them instead of moving into the package; the feed publish time was settled by D-37 | nothing uses them |
+| Host tabs | Events and Muto draw their own text-only tab bar under NUmer's app bar in host chrome, with the role-dependent tabs of `DESIGN.md` 9.5 (Muto operators get four) | the role is known only after the module's session resolves |
+| Host hooks | Events gains reminders, `initialEventToken` and the two Telegram functions; Muto gains `beforeFirstListing`; Muto's blocked-sellers list is a row in My listings | the host's app bar menu cannot reach a package's scope |
+| Muto moderation | an operator hide is `listings.moderation_hidden_at`, not the owner's `hidden` status; reports gain a status; every action writes one audit row; the word list is `LISTING_BLOCKED_WORDS` in the environment, matched as whole words | the owner must not undo a moderation hide; no word list in the repository |
+| Community rules | accepted once per user and device in `SharedPreferences` (`muto_rules_accepted_v1_<uid>`) | text-only, local, no server field for one flag |
+| Module repos | a file a task creates stays under 400 lines and a file over 400 lines it edits does not grow | the spirit of D-33 without a baseline in each repo |
