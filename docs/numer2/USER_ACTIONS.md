@@ -70,13 +70,15 @@ paused behind a coming-soon screen until P5-07.
 ### B-3 Deploy the membership index and profiles, then backfill (P0-05)
 **Why:** the stage 1 rules read these collections; they must be full before the rules change.
 1. `firebase deploy --only functions:onGroupMemberWrite,functions:onUserProfileWrite --project numer-60744`
+   Both retry failed events, so answer yes when the CLI asks to confirm that.
 2. `cd functions && npm ci && npm run build`, then
    `GCLOUD_PROJECT=numer-60744 FORCE_BACKFILL=1 node scripts/backfill_group_index.js --dry-run`,
    then without `--dry-run`.
 3. `GCLOUD_PROJECT=numer-60744 FORCE_BACKFILL=1 node scripts/backfill_public_profiles.js --dry-run`,
    then without.
-4. In the console, check that `groupIndex` has one document per user who is in a group and
-   `publicProfiles` one per user.
+4. In the console, check that `groupIndex` has one document per user who is in a group
+   (a user who left every group may keep one with an empty list) and `publicProfiles` one
+   per user. Both scripts are safe to run again.
 The scripts need a service account key on your machine
 (`GOOGLE_APPLICATION_CREDENTIALS`). Do not commit it.
 
