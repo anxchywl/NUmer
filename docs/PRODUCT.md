@@ -56,7 +56,8 @@ Paused. The Home entry points open a screen saying course analysis is coming soo
 The study tab, which for now links to Statistics and History.
 
 ### Campus — `campus`
-Lists the campus modules visible to the user; hidden while there are none.
+Lists the campus modules visible to the user; hidden while there are none. More than eight
+modules add a search over their names and descriptions.
 
 ### Statistics — `stats`
 Charts, calendars, and heatmaps visualizing study time and progress.

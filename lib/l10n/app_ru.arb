@@ -995,5 +995,8 @@
   "privacyPolicy": "Политика конфиденциальности",
   "contactSupport": "Написать в поддержку",
   "appVersion": "Версия",
-  "linkOpenFailed": "Не удалось открыть ссылку."
+  "linkOpenFailed": "Не удалось открыть ссылку.",
+  "campusSearchHint": "Поиск",
+  "campusNoMatch": "Ничего не найдено.",
+  "campusClearSearch": "Очистить"
 }

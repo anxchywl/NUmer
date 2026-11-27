@@ -4293,6 +4293,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not open the link.'**
   String get linkOpenFailed;
+
+  /// No description provided for @campusSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get campusSearchHint;
+
+  /// No description provided for @campusNoMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches.'**
+  String get campusNoMatch;
+
+  /// No description provided for @campusClearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get campusClearSearch;
 }
 
 class _AppLocalizationsDelegate

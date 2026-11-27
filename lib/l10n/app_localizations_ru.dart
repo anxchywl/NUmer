@@ -2333,4 +2333,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get linkOpenFailed => 'Не удалось открыть ссылку.';
+
+  @override
+  String get campusSearchHint => 'Поиск';
+
+  @override
+  String get campusNoMatch => 'Ничего не найдено.';
+
+  @override
+  String get campusClearSearch => 'Очистить';
 }

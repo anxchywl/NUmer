@@ -1124,5 +1124,8 @@
   "privacyPolicy": "Privacy policy",
   "contactSupport": "Contact support",
   "appVersion": "Version",
-  "linkOpenFailed": "Could not open the link."
+  "linkOpenFailed": "Could not open the link.",
+  "campusSearchHint": "Search",
+  "campusNoMatch": "No matches.",
+  "campusClearSearch": "Clear"
 }

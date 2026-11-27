@@ -1117,5 +1117,8 @@
   "privacyPolicy": "Құпиялық саясаты",
   "contactSupport": "Қолдау қызметіне жазу",
   "appVersion": "Нұсқа",
-  "linkOpenFailed": "Сілтемені ашу мүмкін болмады."
+  "linkOpenFailed": "Сілтемені ашу мүмкін болмады.",
+  "campusSearchHint": "Іздеу",
+  "campusNoMatch": "Ештеңе табылмады.",
+  "campusClearSearch": "Тазалау"
 }

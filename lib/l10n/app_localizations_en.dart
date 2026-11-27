@@ -2326,4 +2326,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get linkOpenFailed => 'Could not open the link.';
+
+  @override
+  String get campusSearchHint => 'Search';
+
+  @override
+  String get campusNoMatch => 'No matches.';
+
+  @override
+  String get campusClearSearch => 'Clear';
 }

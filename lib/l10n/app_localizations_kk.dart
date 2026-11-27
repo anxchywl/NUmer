@@ -2310,4 +2310,13 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get linkOpenFailed => 'Сілтемені ашу мүмкін болмады.';
+
+  @override
+  String get campusSearchHint => 'Іздеу';
+
+  @override
+  String get campusNoMatch => 'Ештеңе табылмады.';
+
+  @override
+  String get campusClearSearch => 'Тазалау';
 }
