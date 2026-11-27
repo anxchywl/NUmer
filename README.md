@@ -5,7 +5,7 @@
 > AI insights are paused.
 
 ![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20macOS-blue)
-![Flutter](https://img.shields.io/badge/Flutter-Dart%20%E2%89%A5%203.4-02569B?logo=flutter)
+![Flutter](https://img.shields.io/badge/Flutter-Dart%20%E2%89%A5%203.10-02569B?logo=flutter)
 ![Backend](https://img.shields.io/badge/backend-Firebase-FFCA28?logo=firebase)
 ![Version](https://img.shields.io/badge/version-1.0.3-informational)
 ![Status](https://img.shields.io/badge/status-live%20on%20App%20Store%20%26%20Play%20Store-success)
@@ -49,7 +49,7 @@ numer_app/
 
 ### Prerequisites
 
-- Flutter SDK with Dart ≥ 3.4.0
+- Flutter SDK with Dart ≥ 3.10
 - Node.js 20+ and the Firebase CLI (`npm i -g firebase-tools`) for the backend
 - Platform Firebase config files in place: `android/app/google-services.json` and
   `ios/Runner/GoogleService-Info.plist`
