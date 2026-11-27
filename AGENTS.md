@@ -45,7 +45,10 @@ backend/
 - **`packages/numer_ui/`** — the design language of
   [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens,
   the theme builder `NumerTheme` and the components, depending only on `flutter`. New and
-  changed UI takes them from `package:numer_ui/numer_ui.dart`.
+  changed UI takes them from `package:numer_ui/numer_ui.dart`. Module code ported from
+  `app_ui` imports `package:numer_ui/compat.dart`
+  ([MIGRATION.md](file:///Users/anx/numer_app/packages/numer_ui/MIGRATION.md)); the app
+  does not.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
   token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`
   (see its README).
