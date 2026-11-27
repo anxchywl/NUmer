@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/ai_analysis/ai_analysis.dart';
 import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
@@ -59,7 +60,10 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: CustomScrollView(
           slivers: [
-            _appBar(),
+            const ShellHeader(
+              title: StreakTitle(),
+              actions: [SyncStatusChip()],
+            ),
             const SliverToBoxAdapter(
               child: Column(
                 children: [
@@ -90,21 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
           : _isIos(context)
           ? _iosFab(context)
           : _materialFab(context),
-    );
-  }
-
-  Widget _appBar() {
-    return SliverAppBar(
-      title: const StreakTitle(),
-      centerTitle: false, // Ensure title is left-aligned on iOS
-      actions: [
-        const Center(
-          child: Padding(
-            padding: EdgeInsets.only(right: 12.0),
-            child: SyncStatusChip(),
-          ),
-        ),
-      ],
     );
   }
 

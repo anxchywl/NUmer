@@ -14,7 +14,7 @@
 608 lib/features/connections/screens/groups_management_sheet.dart
 679 lib/features/connections/screens/person_details_screen.dart
 1356 lib/features/groups/data/group_service.dart
-697 lib/features/groups/screens/groups_screen.dart
+691 lib/features/groups/screens/groups_screen.dart
 913 lib/features/groups/screens/manage_group_screen.dart
 1057 lib/features/groups/widgets/group_leaderboard.dart
 441 lib/features/groups/widgets/user_subjects_bottom_sheet.dart

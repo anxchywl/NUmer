@@ -2,13 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/groups/models/group.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/groups/data/group_service.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/groups/widgets/group_leaderboard.dart';
+import 'package:numer_app/features/groups/widgets/groups_status_view.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 import 'package:numer_app/shared/widgets/tip_icon.dart';
 import 'package:numer_app/features/groups/screens/create_group_screen.dart';
@@ -102,18 +105,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
         stream: _membershipsStream,
         builder: (context, membershipSnap) {
           if (membershipSnap.hasError) {
-            return Center(
-              child: Text(
-                AppLocalizations.of(
-                  context,
-                )!.errorLoadingMemberships(membershipSnap.error.toString()),
-              ),
-            );
+            return GroupsStatusView.error(membershipSnap.error!);
           }
 
           if (membershipSnap.connectionState == ConnectionState.waiting &&
               !membershipSnap.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const GroupsStatusView(child: CircularProgressIndicator());
           }
 
           final memberships = membershipSnap.data ?? const <GroupMembership>[];
@@ -122,15 +119,12 @@ class _GroupsScreenState extends State<GroupsScreen> {
 
           return CustomScrollView(
             slivers: [
-              SliverAppBar(
+              ShellHeader(
                 title: Text(
                   hasMemberships
                       ? AppLocalizations.of(context)!.yourGroup
                       : AppLocalizations.of(context)!.groups,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                  style: context.text.screenTitle,
                 ),
                 actions: [
                   if (hasMemberships)

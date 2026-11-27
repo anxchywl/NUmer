@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:numer_app/l10n/app_localizations.dart';
 
-import 'package:numer_app/features/account/account.dart';
+import 'package:numer_app/app/modules/module_registry.dart';
+import 'package:numer_app/app/modules/open_module.dart';
+import 'package:numer_app/core/config/app_config_service.dart';
+import 'package:numer_app/core/modules/module_descriptor.dart';
+import 'package:numer_app/features/auth/auth.dart';
+import 'package:numer_app/features/campus/campus.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
-import 'package:numer_app/features/stats/stats.dart';
+import 'package:numer_app/features/study/study.dart';
 
 class ShellTab {
   final String label;
@@ -22,8 +28,17 @@ class ShellTab {
   });
 }
 
-List<ShellTab> buildShellTabs(BuildContext context) {
+List<ShellTab> buildShellTabs(
+  BuildContext context, {
+  List<ModuleDescriptor> registry = moduleRegistry,
+}) {
   final l10n = AppLocalizations.of(context)!;
+  final campusModules = visibleModules(
+    ModuleSection.campus,
+    context.watch<AppConfigService>(),
+    context.watch<AuthController>().currentUser?.uid ?? '',
+    registry: registry,
+  );
   return <ShellTab>[
     ShellTab(
       label: l10n.home,
@@ -38,10 +53,10 @@ List<ShellTab> buildShellTabs(BuildContext context) {
       builder: (_) => const HabitsScreen(),
     ),
     ShellTab(
-      label: l10n.statistics,
-      icon: Icons.bar_chart_outlined,
-      selectedIcon: Icons.bar_chart,
-      builder: (_) => const StatsScreen(),
+      label: l10n.navStudy,
+      icon: Icons.school_outlined,
+      selectedIcon: Icons.school,
+      builder: (_) => const StudyScreen(),
     ),
     // connections is built but intentionally hidden, add its ShellTab here to enable it
     ShellTab(
@@ -50,11 +65,15 @@ List<ShellTab> buildShellTabs(BuildContext context) {
       selectedIcon: Icons.group,
       builder: (_) => const GroupsScreen(),
     ),
-    ShellTab(
-      label: l10n.account,
-      icon: Icons.person_outline,
-      selectedIcon: Icons.settings,
-      builder: (_) => const SettingsScreen(),
-    ),
+    if (campusModules.isNotEmpty)
+      ShellTab(
+        label: l10n.navCampus,
+        icon: Icons.apartment_outlined,
+        selectedIcon: Icons.apartment,
+        builder: (context) => CampusScreen(
+          modules: campusModules,
+          onOpen: (module) => openModule(context, module),
+        ),
+      ),
   ];
 }

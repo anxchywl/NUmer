@@ -1,14 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:numer_app/app/modules/module_registry.dart';
 import 'package:numer_app/app/shell/android_tab_bar.dart';
 import 'package:numer_app/app/shell/ios_tab_bar.dart';
 import 'package:numer_app/app/shell/shell_hooks.dart';
 import 'package:numer_app/app/shell/shell_tabs.dart';
+import 'package:numer_app/core/modules/module_descriptor.dart';
 
 // main navigation shell that hosts the bottom-tab pages
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, this.registry = moduleRegistry});
+
+  final List<ModuleDescriptor> registry;
 
   @override
   State<AppShell> createState() => _ShellState();
@@ -76,9 +80,20 @@ class _ShellState extends State<AppShell> with ShellHooks {
     });
   }
 
+  // the campus tab can disappear while it is selected
+  void _leaveRemovedTab(int tabCount) {
+    if (_index < tabCount) return;
+    _index = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageController.hasClients) return;
+      _pageController.jumpToPage(0);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tabs = buildShellTabs(context);
+    final tabs = buildShellTabs(context, registry: widget.registry);
+    _leaveRemovedTab(tabs.length);
     final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
     final tabPages = tabs
         .map((tab) => _KeepAlivePage(child: tab.builder(context)))

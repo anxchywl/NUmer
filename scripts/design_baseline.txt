@@ -115,8 +115,6 @@ color_literal	lib/features/habits/screens/habits_calendar_screen.dart	1
 text_literal	lib/features/habits/screens/habits_calendar_screen.dart	1
 weight	lib/features/habits/screens/habits_calendar_screen.dart	3
 spinner	lib/features/habits/screens/habits_calendar_screen.dart	1
-shadow	lib/features/habits/screens/habits_screen.dart	1
-text_literal	lib/features/habits/screens/habits_screen.dart	1
 color_literal	lib/features/habits/widgets/add_habit/add_habit_extras_step.dart	1
 spinner	lib/features/habits/widgets/add_habit/add_habit_extras_step.dart	1
 opacity	lib/features/habits/widgets/add_habit/add_habit_name_step.dart	1

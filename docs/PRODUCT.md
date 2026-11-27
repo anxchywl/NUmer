@@ -13,6 +13,11 @@ Each capability below maps to a feature folder under `lib/features/` (see
 *what the app does*; it deliberately avoids implementation detail (that lives in
 [INFRASTRUCTURE.md](INFRASTRUCTURE.md)).
 
+## Navigation
+The bottom tabs are Home, Habits, Study, Groups and, only while a campus module is visible
+to the user, Campus. Settings opens from the user's avatar in the header of every tab and
+ends with About: privacy policy, support contact and app version.
+
 ## Capabilities
 
 ### Onboarding & profile — `auth`, `account`
@@ -49,6 +54,12 @@ notifications, phrased in the recipient's preferred language.
 
 ### AI insights — `ai_analysis`
 Paused. The Home entry points open a screen saying course analysis is coming soon.
+
+### Study — `study`
+The study tab, which for now links to Statistics and History.
+
+### Campus — `campus`
+Lists the campus modules visible to the user; hidden while there are none.
 
 ### Statistics — `stats`
 Charts, calendars, and heatmaps visualizing study time and progress.

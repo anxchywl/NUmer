@@ -16,7 +16,6 @@ import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 import 'package:numer_app/features/auth/auth.dart';
-import 'package:numer_app/features/sessions/sessions.dart';
 
 // top-level app widget, feeds theme, locale and accent colour into materialapp and routes
 class AppRoot extends StatefulWidget {
@@ -112,11 +111,7 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
           ],
           supportedLocales: AppLocalizations.supportedLocales,
           home: const AuthGate(),
-          routes: {
-            routeShell: (_) => const AppShell(),
-            routeTimer: (_) => const TimerScreen(),
-            routeAlarms: (_) => const AlarmsScreen(),
-          },
+          routes: {routeShell: (_) => const AppShell()},
         );
       },
     );

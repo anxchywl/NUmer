@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:numer_app/app/app_state.dart';
+import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
 import '../data/habit_service.dart';
@@ -178,6 +180,7 @@ class _HabitsScreenState extends State<HabitsScreen>
         child: CustomScrollView(
           slivers: [
             _buildAppBar(context),
+            _buildTabSwitch(context),
             if (_selectedTabIndex == 0)
               ...habitsProgressSlivers(
                 context: context,
@@ -202,44 +205,55 @@ class _HabitsScreenState extends State<HabitsScreen>
   }
 
   Widget _buildAppBar(BuildContext context) {
-    final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    return SliverAppBar(
-      systemOverlayStyle: theme.brightness == Brightness.dark
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
-      floating: true,
-      snap: true,
-      pinned: false,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      title: Container(
-        height: 40,
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest.withValues(
-            alpha: 0.5,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            _buildTabItem(0, l10n.habitsTabProgress),
-            _buildTabItem(1, l10n.habitsTabList),
-          ],
-        ),
-      ),
+    return ShellHeader(
+      title: Text(l10n.habitsNavLabel, style: context.text.screenTitle),
       actions: [
         IconButton(
+          tooltip: l10n.archivedHabitsTitle,
           icon: const Icon(Icons.archive_outlined),
           onPressed: () => _openScreen(const ArchivedHabitsScreen()),
         ),
         IconButton(
+          tooltip: l10n.habitsCalendarTitle,
           icon: const Icon(Icons.calendar_month),
           onPressed: () => _openScreen(const HabitsCalendarScreen()),
         ),
       ],
     );
+  }
+
+  Widget _buildTabSwitch(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: NumerSpace.lg,
+          vertical: NumerSpace.sm,
+        ),
+        child: SegmentedButton<int>(
+          segments: [
+            ButtonSegment(value: 0, label: Text(l10n.habitsTabProgress)),
+            ButtonSegment(value: 1, label: Text(l10n.habitsTabList)),
+          ],
+          selected: {_selectedTabIndex},
+          showSelectedIcon: false,
+          onSelectionChanged: (selection) => _selectTab(selection.first),
+        ),
+      ),
+    );
+  }
+
+  void _selectTab(int index) {
+    HapticFeedback.selectionClick();
+    if (_selectedTabIndex == index) return;
+    setState(() => _selectedTabIndex = index);
+    if (index == 0) {
+      Future.delayed(
+        const Duration(milliseconds: 50),
+        () => _scrollToToday(animate: true),
+      );
+    }
   }
 
   Widget _buildListTab(HabitService habitService, String uid) {
@@ -299,55 +313,6 @@ class _HabitsScreenState extends State<HabitsScreen>
         ),
       );
     }
-  }
-
-  Widget _buildTabItem(int index, String label) {
-    final theme = Theme.of(context);
-    final isSelected = _selectedTabIndex == index;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          if (_selectedTabIndex != index) {
-            setState(() => _selectedTabIndex = index);
-            if (index == 0) {
-              Future.delayed(
-                const Duration(milliseconds: 50),
-                () => _scrollToToday(animate: true),
-              );
-            }
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          alignment: Alignment.center,
-          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-          decoration: BoxDecoration(
-            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Text(
-            label,
-            style: theme.textTheme.labelLarge?.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.onSurfaceVariant,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ),
-    );
   }
 
   Widget _buildDatePicker() {
