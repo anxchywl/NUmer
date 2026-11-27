@@ -117,8 +117,11 @@ reaches a client on its next token refresh. Allowed values are listed in
 `npm run roles:set -- --uid <uid> --roles <comma list> [--dry-run]` in `functions/` (needs
 `GOOGLE_APPLICATION_CREDENTIALS`); afterwards administrators call `setUserRoles`, which
 requires `numer:admin` in both the caller's token and their current claims. Removing a
-role revokes the user's refresh tokens. `setUserRoles` logs each call to `roleAudit`, which
-clients cannot access; the script does not.
+role revokes the user's refresh tokens, but an ID token issued earlier keeps the role for up
+to 1 hour in a module backend that gives `numer_identity` no `revocation_check`.
+`setUserRoles` logs each call to `roleAudit`, which clients cannot access. The entry is
+written after the claims change, so a failed write leaves that change unlogged, and the
+script writes no entry.
 
 `AGG_INCREMENTAL` (`on` or `off`, default `off`) switches the two aggregate triggers from the
 full recompute to a per-user ledger in the private `users/{uid}/aggState/v1`, which costs about
