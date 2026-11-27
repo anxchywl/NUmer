@@ -5,6 +5,8 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/app/auth_gate.dart';
 import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/upcoming/upcoming_item.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
@@ -133,6 +135,15 @@ class _FakeSync extends ChangeNotifier implements SyncService {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+final _item = UpcomingItem(
+  id: 'events:1',
+  moduleId: 'events',
+  kind: UpcomingKind.eventReminder,
+  title: 'Fair',
+  startsAt: DateTime.utc(2100),
+  route: '/module/events',
+);
+
 void main() {
   testWidgets('signing out returns to the auth gate', (tester) async {
     PackageInfo.setMockInitialValues(
@@ -143,8 +154,13 @@ void main() {
       buildSignature: '',
     );
     SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final upcoming = UpcomingStore(prefs);
+    for (final uid in ['u1', 'u2']) {
+      await upcoming.put(uid, _item);
+    }
     final config = AppConfigService(
-      prefs: await SharedPreferences.getInstance(),
+      prefs: prefs,
       fetch: () async => null,
       build: 10,
     );
@@ -159,6 +175,7 @@ void main() {
           ChangeNotifierProvider<AuthController>.value(value: auth),
           ChangeNotifierProvider<AppState>.value(value: state),
           ChangeNotifierProvider<SyncService>.value(value: sync),
+          ChangeNotifierProvider<UpcomingStore>.value(value: upcoming),
         ],
         child: MaterialApp(
           navigatorKey: navigator,
@@ -186,6 +203,8 @@ void main() {
 
     expect(state.calls, ['stop', 'reflections', 'reset']);
     expect(sync.pushes, 1);
+    expect(upcoming.upcoming('u1'), isEmpty);
+    expect(upcoming.upcoming('u2'), hasLength(1));
     expect(find.byType(SettingsScreen), findsNothing);
     expect(find.byType(AuthGate), findsOneWidget);
     expect(find.byType(AuthScreen), findsOneWidget);

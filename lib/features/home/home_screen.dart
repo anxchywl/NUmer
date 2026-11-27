@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/upcoming/upcoming_item.dart';
 import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/courses/courses.dart';
@@ -14,16 +15,19 @@ import 'package:numer_app/l10n/app_localizations.dart';
 import 'course_picker_sheet.dart';
 import 'streak_title.dart';
 import 'today_block.dart';
+import 'upcoming_section.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.onOpenStudy,
     required this.onOpenHabits,
+    required this.openUpcoming,
   });
 
   final VoidCallback onOpenStudy;
   final VoidCallback onOpenHabits;
+  final bool Function(BuildContext, UpcomingItem) openUpcoming;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -91,6 +95,14 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SliverToBoxAdapter(child: _today(context)),
+            SliverToBoxAdapter(
+              child: UpcomingSection(
+                uid: context.select<AuthController, String>(
+                  (auth) => auth.currentUser?.uid ?? '',
+                ),
+                openInModule: widget.openUpcoming,
+              ),
+            ),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: isIos

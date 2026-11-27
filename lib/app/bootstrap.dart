@@ -28,6 +28,7 @@ import 'package:numer_app/core/notifications/notifications.dart';
 import 'package:numer_app/core/notifications/recording_notification_service.dart';
 import 'package:numer_app/core/observability/crash_reporter.dart';
 import 'package:numer_app/core/startup_metrics.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/groups/groups.dart';
@@ -256,6 +257,9 @@ class NumerBootstrapApp extends StatelessWidget {
               Provider<HabitService>(create: (_) => HabitService()),
               ChangeNotifierProvider<LastCourseStore>(
                 create: (_) => LastCourseStore(prefs),
+              ),
+              ChangeNotifierProvider<UpcomingStore>(
+                create: (_) => UpcomingStore(prefs),
               ),
               ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
                 create: (_) => AppState(),

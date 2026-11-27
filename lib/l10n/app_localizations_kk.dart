@@ -481,6 +481,12 @@ class AppLocalizationsKk extends AppLocalizations {
   String get today => 'Бүгін';
 
   @override
+  String get tomorrow => 'Ертең';
+
+  @override
+  String get upcomingTitle => 'Алдағы';
+
+  @override
   String get edit => 'Өңдеу';
 
   @override

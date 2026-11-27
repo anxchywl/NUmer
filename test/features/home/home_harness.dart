@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/identity/module_session.dart';
+import 'package:numer_app/core/upcoming/upcoming_item.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
@@ -24,6 +26,8 @@ class HomeHarness {
   final habits = FakeHabits();
   final session = CountingSession();
   late final LastCourseStore lastCourse;
+  late final UpcomingStore upcoming;
+  final upcomingOpened = <UpcomingItem>[];
   int studyOpened = 0;
   int habitsOpened = 0;
 
@@ -37,7 +41,9 @@ class HomeHarness {
     SharedPreferences.setMockInitialValues({
       'home_last_course_id_v1': ?lastCourseId,
     });
-    lastCourse = LastCourseStore(await SharedPreferences.getInstance());
+    final prefs = await SharedPreferences.getInstance();
+    lastCourse = LastCourseStore(prefs);
+    upcoming = UpcomingStore(prefs);
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -47,6 +53,7 @@ class HomeHarness {
           ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
           Provider<HabitService>.value(value: habits),
           Provider<ModuleSession>.value(value: session),
+          ChangeNotifierProvider<UpcomingStore>.value(value: upcoming),
         ],
         child: MaterialApp(
           theme: NumerTheme.build(
@@ -65,6 +72,10 @@ class HomeHarness {
           home: HomeScreen(
             onOpenStudy: () => studyOpened++,
             onOpenHabits: () => habitsOpened++,
+            openUpcoming: (_, item) {
+              upcomingOpened.add(item);
+              return true;
+            },
           ),
         ),
       ),

@@ -7,6 +7,7 @@ import 'package:numer_app/app/shell/app_shell.dart';
 import 'package:numer_app/core/config/app_config_service.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/modules/module_descriptor.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/campus/campus.dart';
 import 'package:numer_app/features/courses/course.dart';
@@ -151,7 +152,8 @@ Future<void> _pumpShell(
   AppConfigService config, {
   List<ModuleDescriptor> registry = const [],
 }) async {
-  final lastCourse = LastCourseStore(await SharedPreferences.getInstance());
+  final prefs = await SharedPreferences.getInstance();
+  final lastCourse = LastCourseStore(prefs);
   await tester.pumpWidget(
     MultiProvider(
       providers: [
@@ -162,6 +164,9 @@ Future<void> _pumpShell(
         Provider<GroupService>(create: (_) => _FakeGroups()),
         Provider<HabitService>(create: (_) => _FakeHabits()),
         ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
+        ChangeNotifierProvider<UpcomingStore>(
+          create: (_) => UpcomingStore(prefs),
+        ),
       ],
       child: MaterialApp(
         theme: NumerTheme.build(

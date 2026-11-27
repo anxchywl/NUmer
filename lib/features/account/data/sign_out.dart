@@ -3,15 +3,19 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/auth/auth.dart';
 
 Future<void> signOutAndReset(BuildContext context) async {
   final appState = context.read<AppState>();
   final sync = context.read<SyncService>();
   final auth = context.read<AuthController>();
+  final upcoming = context.read<UpcomingStore>();
+  final uid = auth.currentUser?.uid;
   await appState.stopAndSaveAllActiveSessions();
   await appState.waitForPendingReflections();
   await sync.pushNow();
+  if (uid != null) await upcoming.clear(uid);
   await auth.signOut();
   appState.reset();
 }

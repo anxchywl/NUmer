@@ -442,6 +442,8 @@ Emulators and deploys are covered in [Environments](#environments).
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Remote flags: `lib/core/config/`
+- Upcoming items (device-local, cleared on sign-out and account deletion):
+  `lib/core/upcoming/`
 - Module registry and session contract: `lib/app/modules/`, `lib/core/modules/`,
   `lib/core/identity/`
 - Crash reporting: `lib/core/observability/`

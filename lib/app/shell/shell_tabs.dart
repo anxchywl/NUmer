@@ -53,6 +53,7 @@ List<ShellTab> buildShellTabs(
       builder: (_) => HomeScreen(
         onOpenStudy: () => onSelect(ShellDestination.study),
         onOpenHabits: () => onSelect(ShellDestination.habits),
+        openUpcoming: openNoUpcomingItem,
       ),
     ),
     ShellTab(

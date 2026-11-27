@@ -208,6 +208,8 @@
   "session": "session",
   "editCourse": "Edit course",
   "today": "Today",
+  "tomorrow": "Tomorrow",
+  "upcomingTitle": "Upcoming",
   "edit": "Edit",
   "timerTab": "Timer",
   "stopwatchTab": "Stopwatch",

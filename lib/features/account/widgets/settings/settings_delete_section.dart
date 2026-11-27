@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
@@ -42,6 +43,8 @@ Future<void> _confirmDeleteAccount(BuildContext context) async {
   final auth = context.read<AuthController>();
   final appState = context.read<AppState>();
   final syncService = context.read<SyncService>();
+  final upcoming = context.read<UpcomingStore>();
+  final uid = auth.currentUser?.uid;
   final navigator = Navigator.of(context, rootNavigator: true);
 
   final confirmed = await showDialog<bool>(
@@ -64,6 +67,7 @@ Future<void> _confirmDeleteAccount(BuildContext context) async {
   );
   if (!deleted) return;
 
+  if (uid != null) await upcoming.clear(uid);
   navigator.pushNamedAndRemoveUntil('/', (route) => false);
 }
 

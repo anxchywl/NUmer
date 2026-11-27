@@ -54,7 +54,8 @@ infra/                   # host hardening, backup restore test and monitor scrip
 - **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
   minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
   `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
-  contract), `notifications/`, `observability/` (crash reporting), `firebase_options.dart`,
+  contract), `notifications/`, `observability/` (crash reporting), `upcoming/` (the
+  device-local store of items modules put on Home), `firebase_options.dart`,
   `startup_metrics.dart`.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker). If it references a domain model or does I/O, it does **not** belong here.

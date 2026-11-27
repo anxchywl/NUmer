@@ -74,6 +74,8 @@ The landing tab is the today screen: the study streak, a sync line shown only wh
 or after a failed sync, the running session, and a Today block with the time studied (with
 the daily goal when goal bars are on) and the habits done today. One button continues the
 last used course, picks a course to start, or adds the first one. Pulling down syncs.
+An Upcoming section lists the next three bookings and reminders kept on this device; it is
+hidden while there are none, and no module adds them yet.
 
 ## Cross-cutting product traits
 - **Offline-first:** the app works fully without a connection; study groups are the only

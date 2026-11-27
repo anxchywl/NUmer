@@ -483,6 +483,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get today => 'Сегодня';
 
   @override
+  String get tomorrow => 'Завтра';
+
+  @override
+  String get upcomingTitle => 'Предстоящее';
+
+  @override
   String get edit => 'Редактировать';
 
   @override

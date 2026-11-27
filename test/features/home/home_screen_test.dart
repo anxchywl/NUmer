@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/core/upcoming/upcoming_item.dart';
 import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_ui/numer_ui.dart';
@@ -195,5 +196,31 @@ void main() {
 
     expect(home.sync.forced, [true]);
     expect(home.session.tokenReads, 0);
+  });
+
+  testWidgets('an upcoming item appears below today and opens', (tester) async {
+    final home = HomeHarness();
+    await home.pump(tester);
+    expect(find.text('Upcoming'), findsNothing);
+
+    await home.upcoming.put(
+      'u1',
+      UpcomingItem(
+        id: 'clavis:1',
+        moduleId: 'clavis',
+        kind: UpcomingKind.pianoBooking,
+        title: 'Piano room',
+        startsAt: DateTime.now().add(const Duration(days: 3)),
+        route: '/module/clavis',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('Upcoming')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Add course')).dy),
+    );
+    await tester.tap(find.text('Piano room'));
+    expect(home.upcomingOpened.single.id, 'clavis:1');
   });
 }
