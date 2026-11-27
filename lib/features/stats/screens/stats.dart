@@ -100,8 +100,12 @@ class _StatsScreenState extends State<StatsScreen> {
   void _prevRange() {
     final minDate = DateTime(2025, 1, 1);
     final weekStart = context.read<AppState>().weekStart;
-    final (prevStart, _) =
-        _rangeBounds(DateTime.now(), _range, _shift - 1, weekStart);
+    final (prevStart, _) = _rangeBounds(
+      DateTime.now(),
+      _range,
+      _shift - 1,
+      weekStart,
+    );
 
     if (prevStart.isBefore(minDate)) return;
 
@@ -120,10 +124,10 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   void _setRange(_Range r) => setState(() {
-        _range = r;
-        _shift = 0;
-        _tooltip = null;
-      });
+    _range = r;
+    _shift = 0;
+    _tooltip = null;
+  });
 
   _BucketTooltip? _tooltip;
 
@@ -137,8 +141,10 @@ class _StatsScreenState extends State<StatsScreen> {
   // Cache key to detect if we need to reload
   // For now, load once or on demand.
 
-  final DateTime _habitStatsMonth =
-      DateTime(DateTime.now().year, DateTime.now().month);
+  final DateTime _habitStatsMonth = DateTime(
+    DateTime.now().year,
+    DateTime.now().month,
+  );
   late PageController _habitPageCtrl;
 
   @override
@@ -187,12 +193,18 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<_HabitStatsResult> _computeHabitStats(
-      Habit habit, HabitService service, String uid) async {
+    Habit habit,
+    HabitService service,
+    String uid,
+  ) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     // Start from habit start date
     final start = DateTime(
-        habit.startDate.year, habit.startDate.month, habit.startDate.day);
+      habit.startDate.year,
+      habit.startDate.month,
+      habit.startDate.day,
+    );
 
     // If future start date, no stats
     if (start.isAfter(today)) {
@@ -203,7 +215,10 @@ class _StatsScreenState extends State<StatsScreen> {
     DateTime end = today;
     if (habit.endDate != null) {
       final e = DateTime(
-          habit.endDate!.year, habit.endDate!.month, habit.endDate!.day);
+        habit.endDate!.year,
+        habit.endDate!.month,
+        habit.endDate!.day,
+      );
       if (e.isBefore(today)) end = e;
     }
 
@@ -307,13 +322,18 @@ class _StatsScreenState extends State<StatsScreen> {
         : 4.0;
     const navHeight = 66.0;
     const extra = 12.0;
-    final bottomScrollClearance =
-        isIOS ? navHeight + navBottomOffset + extra : 24.0;
+    final bottomScrollClearance = isIOS
+        ? navHeight + navBottomOffset + extra
+        : 24.0;
 
     final pieFuture = _loadPieForDay(_day, courses);
 
-    final (start, end) =
-        _rangeBounds(DateTime.now(), _range, _shift, weekStart);
+    final (start, end) = _rangeBounds(
+      DateTime.now(),
+      _range,
+      _shift,
+      weekStart,
+    );
     final bucketsFuture = _loadBucketsForRange(start, end, _range, courses);
 
     return Scaffold(
@@ -340,8 +360,10 @@ class _StatsScreenState extends State<StatsScreen> {
               child: Column(
                 children: [
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         IconButton(
@@ -358,24 +380,29 @@ class _StatsScreenState extends State<StatsScreen> {
                                 flex: 2,
                                 child: TextButton.icon(
                                   onPressed: () => _pickDay(context),
-                                  icon: const Icon(Icons.calendar_today,
-                                      size: 20),
+                                  icon: const Icon(
+                                    Icons.calendar_today,
+                                    size: 20,
+                                  ),
                                   label: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
                                       _fmtDateLong(_day, context),
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.w600),
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                   style: TextButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                        vertical: 12, horizontal: 8),
+                                      vertical: 12,
+                                      horizontal: 8,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                       side: BorderSide(
-                                          color:
-                                              Theme.of(context).dividerColor),
+                                        color: Theme.of(context).dividerColor,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -386,12 +413,14 @@ class _StatsScreenState extends State<StatsScreen> {
                                   onPressed: _isToday ? null : _goToday,
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 12),
+                                      horizontal: 12,
+                                    ),
                                   ),
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                        AppLocalizations.of(context)!.today),
+                                      AppLocalizations.of(context)!.today,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -432,11 +461,15 @@ class _StatsScreenState extends State<StatsScreen> {
                         label: Text(AppLocalizations.of(context)!.history),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          textStyle:
-                              const TextStyle(fontWeight: FontWeight.w600),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         onPressed: () async {
                           final dayStart = _strip(_day);
@@ -479,23 +512,28 @@ class _StatsScreenState extends State<StatsScreen> {
                       spacing: 8,
                       children: [
                         _SegChip(
-                            label: AppLocalizations.of(context)!.week,
-                            selected: _range == _Range.week,
-                            onTap: () => _setRange(_Range.week)),
+                          label: AppLocalizations.of(context)!.week,
+                          selected: _range == _Range.week,
+                          onTap: () => _setRange(_Range.week),
+                        ),
                         _SegChip(
-                            label: AppLocalizations.of(context)!.month,
-                            selected: _range == _Range.month,
-                            onTap: () => _setRange(_Range.month)),
+                          label: AppLocalizations.of(context)!.month,
+                          selected: _range == _Range.month,
+                          onTap: () => _setRange(_Range.month),
+                        ),
                         _SegChip(
-                            label: AppLocalizations.of(context)!.year,
-                            selected: _range == _Range.year,
-                            onTap: () => _setRange(_Range.year)),
+                          label: AppLocalizations.of(context)!.year,
+                          selected: _range == _Range.year,
+                          onTap: () => _setRange(_Range.year),
+                        ),
                       ],
                     ),
                   ),
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: Row(
                       children: [
                         IconButton(
@@ -508,11 +546,14 @@ class _StatsScreenState extends State<StatsScreen> {
                             onPressed: null,
                             style: TextButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 8),
+                                vertical: 12,
+                                horizontal: 8,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                                 side: BorderSide(
-                                    color: Theme.of(context).dividerColor),
+                                  color: Theme.of(context).dividerColor,
+                                ),
                               ),
                             ),
                             child: FittedBox(
@@ -520,7 +561,8 @@ class _StatsScreenState extends State<StatsScreen> {
                               child: Text(
                                 _periodLabel(start, end, _range),
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w700),
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                           ),
@@ -566,27 +608,37 @@ class _StatsScreenState extends State<StatsScreen> {
                             aspectRatio: 1.35,
                             child: TweenAnimationBuilder<double>(
                               key: ValueKey(
-                                  'bars-$_range-$_shift-${unit.name}-$totalSecs'),
+                                'bars-$_range-$_shift-${unit.name}-$totalSecs',
+                              ),
                               tween: Tween(begin: 0, end: 1),
                               duration: const Duration(milliseconds: 650),
                               curve: Curves.easeOutCubic,
                               builder: (context, t, _) {
-                                final effectiveT =
-                                    Curves.easeOutCubic.transform(t);
+                                final effectiveT = Curves.easeOutCubic
+                                    .transform(t);
                                 return LayoutBuilder(
                                   builder: (context, c) {
-                                    final n =
-                                        buckets.isEmpty ? 1 : buckets.length;
+                                    final n = buckets.isEmpty
+                                        ? 1
+                                        : buckets.length;
                                     final chartW = c.maxWidth;
 
                                     final slot = chartW / n;
                                     final proposed = slot * 0.85;
-                                    final bw =
-                                        proposed.clamp(4.0, 34.0).toDouble();
+                                    final bw = proposed
+                                        .clamp(4.0, 34.0)
+                                        .toDouble();
 
-                                    final (animatedGroups, _) =
-                                        _buildAnimatedGroups(buckets, courses,
-                                            unitScale, effectiveT, bw);
+                                    final (
+                                      animatedGroups,
+                                      _,
+                                    ) = _buildAnimatedGroups(
+                                      buckets,
+                                      courses,
+                                      unitScale,
+                                      effectiveT,
+                                      bw,
+                                    );
 
                                     return Stack(
                                       children: [
@@ -598,28 +650,31 @@ class _StatsScreenState extends State<StatsScreen> {
                                             maxY: maxYAdjusted,
                                             barGroups: animatedGroups,
                                             gridData: FlGridData(
-                                                show: true,
-                                                drawVerticalLine: false,
-                                                horizontalInterval: interval,
-                                                getDrawingHorizontalLine: (v) =>
-                                                    FlLine(
-                                                        color: Theme.of(context)
-                                                            .dividerColor,
-                                                        strokeWidth: 1)),
+                                              show: true,
+                                              drawVerticalLine: false,
+                                              horizontalInterval: interval,
+                                              getDrawingHorizontalLine: (v) =>
+                                                  FlLine(
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).dividerColor,
+                                                    strokeWidth: 1,
+                                                  ),
+                                            ),
                                             titlesData: FlTitlesData(
                                               leftTitles: AxisTitles(
                                                 axisNameWidget: Padding(
                                                   padding:
                                                       const EdgeInsets.only(
-                                                          bottom: 6),
+                                                        bottom: 6,
+                                                      ),
                                                   child: Text(
                                                     _unitLabel(unit, context),
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .bodySmall
                                                         ?.copyWith(
-                                                          color: Theme.of(
-                                                                  context)
+                                                          color: Theme.of(context)
                                                               .colorScheme
                                                               .onSurfaceVariant,
                                                           fontWeight:
@@ -632,19 +687,18 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   showTitles: true,
                                                   reservedSize: 44,
                                                   interval: interval,
-                                                  getTitlesWidget: (v, meta) =>
-                                                      Padding(
+                                                  getTitlesWidget: (v, meta) => Padding(
                                                     padding:
                                                         const EdgeInsets.only(
-                                                            right: 8),
+                                                          right: 8,
+                                                        ),
                                                     child: Text(
                                                       _fmtAxisTick(v, unit),
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .bodySmall
                                                           ?.copyWith(
-                                                            color: Theme.of(
-                                                                    context)
+                                                            color: Theme.of(context)
                                                                 .colorScheme
                                                                 .onSurfaceVariant,
                                                           ),
@@ -659,24 +713,29 @@ class _StatsScreenState extends State<StatsScreen> {
                                                     final idx = v.toInt();
                                                     if (idx < 0 ||
                                                         idx >= buckets.length) {
-                                                      return const SizedBox
-                                                          .shrink();
+                                                      return const SizedBox.shrink();
                                                     }
                                                     return Padding(
                                                       padding:
                                                           const EdgeInsets.only(
-                                                              top: 6),
+                                                            top: 6,
+                                                          ),
                                                       child: Text(
-                                                        _xLabel(buckets[idx],
-                                                            _range, weekStart),
+                                                        _xLabel(
+                                                          buckets[idx],
+                                                          _range,
+                                                          weekStart,
+                                                        ),
                                                         style: Theme.of(context)
                                                             .textTheme
                                                             .bodySmall
                                                             ?.copyWith(
-                                                              color: Theme.of(
-                                                                      context)
-                                                                  .colorScheme
-                                                                  .onSurface,
+                                                              color:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .colorScheme
+                                                                      .onSurface,
                                                             ),
                                                       ),
                                                     );
@@ -684,25 +743,32 @@ class _StatsScreenState extends State<StatsScreen> {
                                                 ),
                                               ),
                                               rightTitles: const AxisTitles(
-                                                  sideTitles: SideTitles(
-                                                      showTitles: false)),
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
                                               topTitles: const AxisTitles(
-                                                  sideTitles: SideTitles(
-                                                      showTitles: false)),
+                                                sideTitles: SideTitles(
+                                                  showTitles: false,
+                                                ),
+                                              ),
                                             ),
-                                            borderData:
-                                                FlBorderData(show: false),
+                                            borderData: FlBorderData(
+                                              show: false,
+                                            ),
                                             barTouchData: BarTouchData(
                                               enabled: totalSecs > 0,
                                               handleBuiltInTouches: false,
                                               touchTooltipData:
                                                   BarTouchTooltipData(
-                                                getTooltipItem: (group,
-                                                        groupIndex,
-                                                        rod,
-                                                        rodIndex) =>
-                                                    null,
-                                              ),
+                                                    getTooltipItem:
+                                                        (
+                                                          group,
+                                                          groupIndex,
+                                                          rod,
+                                                          rodIndex,
+                                                        ) => null,
+                                                  ),
                                               touchCallback: (event, response) {
                                                 if (!mounted) return;
 
@@ -714,12 +780,14 @@ class _StatsScreenState extends State<StatsScreen> {
                                                   return;
                                                 }
 
-                                                final anchor =
-                                                    _extractLocal(event);
+                                                final anchor = _extractLocal(
+                                                  event,
+                                                );
                                                 if (anchor == null) return;
 
                                                 final idx = response
-                                                    .spot!.touchedBarGroupIndex;
+                                                    .spot!
+                                                    .touchedBarGroupIndex;
                                                 if (idx < 0 ||
                                                     idx >= buckets.length) {
                                                   return;
@@ -728,12 +796,16 @@ class _StatsScreenState extends State<StatsScreen> {
                                                 final bucket = buckets[idx];
                                                 final items =
                                                     _buildTooltipDetails(
-                                                        bucket, courses);
+                                                      bucket,
+                                                      courses,
+                                                    );
                                                 setState(() {
                                                   _tooltip = _BucketTooltip(
                                                     anchor: anchor,
                                                     title: _tooltipTitle(
-                                                        bucket, _range),
+                                                      bucket,
+                                                      _range,
+                                                    ),
                                                     items: items,
                                                   );
                                                 });
@@ -748,8 +820,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                             child: IgnorePointer(
                                               child: Center(
                                                 child: Text(
-                                                  AppLocalizations.of(context)!
-                                                      .noData,
+                                                  AppLocalizations.of(
+                                                    context,
+                                                  )!.noData,
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .bodyMedium
@@ -758,8 +831,9 @@ class _StatsScreenState extends State<StatsScreen> {
                                                             .colorScheme
                                                             .onSurface
                                                             .withAlpha(
-                                                                (0.55 * 255)
-                                                                    .round()),
+                                                              (0.55 * 255)
+                                                                  .round(),
+                                                            ),
                                                         fontWeight:
                                                             FontWeight.w700,
                                                       ),
@@ -788,8 +862,8 @@ class _StatsScreenState extends State<StatsScreen> {
               title: (_range == _Range.week)
                   ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisWeek}'
                   : (_range == _Range.month)
-                      ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisMonth}'
-                      : '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisYear}',
+                  ? '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisMonth}'
+                  : '${AppLocalizations.of(context)!.courseStatistics} ${AppLocalizations.of(context)!.overThisYear}',
               useCard: false,
               child: FutureBuilder<_BucketsPayload>(
                 future: bucketsFuture,
@@ -807,11 +881,13 @@ class _StatsScreenState extends State<StatsScreen> {
                   }
 
                   final courseById = {for (final c in courses) c.id: c};
-                  final positive = perCourse.entries
-                      .where(
-                          (e) => courseById.containsKey(e.key) && e.value > 0)
-                      .toList()
-                    ..sort((a, b) => b.value.compareTo(a.value));
+                  final positive =
+                      perCourse.entries
+                          .where(
+                            (e) => courseById.containsKey(e.key) && e.value > 0,
+                          )
+                          .toList()
+                        ..sort((a, b) => b.value.compareTo(a.value));
 
                   String mostName = '—';
                   int mostSecs = 0;
@@ -834,8 +910,12 @@ class _StatsScreenState extends State<StatsScreen> {
 
                   Widget content;
                   if (_range == _Range.year) {
-                    final (start, end) =
-                        _rangeBounds(DateTime.now(), _range, _shift, weekStart);
+                    final (start, end) = _rangeBounds(
+                      DateTime.now(),
+                      _range,
+                      _shift,
+                      weekStart,
+                    );
                     final days = end.difference(start).inDays;
                     content = FutureBuilder<List<Map<String, int>>>(
                       future: Storage.dailySeries(start, days),
@@ -844,8 +924,9 @@ class _StatsScreenState extends State<StatsScreen> {
                         final activeDays = list
                             .where((m) => m.values.any((s) => s > 0))
                             .length;
-                        final avgSecs =
-                            activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
+                        final avgSecs = activeDays > 0
+                            ? (totalSecs ~/ activeDays)
+                            : 0;
                         return _StatsBlock(
                           totalSecs: totalSecs,
                           avgSecs: avgSecs,
@@ -859,10 +940,12 @@ class _StatsScreenState extends State<StatsScreen> {
                       },
                     );
                   } else {
-                    final activeDays =
-                        buckets.where((b) => b.totalSeconds > 0).length;
-                    final avgSecs =
-                        activeDays > 0 ? (totalSecs ~/ activeDays) : 0;
+                    final activeDays = buckets
+                        .where((b) => b.totalSeconds > 0)
+                        .length;
+                    final avgSecs = activeDays > 0
+                        ? (totalSecs ~/ activeDays)
+                        : 0;
                     content = _StatsBlock(
                       totalSecs: totalSecs,
                       avgSecs: avgSecs,
@@ -923,7 +1006,7 @@ class _StatsScreenState extends State<StatsScreen> {
                   color: theme.colorScheme.primary,
                 ),
               ),
-              if (trailingHeader != null) trailingHeader,
+              ?trailingHeader,
             ],
           ),
         ),
@@ -937,8 +1020,9 @@ class _StatsScreenState extends State<StatsScreen> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.2 : 0.05,
+                        ),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -966,12 +1050,14 @@ class _StatsScreenState extends State<StatsScreen> {
       final secs = secs0 < 0 ? 0 : secs0;
       if (secs <= 0) return;
       final course = courses.firstWhere((c) => c.id == courseId);
-      slices.add(_Slice(
-        id: courseId,
-        name: course.name,
-        color: course.color,
-        seconds: secs,
-      ));
+      slices.add(
+        _Slice(
+          id: courseId,
+          name: course.name,
+          color: course.color,
+          seconds: secs,
+        ),
+      );
       total += secs;
     });
 
@@ -995,8 +1081,11 @@ class _StatsScreenState extends State<StatsScreen> {
       final todayKey = DateTime(now.year, now.month, now.day);
 
       for (var i = 0; i < days; i++) {
-        final dayStart =
-            DateTime(start.year, start.month, start.day).add(Duration(days: i));
+        final dayStart = DateTime(
+          start.year,
+          start.month,
+          start.day,
+        ).add(Duration(days: i));
         final isToday =
             DateTime(dayStart.year, dayStart.month, dayStart.day) == todayKey;
         final dayEnd = isToday ? now : dayStart.add(const Duration(days: 1));
@@ -1024,11 +1113,14 @@ class _StatsScreenState extends State<StatsScreen> {
         final monthStart = DateTime(start.year, month, 1);
         final monthEnd = DateTime(start.year, month + 1, 1);
         final now = DateTime.now();
-        final effectiveEnd =
-            (monthEnd.isAfter(now) && now.isAfter(monthStart)) ? now : monthEnd;
+        final effectiveEnd = (monthEnd.isAfter(now) && now.isAfter(monthStart))
+            ? now
+            : monthEnd;
 
-        final map =
-            await Storage.secondsByCourseBetween(monthStart, effectiveEnd);
+        final map = await Storage.secondsByCourseBetween(
+          monthStart,
+          effectiveEnd,
+        );
         final cleaned = <String, int>{};
         map.forEach((k, v) {
           if (!valid.contains(k)) return;
@@ -1042,7 +1134,8 @@ class _StatsScreenState extends State<StatsScreen> {
           cleaned.putIfAbsent(c.id, () => 0);
         }
         buckets.add(
-            _Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true));
+          _Bucket(date: monthStart, secondsByCourse: cleaned, isMonth: true),
+        );
       }
     }
 
@@ -1104,8 +1197,9 @@ class _StatsScreenState extends State<StatsScreen> {
               toY: hasData ? (accFinal * tt) : 0,
               width: barWidth,
               color: Colors.transparent,
-              borderRadius:
-                  hasData ? BorderRadius.circular(6) : BorderRadius.zero,
+              borderRadius: hasData
+                  ? BorderRadius.circular(6)
+                  : BorderRadius.zero,
               rodStackItems: hasData ? items : const [],
             ),
           ],
@@ -1117,7 +1211,11 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   (DateTime, DateTime) _rangeBounds(
-      DateTime base, _Range r, int shift, WeekStart weekStart) {
+    DateTime base,
+    _Range r,
+    int shift,
+    WeekStart weekStart,
+  ) {
     switch (r) {
       case _Range.week:
         final int delta = (weekStart == WeekStart.monday)
@@ -1154,7 +1252,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 l10n.wed,
                 l10n.thu,
                 l10n.fri,
-                l10n.sat
+                l10n.sat,
               ]
             : [
                 l10n.mon,
@@ -1163,7 +1261,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 l10n.thu,
                 l10n.fri,
                 l10n.sat,
-                l10n.sun
+                l10n.sun,
               ];
         final idx = (weekStart == WeekStart.sunday)
             ? (b.date.weekday % 7)
@@ -1214,63 +1312,71 @@ class _StatsScreenState extends State<StatsScreen> {
       final c = courseById[entry.key];
       if (c == null) continue;
       items.add(
-          _TooltipItem(color: c.color, label: c.name, valueHms: _fmtHMS(secs)));
+        _TooltipItem(color: c.color, label: c.name, valueHms: _fmtHMS(secs)),
+      );
     }
     if (items.isEmpty) {
-      items.add(_TooltipItem(
-        color: Theme.of(context).colorScheme.outline,
-        label: 'No study',
-        valueHms: '00:00:00',
-      ));
+      items.add(
+        _TooltipItem(
+          color: Theme.of(context).colorScheme.outline,
+          label: 'No study',
+          valueHms: '00:00:00',
+        ),
+      );
     }
     return items;
   }
 
   Widget _buildHabitStatistics(BuildContext context) {
     // Let's get it from FirebaseAuth for now or Provider.
-    final uid = context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ??
+    final uid =
+        context.read<firebase_auth.FirebaseAuth?>()?.currentUser?.uid ??
         firebase_auth.FirebaseAuth.instance.currentUser?.uid;
 
     if (uid == null) return const SizedBox.shrink();
 
     return StreamBuilder<List<Habit>>(
-        stream: context.read<HabitService>().habitsStream(uid),
-        builder: (context, snapshot) {
-          final habits = snapshot.data ?? [];
-          if (habits.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: Text(
-                  AppLocalizations.of(context)!.habitStatsEmptyState,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                  textAlign: TextAlign.center,
+      stream: context.read<HabitService>().habitsStream(uid),
+      builder: (context, snapshot) {
+        final habits = snapshot.data ?? [];
+        if (habits.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.all(32),
+            child: Center(
+              child: Text(
+                AppLocalizations.of(context)!.habitStatsEmptyState,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+                textAlign: TextAlign.center,
               ),
-            );
-          }
+            ),
+          );
+        }
 
-          // Trigger stats load if needed
-          if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _loadAllHabitsStats(habits, uid);
-            });
-          }
+        // Trigger stats load if needed
+        if (_allHabitsStatsCache == null && !_loadingHabitsStats) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadAllHabitsStats(habits, uid);
+          });
+        }
 
-          // Initial Page Selection
-          if (_selectedHabitId == null && habits.isNotEmpty) {
-            _selectedHabitId = habits.first.id;
-          }
+        // Initial Page Selection
+        if (_selectedHabitId == null && habits.isNotEmpty) {
+          _selectedHabitId = habits.first.id;
+        }
 
-          return _buildHabitLayout(context, habits, uid);
-        });
+        return _buildHabitLayout(context, habits, uid);
+      },
+    );
   }
 
   // Refactored inner layout to handle the stream wrapping
   Widget _buildHabitLayout(
-      BuildContext context, List<Habit> habits, String uid) {
+    BuildContext context,
+    List<Habit> habits,
+    String uid,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     // Trigger stats load (idempotent-ish)
     // If we want live updates, we need to know when to force reload.
@@ -1306,24 +1412,27 @@ class _StatsScreenState extends State<StatsScreen> {
                 builder: (context, child) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 4), // Tighter padding
+                      horizontal: 4,
+                    ), // Tighter padding
                     child: child,
                   );
                 },
                 // Refined Card Style
                 child: Container(
-                  margin:
-                      const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                  margin: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerLow, // Softer background
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerLow, // Softer background
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .outlineVariant
-                            .withValues(alpha: 0.5)),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -1333,17 +1442,18 @@ class _StatsScreenState extends State<StatsScreen> {
                         Row(
                           children: [
                             Icon(
-                                IconData(habit.iconCodePoint,
-                                    fontFamily: habit.iconFamily,
-                                    fontPackage: habit.iconPackage),
-                                color: habit.color),
+                              IconData(
+                                habit.iconCodePoint,
+                                fontFamily: habit.iconFamily,
+                                fontPackage: habit.iconPackage,
+                              ),
+                              color: habit.color,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 habit.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.bold),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
@@ -1355,27 +1465,34 @@ class _StatsScreenState extends State<StatsScreen> {
                         if (stats == null)
                           const Center(child: CircularProgressIndicator())
                         else ...[
-                          _buildStatRow(context, l10n.habitStatsCompletionRate,
-                              "${stats.completionRate.toStringAsFixed(1)}%"),
+                          _buildStatRow(
+                            context,
+                            l10n.habitStatsCompletionRate,
+                            "${stats.completionRate.toStringAsFixed(1)}%",
+                          ),
                           const SizedBox(height: 12),
                           Row(
                             children: [
                               Expanded(
-                                  child: _buildStatCard(
-                                      context,
-                                      l10n.habitStatsCompleted,
-                                      "${stats.completed}",
-                                      Colors.green)),
+                                child: _buildStatCard(
+                                  context,
+                                  l10n.habitStatsCompleted,
+                                  "${stats.completed}",
+                                  Colors.green,
+                                ),
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
-                                  child: _buildStatCard(
-                                      context,
-                                      l10n.habitStatsMissed,
-                                      "${stats.notCompleted}",
-                                      Colors.redAccent)),
+                                child: _buildStatCard(
+                                  context,
+                                  l10n.habitStatsMissed,
+                                  "${stats.notCompleted}",
+                                  Colors.redAccent,
+                                ),
+                              ),
                             ],
                           ),
-                        ]
+                        ],
                       ],
                     ),
                   ),
@@ -1398,10 +1515,13 @@ class _StatsScreenState extends State<StatsScreen> {
               icon: const Icon(Icons.download, size: 18),
               label: Text(l10n.habitReportDownload),
               style: OutlinedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
@@ -1420,25 +1540,30 @@ class _StatsScreenState extends State<StatsScreen> {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).hintColor,
-                  fontSize: isKK ? 13 : null,
-                ),
+              color: Theme.of(context).hintColor,
+              fontSize: isKK ? 13 : null,
+            ),
             maxLines: 2,
             overflow: TextOverflow.visible,
           ),
         ),
         const SizedBox(width: 8),
-        Text(value,
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.bold)),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
 
   Widget _buildStatCard(
-      BuildContext context, String label, String value, Color color) {
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) {
     final isKK = Localizations.localeOf(context).languageCode == 'kk';
     // Cleaner stat card: no border, subtle background
     return Container(
@@ -1449,13 +1574,20 @@ class _StatsScreenState extends State<StatsScreen> {
       ),
       child: Column(
         children: [
-          Text(value,
-              style: TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
           Text(
             label,
             style: TextStyle(
-                fontSize: isKK ? 10 : 11, color: color.withValues(alpha: 0.8)),
+              fontSize: isKK ? 10 : 11,
+              color: color.withValues(alpha: 0.8),
+            ),
             textAlign: TextAlign.center,
             maxLines: 2,
             softWrap: true,
@@ -1466,7 +1598,10 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Future<void> _showDownloadBottomSheet(
-      BuildContext context, List<Habit> habits, String uid) async {
+    BuildContext context,
+    List<Habit> habits,
+    String uid,
+  ) async {
     DateTime selectedMonth = _habitStatsMonth;
     String selectedFormat = 'excel'; // Default to Excel
     bool isExporting = false;
@@ -1482,202 +1617,222 @@ class _StatsScreenState extends State<StatsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => StatefulBuilder(builder: (context, setSheetState) {
-        final l10n = AppLocalizations.of(context)!;
-        final theme = Theme.of(context);
-        final scheme = theme.colorScheme;
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final l10n = AppLocalizations.of(context)!;
+          final theme = Theme.of(context);
+          final scheme = theme.colorScheme;
 
-        Future<void> triggerExport() async {
-          ExportService.markExportStarted();
-          setSheetState(() {
-            isExporting = true;
-            countdown = 0;
-          });
-          try {
-            final path = await _generateFile(
-                context, habits, uid, selectedMonth, selectedFormat);
-            if (context.mounted) {
-              setSheetState(() {
-                isSuccess = true;
-                filePath = path;
-              });
-            }
-          } catch (e) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.habitReportFailed(e.toString())),
-                  backgroundColor: Colors.red,
-                ),
+          Future<void> triggerExport() async {
+            ExportService.markExportStarted();
+            setSheetState(() {
+              isExporting = true;
+              countdown = 0;
+            });
+            try {
+              final path = await _generateFile(
+                context,
+                habits,
+                uid,
+                selectedMonth,
+                selectedFormat,
               );
-            }
-          } finally {
-            if (context.mounted) {
-              setSheetState(() => isExporting = false);
+              if (context.mounted) {
+                setSheetState(() {
+                  isSuccess = true;
+                  filePath = path;
+                });
+              }
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l10n.habitReportFailed(e.toString())),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            } finally {
+              if (context.mounted) {
+                setSheetState(() => isExporting = false);
+              }
             }
           }
-        }
 
-        void startCountdown() {
-          final remaining = ExportService.remainingCooldownSeconds;
-          if (remaining == 0) {
-            triggerExport();
-            return;
-          }
-
-          setSheetState(() {
-            isExporting = true;
-            countdown = remaining;
-          });
-          timer = Timer.periodic(const Duration(seconds: 1), (t) {
-            if (countdown > 1) {
-              setSheetState(() => countdown--);
-            } else {
-              t.cancel();
+          void startCountdown() {
+            final remaining = ExportService.remainingCooldownSeconds;
+            if (remaining == 0) {
               triggerExport();
+              return;
             }
-          });
-        }
 
-        void cancelCountdown() {
-          timer?.cancel();
-          setSheetState(() {
-            isExporting = false;
-            countdown = 0;
-          });
-        }
+            setSheetState(() {
+              isExporting = true;
+              countdown = remaining;
+            });
+            timer = Timer.periodic(const Duration(seconds: 1), (t) {
+              if (countdown > 1) {
+                setSheetState(() => countdown--);
+              } else {
+                t.cancel();
+                triggerExport();
+              }
+            });
+          }
 
-        // Update the periodic timer to call triggerExport
-        if (timer != null && !timer!.isActive && countdown == 1) {
-          // This is a bit tricky inside build.
-          // Better to handle it in the timer callback itself.
-        }
+          void cancelCountdown() {
+            timer?.cancel();
+            setSheetState(() {
+              isExporting = false;
+              countdown = 0;
+            });
+          }
 
-        return Padding(
-          padding: EdgeInsets.only(
+          // Update the periodic timer to call triggerExport
+          if (timer != null && !timer!.isActive && countdown == 1) {
+            // This is a bit tricky inside build.
+            // Better to handle it in the timer callback itself.
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 24,
               left: 24,
               right: 24,
-              top: 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.habitReportTitle,
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-
-              // Animated content switcher
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                layoutBuilder: (currentChild, previousChildren) {
-                  return Stack(
-                    alignment: Alignment.topCenter,
-                    children: <Widget>[
-                      ...previousChildren,
-                      if (currentChild != null) currentChild,
-                    ],
-                  );
-                },
-                transitionBuilder: (child, animation) {
-                  final isIncoming = child.key == ValueKey(isSuccess);
-
-                  final offset = isIncoming
-                      ? Tween<Offset>(
-                              begin: const Offset(0, 0.2), end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: animation, curve: Curves.easeOutCubic))
-                      : Tween<Offset>(
-                              begin: const Offset(0, -0.2), end: Offset.zero)
-                          .animate(CurvedAnimation(
-                              parent: animation, curve: Curves.easeInCubic));
-
-                  return FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: offset,
-                      child: child,
-                    ),
-                  );
-                },
-                child: isSuccess
-                    ? _buildSuccessView(
-                        l10n, theme, scheme, filePath, selectedFormat)
-                    : _buildSelectionView(
-                        context,
-                        l10n,
-                        theme,
-                        scheme,
-                        selectedMonth,
-                        selectedFormat,
-                        (newMonth) =>
-                            setSheetState(() => selectedMonth = newMonth),
-                        (newFormat) =>
-                            setSheetState(() => selectedFormat = newFormat),
-                      ),
-              ),
-
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: isSuccess
-                    ? () => Navigator.pop(context)
-                    : (isExporting
-                        ? (countdown > 0 ? cancelCountdown : null)
-                        : startCountdown),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+              top: 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.habitReportTitle,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (isExporting) ...[
-                      if (countdown > 0)
-                        const Icon(Icons.close, color: Colors.white)
-                      else
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.white,
-                          ),
+                const SizedBox(height: 24),
+
+                // Animated content switcher
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  layoutBuilder: (currentChild, previousChildren) {
+                    return Stack(
+                      alignment: Alignment.topCenter,
+                      children: <Widget>[...previousChildren, ?currentChild],
+                    );
+                  },
+                  transitionBuilder: (child, animation) {
+                    final isIncoming = child.key == ValueKey(isSuccess);
+
+                    final offset = isIncoming
+                        ? Tween<Offset>(
+                            begin: const Offset(0, 0.2),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          )
+                        : Tween<Offset>(
+                            begin: const Offset(0, -0.2),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeInCubic,
+                            ),
+                          );
+
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(position: offset, child: child),
+                    );
+                  },
+                  child: isSuccess
+                      ? _buildSuccessView(
+                          l10n,
+                          theme,
+                          scheme,
+                          filePath,
+                          selectedFormat,
+                        )
+                      : _buildSelectionView(
+                          context,
+                          l10n,
+                          theme,
+                          scheme,
+                          selectedMonth,
+                          selectedFormat,
+                          (newMonth) =>
+                              setSheetState(() => selectedMonth = newMonth),
+                          (newFormat) =>
+                              setSheetState(() => selectedFormat = newFormat),
                         ),
-                      const SizedBox(width: 8),
-                    ] else if (!isSuccess) ...[
-                      const Icon(Icons.download),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      isExporting
-                          ? (countdown > 0 ? l10n.cancel : l10n.exporting)
-                          : (isSuccess
-                              ? l10n.done
-                              : l10n.habitReportDownloadAction),
-                    ),
-                  ],
                 ),
-              ),
-              if (isExporting && countdown > 0)
-                Padding(
-                  padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    l10n.habitReportDownloadCountdown(countdown),
-                    textAlign: TextAlign.center,
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: scheme.primary),
+
+                const SizedBox(height: 32),
+                FilledButton(
+                  onPressed: isSuccess
+                      ? () => Navigator.pop(context)
+                      : (isExporting
+                            ? (countdown > 0 ? cancelCountdown : null)
+                            : startCountdown),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isExporting) ...[
+                        if (countdown > 0)
+                          const Icon(Icons.close, color: Colors.white)
+                        else
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                        const SizedBox(width: 8),
+                      ] else if (!isSuccess) ...[
+                        const Icon(Icons.download),
+                        const SizedBox(width: 8),
+                      ],
+                      Text(
+                        isExporting
+                            ? (countdown > 0 ? l10n.cancel : l10n.exporting)
+                            : (isSuccess
+                                  ? l10n.done
+                                  : l10n.habitReportDownloadAction),
+                      ),
+                    ],
                   ),
                 ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      }),
+                if (isExporting && countdown > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: Text(
+                      l10n.habitReportDownloadCountdown(countdown),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          );
+        },
+      ),
     ).then((_) => timer?.cancel());
   }
 
@@ -1701,8 +1856,10 @@ class _StatsScreenState extends State<StatsScreen> {
             IconButton(
               onPressed: () {
                 final minDate = DateTime(2025, 1, 1);
-                final prevMonth =
-                    DateTime(selectedMonth.year, selectedMonth.month - 1);
+                final prevMonth = DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month - 1,
+                );
 
                 if (prevMonth.isBefore(minDate)) {
                   return;
@@ -1714,8 +1871,10 @@ class _StatsScreenState extends State<StatsScreen> {
                 Icons.chevron_left,
                 color: () {
                   final minDate = DateTime(2025, 1, 1);
-                  final prevMonth =
-                      DateTime(selectedMonth.year, selectedMonth.month - 1);
+                  final prevMonth = DateTime(
+                    selectedMonth.year,
+                    selectedMonth.month - 1,
+                  );
 
                   if (prevMonth.isBefore(minDate)) {
                     return theme.disabledColor;
@@ -1726,8 +1885,10 @@ class _StatsScreenState extends State<StatsScreen> {
             ),
             Expanded(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border.all(color: theme.dividerColor),
                   borderRadius: BorderRadius.circular(12),
@@ -1747,8 +1908,10 @@ class _StatsScreenState extends State<StatsScreen> {
               onPressed: () {
                 final now = DateTime.now();
                 final currentMonth = DateTime(now.year, now.month);
-                final nextMonth =
-                    DateTime(selectedMonth.year, selectedMonth.month + 1);
+                final nextMonth = DateTime(
+                  selectedMonth.year,
+                  selectedMonth.month + 1,
+                );
 
                 if (nextMonth.isAfter(currentMonth)) {
                   return;
@@ -1761,8 +1924,10 @@ class _StatsScreenState extends State<StatsScreen> {
                 color: () {
                   final now = DateTime.now();
                   final currentMonth = DateTime(now.year, now.month);
-                  final nextMonth =
-                      DateTime(selectedMonth.year, selectedMonth.month + 1);
+                  final nextMonth = DateTime(
+                    selectedMonth.year,
+                    selectedMonth.month + 1,
+                  );
 
                   if (nextMonth.isAfter(currentMonth)) {
                     return theme.disabledColor;
@@ -1869,8 +2034,9 @@ class _StatsScreenState extends State<StatsScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () async {
                     if (filePath != null) {
-                      await SharePlus.instance
-                          .share(ShareParams(files: [XFile(filePath)]));
+                      await SharePlus.instance.share(
+                        ShareParams(files: [XFile(filePath)]),
+                      );
                     }
                   },
                   icon: const Icon(Icons.share),
@@ -1884,8 +2050,13 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
-  Future<String> _generateFile(BuildContext context, List<Habit> habits,
-      String uid, DateTime monthDate, String format) async {
+  Future<String> _generateFile(
+    BuildContext context,
+    List<Habit> habits,
+    String uid,
+    DateTime monthDate,
+    String format,
+  ) async {
     // Removed "Generating CSV..." snackbar message
     final l10n = AppLocalizations.of(context)!;
     // Calculate month name early to avoid async gap usage of context
@@ -1893,8 +2064,10 @@ class _StatsScreenState extends State<StatsScreen> {
 
     try {
       final start = DateTime(monthDate.year, monthDate.month, 1);
-      final daysInMonth =
-          DateUtils.getDaysInMonth(monthDate.year, monthDate.month);
+      final daysInMonth = DateUtils.getDaysInMonth(
+        monthDate.year,
+        monthDate.month,
+      );
       final end = DateTime(monthDate.year, monthDate.month, daysInMonth);
 
       // 1. Fetch History
@@ -1979,8 +2152,9 @@ class _StatsScreenState extends State<StatsScreen> {
       }
 
       // 3. Add Summary Rows (Total, Target, Rate) - use English for CSV, localized for Excel
-      final totalLabel =
-          format == 'csv' ? 'Total completed' : l10n.csvTotalCompleted;
+      final totalLabel = format == 'csv'
+          ? 'Total completed'
+          : l10n.csvTotalCompleted;
       final targetLabel = format == 'csv' ? 'Target' : l10n.csvTarget;
       final rateLabel = format == 'csv' ? 'Rate' : l10n.csvRate;
 
@@ -2012,10 +2186,14 @@ class _StatsScreenState extends State<StatsScreen> {
       final String path;
       if (format == 'excel') {
         path = await ExportService.generateExcelFile(
-            fileName: fileName, rows: rows);
+          fileName: fileName,
+          rows: rows,
+        );
       } else {
-        path =
-            await ExportService.generateCsvFile(fileName: fileName, rows: rows);
+        path = await ExportService.generateCsvFile(
+          fileName: fileName,
+          rows: rows,
+        );
       }
 
       return path;
@@ -2193,14 +2371,14 @@ class _StatsBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context)
-                .colorScheme
-                .primaryContainer
-                .withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color:
-                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.1),
             ),
           ),
           child: Column(
@@ -2208,17 +2386,19 @@ class _StatsBlock extends StatelessWidget {
               Text(
                 l10n.total,
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 6),
               Text(
-                _fmtTotalVerbose(totalSecs, context)
-                    .replaceFirst(' ${l10n.total.toLowerCase()}', ''),
+                _fmtTotalVerbose(
+                  totalSecs,
+                  context,
+                ).replaceFirst(' ${l10n.total.toLowerCase()}', ''),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  fontWeight: FontWeight.w800,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -2241,8 +2421,9 @@ class _StatsBlock extends StatelessWidget {
               child: _DetailStatCard(
                 title: l10n.leastStudied,
                 value: leastName,
-                subValue:
-                    (leastSecs > 0 && mostSecs > 0) ? _fmtHMS(leastSecs) : null,
+                subValue: (leastSecs > 0 && mostSecs > 0)
+                    ? _fmtHMS(leastSecs)
+                    : null,
                 accentColor: leastColor,
                 icon: Icons.trending_down,
               ),
@@ -2254,10 +2435,9 @@ class _StatsBlock extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           width: double.infinity,
           decoration: BoxDecoration(
-            color: Theme.of(context)
-                .colorScheme
-                .surfaceContainerHighest
-                .withValues(alpha: 0.3),
+            color: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -2266,9 +2446,9 @@ class _StatsBlock extends StatelessWidget {
                 child: Text(
                   l10n.avgPerDay,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2276,9 +2456,9 @@ class _StatsBlock extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 _fmtHMS(avgSecs),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
@@ -2311,10 +2491,9 @@ class _DetailStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       decoration: BoxDecoration(
-        color: Theme.of(context)
-            .colorScheme
-            .surfaceContainerHighest
-            .withValues(alpha: 0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -2322,9 +2501,11 @@ class _DetailStatCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant),
+              Icon(
+                icon,
+                size: 14,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: FittedBox(
@@ -2333,10 +2514,10 @@ class _DetailStatCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 10,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                    ),
                   ),
                 ),
               ),
@@ -2362,9 +2543,9 @@ class _DetailStatCard extends StatelessWidget {
                     Text(
                       value,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -2372,11 +2553,9 @@ class _DetailStatCard extends StatelessWidget {
                       Text(
                         subValue!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontSize: 10,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
                       ),
                   ],
                 ),
@@ -2393,8 +2572,11 @@ class _SegChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
-  const _SegChip(
-      {required this.label, required this.selected, required this.onTap});
+  const _SegChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2502,7 +2684,10 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                                     final showTitle = percent >= 0.03;
                                     final label = showTitle
                                         ? _pieSectionTitle(
-                                            s.name, s.seconds, context)
+                                            s.name,
+                                            s.seconds,
+                                            context,
+                                          )
                                         : '';
                                     return PieChartSectionData(
                                       color: s.color,
@@ -2537,10 +2722,11 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
 
                             widget.onSliceTap?.call(
                               _SliceTooltip(
-                                  local: local,
-                                  id: s.id,
-                                  name: s.name,
-                                  seconds: s.seconds),
+                                local: local,
+                                id: s.id,
+                                name: s.name,
+                                seconds: s.seconds,
+                              ),
                             );
                           },
                         ),
@@ -2554,9 +2740,7 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                           child: Center(
                             child: Text(
                               AppLocalizations.of(context)!.noData,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: Colors.black45,
                                     fontWeight: FontWeight.w700,
@@ -2571,19 +2755,21 @@ class _PieChartWithTooltipState extends State<_PieChartWithTooltip> {
                         children: [
                           Text(
                             AppLocalizations.of(context)!.total,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                      fontSize: 13,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                  fontSize: 13,
+                                ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             _fmtHMS(widget.totalSeconds),
                             style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.w800),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ],
                       ),
@@ -2659,8 +2845,10 @@ class _FadeInTooltipCardState extends State<_FadeInTooltipCard>
             children: [
               Text(
                 widget.data.name,
-                style:
-                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -2686,11 +2874,12 @@ class _SliceTooltip {
   final String id;
   final String name;
   final int seconds;
-  _SliceTooltip(
-      {required this.local,
-      required this.id,
-      required this.name,
-      required this.seconds});
+  _SliceTooltip({
+    required this.local,
+    required this.id,
+    required this.name,
+    required this.seconds,
+  });
 }
 
 class _Bucket {
@@ -2711,16 +2900,22 @@ class _BucketTooltip {
   final Offset anchor;
   final String title;
   final List<_TooltipItem> items;
-  _BucketTooltip(
-      {required this.anchor, required this.title, required this.items});
+  _BucketTooltip({
+    required this.anchor,
+    required this.title,
+    required this.items,
+  });
 }
 
 class _TooltipItem {
   final Color color;
   final String label;
   final String valueHms;
-  _TooltipItem(
-      {required this.color, required this.label, required this.valueHms});
+  _TooltipItem({
+    required this.color,
+    required this.label,
+    required this.valueHms,
+  });
 }
 
 class _Slice {
@@ -2746,9 +2941,7 @@ class _BucketsPayload {
   final List<_Bucket> buckets;
   final int totalSeconds;
   const _BucketsPayload({required this.buckets, required this.totalSeconds});
-  const _BucketsPayload.empty()
-      : buckets = const [],
-        totalSeconds = 0;
+  const _BucketsPayload.empty() : buckets = const [], totalSeconds = 0;
 }
 
 enum _Range { week, month, year }
@@ -2936,7 +3129,7 @@ String _fmtDateShort(DateTime d, BuildContext context) {
     l10n.sep,
     l10n.oct,
     l10n.nov,
-    l10n.dec
+    l10n.dec,
   ];
   final i = (d.month - 1);
   final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
@@ -2957,7 +3150,7 @@ String _fmtDateLong(DateTime d, BuildContext context) {
     l10n.sep,
     l10n.oct,
     l10n.nov,
-    l10n.dec
+    l10n.dec,
   ];
   final i = (d.month - 1);
   final safe = i < 0 ? 0 : (i > 11 ? 11 : i);
@@ -3027,5 +3220,9 @@ class _HabitStatsResult {
   final double completionRate;
 
   const _HabitStatsResult(
-      this.required, this.completed, this.notCompleted, this.completionRate);
+    this.required,
+    this.completed,
+    this.notCompleted,
+    this.completionRate,
+  );
 }
