@@ -90,16 +90,31 @@ export function publicProfilesEqual(a: PublicProfile | null, b: PublicProfile | 
   return valuesEqual(a, b);
 }
 
-export const onUserProfileWrite = functions.firestore
-  .document('users/{userId}')
-  .onWrite(async (change, context) => {
-    const mirrorRef = db.collection('publicProfiles').doc(context.params.userId);
-    const after = toPublicProfile(change.after.data());
-    if (after === null) {
-      await mirrorRef.delete();
+function storedProfile(data: FirebaseFirestore.DocumentData | undefined): PublicProfile | null {
+  if (data === undefined) return null;
+  const { updatedAt, ...profile } = data;
+  return profile as PublicProfile;
+}
+
+// reads current state so late, repeated or failed events cannot leave the mirror stale
+export async function syncPublicProfile(userId: string): Promise<void> {
+  const userRef = db.collection('users').doc(userId);
+  const mirrorRef = db.collection('publicProfiles').doc(userId);
+
+  await db.runTransaction(async (txn) => {
+    const [user, mirror] = await txn.getAll(userRef, mirrorRef);
+    const profile = toPublicProfile(user.data());
+    if (profile === null) {
+      txn.delete(mirrorRef);
       return;
     }
-    if (publicProfilesEqual(toPublicProfile(change.before.data()), after)) return;
+    if (publicProfilesEqual(storedProfile(mirror.data()), profile)) return;
 
-    await mirrorRef.set({ ...after, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    txn.set(mirrorRef, { ...profile, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
   });
+}
+
+export const onUserProfileWrite = functions
+  .runWith({ failurePolicy: true })
+  .firestore.document('users/{userId}')
+  .onWrite((_change, context) => syncPublicProfile(context.params.userId));
