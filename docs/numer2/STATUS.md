@@ -4,7 +4,7 @@ Updated 2026-11-27. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 42 done, 1 in progress, 42 to do (85 tasks). Staging deployed 2026-11-27.**
+**Total: 43 done, 1 in progress, 41 to do (85 tasks). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do
 
@@ -50,7 +50,7 @@ Email verification and password reset by 6-digit code in a branded email. Ends i
 | ✅ | P1-09 App Check switch | App Check can be turned on per server function without a code change |
 | ⏳ | P1-10 Docs after auth | Docs describe the new sign-in, email and deletion |
 
-## Phase 2: Identity and infrastructure (11 of 13 done)
+## Phase 2: Identity and infrastructure (12 of 13 done)
 
 The campus modules accept a NUmer sign-in; the server gets backups that are proven to restore.
 
@@ -67,7 +67,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ✅ | P2-09 Muto restore fix | Muto's restore script pointed at a service that did not exist |
 | ✅ | P2-10 Monitor | One small checker watches all module APIs and backups |
 | ✅ | P2-11 Server hardening | Audit and hardening scripts plus a runbook (nothing run on the server yet) |
-| ⏳ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
+| ✅ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
 ## Phase 3: Superapp shell (8 of 18; all prompts written)

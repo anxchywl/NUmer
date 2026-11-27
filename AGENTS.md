@@ -66,8 +66,10 @@ infra/                   # host hardening, backup restore test and monitor scrip
   ([MIGRATION.md](file:///Users/anx/numer_app/packages/numer_ui/MIGRATION.md)); the app
   does not.
 - **`backend/numer_identity/`** — the one place module backends verify a NUmer bearer
-  token; consumed by git tag `identity-v<version>`, with its own `scripts/verify.sh`
-  (see its README).
+  token, with its own `scripts/verify.sh`
+  ([how backends use it](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md#identity)).
+- **`infra/`**: host scripts for operations
+  ([what they do](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md#operations)).
 
 Each feature under `lib/features/<name>/` owns everything for its domain and exposes a
 single barrel `<name>.dart`:
@@ -189,6 +191,11 @@ source of truth for access; read it before writing or reading a collection.
 NUmer is fully localized into English (`en`), Russian (`ru`), and Kazakh (`kk`).
 - When writing UI components, retrieve strings from `AppLocalizations.of(context)`.
 - Localization keys are declared in translation files.
+
+### 6. Module Backends and Server Details
+- A module backend never holds a Firebase service account; it verifies ID tokens with
+  `backend/numer_identity/`.
+- No file contains a server address. Loopback and emulator addresses are not server addresses.
 
 ---
 

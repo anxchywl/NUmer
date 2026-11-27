@@ -139,7 +139,7 @@ by a flag yet.
 | Callable | `deleteAccountCallable` | Disable the auth user and mark it in `deletedUsers` for the purge |
 | Callable | `joinPrivateGroup` | Transactionally validate join code and add member |
 | Callable | `sendNudge` | Persist nudge + FCM push with localized phrase |
-| Callable | `setUserRoles` | Administrator sets a user's module roles (see below) |
+| Callable | `setUserRoles` | Administrator sets a user's module roles (see [Roles](#roles)) |
 | Callable | `publishAnnouncement`, `retractAnnouncement` | An editor publishes or retracts a news announcement (see below) |
 | Callable | `sendEmailVerificationCode`, `verifyEmailCode` | Email and verify a 6-digit code that marks the signed-in user's email verified |
 | Callable | `requestPasswordResetCode`, `verifyPasswordResetCode`, `confirmPasswordReset` | Queue a 6-digit reset code, trade it for a single-use ticket, set the new password |
@@ -166,18 +166,6 @@ secondary. Verification and reset each have their own 2,000 sends a day cap, whi
 gets past App Check can use up for that flow only. The three reset callables also consume the
 App Check token and refuse a reused one with reason `app-check`, so the client must call them
 with limited-use tokens.
-
-Module roles live only in the `numer_roles` custom claim of the Firebase ID token, which
-reaches a client on its next token refresh. Allowed values are listed in
-`functions/src/roles/roles.ts`. The first administrator is created locally with
-`npm run roles:set -- --uid <uid> --roles <comma list> [--dry-run]` in `functions/` (needs
-`GOOGLE_APPLICATION_CREDENTIALS`); afterwards administrators call `setUserRoles`, which
-requires `numer:admin` in both the caller's token and their current claims. Removing a
-role revokes the user's refresh tokens, but an ID token issued earlier keeps the role for up
-to 1 hour in a module backend that gives `numer_identity` no `revocation_check`.
-`setUserRoles` logs each call to `roleAudit`, which clients cannot access. The entry is
-written after the claims change, so a failed write leaves that change unlogged, and the
-script writes no entry.
 
 `AGG_INCREMENTAL` (`on` or `off`, default `off`) switches the two aggregate triggers from the
 full recompute to a per-user ledger in the private `users/{uid}/aggState/v1`, which costs about
@@ -224,6 +212,70 @@ third besides those of `sweepDeletedUsers` and `retryAccountEvents`.
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
 
+## Backends
+
+Campus modules run as separate backends, each in its own repository, which describes it in
+detail. No database is shared between them or with NUmer: each module that stores data keeps
+its own.
+
+| Backend | Purpose | Storage | Repository | Health path |
+|---------|---------|---------|------------|-------------|
+| Gradus | courses, grades and GPA | none, the service is stateless | [Gradus](https://github.com/anxchywl/Gradus) | `/health/ready` |
+| Clavis | piano room booking | SQLite | [Clavis](https://github.com/anxchywl/Clavis) | `/health/ready` |
+| EventsBot | campus events and their moderation | PostgreSQL, with Redis for sessions and caches | [EventsBot](https://github.com/anxchywl/EventsBot) | `/health/ready` |
+| Muto | student marketplace | PostgreSQL and S3-compatible object storage | [Muto](https://github.com/anxchywl/Muto) | `/health/ready` |
+
+## Identity
+
+A module backend takes the NUmer user's Firebase ID token as the bearer token and verifies it
+itself with `numer_identity` (`backend/numer_identity/`), which checks:
+
+- an RS256 signature made by one of Google's public signing keys
+- the issuer and audience of the configured Firebase project
+- the expiry, issue and sign-in times, with 30 seconds of leeway
+- a subject of 1 to 128 characters, which is the Firebase uid
+- no tenant, and a sign-in provider other than `anonymous` or `custom`
+- a verified email address, unless the backend turns that check off
+
+The full table, the error codes and the key caching are in its
+[README](../backend/numer_identity/README.md).
+
+A backend installs the library as a git dependency with that subdirectory, pinned to a tag
+`identity-v<version>`, so its image build needs `git`
+([install](../backend/numer_identity/README.md#install)).
+
+The project id is backend configuration. The staging project has its own, so its tokens carry a
+different issuer and audience, and a backend accepts the tokens of one project only.
+
+## Roles
+
+Module roles live only in the `numer_roles` custom claim of the ID token, a list of strings.
+The allowed values are defined in [roles.ts](../functions/src/roles/roles.ts), and any other
+value grants nothing:
+
+| Role | Grants |
+|------|--------|
+| `clavis:operator` | operator access in Clavis |
+| `events:admin` | administration in EventsBot |
+| `gradus:operator` | operator access in Gradus |
+| `muto:admin` | administration in Muto |
+| `numer:admin` | assigning roles |
+| `numer:editor` | publishing and retracting news announcements |
+
+The first administrator is created locally with
+`npm run roles:set -- --uid <uid> --roles <comma list> [--dry-run]` in `functions/` (needs
+`GOOGLE_APPLICATION_CREDENTIALS`). Afterwards administrators call `setUserRoles`, which
+requires `numer:admin` in both the caller's token and their current claims, and refuses to
+remove the caller's own `numer:admin`.
+
+A change reaches a client on its next token refresh. Removing a role also revokes the user's
+refresh tokens, but an ID token issued earlier keeps the role for up to 1 hour in a module
+backend that gives `numer_identity` no `revocation_check`.
+
+`setUserRoles` logs each call to `roleAudit`, which clients cannot access. The entry is
+written after the claims change, so a failed write leaves that change unlogged, and the
+script writes no entry.
+
 ## Account events
 
 A deleted NUmer account must be deleted in every module backend too
@@ -254,9 +306,22 @@ each target. The scheduled run also takes `pending` events that have no `nextAtt
   other modules is not sent to a module added later.
 
 A module handler must verify the signature over the raw body with
-`numer_identity.verify_account_event` (5 minute tolerance), treat `id` as an idempotency key,
+[`numer_identity.verify_account_event`](../backend/numer_identity/README.md#account-events)
+(5 minute tolerance), treat `id` as an idempotency key,
 answer 2xx for an event it has already processed, and for that `issuer` and `subject` delete
 the data on `account.deleted` and only block access on `account.disabled`.
+
+## Operations
+
+Scripts in `infra/` that the owner runs on the module host.
+
+- **Restore test**: `infra/backup/restore-test.sh` restores the newest backup of a module into
+  a throwaway container and logs the result ([README](../infra/backup/README.md)).
+- **Monitor**: `infra/monitor/` checks the module APIs, backup age and the restore-test log,
+  posts alerts to a webhook and pings an outside heartbeat
+  ([README](../infra/monitor/README.md)).
+- **Host scripts**: `infra/host/` audits the host and applies one hardening step at a time
+  ([runbook](../infra/RUNBOOK.md)).
 
 ## Environments
 
@@ -383,6 +448,3 @@ Emulators and deploys are covered in [Environments](#environments).
 - Performance budgets and measuring scripts: [PERFORMANCE.md](PERFORMANCE.md)
 - Notifications: `lib/core/notifications/`
 - Backend: `functions/src/`, `firestore/firestore.rules`, `firebase.json`
-- Host operations: [RUNBOOK.md](../infra/RUNBOOK.md), [backup](../infra/backup/README.md),
-  [monitor](../infra/monitor/README.md)
-- Module backend token and account event verification: `backend/numer_identity/` (see its README)
