@@ -49,6 +49,10 @@ String activeSessionSignature({
 // central app state, holds profile, courses, sessions, timers and settings and
 // notifies the ui on change, backed by hive and synced through syncservice
 class AppState extends ChangeNotifier {
+  AppState({@visibleForTesting this.loadOverride});
+
+  final Future<void> Function({required bool force})? loadOverride;
+
   static ThemeMode? _initialThemeMode;
   static void setInitialThemeMode(ThemeMode mode) {
     _initialThemeMode = mode;
@@ -57,6 +61,7 @@ class AppState extends ChangeNotifier {
   bool _isLoaded = false;
   bool get isLoaded => _isLoaded;
   Future<void>? _loadFuture;
+  bool _reloadRequested = false;
   Future<void>? _backgroundHydration;
   SyncService? _syncService;
   (String, String)? _sentSessionSignature;
@@ -337,14 +342,28 @@ class AppState extends ChangeNotifier {
 
   // loads all persisted state once, reusing the in-flight future for concurrent calls
   Future<void> load({bool force = false}) {
-    if (_loadFuture != null) {
-      return _loadFuture!;
+    final running = _loadFuture;
+    if (running != null) {
+      // the running load may have read storage before the caller changed it
+      _reloadRequested |= force;
+      return running;
     }
     if (_isLoaded && !force) {
       return Future.value();
     }
-    _loadFuture = _performLoad(force: force);
-    return _loadFuture!.whenComplete(() => _loadFuture = null);
+    return _loadFuture = _loadUntilCurrent(
+      force: force,
+    ).whenComplete(() => _loadFuture = null);
+  }
+
+  Future<void> _loadUntilCurrent({required bool force}) async {
+    final performLoad = loadOverride ?? _performLoad;
+    var forceNext = force;
+    do {
+      _reloadRequested = false;
+      await performLoad(force: forceNext);
+      forceNext = true;
+    } while (_reloadRequested);
   }
 
   // asks the sync service to push and pull now, no-op if sync is not wired
@@ -2402,11 +2421,13 @@ class AppState extends ChangeNotifier {
   Future<void> reset() async {
     await clearAll();
     _forgetSentSession();
+    _reloadRequested = false;
     _isLoaded = false;
   }
 
   void unload() {
     _forgetSentSession();
+    _reloadRequested = false;
     _resetFields();
     _isLoaded = false;
     _hydrated = false;
