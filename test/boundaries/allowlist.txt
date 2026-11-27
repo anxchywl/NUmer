@@ -1,6 +1,7 @@
 lib/app/app_state.dart -> lib/features/courses/course.dart
 lib/app/app_state.dart -> lib/features/habits/data/habit_service.dart
 lib/app/app_state.dart -> lib/features/sessions/models/alarm_item.dart
+lib/core/data/course_storage.dart -> lib/features/courses/course.dart
 lib/core/data/storage.dart -> lib/features/courses/course.dart
 lib/core/data/storage.dart -> lib/features/habits/models/habit_category.dart
 lib/core/data/storage.dart -> lib/features/sessions/models/alarm_item.dart

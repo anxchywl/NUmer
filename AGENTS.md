@@ -52,7 +52,8 @@ infra/                   # host hardening, backup restore test and monitor scrip
   `modules/` (the module registry and `openModule`) and `app_state.dart` (the global
   `ChangeNotifier`).
 - **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
-  minimum build), `data/` (Hive local DB, `storage`, `sync_service`, `user_storage`),
+  minimum build), `data/` (Hive local DB, `storage`, `course_storage`, `sync_service`,
+  `user_storage`),
   `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
   contract), `notifications/`, `observability/` (crash reporting), `upcoming/` (the
   device-local store of items modules put on Home), `firebase_options.dart`,
@@ -221,7 +222,7 @@ The script does not run device builds, emulator tests or deploys.
 
 ## Known debt
 
-- **Layer violations**: 21 allow-listed lines in `test/boundaries/allowlist.txt`.
+- **Layer violations**: 19 allow-listed lines in `test/boundaries/allowlist.txt`.
 - **Files above 1000 lines**: `lib/app/app_state.dart`, `lib/core/data/storage.dart`,
   `lib/core/data/sync_service.dart`, `lib/features/groups/data/group_service.dart`,
   `lib/features/account/screens/account.dart`, `lib/features/habits/data/habit_service.dart`,
