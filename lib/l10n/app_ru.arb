@@ -987,5 +987,13 @@
   "authDataDownloadFailed": "Не удалось загрузить ваши данные. Проверьте соединение и попробуйте ещё раз.",
   "completeProfileTitle": "Заполните профиль",
   "completeSetupButton": "Завершить настройку",
-  "nudgeNotificationTitle": "Напоминание"
+  "nudgeNotificationTitle": "Напоминание",
+  "navStudy": "Учёба",
+  "navCampus": "Кампус",
+  "settingsTooltip": "Настройки",
+  "aboutTitle": "О приложении",
+  "privacyPolicy": "Политика конфиденциальности",
+  "contactSupport": "Написать в поддержку",
+  "appVersion": "Версия",
+  "linkOpenFailed": "Не удалось открыть ссылку."
 }

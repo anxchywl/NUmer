@@ -4245,6 +4245,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Nudge'**
   String get nudgeNotificationTitle;
+
+  /// No description provided for @navStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get navStudy;
+
+  /// No description provided for @navCampus.
+  ///
+  /// In en, this message translates to:
+  /// **'Campus'**
+  String get navCampus;
+
+  /// No description provided for @settingsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTooltip;
+
+  /// No description provided for @aboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get aboutTitle;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @contactSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get contactSupport;
+
+  /// No description provided for @appVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get appVersion;
+
+  /// No description provided for @linkOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link.'**
+  String get linkOpenFailed;
 }
 
 class _AppLocalizationsDelegate

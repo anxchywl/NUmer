@@ -84,11 +84,6 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
     unawaited(syncService.syncNow(full: false));
   }
 
-  Future<void> setTheme(ThemeMode mode) async {
-    if (!mounted) return;
-    await context.read<AppState>().setThemeMode(mode);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Selector<AppState, (ThemeMode, Locale?, Color)>(
@@ -116,9 +111,9 @@ class _AppRootState extends State<AppRoot> with WidgetsBindingObserver {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: AuthGate(onThemeChange: setTheme),
+          home: const AuthGate(),
           routes: {
-            routeShell: (_) => AppShell(onThemeChange: setTheme),
+            routeShell: (_) => const AppShell(),
             routeTimer: (_) => const TimerScreen(),
             routeAlarms: (_) => const AlarmsScreen(),
           },

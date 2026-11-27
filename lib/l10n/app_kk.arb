@@ -1109,5 +1109,13 @@
   "authDataDownloadFailed": "Деректеріңізді жүктеу мүмкін болмады. Байланысты тексеріп, қайталап көріңіз.",
   "completeProfileTitle": "Профильді толтырыңыз",
   "completeSetupButton": "Баптауды аяқтау",
-  "nudgeNotificationTitle": "Ескерту"
+  "nudgeNotificationTitle": "Ескерту",
+  "navStudy": "Оқу",
+  "navCampus": "Кампус",
+  "settingsTooltip": "Баптаулар",
+  "aboutTitle": "Қолданба туралы",
+  "privacyPolicy": "Құпиялық саясаты",
+  "contactSupport": "Қолдау қызметіне жазу",
+  "appVersion": "Нұсқа",
+  "linkOpenFailed": "Сілтемені ашу мүмкін болмады."
 }

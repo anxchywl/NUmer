@@ -1116,5 +1116,13 @@
   "authDataDownloadFailed": "Could not download your data. Check the connection and try again.",
   "completeProfileTitle": "Complete your profile",
   "completeSetupButton": "Finish setup",
-  "nudgeNotificationTitle": "Nudge"
+  "nudgeNotificationTitle": "Nudge",
+  "navStudy": "Study",
+  "navCampus": "Campus",
+  "settingsTooltip": "Settings",
+  "aboutTitle": "About",
+  "privacyPolicy": "Privacy policy",
+  "contactSupport": "Contact support",
+  "appVersion": "Version",
+  "linkOpenFailed": "Could not open the link."
 }

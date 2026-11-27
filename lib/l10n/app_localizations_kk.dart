@@ -2286,4 +2286,28 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get nudgeNotificationTitle => 'Ескерту';
+
+  @override
+  String get navStudy => 'Оқу';
+
+  @override
+  String get navCampus => 'Кампус';
+
+  @override
+  String get settingsTooltip => 'Баптаулар';
+
+  @override
+  String get aboutTitle => 'Қолданба туралы';
+
+  @override
+  String get privacyPolicy => 'Құпиялық саясаты';
+
+  @override
+  String get contactSupport => 'Қолдау қызметіне жазу';
+
+  @override
+  String get appVersion => 'Нұсқа';
+
+  @override
+  String get linkOpenFailed => 'Сілтемені ашу мүмкін болмады.';
 }

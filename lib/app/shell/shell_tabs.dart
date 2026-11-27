@@ -22,10 +22,7 @@ class ShellTab {
   });
 }
 
-List<ShellTab> buildShellTabs(
-  BuildContext context, {
-  Future<void> Function(ThemeMode)? onThemeChange,
-}) {
+List<ShellTab> buildShellTabs(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
   return <ShellTab>[
     ShellTab(
@@ -57,7 +54,7 @@ List<ShellTab> buildShellTabs(
       label: l10n.account,
       icon: Icons.person_outline,
       selectedIcon: Icons.settings,
-      builder: (_) => AccountScreen(onThemeChange: onThemeChange),
+      builder: (_) => const SettingsScreen(),
     ),
   ];
 }

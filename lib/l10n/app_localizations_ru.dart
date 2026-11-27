@@ -2309,4 +2309,28 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get nudgeNotificationTitle => 'Напоминание';
+
+  @override
+  String get navStudy => 'Учёба';
+
+  @override
+  String get navCampus => 'Кампус';
+
+  @override
+  String get settingsTooltip => 'Настройки';
+
+  @override
+  String get aboutTitle => 'О приложении';
+
+  @override
+  String get privacyPolicy => 'Политика конфиденциальности';
+
+  @override
+  String get contactSupport => 'Написать в поддержку';
+
+  @override
+  String get appVersion => 'Версия';
+
+  @override
+  String get linkOpenFailed => 'Не удалось открыть ссылку.';
 }

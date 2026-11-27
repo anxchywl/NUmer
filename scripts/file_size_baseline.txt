@@ -4,7 +4,6 @@
 1416 lib/core/data/sync_service.dart
 545 lib/core/notifications/recording_notification_service.dart
 708 lib/features/account/models/profile_avatar.dart
-1296 lib/features/account/screens/account.dart
 411 lib/features/account/widgets/accent_color_picker.dart
 568 lib/features/account/widgets/profile_form.dart
 665 lib/features/auth/data/auth_service.dart

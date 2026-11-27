@@ -15,8 +15,7 @@ import 'package:numer_app/shared/widgets/loading_screen.dart';
 
 // picks which screen to show based on auth, email verification and profile state
 class AuthGate extends StatefulWidget {
-  final Future<void> Function(ThemeMode)? onThemeChange;
-  const AuthGate({super.key, this.onThemeChange});
+  const AuthGate({super.key});
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -189,7 +188,7 @@ class _AuthGateState extends State<AuthGate> {
             unawaited(state.applyRemoteProfile(profile));
           });
         }
-        return AppShell(onThemeChange: widget.onThemeChange);
+        return const AppShell();
       },
     );
   }

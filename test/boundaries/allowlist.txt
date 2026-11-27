@@ -4,8 +4,6 @@ lib/app/app_state.dart -> lib/features/sessions/models/alarm_item.dart
 lib/core/data/storage.dart -> lib/features/courses/course.dart
 lib/core/data/storage.dart -> lib/features/habits/models/habit_category.dart
 lib/core/data/storage.dart -> lib/features/sessions/models/alarm_item.dart
-lib/features/account/screens/account.dart -> lib/features/auth/data/auth_service.dart
-lib/features/account/screens/account.dart -> lib/features/history/widgets/export_session_dialog.dart
 lib/features/auth/screens/profile_setup_screen.dart -> lib/features/account/widgets/profile_form.dart
 lib/features/connections/screens/add_person_sheet.dart -> lib/features/auth/data/auth_service.dart
 lib/features/connections/screens/connections_screen.dart -> lib/features/auth/data/auth_service.dart

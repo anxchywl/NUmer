@@ -8,8 +8,7 @@ import 'package:numer_app/app/shell/shell_tabs.dart';
 
 // main navigation shell that hosts the bottom-tab pages
 class AppShell extends StatefulWidget {
-  final Future<void> Function(ThemeMode)? onThemeChange;
-  const AppShell({super.key, this.onThemeChange});
+  const AppShell({super.key});
 
   @override
   State<AppShell> createState() => _ShellState();
@@ -79,7 +78,7 @@ class _ShellState extends State<AppShell> with ShellHooks {
 
   @override
   Widget build(BuildContext context) {
-    final tabs = buildShellTabs(context, onThemeChange: widget.onThemeChange);
+    final tabs = buildShellTabs(context);
     final isIOS = !kIsWeb && Theme.of(context).platform == TargetPlatform.iOS;
     final tabPages = tabs
         .map((tab) => _KeepAlivePage(child: tab.builder(context)))

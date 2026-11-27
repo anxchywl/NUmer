@@ -2302,4 +2302,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nudgeNotificationTitle => 'Nudge';
+
+  @override
+  String get navStudy => 'Study';
+
+  @override
+  String get navCampus => 'Campus';
+
+  @override
+  String get settingsTooltip => 'Settings';
+
+  @override
+  String get aboutTitle => 'About';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get contactSupport => 'Contact support';
+
+  @override
+  String get appVersion => 'Version';
+
+  @override
+  String get linkOpenFailed => 'Could not open the link.';
 }
