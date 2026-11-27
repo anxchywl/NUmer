@@ -26,11 +26,13 @@ profile (avatar, name, major, study goals, accent color, preferred language).
 
 ### Courses & goals — `courses`
 Create courses with weekly study-hour goals, credits, experience levels, and custom order.
+The course list lives on the Study tab.
 
 ### Focus timers & sessions — `sessions`
 Three timer modes — count-up **stopwatch**, count-down **timer**, and **Pomodoro** (work +
-short/long breaks with break pings). Sessions auto-save. A running session shows a live
-iOS Live Activity / lock-screen recording notification with elapsed time.
+short/long breaks with break pings), opened from a course row on the Study tab. Sessions
+auto-save. A running session shows a live iOS Live Activity / lock-screen recording
+notification with elapsed time.
 
 ### Habit tracker — `habits`
 Custom habits with frequency rules (daily, weekly, specific days), swipe-to-complete
@@ -50,10 +52,12 @@ plus per-member subject breakdowns. Members can **nudge** each other with motiva
 notifications, phrased in the recipient's preferred language.
 
 ### AI insights — `ai_analysis`
-Paused. The Home entry points open a screen saying course analysis is coming soon.
+Paused. The Course analysis row on the Study tab, shown once a course exists, opens a screen
+saying it is coming soon.
 
 ### Study — `study`
-The study tab, which for now links to Statistics and History.
+The study tab: the course list with its timer sheet and the add-course action, then rows for
+Statistics, History, Course analysis and any study modules visible to the user.
 
 ### Campus — `campus`
 Lists the campus modules visible to the user; hidden while there are none. More than eight
@@ -66,7 +70,7 @@ Charts, calendars, and heatmaps visualizing study time and progress.
 Browse past sessions and export logs to `.ics` (calendar), `.csv`, or `.xlsx` (Excel).
 
 ### Home dashboard — `home`
-The composed landing surface tying the above together.
+The landing tab: the study streak, sync status and the running session.
 
 ## Cross-cutting product traits
 - **Offline-first:** the app works fully without a connection; study groups are the only

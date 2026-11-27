@@ -397,7 +397,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get studyTimer => 'Таймер учебы';
 
   @override
-  String get noCoursesYet => 'Пока нет курсов. Добавьте курс на главной.';
+  String get noCoursesYet => 'Курсов пока нет.';
 
   @override
   String get chooseACourse => 'Выберите курс';
@@ -2312,6 +2312,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get navStudy => 'Учёба';
+
+  @override
+  String get studyCoursesTitle => 'Курсы';
+
+  @override
+  String get studyMoreTitle => 'Ещё';
+
+  @override
+  String get comingSoon => 'Скоро';
 
   @override
   String get navCampus => 'Кампус';

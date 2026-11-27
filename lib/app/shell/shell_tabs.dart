@@ -33,12 +33,12 @@ List<ShellTab> buildShellTabs(
   List<ModuleDescriptor> registry = moduleRegistry,
 }) {
   final l10n = AppLocalizations.of(context)!;
-  final campusModules = visibleModules(
-    ModuleSection.campus,
-    context.watch<AppConfigService>(),
-    context.watch<AuthController>().currentUser?.uid ?? '',
-    registry: registry,
-  );
+  final config = context.watch<AppConfigService>();
+  final uid = context.watch<AuthController>().currentUser?.uid ?? '';
+  List<ModuleDescriptor> modulesIn(ModuleSection section) =>
+      visibleModules(section, config, uid, registry: registry);
+  final studyModules = modulesIn(ModuleSection.study);
+  final campusModules = modulesIn(ModuleSection.campus);
   return <ShellTab>[
     ShellTab(
       label: l10n.home,
@@ -56,7 +56,10 @@ List<ShellTab> buildShellTabs(
       label: l10n.navStudy,
       icon: Icons.school_outlined,
       selectedIcon: Icons.school,
-      builder: (_) => const StudyScreen(),
+      builder: (context) => StudyScreen(
+        modules: studyModules,
+        onOpenModule: (module) => openModule(context, module),
+      ),
     ),
     // connections is built but intentionally hidden, add its ShellTab here to enable it
     ShellTab(

@@ -395,7 +395,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get studyTimer => 'Оқу таймері';
 
   @override
-  String get noCoursesYet => 'Әлі курс жоқ. Басты беттен курс қосыңыз.';
+  String get noCoursesYet => 'Әзірге курс жоқ.';
 
   @override
   String get chooseACourse => 'Курсты таңдаңыз';
@@ -2289,6 +2289,15 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get navStudy => 'Оқу';
+
+  @override
+  String get studyCoursesTitle => 'Курстар';
+
+  @override
+  String get studyMoreTitle => 'Тағы';
+
+  @override
+  String get comingSoon => 'Жақында';
 
   @override
   String get navCampus => 'Кампус';

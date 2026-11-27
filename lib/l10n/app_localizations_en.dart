@@ -395,7 +395,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get studyTimer => 'Study timer';
 
   @override
-  String get noCoursesYet => 'No courses yet. Add a course from Home.';
+  String get noCoursesYet => 'No courses yet.';
 
   @override
   String get chooseACourse => 'Choose a course';
@@ -2305,6 +2305,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navStudy => 'Study';
+
+  @override
+  String get studyCoursesTitle => 'Courses';
+
+  @override
+  String get studyMoreTitle => 'More';
+
+  @override
+  String get comingSoon => 'Coming soon';
 
   @override
   String get navCampus => 'Campus';

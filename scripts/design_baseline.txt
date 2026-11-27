@@ -182,10 +182,6 @@ alert	lib/features/history/screens/history.dart	1
 color_literal	lib/features/history/widgets/export_session_dialog.dart	3
 spinner	lib/features/history/widgets/export_session_dialog.dart	2
 button	lib/features/history/widgets/export_session_dialog.dart	1
-gradient	lib/features/home/home_screen.dart	1
-blur	lib/features/home/home_screen.dart	2
-shadow	lib/features/home/home_screen.dart	2
-color_literal	lib/features/home/home_screen.dart	6
 color_literal	lib/features/home/streak_title.dart	2
 weight	lib/features/home/streak_title.dart	1
 alert	lib/features/sessions/widgets/course_time_sheet/course_time_actions.dart	2

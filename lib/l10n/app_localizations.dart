@@ -805,7 +805,7 @@ abstract class AppLocalizations {
   /// No description provided for @noCoursesYet.
   ///
   /// In en, this message translates to:
-  /// **'No courses yet. Add a course from Home.'**
+  /// **'No courses yet.'**
   String get noCoursesYet;
 
   /// No description provided for @chooseACourse.
@@ -4251,6 +4251,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Study'**
   String get navStudy;
+
+  /// No description provided for @studyCoursesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Courses'**
+  String get studyCoursesTitle;
+
+  /// No description provided for @studyMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get studyMoreTitle;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
 
   /// No description provided for @navCampus.
   ///
