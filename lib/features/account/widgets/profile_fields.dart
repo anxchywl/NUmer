@@ -4,7 +4,7 @@ import 'package:numer_ui/numer_ui.dart';
 
 import 'package:numer_app/l10n/app_localizations.dart';
 
-class ProfileFields extends StatelessWidget {
+class ProfileFields extends StatefulWidget {
   const ProfileFields({
     super.key,
     required this.name,
@@ -23,6 +23,22 @@ class ProfileFields extends StatelessWidget {
   final NumerSheetFocusMode? focus;
 
   @override
+  State<ProfileFields> createState() => _ProfileFieldsState();
+}
+
+class _ProfileFieldsState extends State<ProfileFields> {
+  @override
+  void initState() {
+    super.initState();
+    final focus = widget.focus;
+    if (focus == null || !widget.autofocusName) return;
+    // asked once, since autofocus would fire again each time the fold rebuilds the field
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) focus.nodeFor('name').requestFocus();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       children: [
@@ -38,32 +54,32 @@ class ProfileFields extends StatelessWidget {
   }
 
   Widget _folded(String id, Widget field) {
-    final focus = this.focus;
+    final focus = widget.focus;
     if (focus == null) return field;
     return NumerFocusFold(hidden: focus.hides(id), child: field);
   }
 
   Widget _gap() =>
-      NumerFocusGap(hidden: focus?.hidesChrome ?? false, height: 10);
+      NumerFocusGap(hidden: widget.focus?.hidesChrome ?? false, height: 10);
 
   // only a dialog with a focus mode moves between fields from the keyboard
   TextInputAction? _action(String? next) {
-    if (focus == null) return null;
+    if (widget.focus == null) return null;
     return next == null ? TextInputAction.done : TextInputAction.next;
   }
 
   ValueChanged<String>? _moveTo(String id) {
-    final focus = this.focus;
+    final focus = widget.focus;
     return focus == null ? null : (_) => focus.moveTo(id);
   }
 
   Widget _nameField(BuildContext context) {
     return TextFormField(
-      controller: name,
-      focusNode: focus?.nodeFor('name'),
+      controller: widget.name,
+      focusNode: widget.focus?.nodeFor('name'),
       textInputAction: _action('major'),
       onFieldSubmitted: _moveTo('major'),
-      autofocus: autofocusName,
+      autofocus: widget.focus == null && widget.autofocusName,
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.nameLabel,
         isDense: true,
@@ -98,8 +114,8 @@ class ProfileFields extends StatelessWidget {
 
   Widget _majorField(BuildContext context) {
     return TextFormField(
-      controller: major,
-      focusNode: focus?.nodeFor('major'),
+      controller: widget.major,
+      focusNode: widget.focus?.nodeFor('major'),
       textInputAction: _action('contact'),
       onFieldSubmitted: _moveTo('contact'),
       decoration: InputDecoration(
@@ -118,8 +134,8 @@ class ProfileFields extends StatelessWidget {
 
   Widget _contactField(BuildContext context) {
     return TextFormField(
-      controller: contact,
-      focusNode: focus?.nodeFor('contact'),
+      controller: widget.contact,
+      focusNode: widget.focus?.nodeFor('contact'),
       textInputAction: _action('goal'),
       onFieldSubmitted: _moveTo('goal'),
       decoration: InputDecoration(
@@ -139,8 +155,8 @@ class ProfileFields extends StatelessWidget {
 
   Widget _goalField(BuildContext context) {
     return TextFormField(
-      controller: goal,
-      focusNode: focus?.nodeFor('goal'),
+      controller: widget.goal,
+      focusNode: widget.focus?.nodeFor('goal'),
       textInputAction: _action(null),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.personalGoalLabel,

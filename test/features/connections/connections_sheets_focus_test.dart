@@ -101,4 +101,21 @@ void main() {
 
     expect(service.created, ['Club']);
   });
+
+  testWidgets('closing the keyboard leaves the group name alone', (
+    tester,
+  ) async {
+    await _open(tester, const GroupsManagementSheet());
+    await tester.tap(find.text('Create group'));
+    await tester.pumpAndSettle();
+    await typeIn(tester, find.byType(TextField));
+
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    await hideKeyboard(tester);
+
+    expect(focusedFields(tester), 0);
+    expect(tester.testTextInput.isVisible, isFalse);
+    expect(find.text('Mentors'), findsOneWidget);
+  });
 }

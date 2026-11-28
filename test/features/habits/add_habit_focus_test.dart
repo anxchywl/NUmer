@@ -74,6 +74,7 @@ void main() {
 
     await tapDone(tester);
 
+    expect(focusedFields(tester), 0);
     expect(find.text('Save'), findsOneWidget);
     expect(find.text('Back'), findsOneWidget);
   });

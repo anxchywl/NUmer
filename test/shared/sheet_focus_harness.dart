@@ -65,6 +65,11 @@ Future<void> tapDone(WidgetTester tester) async {
   await hideKeyboard(tester);
 }
 
+int focusedFields(WidgetTester tester) => tester
+    .widgetList<EditableText>(find.byType(EditableText))
+    .where((field) => field.focusNode.hasFocus)
+    .length;
+
 Finder fieldLabeled(String label) => find.widgetWithText(TextField, label);
 
 void expectAboveKeyboard(WidgetTester tester, Finder finder) {

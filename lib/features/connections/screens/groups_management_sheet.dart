@@ -58,7 +58,8 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
               // while typing the sheet is only as tall as the field and save
               fit: chrome ? FlexFit.loose : FlexFit.tight,
               child: ListView(
-                shrinkWrap: chrome,
+                // constant, since switching it rebuilds the editor and it autofocuses again
+                shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 children: [
                   ...groups.map(
