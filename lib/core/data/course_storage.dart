@@ -1,4 +1,5 @@
 import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/grade_storage.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/features/courses/course.dart';
 
@@ -127,6 +128,7 @@ abstract final class CourseStorage {
       ..dirty = true
       ..updatedAtMs = _now();
     await entry.save();
+    await GradeStorage.deleteCourseGrade(id);
   }
 
   static int _compareCourseOrder(Course a, Course b) {

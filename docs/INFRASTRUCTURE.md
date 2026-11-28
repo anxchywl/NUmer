@@ -91,7 +91,8 @@ group with the owner according to `groupIndex`, never according to `users.groupI
                                        server only, denied to every client
 /users/{userId}/
   fcmTokens, aggregates (peers read), aggState (server only), sessions (peers read,
-  seconds at most 604800), studySessions, courses (peers read), studyTimes,
+  seconds at most 604800), studySessions, courses (peers read), courseGrades,
+  semesters, studyTimes,
   courseGoals, courseProgress, goals, reflections, preferences, aiLogs,
   stats, meta, groupMemberships, nudgeCooldowns,
   habits (+ /history), habit_categories, connections, connectionGroups

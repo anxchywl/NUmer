@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/grade_entities.dart';
 
+part 'local_database_grades.dart';
 part 'local_database_habits.dart';
 
 // singleton wrapper over the hive boxes, registers adapters and exposes crud helpers
@@ -29,6 +31,8 @@ class LocalDatabase {
   Box<LocalCourse>? _peerCoursesBox;
   Box<LocalHabit>? _habitsBox;
   Box<LocalHabitHistory>? _habitHistoryBox;
+  Box<LocalCourseGrade>? _courseGradesBox;
+  Box<LocalSemester>? _semestersBox;
 
   Future<void> initCore() async {
     if (_initialized) return;
@@ -56,6 +60,8 @@ class LocalDatabase {
       Hive.openBox<LocalCourse>('${uid}_peer_courses'),
       Hive.openBox<LocalHabit>('${uid}_habits'),
       Hive.openBox<LocalHabitHistory>('${uid}_habit_history'),
+      Hive.openBox<LocalCourseGrade>('${uid}_course_grades'),
+      Hive.openBox<LocalSemester>('${uid}_semesters'),
     ]);
 
     _userBox = results[0] as Box<LocalUserDoc>;
@@ -69,6 +75,8 @@ class LocalDatabase {
     _peerCoursesBox = results[8] as Box<LocalCourse>;
     _habitsBox = results[9] as Box<LocalHabit>;
     _habitHistoryBox = results[10] as Box<LocalHabitHistory>;
+    _courseGradesBox = results[11] as Box<LocalCourseGrade>;
+    _semestersBox = results[12] as Box<LocalSemester>;
   }
 
   Future<void> close() async {
@@ -84,6 +92,8 @@ class LocalDatabase {
       _peerCoursesBox?.close() ?? Future.value(),
       _habitsBox?.close() ?? Future.value(),
       _habitHistoryBox?.close() ?? Future.value(),
+      _courseGradesBox?.close() ?? Future.value(),
+      _semestersBox?.close() ?? Future.value(),
     ]);
     _userBox = null;
     _coursesBox = null;
@@ -96,6 +106,8 @@ class LocalDatabase {
     _peerCoursesBox = null;
     _habitsBox = null;
     _habitHistoryBox = null;
+    _courseGradesBox = null;
+    _semestersBox = null;
     _currentUid = null;
   }
 
@@ -266,6 +278,8 @@ class LocalDatabase {
       _metaBox?.clear() ?? Future.value(),
       _peerSessionsBox?.clear() ?? Future.value(),
       _peerCoursesBox?.clear() ?? Future.value(),
+      _courseGradesBox?.clear() ?? Future.value(),
+      _semestersBox?.clear() ?? Future.value(),
     ]);
   }
 
@@ -281,6 +295,8 @@ class LocalDatabase {
     await Hive.deleteBoxFromDisk('${uid}_peer_courses');
     await Hive.deleteBoxFromDisk('${uid}_habits');
     await Hive.deleteBoxFromDisk('${uid}_habit_history');
+    await Hive.deleteBoxFromDisk('${uid}_course_grades');
+    await Hive.deleteBoxFromDisk('${uid}_semesters');
   }
 
   dynamic getMeta(String key) => _metaBox?.get(key);
@@ -330,7 +346,10 @@ class LocalDatabase {
         ..registerAdapter(SyncStateEntryAdapter())
         ..registerAdapter(LocalConflictAdapter())
         ..registerAdapter(LocalHabitAdapter())
-        ..registerAdapter(LocalHabitHistoryAdapter());
+        ..registerAdapter(LocalHabitHistoryAdapter())
+        ..registerAdapter(LocalCourseGradeAdapter())
+        ..registerAdapter(LocalAssignmentAdapter())
+        ..registerAdapter(LocalSemesterAdapter());
     }
   }
 

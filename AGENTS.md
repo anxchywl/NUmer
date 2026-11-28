@@ -52,8 +52,8 @@ infra/                   # host hardening, backup restore test and monitor scrip
   `modules/` (the module registry and `openModule`) and `app_state.dart` (the global
   `ChangeNotifier`).
 - **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
-  minimum build), `data/` (Hive local DB, `storage`, `course_storage`, `sync_service`,
-  `user_storage`),
+  minimum build), `data/` (Hive local DB, `storage`, `course_storage`, `grade_storage`,
+  `sync_service`, `user_storage`),
   `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
   contract), `notifications/`, `observability/` (crash reporting), `upcoming/` (the
   device-local store of items modules put on Home), `firebase_options.dart`,
@@ -239,7 +239,7 @@ The script does not run device builds, emulator tests or deploys.
   (`hive_generator`/`build_runner` are intentionally not dependencies). If you add a Hive
   type, write its `TypeAdapter` by hand (see the `Local*Adapter` classes in
   `core/data/entities.dart`) with a unique `typeId`; changing an existing `typeId` or field
-  order breaks persisted data. The next free `typeId` is 18:
+  order breaks persisted data. The next free `typeId` is 21:
 
   | typeId | Class |
   |--------|-------|
@@ -251,6 +251,9 @@ The script does not run device builds, emulator tests or deploys.
   | 15 | `LocalConflict` |
   | 16 | `LocalHabit` |
   | 17 | `LocalHabitHistory` |
+  | 18 | `LocalCourseGrade` |
+  | 19 | `LocalAssignment` (embedded in `LocalCourseGrade`) |
+  | 20 | `LocalSemester` |
 - **Setup, emulator, secrets, deploy** are all in
   [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md) — don't
   reinvent commands here.
