@@ -27,7 +27,7 @@ const incrementalSession = test.wrap(
 const subcollections = [
   'courses', 'studyTimes', 'courseGoals', 'courseProgress', 'sessions', 'studySessions', 'goals',
   'reflections', 'preferences', 'groupMemberships', 'meta', 'aggregates', 'aiLogs', 'stats',
-  'habits', 'connections', 'fcmTokens', 'nudgeCooldowns', 'aggState',
+  'habits', 'connections', 'fcmTokens', 'nudgeCooldowns', 'aggState', 'courseGrades', 'semesters',
 ];
 
 let runId = 0;

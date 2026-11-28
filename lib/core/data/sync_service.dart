@@ -8,7 +8,9 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
 import 'package:numer_app/core/data/entities.dart';
+import 'package:numer_app/core/data/grade_entities.dart';
 import 'package:numer_app/core/data/local_database.dart';
+import 'package:numer_app/core/data/study_sync.dart';
 import 'package:numer_app/core/data/sync_schedule.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 
@@ -58,6 +60,8 @@ class SyncService extends ChangeNotifier {
 
   static const _userStateKey = 'user';
   static const _coursesStateKey = 'courses';
+  static const _courseGradesStateKey = 'courseGrades';
+  static const _semestersStateKey = 'semesters';
   static const _sessionsStateKey = 'sessions';
   static const _goalsStateKey = 'goals';
   static const _habitsStateKey = 'habits';
@@ -311,7 +315,7 @@ class SyncService extends ChangeNotifier {
             .doc(_uid)
             .collection('courses')
             .doc(course.id);
-        batch.set(ref, _courseToRemote(course), SetOptions(merge: true));
+        batch.set(ref, courseToRemote(course), SetOptions(merge: true));
         course.dirty = false;
         course.updatedAtMs = _now();
       });
@@ -344,8 +348,34 @@ class SyncService extends ChangeNotifier {
         goal.updatedAtMs = _now();
       });
 
+      final dirtyGrades = _db.dirtyCourseGrades();
+      await pushChunk<LocalCourseGrade>(dirtyGrades, (batch, grade) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('courseGrades')
+            .doc(grade.id);
+        batch.set(ref, courseGradeToRemote(grade), SetOptions(merge: true));
+        grade.dirty = false;
+        grade.updatedAtMs = _now();
+      });
+
+      final dirtySemesters = _db.dirtySemesters();
+      await pushChunk<LocalSemester>(dirtySemesters, (batch, semester) async {
+        final ref = _firestore
+            .collection('users')
+            .doc(_uid)
+            .collection('semesters')
+            .doc(semester.id);
+        batch.set(ref, semesterToRemote(semester), SetOptions(merge: true));
+        semester.dirty = false;
+        semester.updatedAtMs = _now();
+      });
+
       await Future.wait([
         for (final c in dirtyCourses) c.save(),
+        for (final g in dirtyGrades) g.save(),
+        for (final s in dirtySemesters) s.save(),
         for (final s in dirtySessions) s.deleted ? s.delete() : s.save(),
         for (final g in dirtyGoals) g.save(),
         if (userDoc != null && userDoc.dirty == false) userDoc.save(),
@@ -431,9 +461,26 @@ class SyncService extends ChangeNotifier {
     readCount += await _pullCollection(
       collection: 'courses',
       stateKey: _coursesStateKey,
-      mapper: _applyRemoteCourse,
+      mapper: (doc) =>
+          applyRemoteCourse(_db, uid: _uid!, id: doc.id, data: doc.data()),
       full: full,
       limit: 250,
+    );
+    readCount += await _pullCollection(
+      collection: 'courseGrades',
+      stateKey: _courseGradesStateKey,
+      mapper: (doc) =>
+          applyRemoteCourseGrade(_db, uid: _uid!, id: doc.id, data: doc.data()),
+      full: full,
+      limit: 250,
+    );
+    readCount += await _pullCollection(
+      collection: 'semesters',
+      stateKey: _semestersStateKey,
+      mapper: (doc) =>
+          applyRemoteSemester(_db, uid: _uid!, id: doc.id, data: doc.data()),
+      full: full,
+      limit: 200,
     );
     readCount += await _pullCollection(
       collection: 'sessions',
@@ -577,7 +624,7 @@ class SyncService extends ChangeNotifier {
     if (snapshot.exists) reads++;
     final data = snapshot.data();
     if (data == null) return reads;
-    final updatedAt = _timestampToMs(data['updatedAt']);
+    final updatedAt = timestampToMs(data['updatedAt']);
     final local = _db.ensureUserDoc();
     final state = _db.syncStateForKey(_userStateKey);
     final preferRemote = _bootstrapping || !_db.hasBootstrapCache();
@@ -757,7 +804,7 @@ class SyncService extends ChangeNotifier {
       readCount += snapshot.docs.length;
       for (final doc in snapshot.docs) {
         await mapper(doc);
-        maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
+        maxSeen = max(maxSeen, timestampToMs(doc.data()['updatedAt']));
       }
       if (snapshot.docs.length < limit) {
         break;
@@ -771,74 +818,11 @@ class SyncService extends ChangeNotifier {
     return readCount;
   }
 
-  Future<void> _applyRemoteCourse(
-    QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
-  ) async {
-    final data = snapshot.data();
-    final updatedAt = _timestampToMs(data['updatedAt']);
-    var course = _db.getCourseById(snapshot.id);
-    if (course == null) {
-      course = LocalCourse(
-        id: snapshot.id,
-        uid: _uid!,
-        name: data['name'] as String? ?? '',
-        day: data['day'] as String? ?? '',
-        start: data['start'] as String? ?? '',
-        end: data['end'] as String? ?? '',
-        colorValue: (data['colorValue'] as num?)?.toInt() ?? 0,
-        credits: (data['credits'] as num?)?.toDouble(),
-        expLevel: (data['expLevel'] as num?)?.toInt(),
-        goalHours: (data['goalHours'] as num?)?.toDouble(),
-        totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
-        pomodoroLongBreakMinutes: (data['pomodoroLongBreakMinutes'] as num?)
-            ?.toInt(),
-        sortOrder: (data['sortOrder'] as num?)?.toInt(),
-        hiddenFromLeaderboard: data['hiddenFromLeaderboard'] == true,
-        updatedAtMs: updatedAt,
-        dirty: false,
-        deleted: data['deleted'] == true,
-      );
-      await _db.putCourse(course);
-      return;
-    }
-
-    if (course.dirty && updatedAt <= course.updatedAtMs) {
-      return;
-    }
-
-    if (course.dirty && updatedAt > course.updatedAtMs) {
-      await _db.logConflict(
-        collection: 'courses',
-        entityId: course.id,
-        localUpdatedAtMs: course.updatedAtMs,
-        remoteUpdatedAtMs: updatedAt,
-        resolvedWithRemote: true,
-      );
-    }
-
-    course
-      ..name = data['name'] as String? ?? course.name
-      ..day = data['day'] as String? ?? course.day
-      ..start = data['start'] as String? ?? course.start
-      ..end = data['end'] as String? ?? course.end
-      ..colorValue = (data['colorValue'] as num?)?.toInt() ?? course.colorValue
-      ..credits = (data['credits'] as num?)?.toDouble()
-      ..expLevel = (data['expLevel'] as num?)?.toInt()
-      ..goalHours = (data['goalHours'] as num?)?.toDouble()
-      ..goalHours = (data['goalHours'] as num?)?.toDouble()
-      ..sortOrder = (data['sortOrder'] as num?)?.toInt() ?? course.sortOrder
-      ..hiddenFromLeaderboard = data['hiddenFromLeaderboard'] == true
-      ..deleted = data['deleted'] == true
-      ..updatedAtMs = updatedAt
-      ..dirty = false;
-    await course.save();
-  }
-
   Future<void> _applyRemoteSession(
     QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
   ) async {
     final data = snapshot.data();
-    final updatedAt = _timestampToMs(data['updatedAt']);
+    final updatedAt = timestampToMs(data['updatedAt']);
     var session = _db.getSessionById(snapshot.id);
 
     if (!snapshot.exists) {
@@ -851,8 +835,8 @@ class SyncService extends ChangeNotifier {
       return;
     }
 
-    final startUtc = _timestampToMs(data['startUtc']);
-    final endUtc = _timestampToMs(data['endUtc']);
+    final startUtc = timestampToMs(data['startUtc']);
+    final endUtc = timestampToMs(data['endUtc']);
     if (session == null) {
       session = LocalSession(
         id: snapshot.id,
@@ -863,7 +847,7 @@ class SyncService extends ChangeNotifier {
         seconds: (data['seconds'] as num?)?.toInt() ?? 0,
         kind: data['kind'] as String?,
         notes: data['notes'] as String?,
-        createdAtMs: _timestampToMs(data['createdAt']),
+        createdAtMs: timestampToMs(data['createdAt']),
         updatedAtMs: updatedAt,
         dirty: false,
         deleted: data['deleted'] == true,
@@ -903,7 +887,7 @@ class SyncService extends ChangeNotifier {
     QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
   ) async {
     final data = snapshot.data();
-    final updatedAt = _timestampToMs(data['updatedAt']);
+    final updatedAt = timestampToMs(data['updatedAt']);
     var goal = _db.getGoalById(snapshot.id);
     if (goal == null) {
       goal = LocalGoal(
@@ -947,9 +931,9 @@ class SyncService extends ChangeNotifier {
     QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
   ) async {
     final data = snapshot.data();
-    final updatedAt = _timestampToMs(data['updatedAt']);
+    final updatedAt = timestampToMs(data['updatedAt']);
     var habit = _db.getHabitById(snapshot.id);
-    final resetAtMs = _timestampToMs(data['rs'] ?? data['latestResetAt']);
+    final resetAtMs = timestampToMs(data['rs'] ?? data['latestResetAt']);
     final localResetAtMs = habit?.resetAtMs ?? 0;
 
     // parse stats map
@@ -1125,7 +1109,7 @@ class SyncService extends ChangeNotifier {
       readCount += snapshot.docs.length;
       for (final doc in snapshot.docs) {
         await _applyRemoteHabitHistory(habit.id, doc);
-        maxSeen = max(maxSeen, _timestampToMs(doc.data()['updatedAt']));
+        maxSeen = max(maxSeen, timestampToMs(doc.data()['updatedAt']));
       }
     }
 
@@ -1139,7 +1123,7 @@ class SyncService extends ChangeNotifier {
     QueryDocumentSnapshot<Map<String, dynamic>> snapshot,
   ) async {
     final data = snapshot.data();
-    final updatedAt = _timestampToMs(data['updatedAt']);
+    final updatedAt = timestampToMs(data['updatedAt']);
     final habit = _db.getHabitById(habitId);
     final resetAtMs = habit?.resetAtMs ?? 0;
     if (resetAtMs > 0 && updatedAt < resetAtMs) {
@@ -1156,7 +1140,7 @@ class SyncService extends ChangeNotifier {
         uid: _uid!,
         habitId: habitId,
         dateKey: dateKey,
-        completedAtMs: _timestampToMs(data['ts'] ?? data['timestamp']),
+        completedAtMs: timestampToMs(data['ts'] ?? data['timestamp']),
         updatedAtMs: updatedAt,
         value: (data['v'] ?? data['value'] as num?)?.toDouble() ?? 1.0,
         manualValue: (data['m'] as num?)?.toDouble(),
@@ -1172,7 +1156,7 @@ class SyncService extends ChangeNotifier {
     if (history.dirty || history.updatedAtMs >= updatedAt) return;
 
     history
-      ..completedAtMs = _timestampToMs(data['ts'] ?? data['timestamp'])
+      ..completedAtMs = timestampToMs(data['ts'] ?? data['timestamp'])
       ..value = (data['v'] ?? data['value'] as num?)?.toDouble() ?? 1.0
       ..manualValue = (data['m'] as num?)?.toDouble()
       ..note = (data['note'] as String?)
@@ -1259,26 +1243,6 @@ class SyncService extends ChangeNotifier {
     return payload;
   }
 
-  Map<String, dynamic> _courseToRemote(LocalCourse course) {
-    return {
-      'uid': course.uid,
-      'name': course.name,
-      'day': course.day,
-      'start': course.start,
-      'end': course.end,
-      'colorValue': course.colorValue,
-      'credits': course.credits,
-      'expLevel': course.expLevel,
-      'goalHours': course.goalHours,
-      'totalMinutes': course.totalMinutes,
-      'pomodoroLongBreakMinutes': course.pomodoroLongBreakMinutes,
-      'sortOrder': course.sortOrder,
-      'hiddenFromLeaderboard': course.hiddenFromLeaderboard,
-      'deleted': course.deleted,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-  }
-
   Map<String, dynamic> _sessionToRemote(LocalSession session) {
     return {
       'uid': session.uid,
@@ -1352,19 +1316,6 @@ class SyncService extends ChangeNotifier {
     } catch (_) {
       return null;
     }
-  }
-
-  int _timestampToMs(dynamic value) {
-    if (value is Timestamp) {
-      return value.toDate().toUtc().millisecondsSinceEpoch;
-    }
-    if (value is DateTime) {
-      return value.toUtc().millisecondsSinceEpoch;
-    }
-    if (value is int) {
-      return value;
-    }
-    return 0;
   }
 
   Uint8List? _decodeAvatar(String? base64Str) {

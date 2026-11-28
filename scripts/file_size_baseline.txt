@@ -1,7 +1,7 @@
 2743 lib/app/app_state.dart
 793 lib/core/data/entities.dart
 1370 lib/core/data/storage.dart
-1416 lib/core/data/sync_service.dart
+1367 lib/core/data/sync_service.dart
 545 lib/core/notifications/recording_notification_service.dart
 708 lib/features/account/models/profile_avatar.dart
 454 lib/features/account/widgets/profile_form.dart

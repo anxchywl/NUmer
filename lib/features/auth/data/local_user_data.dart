@@ -9,7 +9,9 @@ bool hasUnsyncedChanges(LocalDatabase db) =>
     db.dirtySessions().isNotEmpty ||
     db.dirtyGoals().isNotEmpty ||
     db.dirtyHabits().isNotEmpty ||
-    db.dirtyHabitHistory().isNotEmpty;
+    db.dirtyHabitHistory().isNotEmpty ||
+    db.dirtyCourseGrades().isNotEmpty ||
+    db.dirtySemesters().isNotEmpty;
 
 bool _isSessionPreference(String key) =>
     key.startsWith('timer_planned_') ||

@@ -23,7 +23,10 @@ and on resume when the last pull is at least 10 minutes old (or none has happene
 runs a full pull if none has happened in this session or the session began with a bootstrap. There
 is no background timer. A sync requested while another is running runs after it. It also runs a
 heartbeat to claim/verify active timers across devices, which also records the app's build
-number as `users/{uid}.appBuild`.
+number as `users/{uid}.appBuild`. It syncs the user document and the `courses`, `courseGrades`,
+`semesters`, `sessions`, `goals` and `habits` (with `history`) subcollections; a removed course,
+grade or semester stays remote as `deleted: true`, and a course's `code` travels on the course
+document that peers may read.
 Data flow, end to end:
 
 1. User acts in a feature screen → mutates `AppState`.
