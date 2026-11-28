@@ -11,6 +11,10 @@ import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
+import 'package:numer_ui/numer_ui.dart';
+
+import 'habit_numeric_picker.dart';
 
 class HabitLoggingSheet extends StatefulWidget {
   final Habit habit;
@@ -36,7 +40,7 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
   late double _initialValue;
   late double _currentValue;
   late TextEditingController _numericController;
-  final FocusNode _numericFocusNode = FocusNode();
+  final _focus = NumerSheetFocusMode();
   LoggingMode _mode = LoggingMode.set;
   Map<String, int> _courseContributions = {}; // courseId -> seconds
   Timer? _incrementTimer;
@@ -243,15 +247,19 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
     _historySubscription?.cancel();
     _numericController.removeListener(_onNumericControllerChanged);
     _numericController.dispose();
-    _numericFocusNode.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
     final theme = Theme.of(context);
     final isNumeric = widget.habit.type == HabitType.numeric;
     final l10n = AppLocalizations.of(context)!;
+    final chrome = _focus.hidesChrome;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -263,175 +271,134 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: widget.habit.color.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  IconData(
-                    widget.habit.iconCodePoint,
-                    fontFamily: widget.habit.iconFamily,
-                    fontPackage: widget.habit.iconPackage,
-                  ),
-                  color: widget.habit.color,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.habit.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<LoggingMode>(
-              segments: [
-                ButtonSegment(
-                  value: LoggingMode.set,
-                  label: Text(l10n.habitLogSetTotal),
-                  icon: const Icon(Icons.edit),
-                ),
-                ButtonSegment(
-                  value: LoggingMode.add,
-                  label: Text(l10n.habitLogAddMore),
-                  icon: const Icon(Icons.add),
-                ),
-              ],
-              selected: {_mode},
-              onSelectionChanged: (val) {
-                setState(() {
-                  final newMode = val.first;
-                  if (newMode == LoggingMode.set) {
-                    // Switching to Set: show current total
-                    _currentValue = _initialValue;
-                  } else {
-                    // Switching to Add: start with 0 (amount to add on top of _initialValue)
-                    _currentValue = 0;
-                  }
-                  _mode = newMode;
-                  if (widget.habit.type == HabitType.numeric) {
-                    _numericController.text = _currentValue.toInt().toString();
-                  }
-                });
-              },
-              showSelectedIcon: false,
-              style: SegmentedButton.styleFrom(
-                visualDensity: VisualDensity.comfortable,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
+          NumerFocusFold(hidden: chrome, child: _buildHeader(theme)),
+          NumerFocusGap(hidden: chrome, height: 24),
+          NumerFocusFold(hidden: chrome, child: _buildModeSelector(l10n)),
+          NumerFocusGap(hidden: chrome, height: 24),
           if (isNumeric)
-            _buildNumericPicker(theme)
+            _buildNumericPicker()
           else
             _buildTimePicker(theme, l10n),
-          const SizedBox(height: 24),
-          _buildProgressInfo(theme, l10n),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: FilledButton(
-              onPressed: (isNumeric && _numericController.text.isEmpty)
-                  ? null
-                  : _onConfirm,
-              style: FilledButton.styleFrom(
-                backgroundColor: widget.habit.color,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: Text(
-                l10n.habitUpdateProgress,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+          NumerFocusGap(hidden: chrome, height: 24),
+          NumerFocusFold(
+            hidden: chrome,
+            child: _buildProgressInfo(theme, l10n),
           ),
+          const SizedBox(height: 24),
+          _buildConfirmButton(l10n, isNumeric),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  Widget _buildNumericPicker(ThemeData theme) {
+  Widget _buildHeader(ThemeData theme) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        if (widget.habit.comparator != HabitComparator.exactly)
-          _buildStepButton(Icons.remove, -1.0, theme),
-        const SizedBox(width: 24),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 140,
-              child: widget.habit.comparator == HabitComparator.exactly
-                  ? Center(
-                      child: Text(
-                        _numericController.text,
-                        style: theme.textTheme.displayMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface.withAlpha(
-                            128,
-                          ), // Dimmed to show locked
-                          height: 1.1,
-                        ),
-                      ),
-                    )
-                  : TextField(
-                      controller: _numericController,
-                      focusNode: _numericFocusNode,
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: theme.textTheme.displayMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSurface,
-                        height: 1.1,
-                      ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        MaxValueFormatter(_maxValueForHabit()),
-                      ],
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    ),
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: widget.habit.color.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            IconData(
+              widget.habit.iconCodePoint,
+              fontFamily: widget.habit.iconFamily,
+              fontPackage: widget.habit.iconPackage,
             ),
-            if (widget.habit.unit != null && widget.habit.unit!.isNotEmpty)
+            color: widget.habit.color,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                widget.habit.unit!,
+                widget.habit.name,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-          ],
+            ],
+          ),
         ),
-        const SizedBox(width: 24),
-        if (widget.habit.comparator != HabitComparator.exactly)
-          _buildStepButton(Icons.add, 1.0, theme),
       ],
+    );
+  }
+
+  Widget _buildModeSelector(AppLocalizations l10n) {
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<LoggingMode>(
+        segments: [
+          ButtonSegment(
+            value: LoggingMode.set,
+            label: Text(l10n.habitLogSetTotal),
+            icon: const Icon(Icons.edit),
+          ),
+          ButtonSegment(
+            value: LoggingMode.add,
+            label: Text(l10n.habitLogAddMore),
+            icon: const Icon(Icons.add),
+          ),
+        ],
+        selected: {_mode},
+        onSelectionChanged: (val) => _selectMode(val.first),
+        showSelectedIcon: false,
+        style: SegmentedButton.styleFrom(
+          visualDensity: VisualDensity.comfortable,
+        ),
+      ),
+    );
+  }
+
+  void _selectMode(LoggingMode newMode) {
+    setState(() {
+      // set shows the current total, add starts from the amount to put on top
+      _currentValue = newMode == LoggingMode.set ? _initialValue : 0;
+      _mode = newMode;
+      if (widget.habit.type == HabitType.numeric) {
+        _numericController.text = _currentValue.toInt().toString();
+      }
+    });
+  }
+
+  Widget _buildConfirmButton(AppLocalizations l10n, bool isNumeric) {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: FilledButton(
+        onPressed: (isNumeric && _numericController.text.isEmpty)
+            ? null
+            : _onConfirm,
+        style: FilledButton.styleFrom(
+          backgroundColor: widget.habit.color,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        child: Text(
+          l10n.habitUpdateProgress,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNumericPicker() {
+    return HabitNumericPicker(
+      controller: _numericController,
+      focusNode: _focus.nodeFor('value'),
+      locked: widget.habit.comparator == HabitComparator.exactly,
+      hideSteps: _focus.hidesChrome,
+      maxValue: _maxValueForHabit(),
+      unit: widget.habit.unit,
+      onStepStart: _startAdjusting,
+      onStepStop: _stopAdjusting,
     );
   }
 
@@ -479,25 +446,6 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
         _numericController.text = _currentValue.toInt().toString();
       }
     });
-  }
-
-  Widget _buildStepButton(IconData icon, double step, ThemeData theme) {
-    return GestureDetector(
-      onTapDown: (_) {
-        _startAdjusting(step);
-        HapticFeedback.lightImpact();
-      },
-      onTapUp: (_) => _stopAdjusting(),
-      onTapCancel: () => _stopAdjusting(),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.secondaryContainer,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: theme.colorScheme.onSecondaryContainer),
-      ),
-    );
   }
 
   Widget _buildProgressInfo(ThemeData theme, AppLocalizations l10n) {
@@ -653,29 +601,5 @@ class _HabitLoggingSheetState extends State<HabitLoggingSheet> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: children,
     );
-  }
-}
-
-class MaxValueFormatter extends TextInputFormatter {
-  final double max;
-  MaxValueFormatter(this.max);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) return newValue;
-    final val = double.tryParse(newValue.text);
-    if (val == null) return oldValue;
-    if (val > max) {
-      return TextEditingValue(
-        text: max.toInt().toString(),
-        selection: TextSelection.collapsed(
-          offset: max.toInt().toString().length,
-        ),
-      );
-    }
-    return newValue;
   }
 }

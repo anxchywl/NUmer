@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 class HoldToConfirmButton extends StatefulWidget {
   const HoldToConfirmButton({
@@ -146,6 +148,7 @@ class DeleteAccountTextConfirmDialog extends StatefulWidget {
 class _DeleteAccountTextConfirmDialogState
     extends State<DeleteAccountTextConfirmDialog> {
   final _controller = TextEditingController();
+  final _focus = NumerSheetFocusMode();
   static const _requiredPhrase = 'I really want to delete my account';
   bool _isValid = false;
 
@@ -163,63 +166,34 @@ class _DeleteAccountTextConfirmDialogState
   @override
   void dispose() {
     _controller.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final l10n = AppLocalizations.of(context)!;
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _dialog);
+
+  Widget _dialog(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final chrome = _focus.hidesChrome;
 
     return AlertDialog(
-      icon: Icon(Icons.warning_amber_rounded, color: scheme.error, size: 40),
-      title: const Text('Final Confirmation'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'To confirm deletion, please type:',
-            style: theme.textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: scheme.errorContainer.withAlpha(100),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: scheme.error.withAlpha(100)),
-            ),
-            child: SelectableText(
-              _requiredPhrase,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: scheme.error,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: 'Type the phrase above',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              errorText: _controller.text.isNotEmpty && !_isValid
-                  ? 'Phrase does not match'
-                  : null,
-            ),
-          ),
-        ],
+      icon: NumerFocusFold(
+        hidden: chrome,
+        child: Icon(Icons.warning_amber_rounded, color: scheme.error, size: 40),
       ),
+      title: NumerFocusFold(
+        hidden: chrome,
+        child: const Text('Final Confirmation'),
+      ),
+      content: _content(context),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: Text(l10n.cancel),
-        ),
+        if (!chrome)
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
         FilledButton(
           onPressed: _isValid ? () => Navigator.pop(context, true) : null,
           style: FilledButton.styleFrom(
@@ -229,6 +203,61 @@ class _DeleteAccountTextConfirmDialogState
           child: const Text('Delete Forever'),
         ),
       ],
+    );
+  }
+
+  // the phrase to copy is the label of the field, so it stays while typing
+  Widget _content(BuildContext context) {
+    final theme = Theme.of(context);
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'To confirm deletion, please type:',
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 8),
+          _phrase(theme),
+          const SizedBox(height: 16),
+          _phraseField(),
+        ],
+      ),
+    );
+  }
+
+  Widget _phrase(ThemeData theme) {
+    final scheme = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer.withAlpha(100),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: scheme.error.withAlpha(100)),
+      ),
+      child: SelectableText(
+        _requiredPhrase,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+          color: scheme.error,
+        ),
+      ),
+    );
+  }
+
+  Widget _phraseField() {
+    return TextField(
+      controller: _controller,
+      focusNode: _focus.nodeFor('phrase'),
+      autofocus: true,
+      decoration: InputDecoration(
+        hintText: 'Type the phrase above',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        errorText: _controller.text.isNotEmpty && !_isValid
+            ? 'Phrase does not match'
+            : null,
+      ),
     );
   }
 }

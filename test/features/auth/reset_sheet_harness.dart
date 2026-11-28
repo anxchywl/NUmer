@@ -104,9 +104,19 @@ Future<void> saveNewPassword(
   String? repeated,
 }) async {
   await tester.enterText(find.byType(TextField).first, password);
+  await tester.testTextInput.receiveAction(TextInputAction.next);
+  await tester.pumpAndSettle();
   await tester.enterText(find.byType(TextField).last, repeated ?? password);
+  await tester.pumpAndSettle();
+  // with the keyboard up the save button waits behind done
+  final done = find.widgetWithText(FilledButton, _doneLabel(tester));
+  if (done.evaluate().isNotEmpty) await tapVisible(tester, done);
   await tapVisible(tester, find.byType(FilledButton));
 }
+
+String _doneLabel(WidgetTester tester) => AppLocalizations.of(
+  tester.element(find.byType(TextField).first),
+)!.focusDone;
 
 FilledButton submitButton(WidgetTester tester) =>
     tester.widget(find.byType(FilledButton));

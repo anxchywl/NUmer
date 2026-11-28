@@ -4,6 +4,7 @@ import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 import '../data/auth_code_api.dart';
 import '../data/auth_service.dart';
@@ -13,6 +14,7 @@ import 'reset_step_parts.dart';
 class NewPasswordStep extends StatefulWidget {
   const NewPasswordStep({
     super.key,
+    required this.focus,
     required this.email,
     required this.ticket,
     required this.onSaved,
@@ -20,6 +22,7 @@ class NewPasswordStep extends StatefulWidget {
     required this.onStartOver,
   });
 
+  final NumerSheetFocusMode focus;
   final String email;
   final String ticket;
   final void Function({required bool confirmed}) onSaved;
@@ -106,26 +109,44 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final chrome = widget.focus.hidesChrome;
 
     return Padding(
       padding: const EdgeInsets.all(NumerSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.newPasswordTitle, style: context.text.sectionTitle),
-          const SizedBox(height: NumerSpace.lg),
+          NumerFocusFold(hidden: chrome, child: _buildTitle(l10n)),
           _buildPasswordFields(l10n),
           const SizedBox(height: NumerSpace.sm),
           ResetStateLine(message?.call(l10n) ?? ''),
-          const SizedBox(height: NumerSpace.xl),
-          ResetSubmitButton(
-            label: l10n.savePasswordButton,
-            loading: loading,
-            onPressed: canSubmit ? _submit : null,
+          NumerFocusGap(hidden: chrome, height: NumerSpace.xl),
+          SheetDoneActions(
+            focus: widget.focus,
+            actions: ResetSubmitButton(
+              label: l10n.savePasswordButton,
+              loading: loading,
+              onPressed: canSubmit ? _submit : null,
+            ),
           ),
-          const SizedBox(height: NumerSpace.sm),
-          ResetStartOverButton(onPressed: loading ? null : widget.onStartOver),
+          NumerFocusFold(hidden: chrome, child: _buildStartOver()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTitle(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NumerSpace.lg),
+      child: Text(l10n.newPasswordTitle, style: context.text.sectionTitle),
+    );
+  }
+
+  Widget _buildStartOver() {
+    return Padding(
+      padding: const EdgeInsets.only(top: NumerSpace.sm),
+      child: ResetStartOverButton(
+        onPressed: loading ? null : widget.onStartOver,
       ),
     );
   }
@@ -138,15 +159,32 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildAccountField(),
-          _buildField(_password, l10n.newPasswordLabel, TextInputAction.next),
-          const SizedBox(height: NumerSpace.md),
-          _buildField(
-            _confirmation,
-            l10n.confirmPasswordLabel,
-            TextInputAction.done,
+          _keptWhileFolded(
+            'password',
+            _buildField('password', _password, l10n.newPasswordLabel),
+          ),
+          NumerFocusGap(
+            hidden: widget.focus.hidesChrome,
+            height: NumerSpace.md,
+          ),
+          _keptWhileFolded(
+            'confirmation',
+            _buildField(
+              'confirmation',
+              _confirmation,
+              l10n.confirmPasswordLabel,
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  // offstage rather than removed, so the password manager still fills both fields
+  Widget _keptWhileFolded(String id, Widget field) {
+    return NumerFocusFold(
+      hidden: false,
+      child: Offstage(offstage: widget.focus.hides(id), child: field),
     );
   }
 
@@ -164,14 +202,16 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
   }
 
   Widget _buildField(
+    String id,
     TextEditingController controller,
     String label,
-    TextInputAction action,
   ) {
+    final isLast = controller == _confirmation;
     return TextField(
       controller: controller,
+      focusNode: widget.focus.nodeFor(id),
       obscureText: true,
-      textInputAction: action,
+      textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
       autofillHints: const [AutofillHints.newPassword],
       inputFormatters: passwordInputFormatters,
       decoration: resetFieldDecoration(
@@ -179,7 +219,9 @@ class _NewPasswordStepState extends State<NewPasswordStep> with ResetSubmit {
         label: label,
         hasError: invalidField == controller,
       ),
-      onSubmitted: action == TextInputAction.done ? (_) => _submit() : null,
+      onSubmitted: isLast
+          ? (_) => _submit()
+          : (_) => widget.focus.moveTo('confirmation'),
     );
   }
 }

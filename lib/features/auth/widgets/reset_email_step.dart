@@ -12,11 +12,13 @@ import 'reset_step_parts.dart';
 class ResetEmailStep extends StatefulWidget {
   const ResetEmailStep({
     super.key,
+    required this.focus,
     required this.controller,
     required this.onRequested,
     this.expired = false,
   });
 
+  final NumerSheetFocusMode focus;
   final TextEditingController controller;
   final void Function(String email, CodeOk result) onRequested;
   final bool expired;
@@ -70,37 +72,23 @@ class _ResetEmailStepState extends State<ResetEmailStep> with ResetSubmit {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(NumerSpace.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.resetPasswordTitle, style: context.text.sectionTitle),
-          const SizedBox(height: NumerSpace.sm),
-          Text(
-            l10n.resetPasswordSubtitle,
-            style: context.text.body.copyWith(color: colors.onSurfaceVariant),
+          NumerFocusFold(
+            hidden: widget.focus.hidesChrome,
+            child: _buildIntro(l10n),
           ),
-          const SizedBox(height: NumerSpace.lg),
-          TextField(
-            controller: widget.controller,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            autocorrect: false,
-            autofillHints: const [AutofillHints.email],
-            inputFormatters: emailInputFormatters,
-            decoration: resetFieldDecoration(
-              context,
-              label: l10n.emailAddress,
-              hasError: invalidField == widget.controller,
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
+          _buildEmailField(l10n),
           const SizedBox(height: NumerSpace.sm),
           ResetStateLine(message?.call(l10n) ?? ''),
-          const SizedBox(height: NumerSpace.xl),
+          NumerFocusGap(
+            hidden: widget.focus.hidesChrome,
+            height: NumerSpace.xl,
+          ),
           ResetSubmitButton(
             label: l10n.sendResetCode,
             loading: loading,
@@ -108,6 +96,40 @@ class _ResetEmailStepState extends State<ResetEmailStep> with ResetSubmit {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildIntro(AppLocalizations l10n) {
+    final colors = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.resetPasswordTitle, style: context.text.sectionTitle),
+        const SizedBox(height: NumerSpace.sm),
+        Text(
+          l10n.resetPasswordSubtitle,
+          style: context.text.body.copyWith(color: colors.onSurfaceVariant),
+        ),
+        const SizedBox(height: NumerSpace.lg),
+      ],
+    );
+  }
+
+  Widget _buildEmailField(AppLocalizations l10n) {
+    return TextField(
+      controller: widget.controller,
+      focusNode: widget.focus.nodeFor('email'),
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.done,
+      autocorrect: false,
+      autofillHints: const [AutofillHints.email],
+      inputFormatters: emailInputFormatters,
+      decoration: resetFieldDecoration(
+        context,
+        label: l10n.emailAddress,
+        hasError: invalidField == widget.controller,
+      ),
+      onSubmitted: (_) => _submit(),
     );
   }
 }

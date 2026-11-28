@@ -24,6 +24,7 @@ class CodeEntryBody extends StatefulWidget {
     required this.onVerified,
     this.initialResult,
     this.initialMessage,
+    this.focusMode,
   });
 
   final String subtitle;
@@ -33,13 +34,16 @@ class CodeEntryBody extends StatefulWidget {
   final CodeResult? initialResult;
   final String? initialMessage;
 
+  // set when the body sits in a sheet, null on a full screen
+  final NumerSheetFocusMode? focusMode;
+
   @override
   State<CodeEntryBody> createState() => _CodeEntryBodyState();
 }
 
 class _CodeEntryBodyState extends State<CodeEntryBody> {
   final _controller = TextEditingController();
-  final _focusNode = FocusNode();
+  final _ownNode = FocusNode();
   Timer? _timer;
   _Call? _call;
   CodeFailure? _failure;
@@ -51,6 +55,8 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
   int _retrySeconds = 0;
 
   bool get _busy => _call != null;
+
+  FocusNode get _focusNode => widget.focusMode?.nodeFor('code') ?? _ownNode;
 
   bool get _rateLimited => _retrySeconds > 0;
 
@@ -84,7 +90,7 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
   void dispose() {
     _timer?.cancel();
     _controller.dispose();
-    _focusNode.dispose();
+    _ownNode.dispose();
     super.dispose();
   }
 
@@ -250,11 +256,7 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            widget.subtitle,
-            style: context.text.body.copyWith(color: colors.onSurfaceVariant),
-          ),
-          const SizedBox(height: NumerSpace.xl),
+          _folded(_buildSubtitle(colors)),
           NumerOtpField(
             controller: _controller,
             focusNode: _focusNode,
@@ -267,11 +269,33 @@ class _CodeEntryBodyState extends State<CodeEntryBody> {
           ),
           const SizedBox(height: NumerSpace.sm),
           _buildStateLine(l10n, colors),
-          const SizedBox(height: NumerSpace.xl),
+          _folded(const SizedBox(height: NumerSpace.xl)),
           _buildVerifyButton(l10n),
-          const SizedBox(height: NumerSpace.sm),
-          _buildResendButton(l10n),
+          _folded(
+            Column(
+              children: [
+                const SizedBox(height: NumerSpace.sm),
+                _buildResendButton(l10n),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _folded(Widget child) {
+    final focus = widget.focusMode;
+    if (focus == null) return child;
+    return NumerFocusFold(hidden: focus.hidesChrome, child: child);
+  }
+
+  Widget _buildSubtitle(ColorScheme colors) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: NumerSpace.xl),
+      child: Text(
+        widget.subtitle,
+        style: context.text.body.copyWith(color: colors.onSurfaceVariant),
       ),
     );
   }

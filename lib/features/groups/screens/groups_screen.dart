@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
@@ -12,6 +11,7 @@ import 'package:numer_app/features/groups/data/group_service.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/features/groups/widgets/group_leaderboard.dart';
 import 'package:numer_app/features/groups/widgets/groups_status_view.dart';
+import 'package:numer_app/features/groups/widgets/join_private_group_dialog.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
 import 'package:numer_app/shared/widgets/tip_icon.dart';
 import 'package:numer_app/features/groups/screens/create_group_screen.dart';
@@ -266,7 +266,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
   void _showJoinPrivateDialog() {
     showDialog(
       context: context,
-      builder: (_) => _JoinPrivateGroupDialog(
+      builder: (_) => JoinPrivateGroupDialog(
         groupName: AppLocalizations.of(context)!.private,
         onJoin: (code) {},
       ),
@@ -300,7 +300,7 @@ class _GroupsScreenState extends State<GroupsScreen> {
     } else {
       await showDialog(
         context: context,
-        builder: (_) => _JoinPrivateGroupDialog(
+        builder: (_) => JoinPrivateGroupDialog(
           groupName: group.name,
           onJoin: (code) => _joinPrivateGroup(group.id, code),
         ),
@@ -608,82 +608,6 @@ class _MembershipCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _JoinPrivateGroupDialog extends StatefulWidget {
-  const _JoinPrivateGroupDialog({
-    required this.groupName,
-    required this.onJoin,
-  });
-
-  final String groupName;
-  final ValueChanged<String> onJoin;
-
-  @override
-  State<_JoinPrivateGroupDialog> createState() =>
-      _JoinPrivateGroupDialogState();
-}
-
-class _JoinPrivateGroupDialogState extends State<_JoinPrivateGroupDialog> {
-  final _controller = TextEditingController();
-  bool _isValid = false;
-
-  void _validate() {
-    final text = _controller.text;
-    final valid = text.isNotEmpty && RegExp(r'^[a-zA-Z0-9]+$').hasMatch(text);
-    if (valid != _isValid) {
-      setState(() => _isValid = valid);
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(
-        AppLocalizations.of(context)!.joinGroupDialogTitle(widget.groupName),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(AppLocalizations.of(context)!.joinGroupDialogMessage),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.groupCodeLabel,
-              border: const OutlineInputBorder(),
-              hintText: AppLocalizations.of(context)!.joinCodeHint,
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9]')),
-            ],
-            onChanged: (_) => _validate(),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(AppLocalizations.of(context)!.cancel),
-        ),
-        FilledButton(
-          onPressed: _isValid
-              ? () {
-                  Navigator.of(context).pop();
-                  widget.onJoin(_controller.text);
-                }
-              : null,
-          child: Text(AppLocalizations.of(context)!.joinGroup),
-        ),
-      ],
     );
   }
 }

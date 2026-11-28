@@ -14,7 +14,7 @@
 608 lib/features/connections/screens/groups_management_sheet.dart
 662 lib/features/connections/screens/person_details_screen.dart
 1356 lib/features/groups/data/group_service.dart
-689 lib/features/groups/screens/groups_screen.dart
+613 lib/features/groups/screens/groups_screen.dart
 891 lib/features/groups/screens/manage_group_screen.dart
 1034 lib/features/groups/widgets/group_leaderboard.dart
 441 lib/features/groups/widgets/user_subjects_bottom_sheet.dart
@@ -22,7 +22,7 @@
 664 lib/features/habits/models/habit.dart
 1127 lib/features/habits/screens/habit_details_screen.dart
 553 lib/features/habits/screens/habits_calendar_screen.dart
-681 lib/features/habits/widgets/habit_logging_sheet.dart
+605 lib/features/habits/widgets/habit_logging_sheet.dart
 823 lib/features/habits/widgets/habit_schedule_editor.dart
 480 lib/features/history/screens/history.dart
 569 lib/features/history/widgets/export_session_dialog.dart

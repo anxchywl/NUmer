@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 import '../data/auth_code_api.dart';
 import '../data/auth_service.dart';
@@ -49,6 +50,7 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   late final _emailController = TextEditingController(
     text: widget.initialEmail ?? '',
   );
+  final _focus = NumerSheetFocusMode();
   _Step _step = _Step.email;
   String _email = '';
   CodeOk? _request;
@@ -59,10 +61,13 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   @override
   void dispose() {
     _emailController.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
+  // a field of the next step stays folded away while the previous one counts as typed
   void _showCodeStep(String email, CodeOk request) {
+    _focus.release();
     setState(() {
       _email = email;
       _request = request;
@@ -72,6 +77,7 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   }
 
   void _showPasswordStep(CodeOk verified) {
+    _focus.release();
     setState(() {
       _ticket = verified.data['resetTicket'] as String;
       _step = _Step.newPassword;
@@ -79,6 +85,7 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   }
 
   void _startOver({bool expired = false}) {
+    _focus.release();
     setState(() {
       _ticket = null;
       _expired = expired;
@@ -98,7 +105,10 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
     // ios can report an inset below zero while the keyboard springs closed
     final keyboard = math.max(0.0, MediaQuery.viewInsetsOf(context).bottom);
 
@@ -115,12 +125,14 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
   Widget _buildStep() {
     return switch (_step) {
       _Step.email => ResetEmailStep(
+        focus: _focus,
         controller: _emailController,
         expired: _expired,
         onRequested: _showCodeStep,
       ),
       _Step.code => _buildCodeStep(),
       _Step.newPassword => NewPasswordStep(
+        focus: _focus,
         email: _email,
         ticket: _ticket!,
         onSaved: _finish,
@@ -138,26 +150,38 @@ class _ResetPasswordSheetState extends State<ResetPasswordSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            NumerSpace.lg,
-            NumerSpace.lg,
-            NumerSpace.lg,
-            0,
-          ),
-          child: Text(l10n.codeScreenTitle, style: context.text.sectionTitle),
-        ),
-        const SizedBox(height: NumerSpace.sm),
+        NumerFocusFold(hidden: _focus.hidesChrome, child: _codeTitle(l10n)),
         CodeEntryBody(
+          focusMode: _focus,
           subtitle: l10n.resetCodeSentGeneric(_email),
           initialResult: _request,
           onSubmit: (code) => auth.verifyPasswordResetCode(_email, code),
           onResend: () => auth.requestPasswordResetCode(_email, locale),
           onVerified: _showPasswordStep,
         ),
-        ResetStartOverButton(onPressed: _startOver),
-        const SizedBox(height: NumerSpace.lg),
+        NumerFocusFold(
+          hidden: _focus.hidesChrome,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ResetStartOverButton(onPressed: _startOver),
+              const SizedBox(height: NumerSpace.lg),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+
+  Widget _codeTitle(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        NumerSpace.lg,
+        NumerSpace.lg,
+        NumerSpace.lg,
+        NumerSpace.sm,
+      ),
+      child: Text(l10n.codeScreenTitle, style: context.text.sectionTitle),
     );
   }
 }

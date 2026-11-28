@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:numer_ui/numer_ui.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 typedef DeleteAccountAction =
     Future<DeleteAccountFailure?> Function(String password);
@@ -35,12 +36,14 @@ class DeleteAccountSheet extends StatefulWidget {
 
 class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
   final _password = TextEditingController();
+  final _focus = NumerSheetFocusMode();
   bool _loading = false;
   DeleteAccountFailure? _failure;
 
   @override
   void dispose() {
     _password.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -76,6 +79,7 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
   Widget _passwordField(String hint) {
     return TextField(
       controller: _password,
+      focusNode: _focus.nodeFor('password'),
       obscureText: true,
       autofocus: true,
       enabled: !_loading,
@@ -114,12 +118,10 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final failure = _failure;
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
 
+  Widget _sheet(BuildContext context) {
     return PopScope(
       canPop: !_loading,
       child: Padding(
@@ -134,36 +136,54 @@ class _DeleteAccountSheetState extends State<DeleteAccountSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.deleteAccountPasswordTitle,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _passwordField(l10n.password),
-              if (failure != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _messageFor(l10n, failure),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.error,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 16),
-              _deleteButton(l10n.delete, scheme),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: _loading
-                    ? null
-                    : () => Navigator.pop(context, false),
-                child: Text(l10n.cancel),
-              ),
-            ],
+            children: _content(context),
           ),
         ),
+      ),
+    );
+  }
+
+  List<Widget> _content(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final failure = _failure;
+    final chrome = _focus.hidesChrome;
+    return [
+      NumerFocusFold(hidden: chrome, child: _title(theme, l10n)),
+      _passwordField(l10n.password),
+      if (failure != null) ...[
+        const SizedBox(height: 8),
+        Text(
+          _messageFor(l10n, failure),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.error,
+          ),
+        ),
+      ],
+      const SizedBox(height: 16),
+      _deleteButton(l10n.delete, theme.colorScheme),
+      NumerFocusFold(hidden: chrome, child: _cancelButton(l10n)),
+    ];
+  }
+
+  Widget _title(ThemeData theme, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Text(
+        l10n.deleteAccountPasswordTitle,
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _cancelButton(AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TextButton(
+        onPressed: _loading ? null : () => Navigator.pop(context, false),
+        child: Text(l10n.cancel),
       ),
     );
   }

@@ -69,7 +69,6 @@ shadow	lib/features/groups/screens/groups_screen.dart	1
 color_literal	lib/features/groups/screens/groups_screen.dart	1
 text_literal	lib/features/groups/screens/groups_screen.dart	1
 weight	lib/features/groups/screens/groups_screen.dart	3
-alert	lib/features/groups/screens/groups_screen.dart	1
 chip	lib/features/groups/screens/manage_group_screen.dart	5
 text_literal	lib/features/groups/screens/manage_group_screen.dart	2
 spinner	lib/features/groups/screens/manage_group_screen.dart	2
@@ -79,6 +78,7 @@ color_literal	lib/features/groups/widgets/group_leaderboard.dart	15
 text_literal	lib/features/groups/widgets/group_leaderboard.dart	6
 weight	lib/features/groups/widgets/group_leaderboard.dart	2
 spinner	lib/features/groups/widgets/group_leaderboard.dart	2
+alert	lib/features/groups/widgets/join_private_group_dialog.dart	1
 spinner	lib/features/groups/widgets/user_profile_tile.dart	1
 weight	lib/features/groups/widgets/user_subjects_bottom_sheet.dart	2
 spinner	lib/features/groups/widgets/user_subjects_bottom_sheet.dart	1
