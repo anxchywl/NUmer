@@ -1183,5 +1183,30 @@
         "type": "int"
       }
     }
-  }
+  },
+  "newsTitle": "Жаңалықтар",
+  "newsAll": "Барлығы",
+  "newsPinned": "Бекітілген",
+  "newsEmpty": "Әзірге жаңалық жоқ.",
+  "newsRefresh": "Жаңарту",
+  "newsLoadError": "Жаңалықтарды жүктеу мүмкін болмады.",
+  "newsUpdatedMinutes": "{minutes} мин бұрын жаңартылды",
+  "@newsUpdatedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "newsUpdatedHours": "{hours} сағ бұрын жаңартылды",
+  "@newsUpdatedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "newsSourceNumer": "NUmer",
+  "newsKindEvent": "Іс-шара",
+  "newsOpenLink": "Сілтемені ашу"
 }

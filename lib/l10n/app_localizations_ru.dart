@@ -2392,4 +2392,41 @@ class AppLocalizationsRu extends AppLocalizations {
   String durationMinutes(int minutes) {
     return '$minutes мин';
   }
+
+  @override
+  String get newsTitle => 'Новости';
+
+  @override
+  String get newsAll => 'Все';
+
+  @override
+  String get newsPinned => 'Закреплено';
+
+  @override
+  String get newsEmpty => 'Новостей пока нет.';
+
+  @override
+  String get newsRefresh => 'Обновить';
+
+  @override
+  String get newsLoadError => 'Не удалось загрузить новости.';
+
+  @override
+  String newsUpdatedMinutes(int minutes) {
+    return 'Обновлено $minutes мин назад';
+  }
+
+  @override
+  String newsUpdatedHours(int hours) {
+    return 'Обновлено $hours ч назад';
+  }
+
+  @override
+  String get newsSourceNumer => 'NUmer';
+
+  @override
+  String get newsKindEvent => 'Событие';
+
+  @override
+  String get newsOpenLink => 'Открыть ссылку';
 }

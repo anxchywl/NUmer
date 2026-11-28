@@ -14,6 +14,7 @@ import 'package:numer_app/features/courses/course.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
+import 'package:numer_app/features/news/news.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_ui/numer_ui.dart';
@@ -21,6 +22,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/home/home_fakes.dart' show habit;
+import '../../features/news/news_fakes.dart' show FakeFeed;
 
 class _FakeUser implements User {
   @override
@@ -166,6 +168,9 @@ Future<void> _pumpShell(
         ChangeNotifierProvider<LastCourseStore>.value(value: lastCourse),
         ChangeNotifierProvider<UpcomingStore>(
           create: (_) => UpcomingStore(prefs),
+        ),
+        ChangeNotifierProvider<FeedRepository>(
+          create: (_) => FakeFeed(fetchedAt: DateTime.now()),
         ),
       ],
       child: MaterialApp(

@@ -89,7 +89,7 @@ files. Small features (`ai_analysis`, `courses`) stay flat.
 
 Current features: `auth`, `account`, `habits`, `groups`, `courses`,
 `sessions` (timer), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
-only), `home`, `study`, `campus`, and
+only), `home`, `study`, `campus`, `news`, and
 `connections` (built but intentionally hidden — see the marker in `lib/app/shell/shell_tabs.dart`).
 
 **Dependency rule (one direction):** `features → core → shared`, enforced by

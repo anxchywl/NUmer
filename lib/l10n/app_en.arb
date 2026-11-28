@@ -1190,5 +1190,30 @@
         "type": "int"
       }
     }
-  }
+  },
+  "newsTitle": "News",
+  "newsAll": "All",
+  "newsPinned": "Pinned",
+  "newsEmpty": "No news yet.",
+  "newsRefresh": "Refresh",
+  "newsLoadError": "Could not load news.",
+  "newsUpdatedMinutes": "Updated {minutes} min ago",
+  "@newsUpdatedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "newsUpdatedHours": "Updated {hours} h ago",
+  "@newsUpdatedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "newsSourceNumer": "NUmer",
+  "newsKindEvent": "Event",
+  "newsOpenLink": "Open link"
 }

@@ -73,9 +73,17 @@ Browse past sessions and export logs to `.ics` (calendar), `.csv`, or `.xlsx` (E
 The landing tab is the today screen: the study streak, a sync line shown only when offline
 or after a failed sync, the running session, and a Today block with the time studied (with
 the daily goal when goal bars are on) and the habits done today. One button continues the
-last used course, picks a course to start, or adds the first one. Pulling down syncs.
+last used course, picks a course to start, or adds the first one. Pulling down syncs and
+refreshes the news.
 An Upcoming section lists the next three bookings and reminders kept on this device; it is
-hidden while there are none, and no module adds them yet.
+hidden while there are none, and no module adds them yet. The News section below shows the
+first five news items.
+
+### News — `news`
+Announcements and upcoming campus events, pinned announcements first: five on Home and up to
+30 on the News screen behind "All". An announcement opens its text and optional link, an
+event its date, time and place. The last news read stays on the device, so it shows at once
+and offline, with its age when a refresh fails.
 
 ## Cross-cutting product traits
 - **Offline-first:** the app works fully without a connection; study groups are the only

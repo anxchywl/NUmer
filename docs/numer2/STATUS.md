@@ -4,7 +4,7 @@ Updated 2026-11-28. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 50 done, 0 in progress, 39 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
+**Total: 51 done, 0 in progress, 38 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do, ➖ dropped
 
@@ -70,7 +70,7 @@ The campus modules accept a NUmer sign-in; the server gets backups that are prov
 | ✅ | P2-12 Docs after identity | The infrastructure doc describes backends, identity and backups |
 | ⏳ | P2-13 Proxy and limits (optional) | Plan for moving the reverse proxy out of another project |
 
-## Phase 3: Superapp shell (15 of 18; all prompts written)
+## Phase 3: Superapp shell (16 of 18; all prompts written)
 
 The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind your avatar.
 
@@ -84,7 +84,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ✅ | P3-06 Study tab | Courses with timer, statistics, history, GPA in one place |
 | ✅ | P3-07 Home today | Home shows streak, running session, today, upcoming, news |
 | ✅ | P3-08 Feed backend | Announcements plus events combined into one cheap feed document |
-| ⏳ | P3-09 News on Home | The news list on Home and its own screen |
+| ✅ | P3-09 News on Home | The news list on Home and its own screen |
 | ✅ | P3-10 Upcoming store | Bookings and reminders shown on Home without loading modules |
 | ✅ | P3-11 Campus tab | The list of campus modules |
 | ✅ | P3-12 Design pass | Remove glass, gradients, chips and raw toasts per the design rules |

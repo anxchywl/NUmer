@@ -209,6 +209,11 @@ stay and `eventsOk` is `false`. The composer reads and writes in one transaction
 whose fetch is older than the stored one leaves the events as they are. `composeFeedScheduled` creates one Cloud Scheduler job on deploy, the
 third besides those of `sweepDeletedUsers` and `retryAccountEvents`.
 
+The app (`lib/features/news/`) reads `feed/current` from the server only, keeps the items in
+the order written and caches them in `SharedPreferences` (`news_feed_v1`). It reads when
+Home opens and the cache is at least 30 minutes old, and on a pull to refresh or the refresh
+and retry buttons.
+
 AI course analysis is paused: its callable has been removed and the app shows a coming-soon
 screen.
 

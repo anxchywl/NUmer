@@ -4383,6 +4383,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{minutes} min'**
   String durationMinutes(int minutes);
+
+  /// No description provided for @newsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get newsTitle;
+
+  /// No description provided for @newsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get newsAll;
+
+  /// No description provided for @newsPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned'**
+  String get newsPinned;
+
+  /// No description provided for @newsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No news yet.'**
+  String get newsEmpty;
+
+  /// No description provided for @newsRefresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get newsRefresh;
+
+  /// No description provided for @newsLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load news.'**
+  String get newsLoadError;
+
+  /// No description provided for @newsUpdatedMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {minutes} min ago'**
+  String newsUpdatedMinutes(int minutes);
+
+  /// No description provided for @newsUpdatedHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {hours} h ago'**
+  String newsUpdatedHours(int hours);
+
+  /// No description provided for @newsSourceNumer.
+  ///
+  /// In en, this message translates to:
+  /// **'NUmer'**
+  String get newsSourceNumer;
+
+  /// No description provided for @newsKindEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Event'**
+  String get newsKindEvent;
+
+  /// No description provided for @newsOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Open link'**
+  String get newsOpenLink;
 }
 
 class _AppLocalizationsDelegate

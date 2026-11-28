@@ -1061,5 +1061,30 @@
         "type": "int"
       }
     }
-  }
+  },
+  "newsTitle": "Новости",
+  "newsAll": "Все",
+  "newsPinned": "Закреплено",
+  "newsEmpty": "Новостей пока нет.",
+  "newsRefresh": "Обновить",
+  "newsLoadError": "Не удалось загрузить новости.",
+  "newsUpdatedMinutes": "Обновлено {minutes} мин назад",
+  "@newsUpdatedMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "newsUpdatedHours": "Обновлено {hours} ч назад",
+  "@newsUpdatedHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "newsSourceNumer": "NUmer",
+  "newsKindEvent": "Событие",
+  "newsOpenLink": "Открыть ссылку"
 }

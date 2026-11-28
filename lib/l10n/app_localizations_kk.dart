@@ -2368,4 +2368,41 @@ class AppLocalizationsKk extends AppLocalizations {
   String durationMinutes(int minutes) {
     return '$minutes мин';
   }
+
+  @override
+  String get newsTitle => 'Жаңалықтар';
+
+  @override
+  String get newsAll => 'Барлығы';
+
+  @override
+  String get newsPinned => 'Бекітілген';
+
+  @override
+  String get newsEmpty => 'Әзірге жаңалық жоқ.';
+
+  @override
+  String get newsRefresh => 'Жаңарту';
+
+  @override
+  String get newsLoadError => 'Жаңалықтарды жүктеу мүмкін болмады.';
+
+  @override
+  String newsUpdatedMinutes(int minutes) {
+    return '$minutes мин бұрын жаңартылды';
+  }
+
+  @override
+  String newsUpdatedHours(int hours) {
+    return '$hours сағ бұрын жаңартылды';
+  }
+
+  @override
+  String get newsSourceNumer => 'NUmer';
+
+  @override
+  String get newsKindEvent => 'Іс-шара';
+
+  @override
+  String get newsOpenLink => 'Сілтемені ашу';
 }

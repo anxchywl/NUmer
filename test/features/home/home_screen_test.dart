@@ -4,9 +4,11 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/core/data/sync_service.dart';
 import 'package:numer_app/core/upcoming/upcoming_item.dart';
 import 'package:numer_app/features/courses/courses.dart';
+import 'package:numer_app/features/news/news.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_ui/numer_ui.dart';
 
+import '../news/news_fakes.dart';
 import 'home_fakes.dart';
 import 'home_harness.dart';
 
@@ -185,7 +187,7 @@ void main() {
     expect(_row(tester, 'Study').subtitle, 'Goal: 1 h of 1 h 42 min');
   });
 
-  testWidgets('pulling forces a sync and asks no module for a token', (
+  testWidgets('pulling forces a sync and a feed read, with no token', (
     tester,
   ) async {
     final home = HomeHarness();
@@ -195,6 +197,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(home.sync.forced, [true]);
+    // the first read is the unforced one after the first frame
+    expect(home.feed.forced, [false, true]);
     expect(home.session.tokenReads, 0);
   });
 
@@ -222,5 +226,31 @@ void main() {
     );
     await tester.tap(find.text('Piano room'));
     expect(home.upcomingOpened.single.id, 'clavis:1');
+  });
+
+  testWidgets('news follows upcoming with at most five rows', (tester) async {
+    final home = HomeHarness(
+      feed: FakeFeed(
+        items: [for (var i = 0; i < 6; i++) announcement('Item $i')],
+        fetchedAt: DateTime.now(),
+      ),
+    );
+    await home.pump(tester);
+
+    expect(
+      tester.getTopLeft(find.text('News')).dy,
+      greaterThan(tester.getBottomLeft(find.text('Add course')).dy),
+    );
+    expect(tester.widget<NewsList>(find.byType(NewsList)).limit, 5);
+    expect(find.text('Item 5', skipOffstage: false), findsNothing);
+  });
+
+  testWidgets('all opens the news screen', (tester) async {
+    await HomeHarness().pump(tester);
+
+    await tester.tap(find.widgetWithText(TextButton, 'All'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NewsScreen), findsOneWidget);
   });
 }

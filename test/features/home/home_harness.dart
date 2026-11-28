@@ -8,21 +8,25 @@ import 'package:numer_app/core/upcoming/upcoming_store.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/habits/habits.dart';
 import 'package:numer_app/features/home/home.dart';
+import 'package:numer_app/features/news/news.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../news/news_fakes.dart';
 import 'home_fakes.dart';
 
 class HomeHarness {
-  HomeHarness({FakeState? state, FakeSync? sync})
+  HomeHarness({FakeState? state, FakeSync? sync, FakeFeed? feed})
     : state = state ?? FakeState(),
-      sync = sync ?? FakeSync();
+      sync = sync ?? FakeSync(),
+      feed = feed ?? FakeFeed(fetchedAt: DateTime.now());
 
   final FakeState state;
   final FakeSync sync;
+  final FakeFeed feed;
   final habits = FakeHabits();
   final session = CountingSession();
   late final LastCourseStore lastCourse;
@@ -54,6 +58,7 @@ class HomeHarness {
           Provider<HabitService>.value(value: habits),
           Provider<ModuleSession>.value(value: session),
           ChangeNotifierProvider<UpcomingStore>.value(value: upcoming),
+          ChangeNotifierProvider<FeedRepository>.value(value: feed),
         ],
         child: MaterialApp(
           theme: NumerTheme.build(
@@ -76,6 +81,7 @@ class HomeHarness {
               upcomingOpened.add(item);
               return true;
             },
+            openInModule: (_, _) => false,
           ),
         ),
       ),

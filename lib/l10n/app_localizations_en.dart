@@ -2385,4 +2385,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String durationMinutes(int minutes) {
     return '$minutes min';
   }
+
+  @override
+  String get newsTitle => 'News';
+
+  @override
+  String get newsAll => 'All';
+
+  @override
+  String get newsPinned => 'Pinned';
+
+  @override
+  String get newsEmpty => 'No news yet.';
+
+  @override
+  String get newsRefresh => 'Refresh';
+
+  @override
+  String get newsLoadError => 'Could not load news.';
+
+  @override
+  String newsUpdatedMinutes(int minutes) {
+    return 'Updated $minutes min ago';
+  }
+
+  @override
+  String newsUpdatedHours(int hours) {
+    return 'Updated $hours h ago';
+  }
+
+  @override
+  String get newsSourceNumer => 'NUmer';
+
+  @override
+  String get newsKindEvent => 'Event';
+
+  @override
+  String get newsOpenLink => 'Open link';
 }

@@ -9,6 +9,7 @@ import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/features/habits/habits.dart';
+import 'package:numer_app/features/news/news.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
@@ -17,17 +18,21 @@ import 'streak_title.dart';
 import 'today_block.dart';
 import 'upcoming_section.dart';
 
+const _shownNews = 5;
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.onOpenStudy,
     required this.onOpenHabits,
     required this.openUpcoming,
+    required this.openInModule,
   });
 
   final VoidCallback onOpenStudy;
   final VoidCallback onOpenHabits;
   final bool Function(BuildContext, UpcomingItem) openUpcoming;
+  final bool Function(BuildContext, FeedItem) openInModule;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -43,6 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _sync = context.read<SyncService>();
     _habits = _watchHabits();
     _sync.addAfterPullListener(_reloadHabits);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<FeedRepository>().refresh();
+    });
   }
 
   @override
@@ -64,6 +72,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _pull() => Future.wait([
+    context.read<SyncService>().syncNow(force: true),
+    context.read<FeedRepository>().refresh(force: true),
+  ]);
+
   double _iosBottomNavClearance(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final navBottomOffset = bottomInset > 0 ? (bottomInset * 0.38) : 4.0;
@@ -79,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: RefreshIndicator(
         // starts below the pinned header
         edgeOffset: MediaQuery.paddingOf(context).top + kToolbarHeight,
-        onRefresh: () => context.read<SyncService>().syncNow(force: true),
+        onRefresh: _pull,
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -103,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 openInModule: widget.openUpcoming,
               ),
             ),
+            SliverToBoxAdapter(child: _news(context)),
             SliverPadding(
               padding: EdgeInsets.only(
                 bottom: isIos
@@ -135,6 +149,23 @@ class _HomeScreenState extends State<HomeScreen> {
         bottom: NumerSpace.sm,
       ),
       child: Text(message, style: context.text.meta),
+    );
+  }
+
+  Widget _news(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return NumerSection(
+      title: l10n.newsTitle,
+      actionLabel: l10n.newsAll,
+      onAction: () => Navigator.of(context, rootNavigator: true).push(
+        MaterialPageRoute<void>(
+          builder: (_) => NewsScreen(openInModule: widget.openInModule),
+        ),
+      ),
+      child: NewsStates(
+        limit: _shownNews,
+        onOpen: (item) => openNewsItem(context, item, widget.openInModule),
+      ),
     );
   }
 

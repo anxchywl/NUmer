@@ -33,6 +33,7 @@ import 'package:numer_app/features/account/account.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/features/groups/groups.dart';
 import 'package:numer_app/features/habits/habits.dart';
+import 'package:numer_app/features/news/news.dart';
 import 'package:numer_app/features/sessions/sessions.dart';
 import 'package:numer_app/shared/widgets/loading_screen.dart';
 
@@ -157,6 +158,13 @@ Future<Map<String, dynamic>?> _fetchAppConfig() async {
   return snapshot.data();
 }
 
+Future<Map<String, dynamic>?> _fetchFeed() async {
+  final snapshot = await FirebaseFirestore.instance
+      .doc('feed/current')
+      .get(const GetOptions(source: Source.server));
+  return snapshot.data();
+}
+
 // converts a stored preference string into a thememode
 ThemeMode _parseThemeMode(String? value) {
   switch (value) {
@@ -260,6 +268,9 @@ class NumerBootstrapApp extends StatelessWidget {
               ),
               ChangeNotifierProvider<UpcomingStore>(
                 create: (_) => UpcomingStore(prefs),
+              ),
+              ChangeNotifierProvider<FeedRepository>(
+                create: (_) => FeedRepository(prefs: prefs, fetch: _fetchFeed),
               ),
               ChangeNotifierProxyProvider2<SyncService, HabitService, AppState>(
                 create: (_) => AppState(),

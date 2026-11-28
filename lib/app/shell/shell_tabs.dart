@@ -54,6 +54,7 @@ List<ShellTab> buildShellTabs(
         onOpenStudy: () => onSelect(ShellDestination.study),
         onOpenHabits: () => onSelect(ShellDestination.habits),
         openUpcoming: openNoUpcomingItem,
+        openInModule: (_, _) => false,
       ),
     ),
     ShellTab(
