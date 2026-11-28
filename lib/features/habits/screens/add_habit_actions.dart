@@ -1,15 +1,6 @@
 part of 'add_habit_sheet.dart';
 
 mixin _AddHabitActions on _AddHabitSheetBase {
-  void _onFocusChanged() {
-    setState(() {
-      _isHabitNameFocused = _habitNameFocus.hasFocus;
-      _isFreqGoalFocused = _freqGoalFocus.hasFocus;
-      _isWorkRestFocused = _workDaysFocus.hasFocus || _restDaysFocus.hasFocus;
-      _isTrackingInputFocused = _targetFocus.hasFocus || _unitFocus.hasFocus;
-    });
-  }
-
   bool get _isTrackingNextEnabled {
     return switch (_type) {
       HabitType.yesNo => true,
@@ -30,24 +21,9 @@ mixin _AddHabitActions on _AddHabitSheetBase {
     };
   }
 
-  void _resetFocusModeState() {
-    _isHabitNameFocused = false;
-    _isFreqGoalFocused = false;
-    _isWorkRestFocused = false;
-    _isTrackingInputFocused = false;
-  }
-
   void _navigateToStep(int nextScreen) {
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _resetFocusModeState();
-      _screen = nextScreen;
-    });
-  }
-
-  void _exitFocusMode() {
-    FocusScope.of(context).unfocus();
-    setState(_resetFocusModeState);
+    _focus.release();
+    setState(() => _screen = nextScreen);
   }
 
   void _loadCustomCategories() {

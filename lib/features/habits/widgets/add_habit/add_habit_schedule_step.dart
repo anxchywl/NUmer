@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../../models/habit.dart';
 import 'frequency_option.dart';
@@ -9,8 +11,7 @@ class AddHabitScheduleStep extends StatelessWidget {
   final Key navKey;
   final HabitFrequencyType frequency;
   final bool isEditing;
-  final bool isFreqGoalFocused;
-  final bool isWorkRestFocused;
+  final NumerSheetFocusMode focus;
   final ValueChanged<HabitFrequencyType> onFrequencySelected;
   final Widget specificDays;
   final Widget perPeriod;
@@ -23,8 +24,7 @@ class AddHabitScheduleStep extends StatelessWidget {
     required this.navKey,
     required this.frequency,
     required this.isEditing,
-    required this.isFreqGoalFocused,
-    required this.isWorkRestFocused,
+    required this.focus,
     required this.onFrequencySelected,
     required this.specificDays,
     required this.perPeriod,
@@ -42,9 +42,16 @@ class AddHabitScheduleStep extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // -- Step 3: Frequency --
-        // -- Step 3: Frequency --
-        Text(l10n.habitFrequencyPrompt, style: theme.textTheme.labelLarge),
-        const SizedBox(height: 12),
+        _folded(
+          focus.hidesChrome,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              l10n.habitFrequencyPrompt,
+              style: theme.textTheme.labelLarge,
+            ),
+          ),
+        ),
 
         IgnorePointer(
           ignoring: isEditing,
@@ -54,20 +61,32 @@ class AddHabitScheduleStep extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 32),
+        SizedBox(height: focus.hidesChrome ? 16 : 32),
 
         // Navigation
-        Row(
+        KeyedSubtree(
           key: navKey,
-          children: [
-            TextButton(onPressed: onBack, child: Text(l10n.habitBack)),
-            const Spacer(),
-            FilledButton(
-              style: nextButtonStyle(theme),
-              onPressed: onNext,
-              child: Text(l10n.habitNext),
-            ),
-          ],
+          child: SheetDoneActions(
+            focus: focus,
+            actions: _navigation(theme, l10n),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _folded(bool hidden, Widget child) =>
+      NumerFocusFold(hidden: hidden, animateSize: false, child: child);
+
+  Widget _navigation(ThemeData theme, AppLocalizations l10n) {
+    return Row(
+      children: [
+        TextButton(onPressed: onBack, child: Text(l10n.habitBack)),
+        const Spacer(),
+        FilledButton(
+          style: nextButtonStyle(theme),
+          onPressed: onNext,
+          child: Text(l10n.habitNext),
         ),
       ],
     );
@@ -76,39 +95,27 @@ class AddHabitScheduleStep extends StatelessWidget {
   Widget _options(ThemeData theme, AppLocalizations l10n) {
     return Column(
       children: [
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          child: isFreqGoalFocused || isWorkRestFocused
-              ? const SizedBox.shrink()
-              : _dayOptions(theme, l10n),
+        _folded(focus.hidesChrome, _dayOptions(theme, l10n)),
+        _folded(
+          focus.hides('goal'),
+          _option(
+            HabitFrequencyType.repeatsInPeriod,
+            l10n.habitFrequencyTimesPerPeriodTitle,
+            perPeriod,
+          ),
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          child: isWorkRestFocused
-              ? const SizedBox.shrink()
-              : Column(
-                  children: [
-                    _option(
-                      HabitFrequencyType.repeatsInPeriod,
-                      l10n.habitFrequencyTimesPerPeriodTitle,
-                      perPeriod,
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                ),
+        NumerFocusGap(
+          hidden: focus.hidesChrome,
+          height: 12,
+          animateSize: false,
         ),
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          child: isFreqGoalFocused
-              ? const SizedBox.shrink()
-              : _option(
-                  HabitFrequencyType.interval,
-                  l10n.habitFrequencyWorkRestTitle,
-                  workRest,
-                ),
+        _folded(
+          focus.hides('work') && focus.hides('rest'),
+          _option(
+            HabitFrequencyType.interval,
+            l10n.habitFrequencyWorkRestTitle,
+            workRest,
+          ),
         ),
       ],
     );

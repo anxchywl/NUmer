@@ -8,6 +8,7 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/courses/courses.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 import 'package:numer_ui/numer_ui.dart';
 
 import '../../data/last_course_store.dart';
@@ -52,25 +53,16 @@ class _CourseTimeMenu extends StatefulWidget {
 }
 
 abstract class _CourseTimeMenuBase extends State<_CourseTimeMenu>
-    with TickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin {
   late final TabController _tabs;
 
   final _hCtrl = TextEditingController();
   final _mCtrl = TextEditingController();
   final _sCtrl = TextEditingController();
 
-  final _hNode = FocusNode();
-  final _mNode = FocusNode();
-  final _sNode = FocusNode();
+  final _focus = NumerSheetFocusMode();
 
   Timer? _ticker;
-
-  bool _kbOpen = false;
-
-  late final AnimationController _kbCtrl;
-  late final Animation<Offset> _inputSlide;
-  late final Animation<double> _fadeAway;
-  late final Animation<Offset> _timerSlide;
 
   int _lastSettledTab = 0;
   bool _restoringTab = false;
@@ -111,90 +103,18 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
       ..addListener(_handleTabChange);
     _lastSettledTab = initialIndex;
 
-    _kbCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 220),
-      reverseDuration: const Duration(milliseconds: 200),
-    );
-    _inputSlide = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.20),
-    ).animate(CurvedAnimation(parent: _kbCtrl, curve: Curves.easeOutCubic));
-    _fadeAway = CurvedAnimation(
-      parent: _kbCtrl,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-    _timerSlide = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, 0.20),
-    ).animate(CurvedAnimation(parent: _kbCtrl, curve: Curves.easeOutCubic));
-
-    WidgetsBinding.instance.addObserver(this);
-
-    _hNode.addListener(_handleFocusChange);
-    _mNode.addListener(_handleFocusChange);
-    _sNode.addListener(_handleFocusChange);
-
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _ticker?.cancel();
-    _kbCtrl.dispose();
     _hCtrl.dispose();
     _mCtrl.dispose();
     _sCtrl.dispose();
-    _hNode.removeListener(_handleFocusChange);
-    _mNode.removeListener(_handleFocusChange);
-    _sNode.removeListener(_handleFocusChange);
-    _hNode.dispose();
-    _mNode.dispose();
-    _sNode.dispose();
+    _focus.dispose();
     _tabs.dispose();
     super.dispose();
-  }
-
-  void _handleFocusChange() {
-    if (!mounted) return;
-    _updateCondensedMode();
-  }
-
-  void _updateCondensedMode() {
-    final bool timerFocused =
-        _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
-    final bool shouldBeCondensed = _kbOpen && timerFocused;
-
-    if (shouldBeCondensed) {
-      _kbCtrl.forward();
-      // Only force-switch to Timer tab if not already there
-      if (_tabs.index != 0) {
-        _tabs.animateTo(0);
-      }
-    } else {
-      _kbCtrl.reverse();
-    }
-    setState(() {});
-  }
-
-  @override
-  void didChangeMetrics() {
-    if (ModalRoute.of(context)?.isCurrent != true) return;
-
-    final views = WidgetsBinding.instance.platformDispatcher.views;
-    final view = views.isNotEmpty ? views.first : null;
-    final bottomPx = view?.viewInsets.bottom ?? 0.0;
-    final dpr =
-        view?.devicePixelRatio ??
-        WidgetsBinding.instance.platformDispatcher.views.first.devicePixelRatio;
-    final bottom = bottomPx / dpr;
-
-    final nowOpen = bottom > 0;
-    if (nowOpen == _kbOpen) return;
-    _kbOpen = nowOpen;
-    _updateCondensedMode();
   }
 
   void _handleTabChange() {
@@ -250,21 +170,21 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
         isStopwatchRunningForThis ||
         isPomodoroActiveForThis;
 
-    final timerFocused = _hNode.hasFocus || _mNode.hasFocus || _sNode.hasFocus;
-    final bool isCondensed = _kbOpen && timerFocused;
-
     final shouldGuardPop = isPomodoroActiveForThis;
 
     return PopScope(
       canPop: !shouldGuardPop,
       onPopInvokedWithResult: _handlePopInvoked,
-      child: _sheet(
-        live: live,
-        isCondensed: isCondensed,
-        isTimerRunning: isTimerRunningForThis,
-        isStopwatchRunning: isStopwatchRunningForThis,
-        isPomodoroActive: isPomodoroActiveForThis,
-        isAnyRunning: isAnyRunningCombined,
+      child: SheetFocusBuilder(
+        focus: _focus,
+        builder: (context) => _sheet(
+          context,
+          live: live,
+          isTimerRunning: isTimerRunningForThis,
+          isStopwatchRunning: isStopwatchRunningForThis,
+          isPomodoroActive: isPomodoroActiveForThis,
+          isAnyRunning: isAnyRunningCombined,
+        ),
       ),
     );
   }
@@ -278,14 +198,16 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
     }
   }
 
-  Widget _sheet({
+  Widget _sheet(
+    BuildContext context, {
     required Course live,
-    required bool isCondensed,
     required bool isTimerRunning,
     required bool isStopwatchRunning,
     required bool isPomodoroActive,
     required bool isAnyRunning,
   }) {
+    final chrome = _focus.hidesChrome;
+    final keyboard = chrome ? MediaQuery.viewInsetsOf(context).bottom : 0.0;
     return Material(
       color: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
@@ -294,21 +216,41 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
       child: SafeArea(
         top: false,
         bottom: true,
-        child: Column(
-          children: [
-            _header(live, isAnyRunning),
-            const SizedBox(height: 8),
-            CourseTimeTabBar(controller: _tabs, isCondensed: isCondensed),
-            const SizedBox(height: 8),
-            Expanded(child: _tabViews(isCondensed)),
-            _footer(
-              isTimerRunning: isTimerRunning,
-              isStopwatchRunning: isStopwatchRunning,
-              isPomodoroActive: isPomodoroActive,
-            ),
-          ],
+        child: Padding(
+          padding: EdgeInsets.only(bottom: keyboard),
+          child: Column(
+            children: [
+              NumerFocusFold(
+                hidden: chrome,
+                child: _chrome(live, isAnyRunning),
+              ),
+              Expanded(child: _tabViews()),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: SheetDoneActions(
+                  focus: _focus,
+                  actions: _footer(
+                    isTimerRunning: isTimerRunning,
+                    isStopwatchRunning: isStopwatchRunning,
+                    isPomodoroActive: isPomodoroActive,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _chrome(Course live, bool isAnyRunning) {
+    return Column(
+      children: [
+        _header(live, isAnyRunning),
+        const SizedBox(height: 8),
+        CourseTimeTabBar(controller: _tabs),
+        const SizedBox(height: 8),
+      ],
     );
   }
 
@@ -322,45 +264,28 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
     );
   }
 
-  Widget _tabViews(bool isCondensed) {
-    return IgnorePointer(
-      // Keep timer inputs interactive while keyboard is open so
-      // users can switch H/M/S focus directly.
-      ignoring: _kbOpen && _tabs.index != 0,
-      child: TabBarView(
-        controller: _tabs,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          _timerTab(isCondensed),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            child: isCondensed
-                ? const SizedBox.shrink()
-                : StopwatchTab(course: widget.course),
-          ),
-          PomodoroTab(course: widget.course),
-        ],
-      ),
+  Widget _tabViews() {
+    return TabBarView(
+      controller: _tabs,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _timerTab(),
+        StopwatchTab(course: widget.course),
+        PomodoroTab(course: widget.course),
+      ],
     );
   }
 
-  Widget _timerTab(bool isCondensed) {
+  Widget _timerTab() {
     return TimerTab(
       course: widget.course,
       hCtrl: _hCtrl,
       mCtrl: _mCtrl,
       sCtrl: _sCtrl,
-      hNode: _hNode,
-      mNode: _mNode,
-      sNode: _sNode,
-      inputSlide: _kbOpen
-          ? const AlwaysStoppedAnimation<Offset>(Offset.zero)
-          : _inputSlide,
-      fadeAway: _fadeAway,
-      timerSlide: _timerSlide,
-      isCondensed: isCondensed,
+      hNode: _focus.nodeFor('hours'),
+      mNode: _focus.nodeFor('minutes'),
+      sNode: _focus.nodeFor('seconds'),
+      typing: _focus.hidesChrome,
       loadPlanned: _loadPlannedSecs,
       readInputs: _readInputsCapped,
       onChanged: () => setState(() {}),
@@ -375,7 +300,6 @@ class _CourseTimeMenuState extends _CourseTimeMenuBase with _CourseTimeActions {
     return CourseTimeFooter(
       course: widget.course,
       tabIndex: _tabs.index,
-      fadeAway: _fadeAway,
       isTimerRunning: isTimerRunning,
       isStopwatchRunning: isStopwatchRunning,
       isPomodoroActive: isPomodoroActive,

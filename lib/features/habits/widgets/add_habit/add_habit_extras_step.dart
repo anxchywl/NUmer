@@ -46,7 +46,8 @@ class AddHabitExtrasStep extends StatelessWidget {
         const SizedBox(height: 32),
 
         // Navigation & Create
-        _navigation(l10n),
+        // keyed like the other steps, so the row carries over between them
+        KeyedSubtree(key: navKey, child: _navigation(l10n)),
       ],
     );
   }
@@ -77,7 +78,6 @@ class AddHabitExtrasStep extends StatelessWidget {
 
   Widget _navigation(AppLocalizations l10n) {
     return Row(
-      key: navKey,
       children: [
         TextButton(onPressed: onBack, child: Text(l10n.habitBack)),
         const SizedBox(width: 12),

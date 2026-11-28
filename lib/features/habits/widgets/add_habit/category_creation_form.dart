@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import 'category_color_row.dart';
 import 'category_icon_row.dart';
 
 class CategoryCreationForm extends StatelessWidget {
+  final NumerSheetFocusMode focus;
   final Color color;
   final IconData icon;
   final ValueChanged<String> onNameChanged;
@@ -16,6 +18,7 @@ class CategoryCreationForm extends StatelessWidget {
 
   const CategoryCreationForm({
     super.key,
+    required this.focus,
     required this.color,
     required this.icon,
     required this.onNameChanged,
@@ -32,6 +35,7 @@ class CategoryCreationForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         TextField(
+          focusNode: focus.nodeFor('category'),
           decoration: InputDecoration(
             labelText: l10n.habitCategoryNameLabel,
             hintText: l10n.habitCategoryNameHint,
@@ -45,8 +49,20 @@ class CategoryCreationForm extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        const SizedBox(height: 12),
+        NumerFocusFold(
+          hidden: focus.hidesChrome,
+          animateSize: false,
+          child: _rest(l10n),
+        ),
+      ],
+    );
+  }
+
+  Widget _rest(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
         CategoryColorRow(selected: color, onSelected: onColorChanged),
         const SizedBox(height: 16),
         CategoryIconRow(

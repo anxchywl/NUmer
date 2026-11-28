@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import 'habit_input_decoration.dart';
 import 'next_button_style.dart';
@@ -9,8 +11,7 @@ import 'slide_size_transition.dart';
 class AddHabitNameStep extends StatelessWidget {
   final Key leadKey;
   final String habitName;
-  final FocusNode nameFocus;
-  final bool isNameFocused;
+  final NumerSheetFocusMode focus;
   final bool isCreatingCategory;
   final bool isEditing;
   final ValueChanged<String> onNameChanged;
@@ -21,8 +22,7 @@ class AddHabitNameStep extends StatelessWidget {
     super.key,
     required this.leadKey,
     required this.habitName,
-    required this.nameFocus,
-    required this.isNameFocused,
+    required this.focus,
     required this.isCreatingCategory,
     required this.isEditing,
     required this.onNameChanged,
@@ -44,22 +44,27 @@ class AddHabitNameStep extends StatelessWidget {
           curve: Curves.easeOutCubic,
           child: isCreatingCategory
               ? const SizedBox.shrink()
-              : _nameSection(theme, l10n),
+              : NumerFocusFold(
+                  hidden: focus.hides('name'),
+                  animateSize: false,
+                  child: _nameSection(theme, l10n),
+                ),
         ),
 
-        AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-          child: isNameFocused
-              ? const SizedBox.shrink()
-              : _categorySection(theme, l10n),
+        NumerFocusFold(
+          hidden: focus.hides('category'),
+          animateSize: false,
+          child: _categorySection(theme, l10n),
         ),
 
         const SizedBox(height: 16),
-        FilledButton(
-          style: nextButtonStyle(theme),
-          onPressed: onNext,
-          child: Text(l10n.habitNext),
+        SheetDoneActions(
+          focus: focus,
+          actions: FilledButton(
+            style: nextButtonStyle(theme),
+            onPressed: onNext,
+            child: Text(l10n.habitNext),
+          ),
         ),
       ],
     );
@@ -69,15 +74,19 @@ class AddHabitNameStep extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.habitExplainHabit,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
+        _folded(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              l10n.habitExplainHabit,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
         TextFormField(
-          focusNode: nameFocus,
+          focusNode: focus.nodeFor('name'),
           initialValue: habitName.isNotEmpty ? habitName : null,
           decoration: habitInputDecoration(
             theme,
@@ -93,20 +102,32 @@ class AddHabitNameStep extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 32),
+        _folded(const SizedBox(height: 32)),
       ],
     );
   }
+
+  Widget _folded(Widget child) => NumerFocusFold(
+    hidden: focus.hidesChrome,
+    animateSize: false,
+    child: child,
+  );
 
   Widget _categorySection(ThemeData theme, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          isCreatingCategory ? l10n.habitCategoryNew : l10n.habitCategoryLabel,
-          style: theme.textTheme.labelLarge,
+        _folded(
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              isCreatingCategory
+                  ? l10n.habitCategoryNew
+                  : l10n.habitCategoryLabel,
+              style: theme.textTheme.labelLarge,
+            ),
+          ),
         ),
-        const SizedBox(height: 12),
         IgnorePointer(
           ignoring: isEditing,
           child: Opacity(

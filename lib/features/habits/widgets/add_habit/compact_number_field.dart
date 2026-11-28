@@ -10,6 +10,8 @@ class CompactNumberField extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final String? hintText;
+  final TextInputAction textInputAction;
+  final ValueChanged<String>? onSubmitted;
 
   const CompactNumberField({
     super.key,
@@ -19,6 +21,8 @@ class CompactNumberField extends StatelessWidget {
     required this.controller,
     required this.onChanged,
     this.hintText,
+    this.textInputAction = TextInputAction.done,
+    this.onSubmitted,
   });
 
   @override
@@ -30,6 +34,8 @@ class CompactNumberField extends StatelessWidget {
         focusNode: focusNode,
         controller: controller,
         keyboardType: TextInputType.number,
+        textInputAction: textInputAction,
+        onFieldSubmitted: onSubmitted,
         textAlign: TextAlign.center,
         inputFormatters: [
           FilteringTextInputFormatter.digitsOnly,

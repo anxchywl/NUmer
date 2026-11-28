@@ -9,7 +9,6 @@
 778 lib/features/auth/screens/auth_screen.dart
 503 lib/features/connections/data/connections_service.dart
 513 lib/features/connections/screens/connections_screen.dart
-608 lib/features/connections/screens/groups_management_sheet.dart
 662 lib/features/connections/screens/person_details_screen.dart
 1356 lib/features/groups/data/group_service.dart
 613 lib/features/groups/screens/groups_screen.dart

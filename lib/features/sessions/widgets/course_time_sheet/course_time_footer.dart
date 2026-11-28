@@ -10,7 +10,6 @@ class CourseTimeFooter extends StatelessWidget {
     super.key,
     required this.course,
     required this.tabIndex,
-    required this.fadeAway,
     required this.isTimerRunning,
     required this.isStopwatchRunning,
     required this.isPomodoroActive,
@@ -27,7 +26,6 @@ class CourseTimeFooter extends StatelessWidget {
 
   final Course course;
   final int tabIndex;
-  final Animation<double> fadeAway;
   final bool isTimerRunning;
   final bool isStopwatchRunning;
   final bool isPomodoroActive;
@@ -43,21 +41,14 @@ class CourseTimeFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-      child: tabIndex == 2
-          ? PomodoroControls(
-              course: course,
-              onStart: onStartPomodoro,
-              onResume: onResumePomodoro,
-              onPause: onPausePomodoro,
-              onReset: onResetPomodoro,
-              onSkipBreak: onSkipBreak,
-            )
-          : FadeTransition(
-              opacity: ReverseAnimation(fadeAway),
-              child: _startDoneRow(context),
-            ),
+    if (tabIndex != 2) return _startDoneRow(context);
+    return PomodoroControls(
+      course: course,
+      onStart: onStartPomodoro,
+      onResume: onResumePomodoro,
+      onPause: onPausePomodoro,
+      onReset: onResetPomodoro,
+      onSkipBreak: onSkipBreak,
     );
   }
 

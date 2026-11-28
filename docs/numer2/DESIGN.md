@@ -473,7 +473,10 @@ the next field and opens its fold. Built from `NumerSheetFocusMode`, `NumerFocus
 `NumerFocusGap` and `NumerFocusActions` (ported from Gradus `focus_mode.dart`, which took
 it from Muto, so all of the owner's apps behave alike). The form's `State` creates the mode
 in `initState` and disposes it in `dispose`, builds a `NumerSheetBody` with it, and is opened
-with `showNumerFormSheet`.
+with `showNumerFormSheet`. A sheet or dialog that keeps an older layout wraps it in
+`SheetFocusBuilder` and ends with `SheetDoneActions` (`lib/shared/widgets/sheet_focus.dart`).
+A form with one field keeps its own submit button, with its loading and disabled states, and
+folds the rest. An error under the active field, and text the user has to copy into it, stay.
 
 ### 5.8 Status label
 

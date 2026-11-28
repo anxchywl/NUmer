@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../../models/habit.dart';
 import 'compact_number_field.dart';
@@ -7,7 +8,7 @@ import 'period_selector.dart';
 
 class PerPeriodContent extends StatelessWidget {
   final HabitPeriod period;
-  final FocusNode focusNode;
+  final NumerSheetFocusMode focus;
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
   final VoidCallback onTogglePeriod;
@@ -15,7 +16,7 @@ class PerPeriodContent extends StatelessWidget {
   const PerPeriodContent({
     super.key,
     required this.period,
-    required this.focusNode,
+    required this.focus,
     required this.controller,
     required this.onChanged,
     required this.onTogglePeriod,
@@ -28,20 +29,26 @@ class PerPeriodContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          l10n.habitFrequencyTimesPerPeriodDescription,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        NumerFocusFold(
+          hidden: focus.hidesChrome,
+          animateSize: false,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(
+              l10n.habitFrequencyTimesPerPeriodDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
             CompactNumberField(
               fieldKey: const ValueKey('frequency_goal_input'),
               width: 80,
-              focusNode: focusNode,
+              focusNode: focus.nodeFor('goal'),
               controller: controller,
               onChanged: onChanged,
             ),

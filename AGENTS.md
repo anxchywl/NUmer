@@ -58,7 +58,7 @@ infra/                   # host hardening, backup restore test and monitor scrip
   device-local store of items modules put on Home), `firebase_options.dart`,
   `startup_metrics.dart`.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
-  picker). If it references a domain model or does I/O, it does **not** belong here.
+  picker, sheet focus mode helpers). If it references a domain model or does I/O, it does **not** belong here.
 - **`packages/numer_ui/`** — the design language of
   [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens,
   the theme builder `NumerTheme` and the components, depending only on `flutter`. New and
@@ -226,7 +226,6 @@ The script does not run device builds, emulator tests or deploys.
   `lib/core/data/sync_service.dart`, `lib/features/groups/data/group_service.dart`,
   `lib/features/account/screens/account.dart`, `lib/features/habits/data/habit_service.dart`,
   `lib/features/habits/screens/habit_details_screen.dart`,
-  `lib/features/history/screens/history.dart`,
   `lib/features/groups/widgets/group_leaderboard.dart`.
 - **`lib/app/app_state.dart` is frozen**: no new state goes into it.
 - **Skipped test**: `test/features/account/accent_color_picker_test.dart` is skipped.

@@ -4,6 +4,8 @@ import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/auth/auth.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
+import 'package:numer_ui/numer_ui.dart';
 
 import '../data/habit_service.dart';
 import '../models/habit.dart';
@@ -94,19 +96,8 @@ abstract class _AddHabitSheetBase extends State<AddHabitSheet>
   late TextEditingController _workDaysCtrl;
   late TextEditingController _restDaysCtrl;
 
-  // -- Focus Nodes --
-  final FocusNode _habitNameFocus = FocusNode();
-  final FocusNode _freqGoalFocus = FocusNode();
-  final FocusNode _workDaysFocus = FocusNode();
-  final FocusNode _restDaysFocus = FocusNode();
-  final FocusNode _targetFocus = FocusNode();
-  final FocusNode _unitFocus = FocusNode();
+  final _focus = NumerSheetFocusMode();
 
-  // -- Focus State --
-  bool _isHabitNameFocused = false;
-  bool _isFreqGoalFocused = false;
-  bool _isWorkRestFocused = false;
-  bool _isTrackingInputFocused = false;
   bool get _isEditingHabit => widget.habit != null;
 
   // keys carry these elements and their running animations from step to step
@@ -162,14 +153,6 @@ class _AddHabitSheetState extends _AddHabitSheetBase
       text: isEditing && _target > 0 ? "$_target" : "",
     );
     _unitCtrl = TextEditingController(text: _unit);
-
-    // Focus Listeners
-    _habitNameFocus.addListener(_onFocusChanged);
-    _freqGoalFocus.addListener(_onFocusChanged);
-    _workDaysFocus.addListener(_onFocusChanged);
-    _restDaysFocus.addListener(_onFocusChanged);
-    _targetFocus.addListener(_onFocusChanged);
-    _unitFocus.addListener(_onFocusChanged);
   }
 
   @override
@@ -180,19 +163,7 @@ class _AddHabitSheetState extends _AddHabitSheetBase
     _targetCtrl.dispose();
     _unitCtrl.dispose();
 
-    _habitNameFocus.removeListener(_onFocusChanged);
-    _freqGoalFocus.removeListener(_onFocusChanged);
-    _workDaysFocus.removeListener(_onFocusChanged);
-    _restDaysFocus.removeListener(_onFocusChanged);
-    _targetFocus.removeListener(_onFocusChanged);
-    _unitFocus.removeListener(_onFocusChanged);
-
-    _habitNameFocus.dispose();
-    _freqGoalFocus.dispose();
-    _workDaysFocus.dispose();
-    _restDaysFocus.dispose();
-    _targetFocus.dispose();
-    _unitFocus.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -203,20 +174,25 @@ class _AddHabitSheetState extends _AddHabitSheetBase
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
+    final chrome = _focus.hidesChrome;
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          _exitFocusMode();
+          _focus.release();
         }
       },
       child: Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
         ),
+        // the folds inside leave the height animation to this one
         child: AnimatedSize(
-          duration: const Duration(milliseconds: 300),
+          duration: NumerFocusFold.durationOf(context),
           curve: Curves.easeOutCubic,
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -224,21 +200,29 @@ class _AddHabitSheetState extends _AddHabitSheetBase
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                AddHabitHeader(screen: _screen),
-                const SizedBox(height: 24),
-                if (_screen == 0)
-                  _nameStep()
-                else if (_screen == 1)
-                  _goalStep()
-                else if (_screen == 2)
-                  _scheduleStep()
-                else if (_screen == 3)
-                  _extrasStep(),
+                NumerFocusFold(
+                  hidden: chrome,
+                  animateSize: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: AddHabitHeader(screen: _screen),
+                  ),
+                ),
+                _step(),
               ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  Widget _step() {
+    return switch (_screen) {
+      0 => _nameStep(),
+      1 => _goalStep(),
+      2 => _scheduleStep(),
+      _ => _extrasStep(),
+    };
   }
 }

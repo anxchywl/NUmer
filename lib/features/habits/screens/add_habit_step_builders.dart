@@ -7,8 +7,7 @@ mixin _AddHabitSteps
     return AddHabitNameStep(
       leadKey: _leadKey,
       habitName: _habitName,
-      nameFocus: _habitNameFocus,
-      isNameFocused: _isHabitNameFocused,
+      focus: _focus,
       isCreatingCategory: _isCreatingCategory,
       isEditing: _isEditingHabit,
       onNameChanged: (v) => _habitName = v,
@@ -20,6 +19,7 @@ mixin _AddHabitSteps
   Widget _categoryForm() {
     return CategoryCreationForm(
       key: const ValueKey('creation_form'),
+      focus: _focus,
       color: _newCatColor,
       icon: _newCatIcon,
       onNameChanged: (v) => _newCatName = v,
@@ -48,7 +48,7 @@ mixin _AddHabitSteps
       leadKey: _leadKey,
       navKey: _navKey,
       type: _type,
-      isInputFocused: _isTrackingInputFocused,
+      focus: _focus,
       typePicker: TrackingTypePicker(
         key: const ValueKey('tracking_visible'),
         type: _type,
@@ -73,8 +73,7 @@ mixin _AddHabitSteps
 
   Widget _numericFields() {
     return NumericTargetFields(
-      targetFocus: _targetFocus,
-      unitFocus: _unitFocus,
+      focus: _focus,
       targetController: _targetCtrl,
       unitController: _unitCtrl,
       onTargetChanged: _onTargetTextChanged,
@@ -87,13 +86,12 @@ mixin _AddHabitSteps
       navKey: _navKey,
       frequency: _freq,
       isEditing: _isEditingHabit,
-      isFreqGoalFocused: _isFreqGoalFocused,
-      isWorkRestFocused: _isWorkRestFocused,
+      focus: _focus,
       onFrequencySelected: (type) => setState(() => _freq = type),
       specificDays: _specificDays(),
       perPeriod: PerPeriodContent(
         period: _period,
-        focusNode: _freqGoalFocus,
+        focus: _focus,
         controller: _frequencyGoalCtrl,
         onChanged: _onFrequencyGoalChanged,
         onTogglePeriod: _cyclePeriod,
@@ -118,8 +116,7 @@ mixin _AddHabitSteps
 
   Widget _workRest() {
     return WorkRestContent(
-      workFocus: _workDaysFocus,
-      restFocus: _restDaysFocus,
+      focus: _focus,
       workController: _workDaysCtrl,
       restController: _restDaysCtrl,
       onWorkChanged: _onWorkDaysChanged,

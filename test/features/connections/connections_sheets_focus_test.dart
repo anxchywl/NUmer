@@ -74,4 +74,31 @@ void main() {
     expect(find.text('Mentors'), findsOneWidget);
     expect(find.byIcon(Icons.person_outline), findsOneWidget);
   });
+
+  testWidgets('a new group keeps the name and save', (tester) async {
+    final service = await _open(tester, const GroupsManagementSheet());
+    await tester.tap(find.text('Create group'));
+    await tester.pumpAndSettle();
+
+    await typeIn(tester, find.byType(TextField));
+
+    expect(find.byIcon(Icons.close), findsNothing);
+    expect(find.text('Mentors'), findsNothing);
+    expect(find.text('Cancel'), findsNothing);
+    expectAboveKeyboard(tester, find.byType(TextField));
+    expectAboveKeyboard(tester, find.widgetWithText(FilledButton, 'Save'));
+
+    await hideKeyboard(tester);
+
+    expect(find.text('Mentors'), findsOneWidget);
+    expect(find.text('Cancel'), findsOneWidget);
+
+    await typeIn(tester, find.byType(TextField));
+    await tester.enterText(find.byType(TextField), 'Club');
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, 'Save'));
+    await tester.pumpAndSettle();
+
+    expect(service.created, ['Club']);
+  });
 }

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/features/connections/models/contact_group.dart';
 import 'package:numer_app/features/auth/data/auth_service.dart';
 import 'package:numer_app/features/connections/data/connections_service.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
+import 'package:numer_ui/numer_ui.dart';
+
+import '../widgets/group_editor_card.dart';
+import '../widgets/group_style_pickers.dart';
 
 class GroupsManagementSheet extends StatefulWidget {
   const GroupsManagementSheet({super.key});
@@ -15,6 +19,7 @@ class GroupsManagementSheet extends StatefulWidget {
 }
 
 class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
+  final _focus = NumerSheetFocusMode();
   bool _isCreating = false;
   String? _editingGroupId;
 
@@ -22,115 +27,103 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   Color _selectedColor = Colors.blue;
   IconData _selectedIcon = Icons.group;
 
-  static const List<Color> _colorChoices = [
-    Color(0xFF4285F4), // Google Blue
-    Color(0xFF34A853), // Google Green
-    Color(0xFFEA4335), // Google Red
-    Color(0xFFFBBC04), // Google Yellow
-    Color(0xFF9C27B0), // Purple
-    Color(0xFFFF5722), // Deep Orange
-    Color(0xFF00BCD4), // Cyan
-    Color(0xFF795548), // Brown
-    Color(0xFF607D8B), // Blue Grey
-    Color(0xFFE91E63), // Pink
-  ];
-
-  static const List<IconData> _iconChoices = [
-    Icons.group,
-    Icons.work,
-    Icons.school,
-    Icons.home,
-    Icons.favorite,
-    Icons.star,
-    Icons.sports,
-    Icons.music_note,
-    Icons.restaurant,
-    Icons.flight,
-    Icons.local_cafe,
-    Icons.fitness_center,
-    Icons.code,
-    Icons.brush,
-    Icons.camera,
-  ];
-
   @override
   void dispose() {
     _nameController.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final service = context.watch<ConnectionsService>();
-    final groups = service.groups;
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
+  Widget _sheet(BuildContext context) {
+    final groups = context.watch<ConnectionsService>().groups;
+    final chrome = _focus.hidesChrome;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 16, 8, 8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)!.manageGroupsTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.8,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            NumerFocusFold(hidden: chrome, child: _header(context)),
+            Flexible(
+              // while typing the sheet is only as tall as the field and save
+              fit: chrome ? FlexFit.loose : FlexFit.tight,
+              child: ListView(
+                shrinkWrap: chrome,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                children: [
+                  ...groups.map(
+                    (group) => NumerFocusFold(
+                      hidden: chrome && _editingGroupId != group.id,
+                      child: _buildGroupTile(context, group),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
+                  if (_isCreating)
+                    _buildCreateForm(context)
+                  else
+                    NumerFocusFold(hidden: chrome, child: _createTile(context)),
+                ],
+              ),
             ),
-          ),
-
-          const Divider(height: 1),
-
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              children: [
-                // Existing Groups
-                ...groups.map((group) => _buildGroupTile(context, group)),
-
-                // Create New Group Section
-                if (_isCreating)
-                  _buildCreateForm(context)
-                else
-                  ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: colorScheme.primaryContainer,
-                      child: Icon(
-                        Icons.add,
-                        color: colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    title: Text(AppLocalizations.of(context)!.createGroup),
-                    onTap: () {
-                      setState(() {
-                        _isCreating = true;
-                        _editingGroupId = null;
-                        _nameController.clear();
-                        _selectedColor = _colorChoices.first;
-                        _selectedIcon = _iconChoices.first;
-                      });
-                    },
-                  ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _header(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 16, 8, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  AppLocalizations.of(context)!.manageGroupsTitle,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+      ],
+    );
+  }
+
+  Widget _createTile(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ListTile(
+      leading: CircleAvatar(
+        backgroundColor: colorScheme.primaryContainer,
+        child: Icon(Icons.add, color: colorScheme.onPrimaryContainer),
+      ),
+      title: Text(AppLocalizations.of(context)!.createGroup),
+      onTap: () {
+        setState(() {
+          _isCreating = true;
+          _editingGroupId = null;
+          _nameController.clear();
+          _selectedColor = groupColorChoices.first;
+          _selectedIcon = groupIconChoices.first;
+        });
+      },
     );
   }
 
@@ -204,310 +197,51 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   }
 
   Widget _buildCreateForm(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withAlpha(128),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.newGroup,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Name input
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.groupNameLabel,
-              hintText: AppLocalizations.of(context)!.groupNameHint,
-              filled: true,
-              fillColor: colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            autofocus: true,
-            inputFormatters: [LengthLimitingTextInputFormatter(32)],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Color picker
-          Text(
-            AppLocalizations.of(context)!.color,
-            style: theme.textTheme.labelMedium,
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _colorChoices.length,
-              itemBuilder: (context, index) {
-                final color = _colorChoices[index];
-                final isSelected =
-                    _selectedColor.toARGB32() == color.toARGB32();
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedColor = color),
-                    child: CircleAvatar(
-                      backgroundColor: color,
-                      radius: 16,
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            )
-                          : null,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Icon picker
-          Text('Icon', style: theme.textTheme.labelMedium),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _iconChoices.length,
-              itemBuilder: (context, index) {
-                final icon = _iconChoices[index];
-                final isSelected = _selectedIcon == icon;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedIcon = icon),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? _selectedColor.withAlpha(51)
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? _selectedColor
-                              : colorScheme.outlineVariant,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? _selectedColor
-                            : colorScheme.onSurfaceVariant,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Action buttons
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isCreating = false;
-                    _nameController.clear();
-                  });
-                },
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: _nameController.text.trim().isEmpty
-                    ? null
-                    : _createGroup,
-                child: Text(AppLocalizations.of(context)!.save),
-              ),
-            ],
-          ),
-        ],
-      ),
+    final l10n = AppLocalizations.of(context)!;
+    return _buildEditor(
+      title: l10n.newGroup,
+      hint: l10n.groupNameHint,
+      onCancel: () => setState(() {
+        _isCreating = false;
+        _nameController.clear();
+      }),
+      onSave: _createGroup,
     );
   }
 
   Widget _buildEditForm(BuildContext context, ContactGroup group) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    return _buildEditor(
+      title: AppLocalizations.of(context)!.editGroup,
+      onCancel: () => setState(() {
+        _editingGroupId = null;
+        _nameController.clear();
+      }),
+      onSave: () => _saveGroup(group),
+    );
+  }
 
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withAlpha(128),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.editGroup,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Name input
-          TextField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: AppLocalizations.of(context)!.groupNameLabel,
-              filled: true,
-              fillColor: colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            autofocus: true,
-            inputFormatters: [LengthLimitingTextInputFormatter(32)],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Color picker
-          Text(
-            AppLocalizations.of(context)!.color,
-            style: theme.textTheme.labelMedium,
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _colorChoices.length,
-              itemBuilder: (context, index) {
-                final color = _colorChoices[index];
-                final isSelected =
-                    _selectedColor.toARGB32() == color.toARGB32();
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedColor = color),
-                    child: CircleAvatar(
-                      backgroundColor: color,
-                      radius: 16,
-                      child: isSelected
-                          ? const Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 16,
-                            )
-                          : null,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Icon picker
-          Text(
-            'Icon',
-            style: theme.textTheme.labelMedium,
-          ), // TODO: add to arb if needed
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 48,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: _iconChoices.length,
-              itemBuilder: (context, index) {
-                final icon = _iconChoices[index];
-                final isSelected = _selectedIcon == icon;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedIcon = icon),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? _selectedColor.withAlpha(51)
-                            : Colors.transparent,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isSelected
-                              ? _selectedColor
-                              : colorScheme.outlineVariant,
-                          width: isSelected ? 2 : 1,
-                        ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: isSelected
-                            ? _selectedColor
-                            : colorScheme.onSurfaceVariant,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Action buttons
-          Row(
-            children: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _editingGroupId = null;
-                    _nameController.clear();
-                  });
-                },
-                child: Text(AppLocalizations.of(context)!.cancel),
-              ),
-              const Spacer(),
-              FilledButton(
-                onPressed: _nameController.text.trim().isEmpty
-                    ? null
-                    : () => _saveGroup(group),
-                child: Text(AppLocalizations.of(context)!.save),
-              ),
-            ],
-          ),
-        ],
-      ),
+  Widget _buildEditor({
+    required String title,
+    String? hint,
+    required VoidCallback onCancel,
+    required VoidCallback onSave,
+  }) {
+    return GroupEditorCard(
+      focus: _focus,
+      title: title,
+      hint: hint,
+      controller: _nameController,
+      color: _selectedColor,
+      icon: _selectedIcon,
+      onColor: (color) => setState(() => _selectedColor = color),
+      onIcon: (icon) => setState(() => _selectedIcon = icon),
+      onCancel: onCancel,
+      onSave: onSave,
     );
   }
 
   Future<void> _createGroup() async {
+    _focus.release();
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
@@ -536,6 +270,7 @@ class _GroupsManagementSheetState extends State<GroupsManagementSheet> {
   }
 
   Future<void> _saveGroup(ContactGroup group) async {
+    _focus.release();
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
