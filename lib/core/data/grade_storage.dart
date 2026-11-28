@@ -19,7 +19,7 @@ abstract final class GradeStorage {
 
   static List<LocalSemester> semesters() {
     _ensureUser();
-    return _db.semesters().toList();
+    return _db.semesters().map(_copySemester).toList();
   }
 
   static Future<void> putCourseGrade({
@@ -140,6 +140,16 @@ abstract final class GradeStorage {
     assignments: _copyAssignments(g.assignments),
     dirty: g.dirty,
     deleted: g.deleted,
+  );
+
+  static LocalSemester _copySemester(LocalSemester s) => LocalSemester(
+    id: s.id,
+    uid: s.uid,
+    updatedAtMs: s.updatedAtMs,
+    name: s.name,
+    position: s.position,
+    dirty: s.dirty,
+    deleted: s.deleted,
   );
 
   static List<LocalAssignment> _copyAssignments(List<LocalAssignment> list) => [

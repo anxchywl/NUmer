@@ -5,12 +5,12 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 
 import 'package:numer_app/core/data/entities.dart';
 import 'package:numer_app/core/data/grade_entities.dart';
 import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/core/data/study_sync.dart';
+import 'package:numer_app/core/data/sync_batches.dart';
 import 'package:numer_app/core/data/sync_schedule.dart';
 import 'package:numer_app/core/startup_metrics.dart';
 
@@ -278,7 +278,6 @@ class SyncService extends ChangeNotifier {
     }
 
     try {
-      const maxOperations = 450;
       final userDoc = _db.userDocOrNull;
 
       if (userDoc != null && userDoc.dirty) {
@@ -288,25 +287,10 @@ class SyncService extends ChangeNotifier {
         }
       }
 
-      Future<void> pushChunk<T extends HiveObject>(
+      Future<void> pushChunk<T extends SyncEntity>(
         List<T> items,
         Future<void> Function(WriteBatch batch, T item) writer,
-      ) async {
-        if (items.isEmpty) return;
-        var offset = 0;
-        while (offset < items.length) {
-          final slice = items.sublist(
-            offset,
-            min(offset + maxOperations, items.length),
-          );
-          final batch = _firestore.batch();
-          for (final item in slice) {
-            await writer(batch, item);
-          }
-          await batch.commit();
-          offset += slice.length;
-        }
-      }
+      ) => pushInBatches(_firestore, items, writer);
 
       final dirtyCourses = _db.dirtyCourses();
       await pushChunk<LocalCourse>(dirtyCourses, (batch, course) async {

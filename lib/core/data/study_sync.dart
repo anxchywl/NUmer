@@ -69,6 +69,7 @@ Future<void> applyRemoteCourse(
       deleted: data['deleted'] == true,
     );
     await db.putCourse(course);
+    if (course.deleted) await _retireCourseGrade(db, id);
     return;
   }
 
@@ -90,6 +91,18 @@ Future<void> applyRemoteCourse(
     ..updatedAtMs = updatedAt
     ..dirty = false;
   await course.save();
+  if (course.deleted) await _retireCourseGrade(db, id);
+}
+
+// older builds delete a course without its grade, so the receiving device retires it
+Future<void> _retireCourseGrade(LocalDatabase db, String courseId) async {
+  final grade = db.getCourseGradeById(courseId);
+  if (grade == null || grade.deleted) return;
+  grade
+    ..deleted = true
+    ..dirty = true
+    ..updatedAtMs = DateTime.now().toUtc().millisecondsSinceEpoch;
+  await grade.save();
 }
 
 Map<String, dynamic> courseGradeToRemote(LocalCourseGrade grade) {

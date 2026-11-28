@@ -4,7 +4,7 @@ Updated 2026-11-28. "Done" means written, independently reviewed, fixed and merg
 `main`. Nothing is live for users until it is deployed (functions, rules, module backends) or
 released (app). Task details are in `PLAN.md`; your own steps are in `USER_ACTIONS.md`.
 
-**Total: 55 done, 0 in progress, 34 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
+**Total: 56 done, 0 in progress, 33 to do (89 tasks; P4-05 dropped). Staging deployed 2026-11-27.**
 
 Status: ✅ done, 🔄 in progress, ⏳ to do, ➖ dropped
 
@@ -95,7 +95,7 @@ The new app layout: tabs Home, Habits, Study, Groups, Campus; Settings behind yo
 | ✅ | P3-17 States pass | Confirmations become bottom sheets; loading spinners become quiet placeholders |
 | ✅ | P3-18 Focus mode everywhere | While typing in any sheet, only the field and a Done button stay on screen |
 
-## Phase 4: Module integration (2 of 19; all prompts written)
+## Phase 4: Module integration (3 of 19; all prompts written)
 
 Gradus, Clavis, Events and Muto appear inside NUmer, each behind a feature flag.
 
@@ -103,7 +103,7 @@ Gradus, Clavis, Events and Muto appear inside NUmer, each behind a feature flag.
 |---|---|---|
 | ⏳ | P4-01 Gradus package | Gradus uses NUmer's design and sign-in |
 | ✅ | P4-02 Grades storage | Grades saved in NUmer's local database and Firestore |
-| ⏳ | P4-03 Grades sync | Grades sync between devices |
+| ✅ | P4-03 Grades sync | Grades sync between devices |
 | ⏳ | P4-04 Mount Gradus | GPA appears in the Study tab |
 | ➖ | P4-05 Gradus import | Dropped: no old Gradus data (O-5) |
 | ⏳ | P4-06 Clavis package | Piano room uses NUmer's design and sign-in |

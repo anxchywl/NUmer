@@ -9,6 +9,7 @@ import 'package:numer_app/core/data/local_database.dart';
 import 'package:numer_app/core/data/storage.dart';
 import 'package:numer_app/core/data/study_sync.dart';
 import 'package:numer_app/core/data/sync_service.dart';
+import 'package:numer_app/features/auth/data/local_user_data.dart';
 
 // offline at start, so start makes no remote reads and pushDirty still runs
 class _FakeConnectivity implements Connectivity {
@@ -63,9 +64,10 @@ class _FakeCollection implements CollectionReference<Map<String, dynamic>> {
 
 // ignore: subtype_of_sealed_class
 class _FakeBatch implements WriteBatch {
-  _FakeBatch(this.sets);
+  _FakeBatch(this.sets, {required this.fails});
 
   final Map<String, Map<String, dynamic>> sets;
+  final bool fails;
 
   @override
   void set<T>(DocumentReference<T> document, T data, [SetOptions? options]) {
@@ -73,13 +75,23 @@ class _FakeBatch implements WriteBatch {
   }
 
   @override
-  Future<void> commit() async {}
+  Future<void> commit() async {
+    if (fails) {
+      throw FirebaseException(
+        plugin: 'cloud_firestore',
+        code: 'permission-denied',
+      );
+    }
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeFirestore implements FirebaseFirestore {
+  _FakeFirestore({this.failCommits = false});
+
+  final bool failCommits;
   final sets = <String, Map<String, dynamic>>{};
 
   @override
@@ -87,7 +99,7 @@ class _FakeFirestore implements FirebaseFirestore {
       _FakeCollection(collectionPath);
 
   @override
-  WriteBatch batch() => _FakeBatch(sets);
+  WriteBatch batch() => _FakeBatch(sets, fails: failCommits);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -214,32 +226,70 @@ void main() {
     });
   });
 
-  Future<_FakeFirestore> push(LocalCourseGrade dirty) async {
-    final firestore = _FakeFirestore();
+  Future<_FakeFirestore> pushRecords({
+    List<LocalCourseGrade> grades = const [],
+    List<LocalSemester> semesters = const [],
+    bool failCommits = false,
+  }) async {
+    final firestore = _FakeFirestore(failCommits: failCommits);
     final service = SyncService(
       firestore: firestore,
       connectivity: _FakeConnectivity(),
       database: db(),
     );
-    await service.start(uid: 'u', deviceId: 'd');
-    await db().putCourseGrade(dirty);
-    await service.pushDirty();
-    await service.stop();
+    // the uid of setUp, so every push starts from empty boxes
+    await service.start(uid: db().currentUid!, deviceId: 'd');
+    for (final g in grades) {
+      await db().putCourseGrade(g);
+    }
+    for (final s in semesters) {
+      await db().putSemester(s);
+    }
+    try {
+      await service.pushDirty();
+    } finally {
+      await service.stop();
+    }
     return firestore;
   }
+
+  Future<_FakeFirestore> push(LocalCourseGrade dirty) =>
+      pushRecords(grades: [dirty]);
+
+  test('a failed commit leaves grades and semesters dirty', () async {
+    final pushing = pushRecords(
+      grades: [grade(updatedAtMs: 1000)],
+      semesters: [semester(updatedAtMs: 1000)],
+      failCommits: true,
+    );
+
+    await expectLater(pushing, throwsA(isA<FirebaseException>()));
+    final local = db().getCourseGradeById('c1')!;
+    expect(local.dirty, isTrue);
+    expect(local.updatedAtMs, 1000);
+    expect(db().getSemesterById('s1')!.dirty, isTrue);
+    expect(hasUnsyncedChanges(db()), isTrue);
+  });
 
   test('pushDirty writes a dirty grade and leaves it clean', () async {
     final firestore = await push(grade());
 
-    expect(firestore.sets.keys, ['users/u/courseGrades/c1']);
-    expect(firestore.sets['users/u/courseGrades/c1']!['gradeLetter'], 'A-');
+    expect(firestore.sets.keys, ['users/${db().currentUid}/courseGrades/c1']);
+    expect(
+      firestore
+          .sets['users/${db().currentUid}/courseGrades/c1']!['gradeLetter'],
+      'A-',
+    );
     expect(db().getCourseGradeById('c1')!.dirty, isFalse);
   });
 
   test('a locally deleted grade is pushed as deleted', () async {
     final firestore = await push(grade(deleted: true));
 
-    expect(firestore.sets['users/u/courseGrades/c1']!['deleted'], isTrue);
+    expect(
+      firestore.sets['users/${db().currentUid}/courseGrades/c1']!['deleted'],
+      isTrue,
+    );
   });
 
   test('a remote grade creates a clean local record', () async {
@@ -383,9 +433,58 @@ void main() {
     expect(db().semesters(), isEmpty);
   });
 
-  test('a locally deleted semester is pushed as deleted', () {
+  test('a locally deleted semester is pushed as deleted', () async {
     final deleted = semester()..deleted = true;
 
-    expect(semesterToRemote(deleted)['deleted'], isTrue);
+    final firestore = await pushRecords(semesters: [deleted]);
+
+    expect(
+      firestore.sets['users/${db().currentUid}/semesters/s1']!['deleted'],
+      isTrue,
+    );
+    expect(db().getSemesterById('s1')!.dirty, isFalse);
+  });
+
+  test('remote assignments that are not a list leave none', () async {
+    final data = remoteGrade(2000)..['assignments'] = {'id': 'x1'};
+
+    await applyGrade(data);
+
+    expect(db().getCourseGradeById('c1')!.assignments, isEmpty);
+  });
+
+  Future<void> applyDeletedCourse() => applyRemoteCourse(
+    db(),
+    uid: 'u',
+    id: 'c1',
+    data: {'name': 'Programming', 'deleted': true, 'updatedAt': at(5000)},
+  );
+
+  test('a remotely deleted course retires its grade', () async {
+    await db().putCourseGrade(grade(dirty: false));
+
+    await applyDeletedCourse();
+
+    final local = db().getCourseGradeById('c1')!;
+    expect(local.deleted, isTrue);
+    expect(local.dirty, isTrue);
+    expect(courseGradeToRemote(local)['deleted'], isTrue);
+  });
+
+  test('a remotely deleted course retires a dirty grade', () async {
+    await applyRemoteCourse(
+      db(),
+      uid: 'u',
+      id: 'c1',
+      data: {'name': 'Programming', 'updatedAt': at(2000)},
+    );
+    await db().putCourseGrade(grade(updatedAtMs: 3000));
+
+    await applyDeletedCourse();
+
+    expect(db().getCourseById('c1')!.deleted, isTrue);
+    final local = db().getCourseGradeById('c1')!;
+    expect(local.deleted, isTrue);
+    expect(local.dirty, isTrue);
   });
 }
