@@ -2240,6 +2240,9 @@ class AppLocalizationsKk extends AppLocalizations {
   String get loadingHint => 'Жүктелуде';
 
   @override
+  String get focusDone => 'Дайын';
+
+  @override
   String get emailInUseHint =>
       'Бұл поштамен аккаунт бар. Кіріңіз немесе құпиясөзді қалпына келтіріңіз.';
 

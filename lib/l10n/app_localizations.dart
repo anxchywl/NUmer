@@ -4168,6 +4168,12 @@ abstract class AppLocalizations {
   /// **'Loading'**
   String get loadingHint;
 
+  /// No description provided for @focusDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get focusDone;
+
   /// No description provided for @emailInUseHint.
   ///
   /// In en, this message translates to:

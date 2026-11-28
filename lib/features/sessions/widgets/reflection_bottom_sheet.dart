@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 import 'package:numer_ui/numer_ui.dart';
 
 class ReflectionBottomSheet extends StatefulWidget {
@@ -22,7 +23,15 @@ class ReflectionBottomSheet extends StatefulWidget {
 
 class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
   final TextEditingController _controller = TextEditingController();
+  final _focus = NumerSheetFocusMode();
   bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
 
   String get _durationString {
     final d = Duration(seconds: widget.durationSeconds);
@@ -61,7 +70,11 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
+    final chrome = _focus.hidesChrome;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -73,57 +86,72 @@ class _ReflectionBottomSheetState extends State<ReflectionBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            AppLocalizations.of(context)!.sessionFinished(_durationString),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            textAlign: TextAlign.center,
-          ),
+          NumerFocusFold(hidden: chrome, child: _title(context)),
+          NumerFocusGap(hidden: chrome),
+          _field(context),
           const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            autofocus: true,
-            decoration: InputDecoration(
-              hintText: AppLocalizations.of(context)!.whatDidYouWorkOn,
-              border: const OutlineInputBorder(),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 12,
-              ),
-            ),
-            minLines: 1,
-            maxLines: 3,
-            textCapitalization: TextCapitalization.sentences,
-            inputFormatters: [
-              LengthLimitingTextInputFormatter(160),
-              FilteringTextInputFormatter.allow(
-                RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: _skip,
-                child: Text(AppLocalizations.of(context)!.skip),
-              ),
-              const SizedBox(width: 8),
-              FilledButton(
-                onPressed: _isSaving ? null : _save,
-                child: NumerButtonChild(
-                  label: AppLocalizations.of(context)!.save,
-                  loading: _isSaving,
-                  loadingHint: AppLocalizations.of(context)!.loadingHint,
-                ),
-              ),
-            ],
-          ),
+          _actions(context),
           const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+
+  Widget _title(BuildContext context) {
+    return Text(
+      AppLocalizations.of(context)!.sessionFinished(_durationString),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+      textAlign: TextAlign.center,
+    );
+  }
+
+  Widget _field(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      focusNode: _focus.nodeFor('notes'),
+      autofocus: true,
+      decoration: InputDecoration(
+        hintText: AppLocalizations.of(context)!.whatDidYouWorkOn,
+        border: const OutlineInputBorder(),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
+        ),
+      ),
+      minLines: 1,
+      maxLines: 3,
+      textCapitalization: TextCapitalization.sentences,
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(160),
+        FilteringTextInputFormatter.allow(
+          RegExp(r'[\p{L}\p{N} ,.]', unicode: true),
+        ),
+      ],
+    );
+  }
+
+  Widget _actions(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (!_focus.hidesChrome) ...[
+          TextButton(
+            onPressed: _skip,
+            child: Text(AppLocalizations.of(context)!.skip),
+          ),
+          const SizedBox(width: 8),
+        ],
+        FilledButton(
+          onPressed: _isSaving ? null : _save,
+          child: NumerButtonChild(
+            label: AppLocalizations.of(context)!.save,
+            loading: _isSaving,
+            loadingHint: AppLocalizations.of(context)!.loadingHint,
+          ),
+        ),
+      ],
     );
   }
 }

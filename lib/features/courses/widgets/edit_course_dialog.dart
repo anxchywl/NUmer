@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/color_picker_button.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 import '../course.dart';
 import '../course_format.dart';
@@ -17,91 +19,120 @@ Future<void> showEditCourseDialog(BuildContext context, Course course) {
     orElse: () => course,
   );
 
-  final nameCtrl = TextEditingController(text: live.name);
-  Color selected = live.color;
-
   return showDialog<void>(
     context: context,
-    builder: (ctx) {
-      bool showCustomPicker = false;
-      return StatefulBuilder(
-        builder: (ctx, setLocal) {
-          return AlertDialog(
-            title: Text(AppLocalizations.of(context)!.editCourse),
-            content: _editContent(
-              context,
-              ctx,
-              nameCtrl,
-              selected: selected,
-              showCustomPicker: showCustomPicker,
-              onSwatch: (c) => setLocal(() {
-                selected = c;
-                showCustomPicker = false;
-              }),
-              onToggleCustom: () =>
-                  setLocal(() => showCustomPicker = !showCustomPicker),
-              onColorPicked: (color) => setLocal(() => selected = color),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () =>
-                    _saveCourse(context, ctx, live, nameCtrl.text, selected),
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    builder: (_) => _EditCourseDialog(course: live, host: context),
   );
+}
+
+class _EditCourseDialog extends StatefulWidget {
+  const _EditCourseDialog({required this.course, required this.host});
+
+  final Course course;
+  final BuildContext host;
+
+  @override
+  State<_EditCourseDialog> createState() => _EditCourseDialogState();
+}
+
+class _EditCourseDialogState extends State<_EditCourseDialog> {
+  final _focus = NumerSheetFocusMode();
+  late final _name = TextEditingController(text: widget.course.name);
+  late Color _selected = widget.course.color;
+  bool _showCustomPicker = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _dialog);
+
+  Widget _dialog(BuildContext context) {
+    return AlertDialog(
+      title: NumerFocusFold(
+        hidden: _focus.hidesChrome,
+        child: Text(AppLocalizations.of(widget.host)!.editCourse),
+      ),
+      content: _editContent(
+        widget.host,
+        context,
+        _name,
+        focus: _focus,
+        selected: _selected,
+        showCustomPicker: _showCustomPicker,
+        onSwatch: (c) => setState(() {
+          _selected = c;
+          _showCustomPicker = false;
+        }),
+        onToggleCustom: () =>
+            setState(() => _showCustomPicker = !_showCustomPicker),
+        onColorPicked: (color) => setState(() => _selected = color),
+      ),
+      actions: [
+        if (!_focus.hidesChrome)
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        FilledButton(
+          onPressed: () => _saveCourse(
+            widget.host,
+            context,
+            widget.course,
+            _name.text,
+            _selected,
+          ),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
 }
 
 Widget _editContent(
   BuildContext context,
   BuildContext ctx,
   TextEditingController nameCtrl, {
+  required NumerSheetFocusMode focus,
   required Color selected,
   required bool showCustomPicker,
   required ValueChanged<Color> onSwatch,
   required VoidCallback onToggleCustom,
   required ValueChanged<Color> onColorPicked,
 }) {
+  final chrome = focus.hidesChrome;
   return SingleChildScrollView(
     child: Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _editNameField(context, nameCtrl),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              AppLocalizations.of(context)!.color,
-              style: Theme.of(ctx).textTheme.labelLarge,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _editSwatches(
-            selected: selected,
-            onSwatch: onSwatch,
-            onToggleCustom: onToggleCustom,
-            onColorPicked: onColorPicked,
-          ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 220),
-            crossFadeState: showCustomPicker
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox.shrink(),
-            secondChild: Column(
+          _editNameField(context, nameCtrl, focus.nodeFor('name')),
+          NumerFocusGap(hidden: chrome, height: 12),
+          NumerFocusFold(
+            hidden: chrome,
+            child: Column(
               children: [
-                const SizedBox(height: 16),
-                CustomColorPicker(initial: selected, onChanged: onColorPicked),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    AppLocalizations.of(context)!.color,
+                    style: Theme.of(ctx).textTheme.labelLarge,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _editSwatches(
+                  selected: selected,
+                  onSwatch: onSwatch,
+                  onToggleCustom: onToggleCustom,
+                  onColorPicked: onColorPicked,
+                ),
+                _editCustomPicker(showCustomPicker, selected, onColorPicked),
               ],
             ),
           ),
@@ -111,9 +142,34 @@ Widget _editContent(
   );
 }
 
-Widget _editNameField(BuildContext context, TextEditingController nameCtrl) {
+Widget _editCustomPicker(
+  bool shown,
+  Color selected,
+  ValueChanged<Color> onColorPicked,
+) {
+  return AnimatedCrossFade(
+    duration: const Duration(milliseconds: 220),
+    crossFadeState: shown
+        ? CrossFadeState.showSecond
+        : CrossFadeState.showFirst,
+    firstChild: const SizedBox.shrink(),
+    secondChild: Column(
+      children: [
+        const SizedBox(height: 16),
+        CustomColorPicker(initial: selected, onChanged: onColorPicked),
+      ],
+    ),
+  );
+}
+
+Widget _editNameField(
+  BuildContext context,
+  TextEditingController nameCtrl,
+  FocusNode node,
+) {
   return TextField(
     controller: nameCtrl,
+    focusNode: node,
     autofocus: true,
     textCapitalization: TextCapitalization.words,
     inputFormatters: [

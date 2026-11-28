@@ -1104,6 +1104,7 @@
   "resetRequestFailed": "Could not send the request. Try again.",
   "passwordSaveFailed": "Could not save the password. Try again.",
   "loadingHint": "Loading",
+  "focusDone": "Done",
   "emailInUseHint": "This email already has an account. Sign in or reset the password.",
   "authWrongCredentials": "Wrong email or password. Try again.",
   "authAccountDisabled": "This account is disabled. Use a different account.",

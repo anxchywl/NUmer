@@ -151,7 +151,8 @@ color_literal	lib/features/habits/widgets/today_habit_item.dart	1
 text_literal	lib/features/habits/widgets/today_habit_item.dart	3
 opacity	lib/features/habits/widgets/today_habit_item.dart	1
 color_literal	lib/features/history/screens/history.dart	1
-weight	lib/features/history/screens/history.dart	2
+weight	lib/features/history/screens/history.dart	1
+weight	lib/features/history/widgets/add_time_sheet.dart	1
 color_literal	lib/features/history/widgets/export_session_dialog.dart	1
 spinner	lib/features/history/widgets/export_session_dialog.dart	1
 button	lib/features/history/widgets/export_session_dialog.dart	1

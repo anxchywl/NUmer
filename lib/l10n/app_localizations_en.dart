@@ -2258,6 +2258,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadingHint => 'Loading';
 
   @override
+  String get focusDone => 'Done';
+
+  @override
   String get emailInUseHint =>
       'This email already has an account. Sign in or reset the password.';
 

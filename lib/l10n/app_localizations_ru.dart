@@ -2263,6 +2263,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loadingHint => 'Загрузка';
 
   @override
+  String get focusDone => 'Готово';
+
+  @override
   String get emailInUseHint =>
       'Аккаунт с этой почтой уже есть. Войдите или сбросьте пароль.';
 

@@ -2,11 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 import 'package:numer_app/shared/widgets/color_picker_button.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 import '../course.dart';
 import '../course_format.dart';
@@ -28,6 +30,7 @@ class AddCourseSheet extends StatefulWidget {
 
 class _AddCourseSheetState extends State<AddCourseSheet> {
   final _form = GlobalKey<FormState>();
+  final _focus = NumerSheetFocusMode();
   final _name = TextEditingController();
   Color _picked = courseColorChoices.first;
 
@@ -50,11 +53,15 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
   @override
   void dispose() {
     _credits.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
     final pad = EdgeInsets.only(
       bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       left: 16,
@@ -67,32 +74,44 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
       child: Form(
         key: _form,
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.addCourse,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 12),
-              _nameField(),
-              const SizedBox(height: 12),
-              ..._colorSection(),
-              const SizedBox(height: 16),
-              _creditsField(),
-              _experienceSection(),
-              _saveButton(),
-              const SizedBox(height: 12),
-            ],
-          ),
+          child: Column(mainAxisSize: MainAxisSize.min, children: _content()),
         ),
       ),
     );
   }
 
+  List<Widget> _content() {
+    final chrome = _focus.hidesChrome;
+    return [
+      NumerFocusFold(
+        hidden: chrome,
+        child: Text(
+          AppLocalizations.of(context)!.addCourse,
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+      ),
+      NumerFocusGap(hidden: chrome, height: 12),
+      NumerFocusFold(hidden: _focus.hides('name'), child: _nameField()),
+      NumerFocusGap(hidden: chrome, height: 12),
+      NumerFocusFold(
+        hidden: chrome,
+        child: Column(children: _colorSection()),
+      ),
+      NumerFocusGap(hidden: chrome),
+      NumerFocusFold(hidden: _focus.hides('credits'), child: _creditsField()),
+      NumerFocusFold(hidden: chrome, child: _experienceSection()),
+      NumerFocusGap(hidden: !chrome),
+      SheetDoneActions(focus: _focus, actions: _saveButton()),
+      const SizedBox(height: 12),
+    ];
+  }
+
   Widget _nameField() {
     return TextFormField(
       controller: _name,
+      focusNode: _focus.nodeFor('name'),
+      textInputAction: TextInputAction.next,
+      onFieldSubmitted: (_) => _focus.moveTo('credits'),
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.courseName,
         hintText: AppLocalizations.of(context)!.courseNameHint,
@@ -178,6 +197,7 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
   Widget _creditsField() {
     return TextFormField(
       controller: _credits,
+      focusNode: _focus.nodeFor('credits'),
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       validator: (v) {
         if (v == null || v.isEmpty) return null;
@@ -193,7 +213,9 @@ class _AddCourseSheetState extends State<AddCourseSheet> {
       decoration: InputDecoration(
         labelText: AppLocalizations.of(context)!.creditsOptional,
         hintText: AppLocalizations.of(context)!.creditsHint,
-        helperText: AppLocalizations.of(context)!.creditsHelper,
+        helperText: _focus.hidesChrome
+            ? null
+            : AppLocalizations.of(context)!.creditsHelper,
       ),
     );
   }

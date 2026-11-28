@@ -24,5 +24,5 @@
 553 lib/features/habits/screens/habits_calendar_screen.dart
 681 lib/features/habits/widgets/habit_logging_sheet.dart
 823 lib/features/habits/widgets/habit_schedule_editor.dart
-1114 lib/features/history/screens/history.dart
+480 lib/features/history/screens/history.dart
 569 lib/features/history/widgets/export_session_dialog.dart
