@@ -5,7 +5,7 @@ session. Every task has an execution prompt in `prompts/`; phases 0 to 3 are com
 prompts, later phases are outlines to be expanded when their phase
 starts.
 
-Read with: `DECISIONS.md` (why), `DESIGN.md` (how UI looks), `USER_ACTIONS.md` (what only the
+Read with: `DECISIONS.md` (why), `../DESIGN.md` (how UI looks), `USER_ACTIONS.md` (what only the
 owner can do), `RESEARCH.md` (evidence).
 
 ## How to read a task

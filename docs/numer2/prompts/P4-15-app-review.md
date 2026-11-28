@@ -10,7 +10,7 @@ policy (D-27): community rules a seller accepts once before their first listing,
 document that tells the owner and a reviewer where every required control is.
 
 ## Read first
-- `AGENTS.md`, `docs/numer2/DESIGN.md` sections 3.3, 5.3, 5.4, 8 and 12
+- `AGENTS.md`, `docs/DESIGN.md` sections 3.3, 5.3, 5.4, 8 and 12
 - `docs/numer2/DECISIONS.md` D-17, D-27, D-42; `docs/numer2/USER_ACTIONS.md` E-2 and F-6
 - `lib/features/muto/` (P4-14), `lib/features/account/` Settings (the delete-account and
   About sections from P1-07 and P3-05)
@@ -99,10 +99,10 @@ document that tells the owner and a reviewer where every required control is.
 - No rules for Events or other modules.
 
 ## Constraints
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel. Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/` stays under 400 lines. A file listed in `scripts/file_size_baseline.txt` may only shrink. Never add a new path to the baseline.
 - No secret, password or personal address in the repository; placeholders stay as written.

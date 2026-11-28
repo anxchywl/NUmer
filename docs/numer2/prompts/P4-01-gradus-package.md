@@ -13,7 +13,7 @@ controller when only the token changes.
 - `AGENTS.md` of this repo (binding), and NUmer's `docs/numer2/DECISIONS.md` section F and
   D-42 (`/Users/anx/numer_app/docs/numer2/DECISIONS.md`)
 - `/Users/anx/numer_app/packages/numer_ui/MIGRATION.md` (the whole file; it is the recipe)
-- `/Users/anx/numer_app/docs/numer2/DESIGN.md` sections 5.4, 5.7, 7.2, 9 and 9.5
+- `/Users/anx/numer_app/docs/DESIGN.md` sections 5.4, 5.7, 7.2, 9 and 9.5
 - `gradus_feature/lib/gradus_feature.dart` (94 lines), `lib/src/config/gradus_session.dart`
   (38), `lib/src/config/gradus_scope.dart` (76), `lib/src/data/http_syllabus_importer.dart`
   (198), `lib/src/presentation/focus_mode.dart` (196), `course_form.dart`,

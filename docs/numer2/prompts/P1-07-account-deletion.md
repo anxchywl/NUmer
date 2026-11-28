@@ -166,11 +166,11 @@ restartable and server-side, and queue an event so module backends can delete th
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Cloud Functions keep the v1 API style (`firebase-functions/v1`) and the default region already in use. Do not change a deployed function's name, trigger path or region.
 - Client-supplied ids, emails and text are validated before use. Errors returned to clients are generic; details go to `functions.logger`.
 - Server-only collections are written with the Admin SDK only and are denied to clients in `firestore/firestore.rules`.

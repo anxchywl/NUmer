@@ -19,6 +19,7 @@ Each subject has one owner. Change it there and link to it from anywhere else.
 | `AGENTS.md` | rules for contributors, the repository layout, known debt |
 | [docs/INFRASTRUCTURE.md](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md) | commands, environments, the data model, functions, operations |
 | [docs/PRODUCT.md](file:///Users/anx/numer_app/docs/PRODUCT.md) | what the app does |
+| [docs/DESIGN.md](file:///Users/anx/numer_app/docs/DESIGN.md) | the design language: tokens, components, layouts, states, copy |
 | [README.md](file:///Users/anx/numer_app/README.md) | the introduction and links |
 
 ---
@@ -48,22 +49,22 @@ infra/                   # host hardening, backup restore test and monitor scrip
 
 - **`app/`** — composition root: `bootstrap.dart` (startup and providers), `numer_app.dart`
   (root widget and `MaterialApp`), `app_theme.dart`, `auth_gate.dart`,
-  `update_required_screen.dart`, `routes.dart`, `shell/` (tab shell and navigation bars),
-  `modules/` (the module registry and `openModule`) and `app_state.dart` (the global
-  `ChangeNotifier`).
-- **`core/`** — headless infrastructure used by features: `config/` (remote flags and the
-  minimum build), `data/` (Hive local DB, `storage`, `course_storage`, `grade_storage`,
-  `sync_service`, `user_storage`),
+  `update_required_screen.dart`, `routes.dart`, `shell/` (the tab list, tab shell and
+  navigation bars), `modules/` (the module registry and `openModule`) and
+  `app_state.dart` (the global `ChangeNotifier`).
+- **`core/`** — headless infrastructure used by features: `config/` (remote flags, the
+  minimum build and the About links), `data/` (Hive local DB, `storage`,
+  `course_storage`, `grade_storage`, `sync_service`, `user_storage`),
   `identity/` (ID tokens and `ModuleSession`), `modules/` (the `ModuleDescriptor`
   contract), `notifications/`, `observability/` (crash reporting), `upcoming/` (the
   device-local store of items modules put on Home), `firebase_options.dart`,
   `startup_metrics.dart`.
 - **`shared/`** — domain-agnostic UI in `widgets/` (toast, loading screen, color
   picker, sheet focus mode helpers). If it references a domain model or does I/O, it does **not** belong here.
-- **`packages/numer_ui/`** — the design language of
-  [docs/numer2/DESIGN.md](file:///Users/anx/numer_app/docs/numer2/DESIGN.md) as code: tokens,
-  the theme builder `NumerTheme` and the components, depending only on `flutter`. New and
-  changed UI takes them from `package:numer_ui/numer_ui.dart`. Module code ported from
+- **`packages/numer_ui/`** — the design language as code: tokens, the theme builder
+  `NumerTheme` and the components, depending only on `flutter`. UI follows
+  [docs/DESIGN.md](file:///Users/anx/numer_app/docs/DESIGN.md), and new and changed UI takes
+  its pieces from `package:numer_ui/numer_ui.dart`. Module code ported from
   `app_ui` imports `package:numer_ui/compat.dart`
   ([MIGRATION.md](file:///Users/anx/numer_app/packages/numer_ui/MIGRATION.md)); the app
   does not.
@@ -86,12 +87,13 @@ features/<name>/
 ```
 
 **Grow-as-needed:** a feature starts flat; add a subfolder only once a category reaches ~3
-files. Small features (`ai_analysis`, `courses`) stay flat.
+files. Small features (`ai_analysis`, `campus`, `study`) stay flat.
 
 Current features: `auth`, `account`, `habits`, `groups`, `courses`,
 `sessions` (timer), `stats`, `history`, `ai_analysis` (paused, coming-soon screen
-only), `home`, `study`, `campus`, `news`, and
+only), `home` (the today screen), `study` and `campus` (tab roots), `news`, and
 `connections` (built but intentionally hidden — see the marker in `lib/app/shell/shell_tabs.dart`).
+`account` also owns `ShellHeader`, the tab root header whose avatar opens Settings.
 
 **Dependency rule (one direction):** `features → core → shared`, enforced by
 `test/boundaries/`:
@@ -147,9 +149,30 @@ code does; names and structure do that.
 2. Add files flat; add subfolders only at ~3 files of a kind.
 3. `export` the public surface from the barrel.
 4. Wire it up in `app/`: providers in `bootstrap.dart`, routes in `routes.dart` and
-   `numer_app.dart`, tabs in `shell/shell_tabs.dart`.
+   `numer_app.dart`, tabs in `shell/shell_tabs.dart`. Modules never add tabs.
 5. Add tests under `test/features/<name>/`.
 6. Reuse from `shared/` (UI) and `core/` (infra); never copy another feature's file.
+
+### Adding a module
+
+A module is a row on the Study or Campus root that opens a pushed screen. The contract is
+`ModuleDescriptor` in `lib/core/modules/`.
+
+1. Create the host folder `lib/features/<module>/` with its barrel.
+2. Add one `ModuleDescriptor` to `lib/app/modules/module_registry.dart`: `id`, `title` and
+   `subtitle` (read from the localizations), `icon`, `section` (`study` or `campus`),
+   `flagId` and `builder`. Registry order is row order.
+3. Gate it with `modules.<flagId>` in `config/app`
+   ([flags](file:///Users/anx/numer_app/docs/INFRASTRUCTURE.md#remote-flags-and-minimum-build)).
+   The Campus tab appears by itself once a campus module is visible. Modules never add tabs.
+4. Keep `builder` lazy and return a `NumerModuleScaffold`; `openModule` pushes it above the
+   tab bar.
+5. Do no work at startup: no network call, storage read or controller before the module opens.
+6. Take tokens only through `ModuleSession` (`core/identity/`): `idToken` for requests and
+   `handleSessionExpired` when the backend rejects one.
+7. Home opens nothing inside a module yet: `shell_tabs.dart` passes `openNoUpcomingItem` for
+   Upcoming rows and declines news events. A module that writes to `UpcomingStore` or shows
+   events replaces those hooks.
 
 ---
 
@@ -225,7 +248,7 @@ The script does not run device builds, emulator tests or deploys.
 - **Layer violations**: 19 allow-listed lines in `test/boundaries/allowlist.txt`.
 - **Files above 1000 lines**: `lib/app/app_state.dart`, `lib/core/data/storage.dart`,
   `lib/core/data/sync_service.dart`, `lib/features/groups/data/group_service.dart`,
-  `lib/features/account/screens/account.dart`, `lib/features/habits/data/habit_service.dart`,
+  `lib/features/habits/data/habit_service.dart`,
   `lib/features/habits/screens/habit_details_screen.dart`,
   `lib/features/groups/widgets/group_leaderboard.dart`.
 - **`lib/app/app_state.dart` is frozen**: no new state goes into it.

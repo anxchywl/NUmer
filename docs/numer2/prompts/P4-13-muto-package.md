@@ -14,7 +14,7 @@ mode in its two text sheets. Block and report UI is P4-20 (D-42 split).
 - `AGENTS.md` of this repo, NUmer `docs/numer2/DECISIONS.md` section F and D-42
   (`/Users/anx/numer_app/docs/numer2/DECISIONS.md`)
 - `/Users/anx/numer_app/packages/numer_ui/MIGRATION.md` (whole file)
-- `/Users/anx/numer_app/docs/numer2/DESIGN.md` sections 3.3, 5.3, 5.6, 5.7, 5.10, 9 and 9.5
+- `/Users/anx/numer_app/docs/DESIGN.md` sections 3.3, 5.3, 5.6, 5.7, 5.10, 9 and 9.5
 - `muto_feature/lib/muto_feature.dart`, `lib/src/presentation/muto_feature_widget.dart`
   (156 lines), `lib/src/presentation/shell/muto_shell.dart` (357),
   `lib/src/application/session_controller.dart`, `lib/src/application/muto_scope.dart`,

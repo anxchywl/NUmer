@@ -10,7 +10,7 @@ there appears in Home's "Upcoming" block and gives one local reminder 30 minutes
 both go away when the booking is released.
 
 ## Read first
-- `AGENTS.md`, `docs/numer2/DESIGN.md` sections 3.3, 4.1, 4.4, 6, 7.2, 9.5, 10 and 12
+- `AGENTS.md`, `docs/DESIGN.md` sections 3.3, 4.1, 4.4, 6, 7.2, 9.5, 10 and 12
 - `docs/numer2/DECISIONS.md` D-21, D-24, D-40, D-42
 - `lib/features/gradus/` (P4-04: the descriptor, module body and lazy-start test to copy)
 - `lib/core/modules/module_descriptor.dart`, `lib/app/modules/module_registry.dart`,
@@ -149,11 +149,11 @@ both go away when the booking is released.
 
 ## Constraints
 - Offline-first contract: UI never writes Firestore. The Upcoming store is device-local by design.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel. Direction is `features -> core -> shared`. `lib/features/clavis/` imports `lib/app/app_state.dart` at most; `lib/core/upcoming/` imports nothing from `lib/features/` or `lib/app/`.
 - The module starts nothing before it is opened (`DESIGN.md` 10).
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. A file listed in `scripts/file_size_baseline.txt` may only shrink. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.

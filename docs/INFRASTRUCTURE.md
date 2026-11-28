@@ -444,7 +444,9 @@ Emulators and deploys are covered in [Environments](#environments).
   <address> --template verify --locale en)`, with the three variables in the environment.
 
 ## Key files
-- App shell: `lib/app/` (entry `bootstrap.dart`, root widget `numer_app.dart`, tabs `shell/`)
+- App shell: `lib/app/` (startup `bootstrap.dart`, root widget `numer_app.dart`, tabs
+  `shell/shell_tabs.dart`)
+- Design tokens and components: `packages/numer_ui/` ([DESIGN.md](DESIGN.md))
 - App state: `lib/app/app_state.dart`
 - Local storage / sync: `lib/core/data/storage.dart`, `lib/core/data/sync_service.dart`
 - Remote flags: `lib/core/config/`

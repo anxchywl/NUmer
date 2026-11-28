@@ -11,7 +11,7 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
 
 ## Read first
 - `AGENTS.md`
-- `docs/numer2/DESIGN.md` sections 3, 4.4, 4.5, 5.1 to 5.3, 7.2, 8 and 12 (binding)
+- `docs/DESIGN.md` sections 3, 4.4, 4.5, 5.1 to 5.3, 7.2, 8 and 12 (binding)
 - `docs/numer2/DECISIONS.md` D-20, D-34, D-35, D-36
 - `lib/app/shell/shell_tabs.dart` (63 lines), `lib/app/shell/app_shell.dart` (128 lines),
   `lib/app/shell/ios_tab_bar.dart`, `lib/app/shell/android_tab_bar.dart`
@@ -244,11 +244,11 @@ Campus, and move Settings behind the user's avatar on every tab root, as the own
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.

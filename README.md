@@ -11,9 +11,9 @@
 
 **Download:** [App Store](https://apps.apple.com/kz/app/numer-app/id6759787785) · [Google Play](https://play.google.com/store/apps/details?id=app.anx.numer) · 200+ active users
 
-NUmer brings time tracking, habits, calendars, and study groups into one dashboard instead of
-a handful of disconnected tools. It works fully offline (Hive-backed, synced to Firebase when
-online) and is localized in English, Russian, and Kazakh. The Dart source is organized
+NUmer brings time tracking, habits, calendars, study groups and campus news into one app
+instead of a handful of disconnected tools. It works fully offline (Hive-backed, synced to
+Firebase when online) and is localized in English, Russian, and Kazakh. The Dart source is organized
 **feature-first** so each domain lives in one place.
 
 ## Documentation
@@ -25,7 +25,7 @@ Everything substantive lives in focused docs — this README is just the entry p
 | [docs/PRODUCT.md](docs/PRODUCT.md) | **What** the app does — features and user-facing behavior |
 | [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md) | **How it runs & ships** — architecture, Firebase, Cloud Functions, build/deploy |
 | [AGENTS.md](AGENTS.md) | **How the code is organized** — repo/feature layout, conventions, known debt, and rules for contributors |
-| [docs/numer2/DESIGN.md](docs/numer2/DESIGN.md) | Design language |
+| [docs/DESIGN.md](docs/DESIGN.md) | Design language, implemented in `packages/numer_ui` |
 | [infra/RUNBOOK.md](infra/RUNBOOK.md) | Host hardening runbook |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Performance budgets and baselines |
 | [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) | Privacy policy |

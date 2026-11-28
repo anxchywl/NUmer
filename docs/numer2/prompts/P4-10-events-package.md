@@ -14,7 +14,7 @@ and loses the screens nothing opens.
 - `AGENTS.md` of this repo, NUmer `docs/numer2/DECISIONS.md` section F and D-42
   (`/Users/anx/numer_app/docs/numer2/DECISIONS.md`)
 - `/Users/anx/numer_app/packages/numer_ui/MIGRATION.md` (whole file)
-- `/Users/anx/numer_app/docs/numer2/DESIGN.md` sections 5.4, 9 and 9.5
+- `/Users/anx/numer_app/docs/DESIGN.md` sections 5.4, 9 and 9.5
 - `flutter_events/pubspec.yaml`, `lib/main.dart`, `lib/app.dart` (414 lines),
   `lib/core/constants.dart` (38), `lib/core/api_client.dart:60-140` (`_uri`, `_headers`,
   `_request`) and the rest of that file by name, `lib/core/auth_store.dart` (115),

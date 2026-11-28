@@ -11,7 +11,7 @@ Nothing enforces anything today: there is no `scripts/` directory and no `.githu
 
 ## Read first
 - `AGENTS.md`, `README.md` lines 55-90, `analysis_options.yaml`, `l10n.yaml`
-- `docs/numer2/DESIGN.md` sections 8.3 and 11 (the two mechanical checks you implement)
+- `docs/DESIGN.md` sections 8.3 and 11 (the two mechanical checks you implement)
 - `docs/numer2/DECISIONS.md` section F (the conventions you copy into `AGENTS.md`)
 - `test/smoke/app_boot_test.dart`, `test/features/account/accent_color_picker_test.dart`
 - `functions/package.json`
@@ -125,7 +125,7 @@ Nothing enforces anything today: there is no `scripts/` directory and no `.githu
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.

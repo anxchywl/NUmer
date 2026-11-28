@@ -12,7 +12,7 @@ listing was hidden by moderation, and a banned word gets a clear message. Split 
 (D-42).
 
 ## Read first
-- `AGENTS.md` of this repo, NUmer `docs/numer2/DESIGN.md` sections 5.3, 5.7, 5.8, 5.9, 6, 8
+- `AGENTS.md` of this repo, NUmer `docs/DESIGN.md` sections 5.3, 5.7, 5.8, 5.9, 6, 8
   and 11, `docs/numer2/DECISIONS.md` D-27, D-42 (`/Users/anx/numer_app/docs/numer2/...`)
 - Muto `docs/API.md` (the P4-12 endpoints and errors)
 - `muto_feature/lib/src/presentation/listing/listing_detail_screen.dart:520-620` (the

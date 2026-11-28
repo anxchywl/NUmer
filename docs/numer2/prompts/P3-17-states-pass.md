@@ -11,7 +11,7 @@ centred spinners of list screens become `NumerSkeleton` with its 300 ms delay
 
 ## Read first
 - `AGENTS.md`
-- `docs/numer2/DESIGN.md` sections 5.4, 5.7, 6, 8, 11 and 12 (binding)
+- `docs/DESIGN.md` sections 5.4, 5.7, 6, 8, 11 and 12 (binding)
 - `docs/numer2/DECISIONS.md` D-33, D-41
 - `packages/numer_ui/lib/src/components/numer_confirm.dart`, `numer_skeleton.dart` (P3-01)
 - `scripts/design_baseline.txt` (`alert` and `spinner` lines)
@@ -60,10 +60,10 @@ centred spinners of list screens become `NumerSkeleton` with its 300 ms delay
   deletion; any wording change.
 
 ## Constraints
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. This task should need none; if a confirm action has no string, stop.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. This task should need none; if a confirm action has no string, stop.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`.
+- UI: only the tokens and components of `docs/DESIGN.md`.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - No unrequested features, abstractions, dependencies or error handling.

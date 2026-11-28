@@ -10,7 +10,7 @@ writes NUmer's own courses and grade records, works offline, and costs nothing a
 start.
 
 ## Read first
-- `AGENTS.md`, `docs/numer2/DESIGN.md` sections 3.3, 3.4, 4.3, 9.5, 10 and 12 (binding)
+- `AGENTS.md`, `docs/DESIGN.md` sections 3.3, 3.4, 4.3, 9.5, 10 and 12 (binding)
 - `docs/numer2/DECISIONS.md` D-23, D-24, D-25, D-42
 - `lib/core/modules/module_descriptor.dart`, `lib/app/modules/module_registry.dart`,
   `lib/app/modules/open_module.dart`, `lib/core/identity/module_session.dart`,
@@ -182,11 +182,11 @@ start.
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/` (`GradeStorage`, `AppState`'s course methods) with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel. Direction is `features -> core -> shared`. `lib/features/gradus/` may import `lib/app/app_state.dart` and no other file under `lib/app/`.
 - The module starts nothing before it is opened: no network call, storage read or controller at app start (`DESIGN.md` 10).
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. A file listed in `scripts/file_size_baseline.txt` may only shrink. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.

@@ -12,7 +12,7 @@ the host the three hooks P4-11 needs: Telegram linking, a local reminder, and op
 event from the news feed.
 
 ## Read first
-- `AGENTS.md` of this repo, NUmer `docs/numer2/DESIGN.md` sections 3.3, 5.2, 5.3, 5.5, 5.7,
+- `AGENTS.md` of this repo, NUmer `docs/DESIGN.md` sections 3.3, 5.2, 5.3, 5.5, 5.7,
   6, 9.5 and 11, `docs/numer2/DECISIONS.md` D-42 (`/Users/anx/numer_app/docs/numer2/...`)
 - `/Users/anx/numer_app/packages/numer_ui/MIGRATION.md` "Focus mode" and the "Sheets with a
   text field" table

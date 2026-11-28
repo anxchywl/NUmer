@@ -6,8 +6,8 @@ invent one. Stop and ask.
 
 It keeps the look NUmer has today (Material 3 generated from the user's accent colour, the
 system font, flat surfaces) and fixes the scale that today varies from screen to screen.
-Evidence for "today" is in `RESEARCH.md` section 8; decisions are in `DECISIONS.md` D-20 and
-D-28 to D-32.
+Evidence for "today" is in `numer2/RESEARCH.md` section 8; decisions are in
+`numer2/DECISIONS.md` D-20 and D-28 to D-32.
 
 Sections:
 
@@ -236,9 +236,9 @@ Every tab root uses `NumerShellHeader` (a `SliverAppBar`, `centerTitle: false`, 
 ### 3.4 Module registry
 
 A module is one `ModuleDescriptor` in `lib/app/modules/module_registry.dart`:
-`id`, `titleKey`, `subtitleKey`, `icon`, `section` (`study` or `campus`), `flagId`, and a
-lazy `builder`. The Study and Campus roots render the visible descriptors as rows. Adding a
-module never changes the tab bar.
+`id`, `title`, `subtitle` (both read from the localizations), `icon`, `section` (`study` or
+`campus`), `flagId`, and a lazy `builder`. The Study and Campus roots render the visible
+descriptors as rows. Adding a module never changes the tab bar.
 
 ### 3.5 Where everything goes
 

@@ -36,7 +36,7 @@ as its own task (P5-07).
   `buildFallbackAnalysis` with its helpers and types. Check this with grep before deleting.
 - Installed app versions keep calling `analyzeCourseAi`. Once it is deleted they get an error
   and show their sample analysis, as they have since June. Accepted by the owner.
-- Copy rules: `docs/numer2/DESIGN.md` section 8. The empty-state rule allows one sentence and
+- Copy rules: `docs/DESIGN.md` section 8. The empty-state rule allows one sentence and
   one action; here the app bar back button is the action, so the body has no button.
 - `npm` against the public registry is allowed. No deploy.
 
@@ -82,7 +82,7 @@ as its own task (P5-07).
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.

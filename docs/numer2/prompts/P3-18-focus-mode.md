@@ -6,12 +6,12 @@
 
 ## Goal
 Owner rule: in every sheet or dialog that has a text field, while the keyboard is up only the
-active field and one "Done" button stay on screen (`docs/numer2/DESIGN.md` 5.7, "Focus mode").
+active field and one "Done" button stay on screen (`docs/DESIGN.md` 5.7, "Focus mode").
 Apply it to every existing input sheet so the app behaves like the owner's other apps.
 
 ## Read first
 - `AGENTS.md`
-- `docs/numer2/DESIGN.md` sections 5.5, 5.7 (Focus mode), 7.1
+- `docs/DESIGN.md` sections 5.5, 5.7 (Focus mode), 7.1
 - `packages/numer_ui/lib/` the focus mode components (`NumerSheetFocusMode`, `NumerFocusFold`,
   `NumerFocusGap`, `NumerFocusActions`) and their tests, added in P3-01
 - `/Users/anx/gradus/gradus_feature/lib/src/presentation/` the reference: `focus_mode.dart` and
@@ -47,10 +47,10 @@ Apply it to every existing input sheet so the app behaves like the owner's other
 - Do not change `packages/numer_ui` behaviour; report a needed change instead.
 
 ## Constraints
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. This task should need none; if a confirm action has no string, stop.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. This task should need none; if a confirm action has no string, stop.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`.
+- UI: only the tokens and components of `docs/DESIGN.md`.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - No unrequested features, abstractions, dependencies or error handling.

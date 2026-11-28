@@ -11,7 +11,7 @@ follows the language NUmer runs in, and names NUmer (not the old host) when the 
 ends.
 
 ## Read first
-- `AGENTS.md` of this repo, NUmer `docs/numer2/DESIGN.md` section 8 (copy rules) and
+- `AGENTS.md` of this repo, NUmer `docs/DESIGN.md` section 8 (copy rules) and
   `docs/numer2/DECISIONS.md` D-42 (`/Users/anx/numer_app/docs/numer2/...`)
 - `flutter_events/lib/core/localization.dart` (570 lines: the `en`, `ru` and `kk` maps and
   `AppLocalizations.get`)

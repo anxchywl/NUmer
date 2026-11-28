@@ -15,8 +15,9 @@ Each capability below maps to a feature folder under `lib/features/` (see
 
 ## Navigation
 The bottom tabs are Home, Habits, Study, Groups and, only while a campus module is visible
-to the user, Campus. Settings opens from the user's avatar in the header of every tab and
-ends with About: privacy policy, support contact and app version.
+to the user, Campus. No module ships yet, so there are four tabs. Settings is not a tab: it
+opens from the user's avatar in the header of every tab. Screens opened from a tab cover the
+tab bar.
 
 ## Capabilities
 
@@ -24,20 +25,29 @@ ends with About: privacy policy, support contact and app version.
 Sign-up/sign-in with email verification and password reset by a 6-digit code, guided onboarding, and a
 profile (avatar, name, major, study goals, accent color, preferred language).
 
+### Settings — `account`
+Account details with sync now and sign out, the profile, appearance and accent color,
+language, display options, feature switches (such as quick notes, nudges and the
+Eisenhower matrix), calendar export, About (privacy policy, support contact and app
+version) and account deletion.
+
 ### Courses & goals — `courses`
 Create courses with weekly study-hour goals, credits, experience levels, and custom order.
-The course list lives on the Study tab.
+The course list lives on the Study tab, where courses are reordered, swiped to delete and
+given goals.
 
 ### Focus timers & sessions — `sessions`
 Three timer modes — count-up **stopwatch**, count-down **timer**, and **Pomodoro** (work +
-short/long breaks with break pings), opened from a course row on the Study tab. Sessions
-auto-save. A running session shows a live iOS Live Activity / lock-screen recording
-notification with elapsed time.
+short/long breaks with break pings), opened from a course row on the Study tab or from the
+study button on Home. There is no separate timer or alarm screen. Sessions auto-save. A
+running session shows a bar on Home and Study, and a live iOS Live Activity / lock-screen
+recording notification with elapsed time.
 
 ### Habit tracker — `habits`
 Custom habits with frequency rules (daily, weekly, specific days), swipe-to-complete
 interactions, categories, archiving, an Eisenhower prioritization view, and
-streak heatmaps/calendars.
+streak heatmaps/calendars. The tab switches between Progress and My habits; its header
+opens the archive and the calendar.
 
 ### Connections — `connections` *(planned, currently hidden)*
 Log touchpoints with classmates/friends: interaction dates, notes, custom tags, birthdays,
@@ -56,25 +66,29 @@ Paused. The Course analysis row on the Study tab, shown once a course exists, op
 saying it is coming soon.
 
 ### Study — `study`
-The study tab: the course list with its timer sheet and the add-course action, then rows for
-Statistics, History, Course analysis and any study modules visible to the user.
+The study tab: the running session, the course list with its timer sheet and the add-course
+action in the header, then rows for Statistics, History, Course analysis and any study
+modules visible to the user.
 
 ### Campus — `campus`
 Lists the campus modules visible to the user; hidden while there are none. More than eight
 modules add a search over their names and descriptions.
 
 ### Statistics — `stats`
-Charts, calendars, and heatmaps visualizing study time and progress.
+Charts, calendars, and heatmaps visualizing study time and progress, opened from the Study
+tab. Habit reports download as `.csv` or `.xlsx` (Excel).
 
 ### History & export — `history`
-Browse past sessions and export logs to `.ics` (calendar), `.csv`, or `.xlsx` (Excel).
+Browse past sessions, from the Study tab or from a day in Statistics. Sessions export to
+`.ics` (calendar) from Settings.
 
 ### Home dashboard — `home`
 The landing tab is the today screen: the study streak, a sync line shown only when offline
 or after a failed sync, the running session, and a Today block with the time studied (with
 the daily goal when goal bars are on) and the habits done today. One button continues the
-last used course, picks a course to start, or adds the first one. Pulling down syncs and
-refreshes the news.
+last used course, picks a course to start, or adds the first one; it is hidden while a
+session runs. The Today rows open the Study and Habits tabs, and the habits row is hidden
+when no habit is due today. Pulling down syncs and refreshes the news.
 An Upcoming section lists the next three bookings and reminders kept on this device; it is
 hidden while there are none, and no module adds them yet. The News section below shows the
 first five news items.
@@ -83,9 +97,16 @@ first five news items.
 Announcements and upcoming campus events, pinned announcements first: five on Home and up to
 30 on the News screen behind "All". An announcement opens its text and optional link, an
 event its date, time and place. The last news read stays on the device, so it shows at once
-and offline, with its age when a refresh fails.
+and offline, with its age when a refresh fails. With nothing cached, News shows
+placeholder rows while loading, a retry action after a failure, and a refresh action when
+there is no news.
 
 ## Cross-cutting product traits
+- **Loading and confirmation:** lists such as news, history and groups show placeholder rows
+  while they load, a busy button shows only a spinner, and deleting a course, habit,
+  session or group, or leaving a group, asks first.
+- **Focus mode:** while the keyboard is up, a sheet or dialog with a text field keeps only
+  the field being typed in and one button, Done or the form's own action.
 - **Offline-first:** the app works fully without a connection; study groups are the only
   online-only area.
 - **Localized:** every user-facing string is available in English, Russian, and Kazakh.

@@ -11,7 +11,7 @@ language becomes a permanent doc at `docs/DESIGN.md`.
 
 ## Read first
 - `AGENTS.md`, `README.md`, `docs/PRODUCT.md`, `docs/INFRASTRUCTURE.md`
-- `docs/numer2/DESIGN.md`, `docs/numer2/DECISIONS.md` D-20, D-21, D-24, D-33, D-34
+- `docs/DESIGN.md`, `docs/numer2/DECISIONS.md` D-20, D-21, D-24, D-33, D-34
 - The tree as it is: `find lib packages -maxdepth 3 -type d | sort`
 - `lib/app/modules/`, `lib/core/modules/`, `lib/app/shell/shell_tabs.dart`,
   `packages/numer_ui/MIGRATION.md`
@@ -23,9 +23,9 @@ language becomes a permanent doc at `docs/DESIGN.md`.
 - Earlier phase 3 tasks updated docs piecemeal; this task makes them consistent and complete.
 
 ## Steps
-1. `git mv docs/numer2/DESIGN.md docs/DESIGN.md`. Replace every link to the old path:
-   `grep -rln "numer2/DESIGN.md" AGENTS.md README.md docs scripts packages` and, in each
-   file, `numer2/DESIGN.md` becomes `DESIGN.md` with the path made relative to that file
+1. `git mv` the design doc from `docs/numer2/` to `docs/DESIGN.md`. Replace every link to the old path:
+   `grep -rln "numer2/DESIGN\.md" AGENTS.md README.md docs scripts packages` and, in each
+   file, `numer2/DESIGN\.md` becomes `DESIGN.md` with the path made relative to that file
    (from `docs/numer2/` it is `../DESIGN.md`; from `docs/numer2/prompts/` it is
    `../../DESIGN.md`; from the root `docs/DESIGN.md`). Check each replaced link resolves.
 2. `docs/PRODUCT.md`: the navigation (Home, Habits, Study, Groups, and Campus when a campus
@@ -57,7 +57,7 @@ language becomes a permanent doc at `docs/DESIGN.md`.
 - Size (`AGENTS.md` "Size", D-33) does not apply to Markdown; leave the size baseline alone.
 
 ## Acceptance criteria
-- [ ] `grep -rn "numer2/DESIGN.md" .  --include=*.md` prints nothing; every rewritten link resolves.
+- [ ] `grep -rn "numer2/DESIGN\.md" .  --include=*.md` prints nothing; every rewritten link resolves.
 - [ ] `docs/PRODUCT.md` names the five tabs and no removed screen.
 - [ ] `AGENTS.md` has the "Adding a module" section and lists `study`, `campus`, `news`.
 - [ ] `./scripts/verify.sh` exits 0.

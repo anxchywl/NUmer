@@ -11,7 +11,7 @@ it is then. Order: Gradus, Clavis, Events, Muto. Each module ships behind its fl
 Common to every task:
 - Package tasks work in the module's repo and follow that repo's `AGENTS.md` and
   `./scripts/verify.sh`. Mount tasks work in NUmer.
-- UI is bound by `../DESIGN.md`, in particular section 9 (mapping) and 9.5 (per module).
+- UI is bound by `../../DESIGN.md`, in particular section 9 (mapping) and 9.5 (per module).
 - A module starts nothing until it is opened: no network call, no storage read, no
   controller at app start. Every mount task proves it with a counting-fake test.
 - Every mount task measures download size before and after (`scripts/measure_size.sh`) and

@@ -11,7 +11,7 @@ hand-styled widgets.
 
 ## Read first
 - `AGENTS.md`
-- `docs/numer2/DESIGN.md` sections 1, 2, 3.2, 3.3, 5, 6, 7.1, 11 and 12 (binding)
+- `docs/DESIGN.md` sections 1, 2, 3.2, 3.3, 5, 6, 7.1, 11 and 12 (binding)
 - `packages/numer_ui/lib/numer_ui.dart` and everything under `packages/numer_ui/lib/src/`
 - `packages/numer_ui/test/` (all five files; `otp_images_test.dart` is the pattern for images)
 - `lib/app/app_theme.dart` (40 lines), `lib/shared/widgets/app_toast.dart` (44 lines)
@@ -261,11 +261,11 @@ hand-styled widgets.
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`. (This task adds none: the package takes its words as parameters.)
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`. (This task adds none: the package takes its words as parameters.)
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`. `packages/numer_ui` imports nothing from `lib/` and depends on `flutter` only.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. `scripts/check_file_size.sh` (in `verify.sh`) enforces it. A file listed in `scripts/file_size_baseline.txt` may only shrink: when it shrinks, lower its entry in the same commit; when it is split away, remove its entry. Never add a new path to the baseline.
 - Catch only the specific failure you handle. Never catch broadly or swallow an error.

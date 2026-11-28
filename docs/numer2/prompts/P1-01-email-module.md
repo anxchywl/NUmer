@@ -12,7 +12,7 @@ interface, with a queue for the cases where the sender must not wait for deliver
 ## Read first
 - `AGENTS.md`
 - `docs/numer2/DECISIONS.md` D-18 and D-19
-- `docs/numer2/DESIGN.md` section 8 (copy rules apply to emails too)
+- `docs/DESIGN.md` section 8 (copy rules apply to emails too)
 - `functions/src/shared/admin.ts`, `functions/src/ai/analyze_course.ts` (the `runWith({secrets})` pattern)
 - `functions/test/emulator/` (test style)
 

@@ -13,7 +13,7 @@ session, and callbacks that let the host keep an "Upcoming" item for each bookin
 - `AGENTS.md` of this repo (binding), and NUmer `docs/numer2/DECISIONS.md` section F and
   D-42 (`/Users/anx/numer_app/docs/numer2/DECISIONS.md`)
 - `/Users/anx/numer_app/packages/numer_ui/MIGRATION.md` (whole file)
-- `/Users/anx/numer_app/docs/numer2/DESIGN.md` sections 5.3, 5.4, 6, 7.2, 9 and 9.5
+- `/Users/anx/numer_app/docs/DESIGN.md` sections 5.3, 5.4, 6, 7.2, 9 and 9.5
 - `piano_room_feature/lib/piano_room_feature.dart` (128 lines),
   `lib/piano_room_remote.dart`, `lib/src/data/http_piano_room_repository.dart` (298),
   `lib/src/application/piano_room_controller.dart:160-227`,

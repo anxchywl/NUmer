@@ -12,7 +12,7 @@ release builds and two measuring scripts.
 ## Read first
 - `AGENTS.md`
 - `docs/numer2/DECISIONS.md` D-32 and O-7
-- `docs/numer2/DESIGN.md` section 10
+- `docs/DESIGN.md` section 10
 - `lib/app/bootstrap.dart`
 - `lib/core/startup_metrics.dart`
 - `android/settings.gradle.kts`, `android/app/build.gradle.kts`
@@ -48,7 +48,7 @@ release builds and two measuring scripts.
 5. `scripts/measure_size.sh`: runs
    `flutter build apk --release --target-platform android-arm64 --analyze-size` and prints one
    line `apkDownloadBytes=<value>` taken from the tool's summary. It exits 1 if the build fails.
-6. Create `docs/PERFORMANCE.md`: the budget table of `docs/numer2/DESIGN.md` section 10, a
+6. Create `docs/PERFORMANCE.md`: the budget table of `docs/DESIGN.md` section 10, a
    "Baseline" table with rows cold start (ms), APK download size (bytes), and columns value,
    device, date, app version, all cells `not measured`, and the two commands. One screen of text.
 7. Rewrite the file comment of `lib/core/startup_metrics.dart` as one lowercase line without trailing punctuation that says why the file exists, or delete it if the code is self-explanatory.
@@ -63,7 +63,7 @@ release builds and two measuring scripts.
 ## Constraints
 - Offline-first contract: UI never writes Firestore. Mutate Hive through `lib/core/data/storage.dart` with `dirty = true` and `updatedAt = now`.
 - Never renumber a Hive typeId or reorder adapter writes. A new field is an appended write and a guarded read; a new type takes the next free id.
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel (`lib/features/<name>/<name>.dart`). Direction is `features -> core -> shared`.
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
 - Development mechanisms are refused when `APP_ENV=production`.

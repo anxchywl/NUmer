@@ -9,7 +9,7 @@ Show "Marketplace" in the Campus tab for users whose `muto` flag is on, inside N
 module scaffold, started only when opened and within the download-size budget.
 
 ## Read first
-- `AGENTS.md`, `docs/numer2/DESIGN.md` sections 3.3, 4.4, 9.5, 10 and 12
+- `AGENTS.md`, `docs/DESIGN.md` sections 3.3, 4.4, 9.5, 10 and 12
 - `docs/numer2/DECISIONS.md` D-24, D-27, D-42
 - `lib/features/events/` and `lib/features/clavis/` (P4-11, P4-08: descriptor, body,
   lazy-start test), `lib/app/modules/module_registry.dart`
@@ -75,11 +75,11 @@ module scaffold, started only when opened and within the download-size budget.
 - No marketplace items in the news feed (D-21).
 
 ## Constraints
-- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/numer2/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
+- Every user-facing string goes in `lib/l10n/app_en.arb`, `app_ru.arb` and `app_kk.arb`, following the copy rules in `docs/DESIGN.md` section 8. Run `flutter gen-l10n`; never hand-edit `lib/l10n/app_localizations*.dart`.
 - Import a feature only through its barrel. Direction is `features -> core -> shared`.
 - The module starts nothing before it is opened (`DESIGN.md` 10).
 - Tests use `flutter_test` and hand-written fakes. No mocking package.
-- UI: only the tokens and components of `docs/numer2/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
+- UI: only the tokens and components of `docs/DESIGN.md`. No new colour, radius, text style, icon package or font. Every icon-only control has a tooltip.
 - Code conventions from `AGENTS.md`. Comments only for a non-obvious *why*: lowercase, no trailing punctuation, one line. No docstrings, no debug prints, no commented-out code, no emoji.
 - Size (`AGENTS.md` "Size", D-33): every file you create or edit under `lib/`, `packages/*/lib` or `functions/src` stays under 400 lines, every function under about 60. Never add a new path to the baseline.
 - Catch only the specific failure you handle.

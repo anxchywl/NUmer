@@ -10,7 +10,7 @@ Rules for whoever writes a prompt:
 - Imperative English. Exact paths, commands and checks. No adjective where a check would do.
 - Cite files and lines that exist at the time of writing. Open them first.
 - Every step can be verified. Never "improve", "clean up", "make it nice", "as appropriate".
-- UI prompts quote the token names and values from `../DESIGN.md` and give every new string
+- UI prompts quote the token names and values from `../../DESIGN.md` and give every new string
   in EN, RU and KK.
 - One task is one pull request that a mid-tier model finishes in one session.
 
@@ -25,7 +25,7 @@ Rules for whoever writes a prompt:
 One or two sentences: the outcome, and why it matters for NUmer 2.0.
 
 ## Read first
-- `AGENTS.md` (binding rules and code conventions), `docs/numer2/DESIGN.md` sections <n>
+- `AGENTS.md` (binding rules and code conventions), `docs/DESIGN.md` sections <n>
   (for UI work), and: <exact paths, line ranges if large>
 
 ## Context
