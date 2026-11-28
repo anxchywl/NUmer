@@ -4,12 +4,10 @@
 1416 lib/core/data/sync_service.dart
 545 lib/core/notifications/recording_notification_service.dart
 708 lib/features/account/models/profile_avatar.dart
-411 lib/features/account/widgets/accent_color_picker.dart
-566 lib/features/account/widgets/profile_form.dart
+454 lib/features/account/widgets/profile_form.dart
 665 lib/features/auth/data/auth_service.dart
 778 lib/features/auth/screens/auth_screen.dart
 503 lib/features/connections/data/connections_service.dart
-492 lib/features/connections/screens/add_person_sheet.dart
 513 lib/features/connections/screens/connections_screen.dart
 608 lib/features/connections/screens/groups_management_sheet.dart
 662 lib/features/connections/screens/person_details_screen.dart

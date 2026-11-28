@@ -9,7 +9,6 @@ gradient	lib/app/shell/ios_tab_bar.dart	1
 blur	lib/app/shell/ios_tab_bar.dart	2
 color_literal	lib/app/shell/ios_tab_bar.dart	2
 text_literal	lib/app/shell/ios_tab_bar.dart	1
-shadow	lib/app/shell/shell_hooks.dart	1
 print	lib/core/data/sync_service.dart	1
 print	lib/core/notifications/notifications.dart	15
 color_literal	lib/core/notifications/recording_notification_service.dart	1
@@ -21,7 +20,9 @@ color_literal	lib/features/account/screens/settings_screen.dart	1
 chip	lib/features/account/widgets/accent_color_picker.dart	3
 color_literal	lib/features/account/widgets/accent_color_picker.dart	17
 text_literal	lib/features/account/widgets/accent_color_picker.dart	2
-color_literal	lib/features/account/widgets/profile_form.dart	7
+color_literal	lib/features/account/widgets/profile_avatar_picker.dart	3
+color_literal	lib/features/account/widgets/profile_form.dart	2
+shadow	lib/features/account/widgets/profile_setup_dialog.dart	1
 color_literal	lib/features/account/widgets/settings/settings_delete_confirm.dart	1
 alert	lib/features/account/widgets/settings/settings_delete_confirm.dart	1
 text_literal	lib/features/account/widgets/settings/settings_delete_section.dart	5
@@ -39,8 +40,6 @@ spinner	lib/features/auth/screens/profile_setup_screen.dart	1
 print	lib/features/connections/data/connections_service.dart	2
 color_literal	lib/features/connections/models/contact_group.dart	1
 text_literal	lib/features/connections/models/contact_group.dart	1
-chip	lib/features/connections/screens/add_person_sheet.dart	1
-text_literal	lib/features/connections/screens/add_person_sheet.dart	2
 chip	lib/features/connections/screens/connections_screen.dart	2
 color_literal	lib/features/connections/screens/groups_management_sheet.dart	15
 text_literal	lib/features/connections/screens/groups_management_sheet.dart	3
@@ -53,6 +52,8 @@ text_literal	lib/features/connections/screens/person_details_screen.dart	2
 color_literal	lib/features/connections/widgets/person_card.dart	1
 text_literal	lib/features/connections/widgets/person_card.dart	4
 weight	lib/features/connections/widgets/person_card.dart	1
+chip	lib/features/connections/widgets/person_extras.dart	1
+text_literal	lib/features/connections/widgets/person_extras.dart	2
 color_literal	lib/features/courses/course.dart	1
 color_literal	lib/features/courses/course_format.dart	13
 color_literal	lib/features/courses/swipeable_course_item.dart	2

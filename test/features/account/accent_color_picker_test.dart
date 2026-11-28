@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/features/account/widgets/accent_color_picker.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 void main() {
@@ -33,6 +34,7 @@ void main() {
                 selectedColor = color;
               },
               onSave: () {},
+              focus: NumerSheetFocusMode(),
             ),
           ),
         ),

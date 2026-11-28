@@ -85,76 +85,41 @@ mixin ShellHooks on State<AppShell> {
         barrierColor: colorScheme.scrim.withAlpha((0.7 * 255).round()),
         transitionDuration: const Duration(milliseconds: 300),
         pageBuilder: (dialogContext, _, _) {
-          return PopScope(
-            canPop: false,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 24,
-                ),
-                child: Material(
-                  color: colorScheme.surfaceContainerHigh,
-                  elevation: 8,
-                  borderRadius: BorderRadius.circular(28),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 420),
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Welcome!\nLet\'s create your profile.',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: colorScheme.onSurface,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ProfileForm(
-                            initialName:
-                                appState.profileName?.isNotEmpty == true
-                                ? appState.profileName!
-                                : remoteName,
-                            initialMajor: appState.major?.isNotEmpty == true
-                                ? appState.major
-                                : remoteMajor,
-                            initialContact:
-                                appState.profileContact?.isNotEmpty == true
-                                ? appState.profileContact
-                                : remoteContact,
-                            initialGoal: appState.profileGoal,
-                            initialAvatarIndex: appState.profileAvatarIndex,
-                            primaryButtonLabel: 'Save profile',
-                            autofocusName: true,
-                            onSubmit: (data) async {
-                              final state = rootContext.read<AppState>();
-                              final authController = rootContext
-                                  .read<AuthController>();
-                              final uid = authController.currentUser?.uid;
+          return ProfileSetupDialog(
+            formBuilder: (focus) => ProfileForm(
+              focusMode: focus,
+              initialName: appState.profileName?.isNotEmpty == true
+                  ? appState.profileName!
+                  : remoteName,
+              initialMajor: appState.major?.isNotEmpty == true
+                  ? appState.major
+                  : remoteMajor,
+              initialContact: appState.profileContact?.isNotEmpty == true
+                  ? appState.profileContact
+                  : remoteContact,
+              initialGoal: appState.profileGoal,
+              initialAvatarIndex: appState.profileAvatarIndex,
+              primaryButtonLabel: 'Save profile',
+              autofocusName: true,
+              onSubmit: (data) async {
+                final state = rootContext.read<AppState>();
+                final authController = rootContext.read<AuthController>();
+                final uid = authController.currentUser?.uid;
 
-                              await state.saveProfile(
-                                name: data.name,
-                                goal: data.goal,
-                                majorText: data.major,
-                                contact: data.contact,
-                                avatarIndex: data.avatarIndex,
-                                avatarColorValue: data.avatarColorValue,
-                                uid: uid,
-                              );
+                await state.saveProfile(
+                  name: data.name,
+                  goal: data.goal,
+                  majorText: data.major,
+                  contact: data.contact,
+                  avatarIndex: data.avatarIndex,
+                  avatarColorValue: data.avatarColorValue,
+                  uid: uid,
+                );
 
-                              if (dialogContext.mounted) {
-                                Navigator.of(dialogContext).pop();
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
             ),
           );
         },

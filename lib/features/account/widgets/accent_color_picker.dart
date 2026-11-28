@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+
+import 'preset_naming_row.dart';
 
 class AccentColorPicker extends StatefulWidget {
   final Color currentColor;
   final ValueChanged<Color> onColorChanged;
   final VoidCallback onSave;
+  final NumerSheetFocusMode focus;
 
   const AccentColorPicker({
     super.key,
     required this.currentColor,
     required this.onColorChanged,
     required this.onSave,
+    required this.focus,
   });
 
   @override
@@ -51,6 +55,23 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
       _hsvColor = hsv;
     });
     widget.onColorChanged(hsv.toColor());
+  }
+
+  void _closeNaming() {
+    widget.focus.release();
+    setState(() {
+      _namingMode = false;
+      _nameController.clear();
+    });
+  }
+
+  void _confirmNaming() {
+    if (!_formKey.currentState!.validate()) return;
+    context.read<AppState>().addUserColorPreset(
+      _nameController.text.trim(),
+      widget.currentColor,
+    );
+    _closeNaming();
   }
 
   @override
@@ -173,33 +194,26 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
         ),
 
         // Presets
-        Text(l10n.presets, style: theme.textTheme.titleSmall),
-        const SizedBox(height: 12),
+        NumerFocusFold(
+          hidden: widget.focus.hidesChrome,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Text(l10n.presets, style: theme.textTheme.titleSmall),
+          ),
+        ),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [
             if (_namingMode)
-              _InlineNamingRow(
+              PresetNamingRow(
                 color: widget.currentColor,
                 controller: _nameController,
                 formKey: _formKey,
-                onCancel: () => setState(() {
-                  _namingMode = false;
-                  _nameController.clear();
-                }),
-                onConfirm: () {
-                  if (_formKey.currentState!.validate()) {
-                    appState.addUserColorPreset(
-                      _nameController.text.trim(),
-                      widget.currentColor,
-                    );
-                    setState(() {
-                      _namingMode = false;
-                      _nameController.clear();
-                    });
-                  }
-                },
+                focusNode: widget.focus.nodeFor('preset'),
+                showActions: !widget.focus.hidesChrome,
+                onCancel: _closeNaming,
+                onConfirm: _confirmNaming,
               ),
             if (!_namingMode) ...[
               ...presets.map((entry) {
@@ -293,98 +307,15 @@ class _AccentColorPickerState extends State<AccentColorPicker> {
 
         const SizedBox(height: 16),
 
-        if (!_namingMode)
-          FilledButton(onPressed: widget.onSave, child: Text(l10n.save)),
+        NumerFocusActions(
+          isTyping: widget.focus.isTyping,
+          doneLabel: l10n.save,
+          onDone: _confirmNaming,
+          actions: _namingMode
+              ? const SizedBox.shrink()
+              : FilledButton(onPressed: widget.onSave, child: Text(l10n.save)),
+        ),
       ],
-    );
-  }
-}
-
-class _InlineNamingRow extends StatelessWidget {
-  final Color color;
-  final TextEditingController controller;
-  final GlobalKey<FormState> formKey;
-  final VoidCallback onCancel;
-  final VoidCallback onConfirm;
-
-  const _InlineNamingRow({
-    required this.color,
-    required this.controller,
-    required this.formKey,
-    required this.onCancel,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(radius: 12, backgroundColor: color),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Form(
-              key: formKey,
-              child: TextFormField(
-                controller: controller,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: l10n.presetName,
-                  isDense: true,
-                  border: InputBorder.none,
-                  counterText: "", // Hide counter
-                  contentPadding: EdgeInsets.zero,
-                ),
-                maxLength: 16,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L} ]', unicode: true),
-                  ),
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    if (newValue.text.startsWith(' ')) {
-                      return oldValue;
-                    }
-                    return newValue;
-                  }),
-                ],
-                validator: (v) {
-                  if (v == null || v.isEmpty) return ""; // Subtle error
-                  if (v.startsWith(' ')) return "";
-                  if (!RegExp(r'^[\p{L} ]+$', unicode: true).hasMatch(v)) {
-                    return "";
-                  }
-                  return null;
-                },
-                onFieldSubmitted: (_) => onConfirm(),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 20),
-            onPressed: onCancel,
-            visualDensity: VisualDensity.compact,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-          IconButton(
-            icon: const Icon(Icons.check, size: 20),
-            onPressed: onConfirm,
-            visualDensity: VisualDensity.compact,
-            color: color,
-          ),
-        ],
-      ),
     );
   }
 }

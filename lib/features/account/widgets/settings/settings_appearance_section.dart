@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:numer_ui/numer_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'package:numer_app/app/app_state.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 
 import '../accent_color_picker.dart';
 import 'settings_heading.dart';
@@ -92,13 +94,29 @@ class SettingsAppearanceSection extends StatelessWidget {
   }
 }
 
-class _AccentSheet extends StatelessWidget {
+class _AccentSheet extends StatefulWidget {
   const _AccentSheet({required this.state});
 
   final AppState state;
 
   @override
-  Widget build(BuildContext context) {
+  State<_AccentSheet> createState() => _AccentSheetState();
+}
+
+class _AccentSheetState extends State<_AccentSheet> {
+  final _focus = NumerSheetFocusMode();
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      SheetFocusBuilder(focus: _focus, builder: _sheet);
+
+  Widget _sheet(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -110,26 +128,15 @@ class _AccentSheet extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 32,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
+            NumerFocusFold(
+              hidden: _focus.hidesChrome,
+              child: _heading(context),
             ),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context)!.accentColor,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 24),
             AccentColorPicker(
-              currentColor: state.accentColor,
+              focus: _focus,
+              currentColor: widget.state.accentColor,
               onColorChanged: (color) {
-                state.setAccentColor(color);
+                widget.state.setAccentColor(color);
               },
               onSave: () {
                 Navigator.pop(context);
@@ -139,6 +146,29 @@ class _AccentSheet extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _heading(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 32,
+          height: 4,
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          AppLocalizations.of(context)!.accentColor,
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

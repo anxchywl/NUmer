@@ -6,16 +6,18 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 const _pixelRatio = 3.0;
-const _screen = Size(390, 844);
+const _width = 390.0;
+const _height = 844.0;
 const _keyboardHeight = 336.0;
 
 Future<void> openSheet(
   WidgetTester tester,
   Future<void> Function(BuildContext context) open, {
   List<SingleChildWidget> providers = const [],
+  double width = _width,
 }) async {
   tester.view.devicePixelRatio = _pixelRatio;
-  tester.view.physicalSize = _screen * _pixelRatio;
+  tester.view.physicalSize = Size(width, _height) * _pixelRatio;
   addTearDown(tester.view.reset);
   final app = MaterialApp(
     theme: NumerTheme.build(seed: Colors.indigo, brightness: Brightness.light),
@@ -69,6 +71,6 @@ void expectAboveKeyboard(WidgetTester tester, Finder finder) {
   expect(finder, findsOneWidget);
   expect(
     tester.getBottomLeft(finder).dy,
-    lessThanOrEqualTo(_screen.height - _keyboardHeight),
+    lessThanOrEqualTo(_height - _keyboardHeight),
   );
 }

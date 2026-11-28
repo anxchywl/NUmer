@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:numer_app/l10n/app_localizations.dart';
 
 import 'package:numer_app/features/account/models/profile_avatar.dart';
-import 'package:numer_app/shared/widgets/color_picker_button.dart';
 import 'package:numer_app/shared/widgets/app_toast.dart';
+import 'package:numer_app/shared/widgets/sheet_focus.dart';
 import 'package:numer_ui/numer_ui.dart';
+
+import 'profile_avatar_picker.dart';
+import 'profile_fields.dart';
 
 class ProfileFormData {
   const ProfileFormData({
@@ -40,6 +43,7 @@ class ProfileForm extends StatefulWidget {
     required this.primaryButtonLabel,
     required this.onSubmit,
     this.autofocusName = false,
+    this.focusMode,
   });
 
   final String initialName;
@@ -52,6 +56,9 @@ class ProfileForm extends StatefulWidget {
   final String primaryButtonLabel;
   final Future<void> Function(ProfileFormData data) onSubmit;
   final bool autofocusName;
+
+  // set when the form sits in a dialog, null on a full screen
+  final NumerSheetFocusMode? focusMode;
 
   @override
   State<ProfileForm> createState() => _ProfileFormState();
@@ -230,235 +237,198 @@ class _ProfileFormState extends State<ProfileForm> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final option =
         (_avatarIndex != null && _avatarIndex! < profileAvatarOptions.length)
         ? profileAvatarOptions[_avatarIndex!]
         : null;
-    final effectiveBgColor = (_avatarColorValue != null)
-        ? Color(_avatarColorValue!)
-        : (option?.background ?? theme.colorScheme.primaryContainer);
-    final isDark =
-        ThemeData.estimateBrightnessForColor(effectiveBgColor) ==
-        Brightness.dark;
-    final optionIconColor = isDark ? Colors.white : Colors.black87;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            AnimatedScale(
-              duration: const Duration(milliseconds: 250),
-              scale: 1.0,
-              child: CircleAvatar(
-                radius: 34,
-                backgroundColor: option == null
-                    ? Colors.transparent
-                    : (_avatarColorValue != null
-                          ? Color(_avatarColorValue!)
-                          : option.background),
-                child: Icon(
-                  option?.icon ?? Icons.person,
-                  size: option == null ? 48 : 32,
-                  color: option == null
-                      ? theme.colorScheme.onSurfaceVariant
-                      : (_avatarColorValue != null
-                            ? (ThemeData.estimateBrightnessForColor(
-                                        Color(_avatarColorValue!),
-                                      ) ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black87)
-                            : optionIconColor),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: Column(
-                  key: ValueKey('${_nameCtrl.text}_${_goalCtrl.text}'),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _nameCtrl.text.trim().isEmpty
-                          ? AppLocalizations.of(context)!.yourName
-                          : _nameCtrl.text.trim(),
-                      style: theme.textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _goalCtrl.text.trim().isEmpty
-                          ? AppLocalizations.of(context)!.addPersonalGoal
-                          : _goalCtrl.text.trim(),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
+        _folded(_buildPreview(context, option)),
         Form(
           key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                controller: _nameCtrl,
-                autofocus: widget.autofocusName,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.nameLabel,
-                  isDense: true,
-                ),
-                textCapitalization: TextCapitalization.none,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(30),
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N} ]', unicode: true),
-                  ),
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    if (newValue.text.startsWith(' ')) {
-                      return oldValue;
-                    }
-                    return newValue;
-                  }),
-                ],
-                validator: (value) {
-                  final trimmed = value?.trim() ?? '';
-                  if (trimmed.isEmpty) {
-                    return AppLocalizations.of(context)!.nameRequired;
-                  }
-                  if (trimmed.length < 2) {
-                    return AppLocalizations.of(context)!.displayNameLength;
-                  }
-                  if (!RegExp(
-                    r'^[\p{L}\p{N} ]+$',
-                    unicode: true,
-                  ).hasMatch(trimmed)) {
-                    return AppLocalizations.of(
-                      context,
-                    )!.displayNameInvalidChars;
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _majorCtrl,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.majorLabel,
-                  isDense: true,
-                ),
-                textCapitalization: TextCapitalization.words,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(32),
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N} ]', unicode: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _contactCtrl,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.contactLabel,
-                  hintText: AppLocalizations.of(context)!.contactHint,
-                  isDense: true,
-                ),
-                textCapitalization: TextCapitalization.none,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(32),
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N}_@ ]', unicode: true),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _goalCtrl,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.personalGoalLabel,
-                  hintText: AppLocalizations.of(context)!.personalGoalHint,
-                  isDense: true,
-                ),
-                textCapitalization: TextCapitalization.sentences,
-                maxLines: 1,
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(88),
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'[\p{L}\p{N}\s,.]', unicode: true),
-                  ),
-                ],
-              ),
-            ],
+          child: ProfileFields(
+            name: _nameCtrl,
+            major: _majorCtrl,
+            contact: _contactCtrl,
+            goal: _goalCtrl,
+            focus: widget.focusMode,
+            autofocusName: widget.autofocusName,
           ),
         ),
+        _folded(_buildAvatarSection(context, option)),
         const SizedBox(height: 24),
-        SizedBox(
-          height: 80,
-          child: ListView.builder(
-            controller: _scrollController,
-            scrollDirection: Axis.horizontal,
-            itemCount: profileAvatarOptions.length,
-            padding: EdgeInsets.zero,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Center(
-                  child: _AvatarChip(
-                    option: profileAvatarOptions[index],
-                    backgroundColor: effectiveBgColor,
-                    selected: _avatarIndex == index,
-                    onTap: () {
-                      setState(() {
-                        _avatarIndex = index;
-                        _showColorPicker = true;
-                        // Ensure color picker stays visible
-                      });
-                      _scrollToIndex(index);
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          transitionBuilder: (Widget child, Animation<double> animation) {
-            return SizeTransition(
-              sizeFactor: animation,
-              axisAlignment: -1.0,
-              child: FadeTransition(opacity: animation, child: child),
-            );
-          },
-          child: _showColorPicker && _avatarIndex != null
-              ? Padding(
-                  padding: const EdgeInsets.only(top: 24),
-                  child: _ColorChooser(
-                    selectedColorValue: _avatarColorValue,
-                    onColorChanged: (cv) =>
-                        setState(() => _avatarColorValue = cv),
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-        const SizedBox(height: 24),
-        FilledButton(
-          onPressed: _isNameValid && !_saving ? _submit : null,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            transitionBuilder: (child, animation) =>
-                FadeTransition(opacity: animation, child: child),
-            child: _buildButtonChild(),
-          ),
-        ),
+        _buildActions(),
       ],
+    );
+  }
+
+  Widget _folded(Widget child) {
+    final focus = widget.focusMode;
+    if (focus == null) return child;
+    return NumerFocusFold(hidden: focus.hidesChrome, child: child);
+  }
+
+  Widget _buildActions() {
+    final button = FilledButton(
+      onPressed: _isNameValid && !_saving ? _submit : null,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
+        child: _buildButtonChild(),
+      ),
+    );
+    final focus = widget.focusMode;
+    if (focus == null) return button;
+    return SheetDoneActions(focus: focus, actions: button);
+  }
+
+  Widget _buildPreview(BuildContext context, ProfileAvatarOption? option) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        children: [
+          _buildPreviewAvatar(context, option),
+          const SizedBox(width: 16),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Column(
+                key: ValueKey('${_nameCtrl.text}_${_goalCtrl.text}'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _nameCtrl.text.trim().isEmpty
+                        ? AppLocalizations.of(context)!.yourName
+                        : _nameCtrl.text.trim(),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _goalCtrl.text.trim().isEmpty
+                        ? AppLocalizations.of(context)!.addPersonalGoal
+                        : _goalCtrl.text.trim(),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _iconColorFor(ProfileAvatarOption option) {
+    final custom = _avatarColorValue;
+    final background = custom != null ? Color(custom) : option.background;
+    final isDark =
+        ThemeData.estimateBrightnessForColor(background) == Brightness.dark;
+    return isDark ? Colors.white : Colors.black87;
+  }
+
+  Color _backgroundFor(BuildContext context, ProfileAvatarOption? option) {
+    final custom = _avatarColorValue;
+    if (custom != null) return Color(custom);
+    return option?.background ?? Theme.of(context).colorScheme.primaryContainer;
+  }
+
+  Widget _buildPreviewAvatar(
+    BuildContext context,
+    ProfileAvatarOption? option,
+  ) {
+    return AnimatedScale(
+      duration: const Duration(milliseconds: 250),
+      scale: 1.0,
+      child: CircleAvatar(
+        radius: 34,
+        backgroundColor: option == null
+            ? Colors.transparent
+            : _backgroundFor(context, option),
+        child: Icon(
+          option?.icon ?? Icons.person,
+          size: option == null ? 48 : 32,
+          color: option == null
+              ? Theme.of(context).colorScheme.onSurfaceVariant
+              : _iconColorFor(option),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarSection(
+    BuildContext context,
+    ProfileAvatarOption? option,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 24),
+        _buildAvatarList(_backgroundFor(context, option)),
+        _buildColorChooser(),
+      ],
+    );
+  }
+
+  Widget _buildAvatarList(Color background) {
+    return SizedBox(
+      height: 80,
+      child: ListView.builder(
+        // the list leaves the tree while typing and must come back where it was
+        key: const PageStorageKey('profile_avatars'),
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        itemCount: profileAvatarOptions.length,
+        padding: EdgeInsets.zero,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Center(
+              child: ProfileAvatarChip(
+                option: profileAvatarOptions[index],
+                backgroundColor: background,
+                selected: _avatarIndex == index,
+                onTap: () => _selectAvatar(index),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _selectAvatar(int index) {
+    setState(() {
+      _avatarIndex = index;
+      _showColorPicker = true;
+    });
+    _scrollToIndex(index);
+  }
+
+  Widget _buildColorChooser() {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return SizeTransition(
+          sizeFactor: animation,
+          axisAlignment: -1.0,
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+      child: _showColorPicker && _avatarIndex != null
+          ? Padding(
+              padding: const EdgeInsets.only(top: 24),
+              child: ProfileColorChooser(
+                selectedColorValue: _avatarColorValue,
+                onColorChanged: (cv) => setState(() => _avatarColorValue = cv),
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -479,88 +449,6 @@ class _ProfileFormState extends State<ProfileForm> {
       label: widget.primaryButtonLabel,
       loading: _saving,
       loadingHint: AppLocalizations.of(context)!.loadingHint,
-    );
-  }
-}
-
-class _AvatarChip extends StatelessWidget {
-  const _AvatarChip({
-    required this.option,
-    required this.backgroundColor,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final ProfileAvatarOption option;
-  final Color backgroundColor;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark =
-        ThemeData.estimateBrightnessForColor(backgroundColor) ==
-        Brightness.dark;
-    final iconColor = isDark ? Colors.white : Colors.black87;
-    final borderColor = selected
-        ? backgroundColor
-        : Theme.of(context).colorScheme.outlineVariant;
-
-    return AnimatedScale(
-      duration: const Duration(milliseconds: 200),
-      scale: selected ? 1.05 : 1.0,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(28),
-        onTap: onTap,
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            color: backgroundColor.withAlpha(
-              ((selected ? 1 : 0.7) * 255).round(),
-            ),
-            shape: BoxShape.circle,
-            border: Border.all(color: borderColor, width: selected ? 3 : 1),
-          ),
-          child: Icon(option.icon, color: iconColor),
-        ),
-      ),
-    );
-  }
-}
-
-class _ColorChooser extends StatefulWidget {
-  final int? selectedColorValue;
-  final ValueChanged<int?> onColorChanged;
-
-  const _ColorChooser({
-    required this.selectedColorValue,
-    required this.onColorChanged,
-  });
-
-  @override
-  State<_ColorChooser> createState() => _ColorChooserState();
-}
-
-class _ColorChooserState extends State<_ColorChooser> {
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          AppLocalizations.of(context)!.iconColor,
-          style: theme.textTheme.labelLarge,
-        ),
-        const SizedBox(height: 12),
-        CustomColorPicker(
-          initial: widget.selectedColorValue != null
-              ? Color(widget.selectedColorValue!)
-              : Colors.grey,
-          onChanged: (c) => widget.onColorChanged(c.toARGB32()),
-        ),
-      ],
     );
   }
 }
